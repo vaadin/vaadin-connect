@@ -14,14 +14,13 @@
  * the License.
  */
 package com.vaadin.services;
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Dummy class to verify project setup works
- */
 public class DummyClass {
 
   protected boolean getTrue() {
+    
     return true;
   }
 }
