@@ -20,7 +20,10 @@ import java.util.List;
 public class DummyClass {
 
   protected boolean getTrue() {
-    
+
+
+
+
     return true;
   }
 }
