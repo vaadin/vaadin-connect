@@ -15,11 +15,11 @@
  */
 package com.vaadin.services;
 import java.util.ArrayList;
-import java.util.List;
 
 public class DummyClass {
 
   protected boolean getTrue() {
+
     
     return true;
   }
