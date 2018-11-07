@@ -14,6 +14,7 @@
  * the License.
  */
 package com.vaadin.services;
+import java.util.List;
 
 /**
  * Dummy class to verify project setup works
