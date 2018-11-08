@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class VaadinServiceController {
+  private static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
+
   private final ObjectMapper vaadinServiceMapper;
   private final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
 
@@ -56,7 +58,7 @@ public class VaadinServiceController {
   }
 
   public VaadinServiceController(
-      @Autowired(required = false) @Qualifier("vaadinServiceMapper") ObjectMapper vaadinServiceMapper,
+      @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       ApplicationContext context) {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : Jackson2ObjectMapperBuilder.json()
@@ -69,13 +71,16 @@ public class VaadinServiceController {
           // case of e.g. proxies
           Class<?> beanType = context.getType(name);
           if (beanType == null) {
-            throw new IllegalStateException("WTF?");
+            throw new IllegalStateException(String.format(
+                "Unable to determine a type for the bean with name '%s', double check your bean configuration",
+                name));
           }
 
           String serviceName = beanType.getSimpleName();
           if (serviceName.isEmpty()) {
-            throw new IllegalStateException(
-                "Anonymous class as a VaadinService declared, wtf?");
+            throw new IllegalStateException(String.format(
+                "A bean with name '%s' and type '%s' is annotated with '%s' annotation but is an anonymous class. Modify the bean declaration so that it is not an anonymous class",
+                name, beanType, VaadinService.class));
           }
 
           vaadinServices.put(serviceName.toLowerCase(Locale.ENGLISH),
