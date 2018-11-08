@@ -15,7 +15,6 @@
  */
 package com.vaadin.services;
 
-
 import org.junit.Assert;
 import org.junit.Test;
 
