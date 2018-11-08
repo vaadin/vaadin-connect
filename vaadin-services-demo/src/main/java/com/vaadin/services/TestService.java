@@ -1,6 +1,7 @@
 package com.vaadin.services;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,16 @@ public class TestService {
       result.put(Integer.toString(i), inner);
     }
     return result;
+  }
+
+  public List<Object> testMultipleParameters(String arg1, int arg2,
+      double arg3) {
+    return Arrays.asList(arg1, arg2, arg3);
+  }
+
+  public void noReturnValue(String testParam) {
+    System.out.println(testParam);
+    // testing that the method invocation is possible
   }
 
   public static class TestObject {

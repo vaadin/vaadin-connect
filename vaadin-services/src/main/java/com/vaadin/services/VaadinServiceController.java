@@ -91,9 +91,12 @@ public class VaadinServiceController {
   // @formatter:off
   // curl -i -H "Content-Type: application/json" -d '' http://localhost:8080/ser/var
   // curl -i -H "Content-Type: application/json" -d '' http://localhost:8080/testservice/ss
+  // curl -i -H "Content-Type: application/json" -d '{"testParam": ["test", 5]}' http://localhost:8080/testservice/noReturnValue
 
   // curl -i -H "Content-Type: application/json" -d '' http://localhost:8080/testservice/test
-  // curl -i -H "Content-Type: application/json" -d '{"count":3}' http://localhost:8080/testservice/complexTest
+  // curl -i -H "Content-Type: application/json" -d '{"count": 3}' http://localhost:8080/testservice/complexTest
+  // curl -i -H "Content-Type: application/json" -d '{"arg1": "1", "arg2": 2, "arg3": 3.0}' http://localhost:8080/testservice/testMultipleParameters
+  // curl -i -H "Content-Type: application/json" -d '{"testParam": "test"}' http://localhost:8080/testservice/noReturnValue
   // @formatter:on
   @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
   public ResponseEntity<String> serveVaadinService(
@@ -121,18 +124,13 @@ public class VaadinServiceController {
       @RequestBody(required = false) ObjectNode body,
       Parameter[] javaParameters) throws IOException {
     List<JsonNode> requestParameters = getRequestParameters(body);
-    Object[] javaArguments = new Object[javaParameters.length];
-    int nextJsonParamIndex = 0;
+    Object[] serviceParameters = new Object[javaParameters.length];
     for (int i = 0; i < javaParameters.length; i++) {
-      Parameter parameter = javaParameters[i];
-      Object value;
-
-      JsonNode jsonValue = requestParameters.get(nextJsonParamIndex++);
-      value = vaadinServiceMapper.readerFor(parameter.getType())
-          .readValue(jsonValue);
-      javaArguments[i] = value;
+      serviceParameters[i] = vaadinServiceMapper
+          .readerFor(javaParameters[i].getType())
+          .readValue(requestParameters.get(i));
     }
-    return javaArguments;
+    return serviceParameters;
   }
 
   private List<JsonNode> getRequestParameters(ObjectNode body) {
