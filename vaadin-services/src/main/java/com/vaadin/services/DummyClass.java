@@ -16,7 +16,7 @@
 package com.vaadin.services;
 
 /**
- * Dummy class to verify project setup works
+ * Dummy class to verify project setup works.
  */
 public class DummyClass {
 

@@ -15,17 +15,22 @@
  */
 package com.vaadin.services;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class VaadinServiceDemoApplicationTests {
+/**
+ * Main class of the Vaadin services demo module.
+ */
+@SpringBootApplication
+public class VaadinServicesDemoApplication {
 
-  @Test
-  public void contextLoads() {
+  /**
+   * Main method to run the application.
+   *
+   * @param args
+   *          arguments
+   */
+  public static void main(String[] args) {
+    SpringApplication.run(VaadinServicesDemoApplication.class, args);
   }
-
 }
