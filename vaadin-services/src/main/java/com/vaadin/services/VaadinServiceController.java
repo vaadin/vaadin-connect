@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class VaadinServiceController {
     private static final ObjectMapper objectMapper = Jackson2ObjectMapperBuilder
-            .json().build();
+            .json().visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY).build();
 
     private final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
 
@@ -72,7 +74,9 @@ public class VaadinServiceController {
 
     // curl -i -H "Content-Type: application/json" -d "" http://localhost:8080/ser/var
     // curl -i -H "Content-Type: application/json" -d "" http://localhost:8080/testservice/ss
+
     // curl -i -H "Content-Type: application/json" -d "" http://localhost:8080/testservice/test
+    // curl -i -H "Content-Type: application/json" -d '{"count":3}' http://localhost:8080/testservice/complexTest
     @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<String> serveVaadinService(@PathVariable("service") String serviceName,
                                                      @PathVariable("method") String methodName,
