@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class VaadinServiceController {
-    private static final ObjectMapper objectMapper = Jackson2ObjectMapperBuilder
-            .json().visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY).build();
-
+    private final ObjectMapper vaadinServiceMapper;
     private final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
 
     private static class VaadinServiceData {
@@ -53,8 +52,13 @@ public class VaadinServiceController {
         }
     }
 
-    @Autowired
-    public VaadinServiceController(ApplicationContext context) {
+    public VaadinServiceController(
+            @Autowired(required = false) @Qualifier("vaadinServiceMapper") ObjectMapper vaadinServiceMapper,
+            ApplicationContext context
+    ) {
+        this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper : Jackson2ObjectMapperBuilder
+                .json().visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY).build();
+
         context.getBeansWithAnnotation(VaadinService.class).forEach((name, serviceBean) -> {
             // Check the bean type instead of the implementation type in
             // case of e.g. proxies
@@ -98,14 +102,14 @@ public class VaadinServiceController {
 
             JsonNode jsonValue = paramsInOrder
                     .get(nextJsonParamIndex++);
-            value = objectMapper.readerFor(parameter.getType())
+            value = vaadinServiceMapper.readerFor(parameter.getType())
                     .readValue(jsonValue);
             javaArguments[i] = value;
         }
 
         Object returnValue = methodToInvoke
                 .invoke(vaadinServiceData.getServiceObject(), javaArguments);
-        return ResponseEntity.ok(objectMapper.writeValueAsString(returnValue));
+        return ResponseEntity.ok(vaadinServiceMapper.writeValueAsString(returnValue));
     }
 
     private Map<String, JsonNode> getParametersData(ObjectNode body) {
