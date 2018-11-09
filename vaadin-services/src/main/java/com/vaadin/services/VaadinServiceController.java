@@ -1,3 +1,18 @@
+/*
+ * Copyright 2000-2018 Vaadin Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.vaadin.services;
 
 import java.io.IOException;
@@ -106,10 +121,7 @@ public class VaadinServiceController {
   public ResponseEntity<String> serveVaadinService(
       @PathVariable("service") String serviceName,
       @PathVariable("method") String methodName,
-      @RequestBody(required = false) ObjectNode body)
-  // TODO kb process this exception also
-  // TODO kb do not show stacktraces by default in response messages
-      throws InvocationTargetException {
+      @RequestBody(required = false) ObjectNode body) {
     VaadinServiceData vaadinServiceData = vaadinServices
         .get(serviceName.toLowerCase(Locale.ENGLISH));
     Method methodToInvoke = vaadinServiceData == null ? null
@@ -135,18 +147,25 @@ public class VaadinServiceController {
     } catch (IOException e) {
       return ResponseEntity.badRequest().body(String.format(
           "Unable to deserialize parameters for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
-          serviceName, methodName,
-          Stream.of(javaParameters).map(Parameter::getType).map(Class::getName)
-              .collect(Collectors.joining(", "))));
+          serviceName, methodName, listMethodParameterTypes(javaParameters)));
     }
 
     Object returnValue;
     try {
-      returnValue = methodToInvoke
-          .invoke(vaadinServiceData.getServiceObject(), vaadinServiceParameters);
+      returnValue = methodToInvoke.invoke(vaadinServiceData.getServiceObject(),
+          vaadinServiceParameters);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(String.format(
+          "Received incorrect arguments for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
+          serviceName, methodName, listMethodParameterTypes(javaParameters)));
     } catch (IllegalAccessException e) {
-      // TODO kb return a proper error code instead
-      throw new IllegalStateException(e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(String.format("Service '%s' method '%s' access failure",
+              serviceName, methodName));
+    } catch (InvocationTargetException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(String.format("Service '%s' method '%s' execution failure",
+              serviceName, methodName));
     }
 
     try {
@@ -158,6 +177,11 @@ public class VaadinServiceController {
               "Failed to serialize service '%s' method '%s' response. Double check method's return type or specify a custom mapper bean with qualifier '%s'",
               serviceName, methodName, VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER));
     }
+  }
+
+  private String listMethodParameterTypes(Parameter[] javaParameters) {
+    return Stream.of(javaParameters).map(Parameter::getType).map(Class::getName)
+        .collect(Collectors.joining(", "));
   }
 
   private Object[] getVaadinServiceParameters(List<JsonNode> requestParameters,
