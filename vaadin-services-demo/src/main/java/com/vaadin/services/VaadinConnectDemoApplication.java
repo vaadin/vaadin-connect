@@ -22,7 +22,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * Main class of the Vaadin services demo module.
  */
 @SpringBootApplication
-public class VaadinServicesDemoApplication {
+public class VaadinConnectDemoApplication {
 
   /**
    * Main method to run the application.
@@ -31,6 +31,6 @@ public class VaadinServicesDemoApplication {
    *          arguments
    */
   public static void main(String[] args) {
-    SpringApplication.run(VaadinServicesDemoApplication.class, args);
+    SpringApplication.run(VaadinConnectDemoApplication.class, args);
   }
 }
