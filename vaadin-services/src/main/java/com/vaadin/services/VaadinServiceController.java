@@ -46,6 +46,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * TODO kb
+ */
 @RestController
 public class VaadinServiceController {
   private static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
@@ -75,6 +78,11 @@ public class VaadinServiceController {
     }
   }
 
+  /**
+   * TODO kb
+   * @param vaadinServiceMapper
+   * @param context
+   */
   public VaadinServiceController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       ApplicationContext context) {
@@ -106,17 +114,13 @@ public class VaadinServiceController {
         });
   }
 
-  // @formatter:off
-  // curl -i -H "Content-Type: application/json" -d '' http://localhost:8080/ser/var
-  // curl -i -H "Content-Type: application/json" -d '' http://localhost:8080/testservice/ss
-  // curl -i -H "Content-Type: application/json" -d '' http://localhost:8080/testservice/complexTest
-  // curl -i -H "Content-Type: application/json" -d '{"arg1": [1], "arg2": 2, "arg3": 3.0}' http://localhost:8080/testservice/testMultipleParameters
-
-  // curl -i -H "Content-Type: application/json" -d '' http://localhost:8080/testservice/test
-  // curl -i -H "Content-Type: application/json" -d '{"count": 3}' http://localhost:8080/testservice/complexTest
-  // curl -i -H "Content-Type: application/json" -d '{"arg1": "1", "arg2": 2, "arg3": 3.0}' http://localhost:8080/testservice/testMultipleParameters
-  // curl -i -H "Content-Type: application/json" -d '{"testParam": "test"}' http://localhost:8080/testservice/noReturnValue
-  // @formatter:on
+  /**
+   * TODO kb
+   * @param serviceName
+   * @param methodName
+   * @param body
+   * @return
+   */
   @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
   public ResponseEntity<String> serveVaadinService(
       @PathVariable("service") String serviceName,
