@@ -13,24 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.services;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+package com.vaadin.connect;
 
 /**
- * Main class of the Vaadin services demo module.
+ * Dummy class to verify project setup works.
  */
-@SpringBootApplication
-public class VaadinServicesDemoApplication {
+public class DummyClass {
 
-  /**
-   * Main method to run the application.
-   *
-   * @param args
-   *          arguments
-   */
-  public static void main(String[] args) {
-    SpringApplication.run(VaadinServicesDemoApplication.class, args);
+  protected boolean getTrue() {
+    return true;
   }
 }

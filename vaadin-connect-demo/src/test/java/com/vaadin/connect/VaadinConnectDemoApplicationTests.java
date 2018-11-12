@@ -13,18 +13,19 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.services;
+package com.vaadin.connect;
 
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
-/**
- * Dummy test to verify project setup works
- */
-public class DummyClassTest {
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class VaadinConnectDemoApplicationTests {
+
   @Test
-  public void firstUnitTest() {
-    DummyClass dummyInstance = new DummyClass();
-    Assert.assertTrue(dummyInstance.getTrue());
+  public void contextLoads() {
   }
+
 }
