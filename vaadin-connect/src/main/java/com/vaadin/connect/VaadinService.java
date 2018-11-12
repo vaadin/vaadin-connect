@@ -26,5 +26,11 @@ import org.springframework.stereotype.Component;
 @Retention(RetentionPolicy.RUNTIME)
 @Component
 public @interface VaadinService {
-  String serviceName() default "";
+  /**
+   * The name of a service to use. If nothing is specified, the name of the
+   * annotated class is taken.
+   *
+   * @return the name of the service to use in post requests
+   */
+  String value() default "";
 }

@@ -76,7 +76,7 @@ public class VaadinConnectControllerIT {
         requestObject, String.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    verifyVaadinErrorResponse(response.getBody(), methodName);
+    assertVaadinErrorResponse(response.getBody(), methodName);
   }
 
   @Test
@@ -86,7 +86,7 @@ public class VaadinConnectControllerIT {
         Collections.emptyMap(), String.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    verifyVaadinErrorResponse(response.getBody(), methodName);
+    assertVaadinErrorResponse(response.getBody(), methodName);
   }
 
   @Test
@@ -98,7 +98,7 @@ public class VaadinConnectControllerIT {
         String.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    verifyVaadinErrorResponse(response.getBody(), methodName);
+    assertVaadinErrorResponse(response.getBody(), methodName);
   }
 
   @Test
@@ -196,7 +196,7 @@ public class VaadinConnectControllerIT {
     ResponseEntity<String> response = sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    verifyVaadinErrorResponse(response.getBody(), methodName);
+    assertVaadinErrorResponse(response.getBody(), methodName);
   }
 
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,
@@ -227,7 +227,7 @@ public class VaadinConnectControllerIT {
     }
   }
 
-  private void verifyVaadinErrorResponse(String body, String methodName) {
+  private void assertVaadinErrorResponse(String body, String methodName) {
     assertNotNull(body);
     assertNotNull(methodName);
     assertTrue(
