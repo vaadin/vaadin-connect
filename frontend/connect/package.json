@@ -1,0 +1,61 @@
+{
+  "name": "@vaadin/connect",
+  "version": "0.0.0",
+  "description": "A Vaadin Labs experiment with a secure stateless communication framework",
+  "main": "src/connect.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "yarn run build:bundle && yarn run build:minify",
+    "build:bundle": "rollup -c",
+    "build:minify": "uglifyjs dist/bundle.umd.js -c -m --toplevel --output dist/bundle.umd.min.js",
+    "lint": "eslint src/ test/ *.js",
+    "test": "yarn lint && intern && yarn build && yarn bundlesize",
+    "test:watch": "chokidar \"index.js\" \"src/**/*.js\" -c \"yarn test\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaadin/vaadin-connect.git"
+  },
+  "author": "Vaadin Ltd",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/vaadin/vaadin-connect/issues"
+  },
+  "homepage": "https://github.com/vaadin/vaadin-connect#readme",
+  "devDependencies": {
+    "@babel/core": "^7.1.5",
+    "@babel/preset-env": "^7.1.5",
+    "@babel/register": "^7.0.0",
+    "bundlesize": "^0.17.0",
+    "chokidar-cli": "^1.2.1",
+    "eslint": "^5.8.0",
+    "eslint-config-vaadin": "^0.2.7",
+    "eslint-plugin-chai-expect": "^2.0.1",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "intern": "^4.3.3",
+    "rollup": "^0.67.1",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "uglify-js": "^3.4.9"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": true
+          }
+        }
+      ]
+    ]
+  },
+  "bundlesize": [
+    {
+      "path": "dist/bundle.umd.min.js",
+      "maxSize": "640 kB"
+    }
+  ]
+}
