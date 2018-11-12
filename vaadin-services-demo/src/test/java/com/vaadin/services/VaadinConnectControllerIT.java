@@ -190,6 +190,15 @@ public class VaadinConnectControllerIT {
         response.getBody());
   }
 
+  @Test
+  public void exceptionTest() {
+    String methodName = "throwsException";
+    ResponseEntity<String> response = sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    verifyVaadinErrorResponse(response.getBody(), methodName);
+  }
+
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,
       Object requestData, Class<T> responseType) {
     return template.postForEntity(getRequestUrl(TEST_SERVICE_NAME, methodName),
