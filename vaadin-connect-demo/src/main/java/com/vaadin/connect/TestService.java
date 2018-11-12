@@ -1,4 +1,4 @@
-package com.vaadin.services;
+package com.vaadin.connect;
 
 import java.util.ArrayList;
 import java.util.HashMap;
