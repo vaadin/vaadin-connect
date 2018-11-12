@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-services-parent</artifactId>
+        <artifactId>vaadin-connect-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>vaadin-services</artifactId>
+    <artifactId>vaadin-connect</artifactId>
     <packaging>jar</packaging>
-    <name>Vaadin Services</name>
-    <description>Vaadin Services</description>
+    <name>Vaadin Connect</name>
+    <description>Vaadin Connect</description>
     <url>http://vaadin.com</url>
     <dependencies>
         <dependency>
