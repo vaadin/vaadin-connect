@@ -61,6 +61,10 @@ public class TestService {
   public void noReturnNoArguments() {
   }
 
+  public String throwsException() {
+    throw new IllegalStateException("Ooops");
+  }
+
   public ComplexResponse complexEntitiesTest(ComplexRequest request) {
     Map<Integer, List<String>> results = new HashMap<>();
     for (int i = 0; i < request.count; i++) {
