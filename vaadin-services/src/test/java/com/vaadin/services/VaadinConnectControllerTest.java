@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationContext;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class VaadinServiceControllerTest {
+public class VaadinConnectControllerTest {
   @Rule
   public final ExpectedException exception = ExpectedException.none();
 
@@ -26,6 +26,6 @@ public class VaadinServiceControllerTest {
 
     exception.expect(IllegalStateException.class);
     exception.expectMessage(beanName);
-    new VaadinServiceController(null, contextMock);
+    new VaadinConnectController(null, contextMock);
   }
 }
