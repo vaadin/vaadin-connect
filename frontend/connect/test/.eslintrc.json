@@ -1,0 +1,18 @@
+{
+  "env": {
+    "mocha": true
+  },
+  "globals": {
+    "intern": true,
+    "expect": true
+  },
+  "plugins": [
+    "chai-friendly",
+    "chai-expect"
+  ],
+  "rules": {
+    "chai-expect/missing-assertion": 2,
+    "chai-expect/no-inner-compare": 2,
+    "chai-expect/terminating-properties": 2
+  }
+}
