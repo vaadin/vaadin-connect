@@ -1,0 +1,20 @@
+{
+  "name": "vaadin-services",
+  "private": true,
+  "description": "Vaadin Services monorepo",
+  "repository": "git@github.com:vaadin/vaadin-services.git",
+  "author": "Vaadin Ltd",
+  "license": "Apache-2.0",
+  "workspaces": {
+    "packages": [
+      "frontend/*"
+    ],
+    "nohoist": [
+      "@vaadin/services/**"
+    ]
+  },
+  "scripts": {
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint"
+  }
+}
