@@ -1,51 +1,75 @@
 package com.vaadin.services;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @VaadinService
 public class TestService {
+  public static class ComplexRequest {
+    private final String name;
+    private final int count;
 
-  public String test() {
-    return "test successful";
+    public ComplexRequest(@JsonProperty("name") String name,
+        @JsonProperty("count") int count) {
+      this.name = name;
+      this.count = count;
+    }
   }
 
-  public Map<String, List<TestObject>> complexTest(int count) {
-    Map<String, List<TestObject>> result = new HashMap<>(count, 1);
-    for (int i = 0; i < count; i++) {
-      List<TestObject> inner = new ArrayList<>(count);
-      for (int j = 0; j < i; j++) {
-        inner.add(new TestObject(j));
+  public static class ComplexResponse {
+    private final String name;
+    private final Map<Integer, List<String>> generatedResponse;
+
+    public ComplexResponse(@JsonProperty("name") String name,
+        @JsonProperty("generatedResponse") Map<Integer, List<String>> generatedResponse) {
+      this.name = name;
+      this.generatedResponse = generatedResponse;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
       }
-      result.put(Integer.toString(i), inner);
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ComplexResponse that = (ComplexResponse) o;
+      return Objects.equals(name, that.name)
+          && Objects.equals(generatedResponse, that.generatedResponse);
     }
-    return result;
-  }
 
-  public List<Object> testMultipleParameters(String arg1, int arg2,
-      double arg3) {
-    return Arrays.asList(arg1, arg2, arg3);
-  }
-
-  public void noReturnValue(String testParam) {
-    System.out.println(testParam);
-    // testing that the method invocation is possible
-  }
-
-  public static class TestObject {
-    private final int number;
-
-    @JsonIgnore
-    private final int number2;
-
-    public TestObject(int number) {
-      this.number = number;
-      this.number2 = number;
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, generatedResponse);
     }
+  }
+
+  public int addOne(int number) {
+    return number + 1;
+  }
+
+  private String privateMethod() {
+    return "no-op";
+  }
+
+  public void noReturnNoArguments() {
+  }
+
+  public ComplexResponse complexEntitiesTest(ComplexRequest request) {
+    Map<Integer, List<String>> results = new HashMap<>();
+    for (int i = 0; i < request.count; i++) {
+      List<String> subresults = new ArrayList<>(i);
+      for (int j = 0; j < i; j++) {
+        subresults.add(Integer.toString(j));
+      }
+      results.put(i, subresults);
+    }
+    return new ComplexResponse(request.name, results);
   }
 }
