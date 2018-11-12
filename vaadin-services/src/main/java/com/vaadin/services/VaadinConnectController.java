@@ -50,7 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
  * TODO kb
  */
 @RestController
-public class VaadinServiceController {
+public class VaadinConnectController {
   private static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
   private final ObjectMapper vaadinServiceMapper;
@@ -83,7 +83,7 @@ public class VaadinServiceController {
    * @param vaadinServiceMapper
    * @param context
    */
-  public VaadinServiceController(
+  public VaadinConnectController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       ApplicationContext context) {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper

@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class VaadinServiceControllerIT {
+public class VaadinConnectControllerIT {
   private static final String TEST_SERVICE_NAME = TestService.class
       .getSimpleName();
 
