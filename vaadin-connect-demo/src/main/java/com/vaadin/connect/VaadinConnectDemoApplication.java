@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.services;
+package com.vaadin.connect;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Main class of the Vaadin services demo module.
+ * Main class of the Vaadin connect demo module.
  */
 @SpringBootApplication
 public class VaadinConnectDemoApplication {

@@ -1,4 +1,4 @@
-package com.vaadin.services;
+package com.vaadin.connect;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
