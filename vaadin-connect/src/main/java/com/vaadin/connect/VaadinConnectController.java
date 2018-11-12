@@ -124,11 +124,17 @@ public class VaadinConnectController {
                 name));
           }
 
-          String serviceName = beanType.getSimpleName();
+          String serviceName = Optional
+              .ofNullable(beanType.getAnnotation(VaadinService.class))
+              .map(VaadinService::value).filter(value -> !value.isEmpty())
+              .orElse(beanType.getSimpleName());
           if (serviceName.isEmpty()) {
             throw new IllegalStateException(String.format(
-                "A bean with name '%s' and type '%s' is annotated with '%s' annotation but is an anonymous class. Modify the bean declaration so that it is not an anonymous class",
-                name, beanType, VaadinService.class));
+                "A bean with name '%s' and type '%s' is annotated with '%s' annotation but is an anonymous class hence has no name. ",
+                name, beanType, VaadinService.class)
+                + String.format(
+                    "Either modify the bean declaration so that it is not an anonymous class or specify a service name in the '%s' annotation",
+                    VaadinService.class));
           }
 
           vaadinServices.put(serviceName.toLowerCase(Locale.ENGLISH),
@@ -175,7 +181,7 @@ public class VaadinConnectController {
     Parameter[] javaParameters = methodToInvoke.getParameters();
     if (javaParameters.length != requestParameters.size()) {
       return ResponseEntity.badRequest().body(String.format(
-          "Incorrect number of parameters for service '%s' method '%s', expected: '%s', got: '%s'",
+          "Incorrect number of parameters for service '%s' method '%s', expected: %s, got: %s",
           serviceName, methodName, javaParameters.length,
           requestParameters.size()));
     }
