@@ -47,7 +47,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * TODO kb
+ * The controller that is responsible for processing Vaadin Connect requests.
+ * Each class that is annotated with {@link VaadinService} gets its public
+ * methods exposed so that those can be triggered by a correct POST request,
+ * including the methods inherited from the other classes, excluding
+ * {@link Object} class ones. Other methods (non-public) are not considered by
+ * the controller.
+ * <p>
+ * For example, if a class with name {@code TestClass} that has the only public
+ * method {@code testMethod} was annotated with the annotation, it can be called
+ * via {@literal http://${base_url}/testclass/testmethod} POST call, where
+ * {@literal ${base_url}} is the application base url, configured by the user.
+ * Class name and method name case in the request URL does not matter, but if
+ * the method has parameters, the request body should contain a valid JSON with
+ * all parameters in the same order as they are declared in the method. The
+ * parameter types should also correspond for the request to be successful.
  */
 @RestController
 public class VaadinConnectController {
@@ -79,9 +93,17 @@ public class VaadinConnectController {
   }
 
   /**
-   * TODO kb
+   * A constructor used to initialize the controller.
+   *
    * @param vaadinServiceMapper
+   *          optional bean to override the default {@link ObjectMapper} that is
+   *          used for serializing and deserializing request and response bodies
+   *          Use
+   *          {@link VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER}
+   *          qualifier to override the mapper.
    * @param context
+   *          Spring context to extract beans annotated with
+   *          {@link VaadinService} from
    */
   public VaadinConnectController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
@@ -115,11 +137,25 @@ public class VaadinConnectController {
   }
 
   /**
-   * TODO kb
+   * Captures and processes the Vaadin Service requests.
+   * <p>
+   * Matches the service name and a method name with the corresponding Java
+   * class and a public method in the class. Extracts parameters from a request
+   * body if the Java method requires any and applies in the same order. After
+   * the method call, serializes the Java method execution result and sends it
+   * back.
+   * <p>
+   * If an issue occurs during the request processing, an error response is
+   * returned instead of the serialized Java method return value.
+   *
    * @param serviceName
+   *          the name of a service to address the calls to, not case sensitive
    * @param methodName
+   *          the method name to execute on a service, not case sensitive
    * @param body
-   * @return
+   *          optional request body, that should be specified if the method
+   *          called has parameters
+   * @return execution result as a JSON string or an error message string
    */
   @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
   public ResponseEntity<String> serveVaadinService(
