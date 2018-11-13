@@ -9,10 +9,14 @@
     "loader": {"script": "esm"}
   },
   "node": {
-    "plugins": "@babel/register/lib/node.js",
+    "plugins": ["@babel/register"],
     "reporters+": ["lcov", "htmlcoverage"]
   },
   "instrumenterOptions": {
     "esModules": true
+  },
+  "plugins": {
+    "script": "test/utils.js",
+    "useLoader": true
   }
 }

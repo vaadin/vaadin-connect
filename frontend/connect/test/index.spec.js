@@ -4,7 +4,7 @@ const {expect} = intern.getPlugin('chai');
 import * as index from '../index.js';
 
 describe('index', () => {
-  it('should contain Connect', () => {
-    expect(index.Connect).to.be.ok;
+  it('should contain ConnectClient', () => {
+    expect(index.ConnectClient).to.be.ok;
   });
 });
