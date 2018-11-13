@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect;
+package com.vaadin.connect.demo;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -193,7 +193,8 @@ public class VaadinConnectControllerIT {
   @Test
   public void exceptionTest() {
     String methodName = "throwsException";
-    ResponseEntity<String> response = sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+    ResponseEntity<String> response = sendVaadinServiceRequest(methodName,
+        Collections.emptyMap(), String.class);
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     assertVaadinErrorResponse(response.getBody(), methodName);
