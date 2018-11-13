@@ -16,6 +16,7 @@
     <properties>
         <united.jacoco.exec>${project.build.directory}/jacoco-merged.exec
         </united.jacoco.exec>
+        <sonar.skip>true</sonar.skip>
     </properties>
 
     <dependencies>
