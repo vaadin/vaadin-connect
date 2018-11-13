@@ -13,19 +13,24 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect;
+package com.vaadin.connect.demo;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class VaadinConnectDemoApplicationTests {
+/**
+ * Main class of the Vaadin connect demo module.
+ */
+@SpringBootApplication
+public class VaadinConnectDemoApplication {
 
-  @Test
-  public void contextLoads() {
+  /**
+   * Main method to run the application.
+   *
+   * @param args
+   *          arguments
+   */
+  public static void main(String[] args) {
+    SpringApplication.run(VaadinConnectDemoApplication.class, args);
   }
-
 }
