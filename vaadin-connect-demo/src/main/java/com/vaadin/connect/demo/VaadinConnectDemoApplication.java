@@ -21,6 +21,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 
 import com.vaadin.connect.demo.account.Account;
 import com.vaadin.connect.demo.account.AccountRepository;
@@ -29,6 +32,9 @@ import com.vaadin.connect.demo.account.AccountRepository;
  * Main class of the Vaadin connect demo module.
  */
 @SpringBootApplication
+@EnableAuthorizationServer
+@EnableWebSecurity
+@EnableResourceServer
 public class VaadinConnectDemoApplication {
 
   /**
