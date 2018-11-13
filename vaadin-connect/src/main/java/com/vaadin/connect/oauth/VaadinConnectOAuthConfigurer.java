@@ -22,7 +22,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -35,13 +34,14 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
  * Extend this and provide a proper way for getting users to have your
  * vaadin-connect application authentication working.
  */
-@SuppressWarnings("deprecation")
 public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerAdapter {
-  
-  private final String DEFAULT_CLIENT_APP_NAME = "vaadin-connect-client";
-  private final String DEFAULT_CLIENT_APP_SECRET = "c13nts3cr3t";
-  private final String DEFAULT_SIGNING_KEY = "JustAnySigningK3y";
-  
+
+  private static final String DEFAULT_CLIENT_APP_NAME = "vaadin-connect-client";
+  private static final String DEFAULT_CLIENT_APP_SECRET = "c13nts3cr3t";
+  private static final String DEFAULT_SIGNING_KEY = "JustAnySigningK3y";
+  private static final String[] SCOPES = new String[] {"read", "write"};
+  private static final String[] GRANT_TYPES = new String[] {"password", "refresh_token"};
+
   @Autowired
   private AuthenticationConfiguration authenticationConfiguration;
 
@@ -50,10 +50,10 @@ public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerA
     clients.inMemory()
     .withClient(getClientApp())
     .secret(getClientAppSecret())
-    .scopes("read", "write")
-    .authorizedGrantTypes("password", "refresh_token");
+    .scopes(SCOPES)
+    .authorizedGrantTypes(GRANT_TYPES);
   }
-  
+
   /**
    * @return the client app name
    */
@@ -67,17 +67,20 @@ public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerA
   public String getClientAppSecret() {
     return DEFAULT_CLIENT_APP_SECRET;
   }
-  
+
   /**
    * @return the signing key of the application
    */
   public String getSigningKey() {
     return DEFAULT_SIGNING_KEY;
   }
-  
+
   /**
+   * Return a UserDetails given a username.
+   * Developer must override this method when configuring the app.
+   *
    * @param the username
-   * @return the UserDetails 
+   * @return the UserDetails
    */
   public UserDetails getUserDetails(String username) {
     throw new UsernameNotFoundException(
@@ -109,13 +112,21 @@ public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerA
       .tokenStore(tokenStore())
       .accessTokenConverter(accessTokenConverter());
   }
-  
+
   /**
-   * Override this method if your database uses a custom password encoder
+   * Override this method if your database stores encoded passwords
    */
   @Bean
   public PasswordEncoder passwordEncoder() {
-      return NoOpPasswordEncoder.getInstance();
+    return new PasswordEncoder() {
+      public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        return rawPassword.toString().equals(encodedPassword);
+      }
+
+      public String encode(CharSequence rawPassword) {
+        return rawPassword.toString();
+      }
+    };
   }
 
   /**
@@ -123,13 +134,13 @@ public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerA
    */
   @Bean
   public UserDetailsService userDetailsService() {
-    return username -> getUserDetails(username);
+    return this::getUserDetails;
   }
-  
+
   /**
    * Override this method if you need a custom authentication manager not based in
    * user/password authentication.
-   * 
+   *
    * @return the AuthenticationManager
    * @throws Exception
    */
