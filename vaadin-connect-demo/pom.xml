@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -11,6 +12,12 @@
     <name>Vaadin Connect Demo</name>
     <description>Vaadin Connect Demo</description>
     <url>http://vaadin.com</url>
+
+    <properties>
+        <united.jacoco.exec>${project.build.directory}/jacoco-merged.exec
+        </united.jacoco.exec>
+        <sonar.skip>true</sonar.skip>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -72,15 +79,40 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>jacoco-merge</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}
+                                    </directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>
+                                        ${project.basedir}/../vaadin-connect/target/
+                                    </directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${united.jacoco.exec}</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>jacoco-check</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
                         <configuration>
-                            <excludes>
-                                <exclude>com/vaadin/connect/demo/**/*</exclude>
-                            </excludes>
+                            <dataFile>${united.jacoco.exec}</dataFile>
                             <rules>
                                 <rule implementation="org.jacoco.maven.RuleConfiguration">
                                     <element>BUNDLE</element>
@@ -88,7 +120,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>1.0</minimum>
+                                            <minimum>0.7</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>CLASS</counter>
