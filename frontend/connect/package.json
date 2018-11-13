@@ -2,17 +2,20 @@
   "name": "@vaadin/connect",
   "version": "0.0.0",
   "description": "A Vaadin Labs experiment with a secure stateless communication framework",
-  "main": "src/connect.js",
+  "main": "index.js",
   "directories": {
     "test": "test"
   },
+  "files": [
+    "src/**/*.js"
+  ],
   "scripts": {
     "build": "yarn run build:bundle && yarn run build:minify",
     "build:bundle": "rollup -c",
     "build:minify": "uglifyjs dist/bundle.umd.js -c -m --toplevel --output dist/bundle.umd.min.js",
     "lint": "eslint src/ test/ *.js",
     "test": "yarn lint && intern && yarn build && yarn bundlesize",
-    "test:watch": "chokidar \"index.js\" \"src/**/*.js\" -c \"yarn test\""
+    "test:watch": "chokidar \"index.js\" \"src/**/*.js\" \"test/**/*.js\" -c \"yarn test\""
   },
   "repository": {
     "type": "git",
@@ -34,12 +37,17 @@
     "eslint-config-vaadin": "^0.2.7",
     "eslint-plugin-chai-expect": "^2.0.1",
     "eslint-plugin-chai-friendly": "^0.4.1",
+    "fetch-mock": "^7.2.5",
     "intern": "^4.3.3",
+    "node-fetch": "^2.3.0",
     "rollup": "^0.67.1",
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-node-resolve": "^3.4.0",
+    "sinon": "^7.1.1",
+    "sinon-chai": "^3.2.0",
     "uglify-js": "^3.4.9"
   },
+  "dependencies": {},
   "babel": {
     "presets": [
       [
