@@ -143,7 +143,7 @@ public class VaadinConnectController {
   }
 
   /**
-   * Captures and processes the Vaadin Service requests.
+   * Captures and processes the Vaadin Connect requests.
    * <p>
    * Matches the service name and a method name with the corresponding Java
    * class and a public method in the class. Extracts parameters from a request
