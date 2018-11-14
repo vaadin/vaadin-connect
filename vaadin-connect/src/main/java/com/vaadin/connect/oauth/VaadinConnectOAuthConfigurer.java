@@ -31,8 +31,34 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
 /**
- * Extend this and provide a proper way for getting users to have your
- * vaadin-connect application authentication working.
+ * Class to configure the authentication of a vaadin-connect application
+ *
+ * Configure oauth by Extending this class and overriding methods
+ * <code>
+    @Configuration
+    public class VaadinConnectDemoOAuthConfiguration extends VaadinConnectOAuthConfigurer {
+
+      @Autowired
+      private AccountRepository accountRepository;
+
+      @Bean
+      public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+      }
+
+      @Bean
+      public UserDetailsService userDetailsService() {
+        return username -> this.accountRepository
+          .findByUsername(username)
+          .map(account -> User.builder()
+            .username(account.getUsername())
+            .password(account.getPassword())
+            .roles("USER")
+            .build())
+          .orElseThrow(() -> new UsernameNotFoundException(username));
+      }
+    }
+ * </code>
  */
 public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerAdapter {
 
@@ -109,8 +135,8 @@ public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerA
   public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception{
     // This is required for 'password' grants, which is specified below
     endpoints.authenticationManager(authenticationManager())
-      .tokenStore(tokenStore())
-      .accessTokenConverter(accessTokenConverter());
+    .tokenStore(tokenStore())
+    .accessTokenConverter(accessTokenConverter());
   }
 
   /**
@@ -119,10 +145,12 @@ public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerA
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new PasswordEncoder() {
+      @Override
       public boolean matches(CharSequence rawPassword, String encodedPassword) {
         return rawPassword.toString().equals(encodedPassword);
       }
 
+      @Override
       public String encode(CharSequence rawPassword) {
         return rawPassword.toString();
       }
@@ -144,7 +172,6 @@ public class VaadinConnectOAuthConfigurer extends AuthorizationServerConfigurerA
    * @return the AuthenticationManager
    * @throws Exception
    */
-  @Bean
   public AuthenticationManager authenticationManager() throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
   }
