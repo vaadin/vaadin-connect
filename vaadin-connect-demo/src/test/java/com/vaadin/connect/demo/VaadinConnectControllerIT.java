@@ -34,7 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.vaadin.connect.VaadinConnectControllerConfiguration;
+import com.vaadin.connect.VaadinConnectProperties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -55,7 +55,7 @@ public class VaadinConnectControllerIT {
   private TestRestTemplate template;
 
   @Autowired
-  private VaadinConnectControllerConfiguration vaadinConnectConfiguration;
+  private VaadinConnectProperties vaadinConnectProperties;
 
   @Test
   public void simpleMethodExecutedSuccessfully() {
@@ -213,7 +213,7 @@ public class VaadinConnectControllerIT {
 
   private String getRequestUrl(String serviceName, String methodName) {
     return String.format("http://localhost:%d/%s/%s/%s", port,
-        vaadinConnectConfiguration.getVaadinConnectBaseUrl(), serviceName,
+        vaadinConnectProperties.getVaadinConnectEndpoint(), serviceName,
         methodName);
   }
 

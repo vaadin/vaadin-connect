@@ -2,7 +2,6 @@ package com.vaadin.connect;
 
 import java.lang.reflect.Method;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,25 +15,23 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  */
 @Configuration
 public class VaadinConnectControllerConfiguration {
-  @Value("${vaadin.connect.base.url:/connect}")
-  private String vaadinConnectBaseUrl;
+  private final VaadinConnectProperties vaadinConnectProperties;
 
   /**
-   * Customize the base url that Vaadin Connect services are located at. See
-   * default value in the
-   * {@link VaadinConnectControllerConfiguration#vaadinConnectBaseUrl} field
-   * annotation.
+   * Initializes the connect configuration.
    *
-   * @return base url that should be used to access any Vaadin Connect service
+   * @param vaadinConnectProperties
+   *          Vaadin Connect properties
    */
-  public String getVaadinConnectBaseUrl() {
-    return vaadinConnectBaseUrl;
+  public VaadinConnectControllerConfiguration(
+      VaadinConnectProperties vaadinConnectProperties) {
+    this.vaadinConnectProperties = vaadinConnectProperties;
   }
 
   /**
    * Registers {@link VaadinConnectController} to use
-   * {@link VaadinConnectControllerConfiguration#getVaadinConnectBaseUrl()} as a
-   * base url for all Vaadin Connect services.
+   * {@link VaadinConnectProperties#getVaadinConnectEndpoint()} as an endpoint
+   * for all Vaadin Connect services.
    *
    * @return updated configuration for {@link VaadinConnectController}
    */
@@ -51,7 +48,7 @@ public class VaadinConnectControllerConfiguration {
             if (VaadinConnectController.class
                 .equals(method.getDeclaringClass())) {
               PatternsRequestCondition connectServicePattern = new PatternsRequestCondition(
-                getVaadinConnectBaseUrl())
+                  vaadinConnectProperties.getVaadinConnectEndpoint())
                       .combine(mapping.getPatternsCondition());
 
               mapping = new RequestMappingInfo(mapping.getName(),

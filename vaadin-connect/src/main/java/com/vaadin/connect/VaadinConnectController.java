@@ -65,7 +65,8 @@ import org.springframework.web.bind.annotation.RestController;
  * parameter types should also correspond for the request to be successful.
  */
 @RestController
-@Import(VaadinConnectControllerConfiguration.class)
+@Import({ VaadinConnectControllerConfiguration.class,
+    VaadinConnectProperties.class })
 public class VaadinConnectController {
   private static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
