@@ -32,16 +32,16 @@ public class VaadinConnectDemoOAuthConfiguration extends VaadinConnectOAuthConfi
 
   @Autowired
   private AccountRepository accountRepository;
-  
+
   @Override
   public UserDetails getUserDetails(String username) {
     return this.accountRepository
-      .findByUsername(username)
-      .map(account -> User.builder()
-        .username(account.getUsername())
-        .password(account.getPassword())
-        .roles("USER")
-        .build())
-      .orElseThrow(() -> new UsernameNotFoundException(username));
+        .findByUsername(username)
+        .map(account -> User.builder()
+            .username(account.getUsername())
+            .password(account.getPassword())
+            .roles("USER")
+            .build())
+        .orElseThrow(() -> new UsernameNotFoundException(username));
   }
 }

@@ -33,13 +33,13 @@ public class HelloRestController {
      * A remote method served via the '/hello' path.
      * When the app is correctly configured, it should be served only when
      * authentication and oauth credentials are correctly sent.
-     *  
+     *
      * @param request
      * @return a Hello message
      * @throws AccountNotFoundException
      */
     @GetMapping
-    String sayHello(HttpServletRequest request) throws AccountNotFoundException {
+    String sayHello(HttpServletRequest request) {
         return "Hello Word";
     }
 }
