@@ -15,18 +15,11 @@
  */
 package com.vaadin.connect.demo;
 
-import java.util.Arrays;
-
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
-
-import com.vaadin.connect.demo.account.Account;
-import com.vaadin.connect.demo.account.AccountRepository;
 
 /**
  * Main class of the Vaadin connect demo module.
@@ -45,11 +38,5 @@ public class VaadinConnectDemoApplication {
    */
   public static void main(String[] args) {
     SpringApplication.run(VaadinConnectDemoApplication.class, args);
-  }
-
-  @Bean
-  CommandLineRunner init(AccountRepository accountRepository) {
-    return args -> Arrays.asList("manolo", "viktor", "kirill", "anton", "tien")
-        .forEach(username -> accountRepository.save(new Account(username, "abc123")));
   }
 }

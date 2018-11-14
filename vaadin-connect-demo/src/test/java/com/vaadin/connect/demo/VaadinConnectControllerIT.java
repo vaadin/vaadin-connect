@@ -22,17 +22,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import com.vaadin.connect.oauth.VaadinConnectOAuthConfigurer;
 
 import com.vaadin.connect.VaadinConnectProperties;
 
@@ -47,6 +56,7 @@ import static org.junit.Assert.assertTrue;
 public class VaadinConnectControllerIT {
   private static final String TEST_SERVICE_NAME = TestService.class
       .getSimpleName();
+  private static boolean tokenInjected = false;
 
   @LocalServerPort
   private int port;
@@ -56,6 +66,58 @@ public class VaadinConnectControllerIT {
 
   @Autowired
   private VaadinConnectProperties vaadinConnectProperties;
+
+  @Autowired
+  private VaadinConnectOAuthConfigurer oAuthConfigurer;
+
+  @Before
+  public void authenticate() {
+    if (!tokenInjected) {
+      String accessToken = getAccessToken();
+      template.getRestTemplate().getInterceptors()
+          .add((request, body, execution) -> {
+            request.getHeaders().setBearerAuth(accessToken);
+            return execution.execute(request, body);
+          });
+      tokenInjected = true;
+    }
+  }
+
+  private String getAccessToken() {
+    List<ClientHttpRequestInterceptor> interceptors = template.getRestTemplate()
+        .getInterceptors();
+    ClientHttpRequestInterceptor getAccessTokenInterceptor = (request, body,
+        execution) -> {
+      HttpHeaders headers = request.getHeaders();
+      headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+      headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+      headers.setBasicAuth(oAuthConfigurer.getClientApp(),
+          oAuthConfigurer.getClientAppSecret());
+      return execution.execute(request, body);
+    };
+
+    interceptors.add(getAccessTokenInterceptor);
+    ResponseEntity<Map> response = template.postForEntity(
+        String.format("http://localhost:%d/oauth/token", port),
+        getTokenRequest(), Map.class);
+    interceptors.remove(getAccessTokenInterceptor);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    return Optional.ofNullable(response.getBody())
+        .map(body -> body.get("access_token")).map(Object::toString)
+        .orElseThrow(() -> new AssertionError(
+            "Did not get an access token from access token request"));
+  }
+
+  private MultiValueMap<String, String> getTokenRequest() {
+    MultiValueMap<String, String> getTokenRequest = new LinkedMultiValueMap<>();
+    getTokenRequest.put("username", Collections
+        .singletonList(VaadinConnectDemoOAuthConfiguration.TEST_LOGIN));
+    getTokenRequest.put("password", Collections
+        .singletonList(VaadinConnectDemoOAuthConfiguration.TEST_PASSWORD));
+    getTokenRequest.put("grant_type", Collections.singletonList("password"));
+    return getTokenRequest;
+  }
 
   @Test
   public void simpleMethodExecutedSuccessfully() {
