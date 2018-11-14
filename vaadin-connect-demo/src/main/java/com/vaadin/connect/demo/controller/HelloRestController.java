@@ -39,7 +39,7 @@ public class HelloRestController {
      * @throws AccountNotFoundException
      */
     @GetMapping
-    String sayHello(HttpServletRequest request) throws AccountNotFoundException {
+    String sayHello(HttpServletRequest request) {
         return "Hello Word";
     }
 }
