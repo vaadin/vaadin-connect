@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -64,6 +65,8 @@ import org.springframework.web.bind.annotation.RestController;
  * parameter types should also correspond for the request to be successful.
  */
 @RestController
+@Import({ VaadinConnectControllerConfiguration.class,
+    VaadinConnectProperties.class })
 public class VaadinConnectController {
   private static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
