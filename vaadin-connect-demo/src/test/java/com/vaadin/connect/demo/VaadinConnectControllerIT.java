@@ -212,7 +212,7 @@ public class VaadinConnectControllerIT {
   }
 
   private String getRequestUrl(String serviceName, String methodName) {
-    return String.format("http://localhost:%d/%s/%s/%s", port,
+    return String.format("http://localhost:%d%s/%s/%s", port,
         vaadinConnectProperties.getVaadinConnectEndpoint(), serviceName,
         methodName);
   }
