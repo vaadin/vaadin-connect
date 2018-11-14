@@ -52,6 +52,9 @@ public class VaadinConnectControllerIT {
   @Autowired
   private TestRestTemplate template;
 
+  @Autowired
+  private String vaadinConnectBaseUrl;
+
   @Test
   public void simpleMethodExecutedSuccessfully() {
     int argument = 3;
@@ -207,8 +210,8 @@ public class VaadinConnectControllerIT {
   }
 
   private String getRequestUrl(String serviceName, String methodName) {
-    return String.format("http://localhost:%d/%s/%s", port, serviceName,
-        methodName);
+    return String.format("http://localhost:%d/%s/%s/%s", port,
+        vaadinConnectBaseUrl, serviceName, methodName);
   }
 
   private void checkMethodPresenceInService(String method,
