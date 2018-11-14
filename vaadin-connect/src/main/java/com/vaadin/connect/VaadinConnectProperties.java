@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties("vaadin.connect")
 public class VaadinConnectProperties {
-  @Value("${vaadin.connect.endpoint:/connect}")
+  @Value("${vaadin.connect.endpoint:connect}")
   private String vaadinConnectEndpoint;
 
   /**
