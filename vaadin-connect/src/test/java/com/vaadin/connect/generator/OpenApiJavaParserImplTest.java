@@ -52,12 +52,13 @@ public class OpenApiJavaParserImplTest {
     OpenAPI openAPI = generator.generateOpenApi();
 
     String expectedJson = getExpectedJson();
+    Json.prettyPrint(openAPI);
     Assert.assertEquals(expectedJson, Json.pretty(openAPI));
   }
 
   private String getExpectedJson() {
     try (InputStream input = OpenApiJavaParserImplTest.class
-      .getResourceAsStream("openapi.json")) {
+      .getResourceAsStream("expected-openapi.json")) {
       return new BufferedReader(new InputStreamReader(input)).lines()
         .collect(Collectors.joining("\n"));
     } catch (IOException e) {

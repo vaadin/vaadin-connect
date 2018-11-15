@@ -1,12 +1,12 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "Demo Application",
+    "title" : "Test title",
     "version" : "0.0.1"
   },
   "servers" : [ {
-    "url" : "http://localhost:8080",
-    "description" : "Demo server"
+    "url" : "https://server.test",
+    "description" : "Test description"
   } ],
   "paths" : {
     "/generatortestclass/getallusers" : {
