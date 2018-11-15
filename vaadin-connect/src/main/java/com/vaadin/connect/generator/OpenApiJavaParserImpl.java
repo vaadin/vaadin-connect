@@ -88,9 +88,12 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
   @Override
   public void setSourcePath(Path sourcePath) {
-    if (sourcePath == null || !sourcePath.toFile().isDirectory()) {
+    if (sourcePath == null) {
       throw new IllegalArgumentException(
         "Java source path must be a valid directory");
+    }
+    if (!sourcePath.toFile().exists()) {
+      throw new IllegalArgumentException("Java source path is not existed");
     }
     this.javaSourcePath = sourcePath;
   }
@@ -144,7 +147,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
     Info info = new Info();
     info.setTitle(configuration.getApplicationTitle());
-    info.setVersion(configuration.getApplicationVersion());
+    info.setVersion(configuration.getApplicationApiVersion());
     openAPI.setInfo(info);
 
     Paths paths = new Paths();
