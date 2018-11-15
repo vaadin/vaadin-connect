@@ -1,1 +1,1 @@
-export {Connect} from './src/connect.js';
+export {ConnectClient} from './src/connect-client.js';
