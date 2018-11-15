@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties("vaadin.connect")
 public class VaadinConnectProperties {
+
   @Value("${vaadin.connect.endpoint:/connect}")
   private String vaadinConnectEndpoint;
 
@@ -22,5 +23,31 @@ public class VaadinConnectProperties {
    */
   public String getVaadinConnectEndpoint() {
     return vaadinConnectEndpoint;
+  }
+
+  @Value("${vaadin.connect.client.name:vaadin-connect-client}")
+  private String vaadinConnectClientAppname;
+
+  /**
+   * Customize the application client name used in oauth.
+   * Default see {@link VaadinConnectProperties#vaadinConnectClientAppname}.
+   *
+   * @return client application name
+   */
+  public String getVaadinConnectClientAppname() {
+    return vaadinConnectClientAppname;
+  }
+
+  @Value("${vaadin.connect.client.secret:c13nts3cr3t}")
+  private String vaadinConnectClientSecret;
+
+  /**
+   * Customize the application client secret used in oauth.
+   * Default see {@link VaadinConnectProperties#vaadinConnectClientAppname}.
+   *
+   * @return client application secret
+   */
+  public String getVaadinConnectClientSecret() {
+    return vaadinConnectClientSecret;
   }
 }
