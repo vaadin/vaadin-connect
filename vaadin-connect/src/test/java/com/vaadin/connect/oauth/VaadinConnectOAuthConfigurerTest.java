@@ -28,6 +28,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.test.web.servlet.ResultActions;
@@ -133,9 +134,15 @@ public class VaadinConnectOAuthConfigurerTest {
   protected static class ConfigureUserDetailsService {
     @Bean
     public UserDetailsService userDetailsService() {
+      // Password in database should be BCrypted by default.
+      String crypted = new BCryptPasswordEncoder().encode("bar");
+
       return username -> {
         if (username.equals("foo")) {
-          return User.builder().username("foo").password("bar").roles("baz")
+          return User.builder()
+              .username("foo")
+              .password(crypted)
+              .roles("baz")
               .build();
         } else {
           return null;
@@ -258,8 +265,7 @@ public class VaadinConnectOAuthConfigurerTest {
         @Override
         public boolean matches(CharSequence rawPassword,
             String encodedPassword) {
-          return encodedPassword.equals(rawPassword.toString())
-              || encodedPassword.equals(this.encode(rawPassword));
+          return encodedPassword.equals(this.encode(rawPassword));
         }
 
         @Override

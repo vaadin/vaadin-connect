@@ -17,13 +17,13 @@ package com.vaadin.connect.demo;
 
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.vaadin.connect.demo.account.Account;
 import com.vaadin.connect.demo.account.AccountRepository;
@@ -38,23 +38,26 @@ public class VaadinConnectDemoOAuthConfiguration
   static final String TEST_LOGIN = "test_login";
   static final String TEST_PASSWORD = "test_password";
 
-  @Autowired
-  private AccountRepository accountRepository;
-  
+
   @Bean
-  public UserDetailsService userDetailsService() {
-    return username -> this.accountRepository.findByUsername(username)
+  public UserDetailsService userDetailsService(AccountRepository accountRepository) {
+    return username -> accountRepository.findByUsername(username)
         .map(account -> User.builder().username(account.getUsername())
             .password(account.getPassword()).roles("USER").build())
         .orElseThrow(() -> new UsernameNotFoundException(username));
   }
 
   @Bean
-  CommandLineRunner init(AccountRepository accountRepository) {
+  CommandLineRunner init(
+      AccountRepository accountRepository,
+      PasswordEncoder encoder) {
     return args -> {
-      Stream.of("manolo", "viktor", "kirill", "anton", "tien").forEach(
-          username -> accountRepository.save(new Account(username, "abc123")));
-      accountRepository.save(new Account(TEST_LOGIN, TEST_PASSWORD));
+      Stream.of("manolo", "viktor", "kirill", "anton", "tien")
+          .forEach(username -> accountRepository
+              .save(new Account(username, encoder.encode("abc123"))));
+
+      accountRepository
+          .save(new Account(TEST_LOGIN, encoder.encode(TEST_PASSWORD)));
     };
   }
 }
