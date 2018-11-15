@@ -14,6 +14,12 @@ public class VaadinConnectProperties {
   @Value("${vaadin.connect.endpoint:/connect}")
   private String vaadinConnectEndpoint;
 
+  @Value("${vaadin.connect.client.name:vaadin-connect-client}")
+  private String vaadinConnectClientAppname;
+
+  @Value("${vaadin.connect.client.secret:c13nts3cr3t}")
+  private String vaadinConnectClientSecret;
+
   /**
    * Customize the endpoint for all Vaadin Connect services. See default value
    * in the {@link VaadinConnectProperties#vaadinConnectEndpoint} field
@@ -25,9 +31,6 @@ public class VaadinConnectProperties {
     return vaadinConnectEndpoint;
   }
 
-  @Value("${vaadin.connect.client.name:vaadin-connect-client}")
-  private String vaadinConnectClientAppname;
-
   /**
    * Customize the application client name used in oauth.
    * Default see {@link VaadinConnectProperties#vaadinConnectClientAppname}.
@@ -37,9 +40,6 @@ public class VaadinConnectProperties {
   public String getVaadinConnectClientAppname() {
     return vaadinConnectClientAppname;
   }
-
-  @Value("${vaadin.connect.client.secret:c13nts3cr3t}")
-  private String vaadinConnectClientSecret;
 
   /**
    * Customize the application client secret used in oauth.

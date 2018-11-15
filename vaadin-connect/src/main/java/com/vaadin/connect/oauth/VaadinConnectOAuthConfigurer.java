@@ -39,11 +39,10 @@ import com.vaadin.connect.VaadinConnectProperties;
 /**
  * Class to configure the authentication of a vaadin-connect application
  *
- * Configure oauth by adding the {@link EnableVaadinConnectOAuthServer}
- * annotation to your application and defining a Bean for either
+ * Configure oauth by extending or importing this, and defining a Bean for either
  * {@link UserDetailsService} or {@link AuthenticationManager}.
  *
- * <code>
+ * <pre class="code">
     &#64;Configuration
     public class MyVaadinConnectConfiguration {
       &#64;Autowired
@@ -77,7 +76,7 @@ import com.vaadin.connect.VaadinConnectProperties;
         };
       }
     }
- * </code>
+ * </pre>
  */
 @Import({ VaadinConnectProperties.class })
 @Component
@@ -86,7 +85,7 @@ public class VaadinConnectOAuthConfigurer
 
   private static final String DEFAULT_SIGNING_KEY = "JustAnySigningK3y";
   private static final String[] SCOPES = new String[] { "read", "write" };
-  private static final String[] GRANT_TYPES = 
+  private static final String[] GRANT_TYPES =
       new String[] { "password", "refresh_token" };
 
   @Autowired
@@ -142,7 +141,7 @@ public class VaadinConnectOAuthConfigurer
       return authenticationConfiguration.getAuthenticationManager();
     }
   }
-  
+
   @Configuration
   @ConditionalOnMissingBean(PasswordEncoder.class)
   protected static class PasswordEncoderConfiguration {
@@ -159,6 +158,6 @@ public class VaadinConnectOAuthConfigurer
           return rawPassword.toString();
         }
       };
-    }    
-  }  
+    }
+  }
 }
