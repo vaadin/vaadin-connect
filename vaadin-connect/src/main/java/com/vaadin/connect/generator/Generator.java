@@ -59,8 +59,8 @@ public class Generator {
       inputPath = Paths.get(args[0]);
     } else {
       inputPath = CodeGenerationUtils.mavenModuleRoot(Generator.class)
-        .resolveSibling(
-          "vaadin-connect-demo/src/main/java/com/vaadin/connect/demo");
+        .resolve(
+          "src/test/java/com/vaadin/connect/generator/");
     }
     OpenApiGenerator generator = new OpenApiJavaParserImpl();
 
