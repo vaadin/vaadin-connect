@@ -21,7 +21,7 @@ package com.vaadin.connect.generator;
 public class OpenApiConfiguration {
 
   private final String applicationTitle;
-  private final String applicationVersion;
+  private final String applicationApiVersion;
   private final String serverUrl;
   private final String serverDescription;
 
@@ -30,17 +30,17 @@ public class OpenApiConfiguration {
    *
    * @param applicationTitle
    *         Title of the application
-   * @param applicationVersion
-   *         Version of the application
+   * @param applicationApiVersion
+   *         api version of the application
    * @param serverUrl
    *         Base url of the application
    * @param serverDescription
    *         Description of the server
    */
   public OpenApiConfiguration(String applicationTitle,
-    String applicationVersion, String serverUrl, String serverDescription) {
+    String applicationApiVersion, String serverUrl, String serverDescription) {
     this.applicationTitle = applicationTitle;
-    this.applicationVersion = applicationVersion;
+    this.applicationApiVersion = applicationApiVersion;
     this.serverUrl = serverUrl;
     this.serverDescription = serverDescription;
   }
@@ -55,12 +55,12 @@ public class OpenApiConfiguration {
   }
 
   /**
-   * Get application version
+   * Get application api version
    *
-   * @return application version
+   * @return application api version
    */
-  public String getApplicationVersion() {
-    return applicationVersion;
+  public String getApplicationApiVersion() {
+    return applicationApiVersion;
   }
 
   /**
