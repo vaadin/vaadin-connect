@@ -15,8 +15,6 @@
  */
 package com.vaadin.connect.oauth;
 
-import static org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance;
-
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -27,6 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -41,8 +40,12 @@ import com.vaadin.connect.VaadinConnectProperties;
 /**
  * Class to configure the authentication of a vaadin-connect application
  *
- * Configure oauth by extending or importing this, and defining a Bean for either
+ * Configure oauth by extending or importing this, and defining either
  * {@link UserDetailsService} or {@link AuthenticationManager}.
+ *
+ * This configurator automatically register a {@Link BCryptPasswordEncoder}.
+ * If you store passwords in your database using another encoding algorithm
+ * define your own {@Link PasswordEncoder}
  *
  * <pre class="code">
     &#64;Configuration
@@ -94,6 +97,9 @@ public class VaadinConnectOAuthConfigurer
   private AuthenticationConfiguration authenticationConfiguration;
 
   @Autowired
+  private PasswordEncoder encoder;
+
+  @Autowired
   private VaadinConnectProperties vaadinConnectProperties;
 
   @Autowired
@@ -113,7 +119,8 @@ public class VaadinConnectOAuthConfigurer
       throws Exception {
     clients.inMemory()
         .withClient(vaadinConnectProperties.getVaadinConnectClientAppname())
-        .secret(vaadinConnectProperties.getVaadinConnectClientSecret())
+        .secret(encoder
+            .encode(vaadinConnectProperties.getVaadinConnectClientSecret()))
         .scopes(SCOPES)
         .authorizedGrantTypes(GRANT_TYPES);
   }
@@ -148,10 +155,8 @@ public class VaadinConnectOAuthConfigurer
   @ConditionalOnMissingBean(PasswordEncoder.class)
   protected static class PasswordEncoderConfiguration {
     @Bean
-    @SuppressWarnings("deprecation")
     public PasswordEncoder passwordEncoder() {
-      // Using static import here to skip sonar lint.
-      return getInstance();
+      return new BCryptPasswordEncoder();
     }
   }
 }
