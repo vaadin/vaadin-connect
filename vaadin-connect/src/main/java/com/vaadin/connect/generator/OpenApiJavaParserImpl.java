@@ -185,8 +185,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     for (Map.Entry<String, PathItem> entry : pathItems.entrySet()) {
       String methodName = entry.getKey();
       PathItem pathItem = entry.getValue();
-      String pathName = "/" + className.toLowerCase(Locale.ENGLISH) + "/" +
-        methodName.toLowerCase(Locale.ENGLISH);
+      String pathName = "/" + className + "/" +
+        methodName;
       openApiModel.getPaths().addPathItem(pathName, pathItem);
     }
   }
