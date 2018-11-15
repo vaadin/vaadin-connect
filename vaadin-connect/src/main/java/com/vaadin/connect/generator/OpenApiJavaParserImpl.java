@@ -30,6 +30,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
@@ -283,6 +285,10 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
         }
       }
     });
+    if (StringUtils.isBlank(successfulResponse.getDescription())) {
+      successfulResponse
+        .setDescription("Request has been processed without any return result");
+    }
     if (!methodDeclaration.getType().isVoidType()) {
       MediaType mediaItem = createReturnMediaType(methodDeclaration);
       successfulContent.addMediaType("application/json", mediaItem);
@@ -364,7 +370,13 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     } else if (MAP_TYPES.contains(typeName)) {
       return createMapSchema(javaType);
     }
-    return new ObjectSchema().$ref(javaType.asString());
+    return createUserBeanSchema(javaType);
+  }
+
+  private Schema createUserBeanSchema(Type javaType) {
+    String userType = javaType.asString();
+    usedSchemas.add(userType);
+    return new ObjectSchema().$ref(userType);
   }
 
   private String getTypeName(Type javaType) {
