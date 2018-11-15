@@ -19,14 +19,13 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -149,7 +148,8 @@ public class VaadinConnectOAuthConfigurerTest {
   @EnableWebSecurity
   @EnableAuthorizationServer
   @EnableWebMvc
-  protected static class EnableVaadinOauth extends VaadinConnectOAuthConfigurer {
+  @Import(VaadinConnectOAuthConfigurer.class)
+  protected static class EnableVaadinOauth {
   }
 
   /**
@@ -289,16 +289,9 @@ public class VaadinConnectOAuthConfigurerTest {
   @Configuration
   protected static class CustomAuthenticationManager implements TestRunner {
     @Bean
-    AuthenticationManager AuthenticationManager() {
-      return new AuthenticationManager() {
-        @Override
-        public Authentication authenticate(Authentication auth)
-            throws AuthenticationException {
-
-          return new UsernamePasswordAuthenticationToken(
-              auth.getName(), auth.getCredentials(), new ArrayList<>());
-        }
-      };
+    AuthenticationManager authenticationManager() {
+      return auth -> new UsernamePasswordAuthenticationToken(
+        auth.getName(), auth.getCredentials(), new ArrayList<>());
     }
 
     @Override
