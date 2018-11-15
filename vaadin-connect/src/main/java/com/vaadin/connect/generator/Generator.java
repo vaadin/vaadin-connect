@@ -23,8 +23,6 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.github.javaparser.utils.CodeGenerationUtils;
-
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 
@@ -34,19 +32,22 @@ import io.swagger.v3.oas.models.OpenAPI;
 public class Generator {
 
   /**
-   * This class will take the first program argument as the java source path
-   * that will be parsed to OpenApi spec. If the argument is not provided, the
-   * default path to the TestService of `vaadin-connect-demo` module will be
-   * used.
+   * This main method will take:
+   * <ul>
+   * <li>The first program argument as the java source path
+   * that will be parsed to OpenApi spec. Default value:
+   * "/<current-directory/src/main/java"
+   * </li>
+   * <li>
+   * The second program argument as the output path of the generated OpenApi
+   * json. Default value: "/<current-directory/target/generated-resources/openapi.json"
+   * </li>
+   * </ul>
    *
    * <pre>
-   * Example:
-   *
-   *  - Running the program with input
-   * "/home/user/source/to-be-parsed-java-source/"
-   *
-   *  - Output: /project-dir/vaadin-connect/target/generated-resources
-   *  /openapi.json
+   * Example usage:
+   * `java -cp vaadin-connect.jar com.vaadin.connect.generator.Generator
+   * "/home/user/my-input-source/" "/home/user/output/openapi.json"`
    *
    * </pre>
    *
@@ -55,12 +56,17 @@ public class Generator {
    */
   public static void main(String[] args) {
     Path inputPath;
+    Path outputPath;
     if (args.length >= 1) {
       inputPath = Paths.get(args[0]);
     } else {
-      inputPath = CodeGenerationUtils.mavenModuleRoot(Generator.class)
-        .resolve(
-          "src/test/java/com/vaadin/connect/generator/");
+      inputPath = Paths.get("src/main/java").toAbsolutePath();
+    }
+    if (args.length >= 2) {
+      outputPath = Paths.get(args[0]);
+    } else {
+      outputPath = Paths.get("target/generated-resources/openapi.json")
+        .toAbsolutePath();
     }
     OpenApiGenerator generator = new OpenApiJavaParserImpl();
 
@@ -69,14 +75,16 @@ public class Generator {
     generator.setOpenApiConfiguration(
       new OpenApiConfiguration("Demo Application", "0.0.1",
         "http://localhost:8080", "Demo server"));
+
+    System.out.println("Parsing java files from " + inputPath.toString());
     OpenAPI openAPI = generator.generateOpenApi();
 
-    writeToFile(openAPI);
+    System.out.println("Writing output to " + outputPath.toString());
+    writeToFile(openAPI, outputPath);
   }
 
-  private static void writeToFile(OpenAPI openAPI) {
-    Path outputPath = CodeGenerationUtils.mavenModuleRoot(Generator.class)
-      .resolve("target/generated-resources/openapi.json");
+  private static void writeToFile(OpenAPI openAPI, Path outputPath) {
+
     try {
       File parentFolder = outputPath.toFile().getParentFile();
       if (!parentFolder.exists()) {
@@ -88,7 +96,7 @@ public class Generator {
       Files.write(outputPath, Json.pretty(openAPI).getBytes());
     } catch (IOException e) {
       Logger.getLogger(Generator.class.getName())
-        .log(Level.WARNING, "Can't write to file", e);
+        .log(Level.SEVERE, "Can't write to file", e);
     }
   }
 }
