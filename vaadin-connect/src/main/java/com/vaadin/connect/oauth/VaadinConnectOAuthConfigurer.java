@@ -40,47 +40,58 @@ import com.vaadin.connect.VaadinConnectProperties;
 /**
  * Class to configure the authentication of a vaadin-connect application
  *
- * Configure oauth by extending or importing this, and defining either
- * {@link UserDetailsService} or {@link AuthenticationManager}.
- *
- * This configurator automatically register a {@link BCryptPasswordEncoder}.
- * If you store passwords in your database using another encoding algorithm
- * define your own {@link PasswordEncoder}
+ * Configure oauth by annotating your app with the
+ * {@link EnableVaadinConnectOAuthServer} and defining either a
+ * {@link UserDetailsService} or a {@link AuthenticationManager} Bean.
  *
  * <pre class="code">
-    &#64;Configuration
-    public class MyVaadinConnectConfiguration {
-      &#64;Autowired
-      private AccountRepository accountRepository;
-
-      &#64;Bean
-      public UserDetailsService userDetailsService() {
-        return username -> this.accountRepository
-          .findByUsername(username)
-          .map(account -> User.builder()
-            .username(account.getUsername())
-            .password(account.getPassword())
-            .roles("USER")
-            .build())
-          .orElseThrow(() -> new UsernameNotFoundException(username));
-      }
-    }
-
-    &#64;Configuration
-    public class MyVaadinConnectConfiguration {
-      &#64;Bean
-      AuthenticationManager AuthenticationManager() {
-        return new AuthenticationManager() {
-          &#64;Override
-          public Authentication authenticate(Authentication auth)
-              throws AuthenticationException {
-
-            return new UsernamePasswordAuthenticationToken(
-                auth.getName(), auth.getCredentials(), new ArrayList<>());
-          }
-        };
-      }
-    }
+ * &#64;Configuration
+ * public class MyApplicationConfiguration {
+ *   &#64;Autowired
+ *   private AccountRepository accountRepository;
+ *
+ *   &#64;Bean
+ *   public UserDetailsService userDetailsService() {
+ *     return username -> this.accountRepository
+ *         .findByUsername(username)
+ *         .map(account -> User.builder()
+ *             .username(account.getUsername())
+ *             .password(account.getPassword())
+ *             .roles("USER")
+ *             .build())
+ *         .orElseThrow(() -> new UsernameNotFoundException(username));
+ *   }
+ * }
+ *
+ * &#64;Configuration
+ * public class MyApplicationConfiguration {
+ *   &#64;Bean
+ *   AuthenticationManager authenticationManager() {
+ *     return new AuthenticationManager() {
+ *       &#64;Override
+ *       public Authentication authenticate(Authentication auth)
+ *           throws AuthenticationException {
+ *
+ *         return new UsernamePasswordAuthenticationToken(
+ *             auth.getName(), auth.getCredentials(), new ArrayList<>());
+ *       }
+ *     };
+ *   }
+ * }
+ * </pre>
+ *
+ * This configurator automatically register a {@link BCryptPasswordEncoder}. If
+ * you store passwords in your database using another encoding algorithm define
+ * your own {@link PasswordEncoder} Bean.
+ *
+ * <pre class="code">
+ * public class MyApplicationConfiguration {
+ *   &#64;Bean
+ *   public PasswordEncoder passwordEncoder() {
+ *     // When using plain passwords stored in user database
+ *     return NoOpPasswordEncoder.getInstance();
+ *   }
+ * }
  * </pre>
  */
 @Import({ VaadinConnectProperties.class })
@@ -105,13 +116,16 @@ public class VaadinConnectOAuthConfigurer
   @Autowired
   private ApplicationContext applicationContext;
 
+  @Autowired
+  private JwtAccessTokenConverter accessTokenConverter;
+
   @Override
   public void configure(AuthorizationServerEndpointsConfigurer endpoints)
       throws Exception {
     // This is required for 'password' grants, which is specified below
     endpoints.authenticationManager(authenticationManager())
         .tokenStore(tokenStore())
-        .accessTokenConverter(accessTokenConverter());
+        .accessTokenConverter(accessTokenConverter);
   }
 
   @Override
@@ -140,7 +154,7 @@ public class VaadinConnectOAuthConfigurer
    */
   @Bean
   public TokenStore tokenStore() {
-    return new JwtTokenStore(accessTokenConverter());
+    return new JwtTokenStore(accessTokenConverter);
   }
 
   private AuthenticationManager authenticationManager() throws Exception {
