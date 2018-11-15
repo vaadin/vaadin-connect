@@ -15,9 +15,12 @@
  */
 package com.vaadin.connect.oauth;
 
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -29,6 +32,7 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.stereotype.Component;
 
 import com.vaadin.connect.VaadinConnectProperties;
 
@@ -38,9 +42,6 @@ import com.vaadin.connect.VaadinConnectProperties;
  * Configure oauth by adding the {@link EnableVaadinConnectOAuthServer}
  * annotation to your application and defining a Bean for either
  * {@link UserDetailsService} or {@link AuthenticationManager}.
- *
- * For overriding the {@link PasswordEncoder} default implementation, you need to
- * extend this class and override the  {@link VaadinConnectOAuthConfigurer#passwordEncoder} method.
  *
  * <code>
     &#64;Configuration
@@ -76,17 +77,10 @@ import com.vaadin.connect.VaadinConnectProperties;
         };
       }
     }
-
-    &#64;Configuration
-    public class MyVaadinConnectConfiguration extends VaadinConnectOAuthConfigurer {
-      &#64;Bean
-      PasswordEncoder passwordEncoder() {
-        return new new BCryptPasswordEncoder();
-      }
-    }
  * </code>
  */
 @Import({ VaadinConnectProperties.class })
+@Component
 public class VaadinConnectOAuthConfigurer
     extends AuthorizationServerConfigurerAdapter {
 
@@ -141,29 +135,30 @@ public class VaadinConnectOAuthConfigurer
     return new JwtTokenStore(accessTokenConverter());
   }
 
-  /**
-   * Override this method if your database stores encoded passwords
-   */
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new PasswordEncoder() {
-      @Override
-      public boolean matches(CharSequence rawPassword, String encodedPassword) {
-        return rawPassword.toString().equals(encodedPassword);
-      }
-
-      @Override
-      public String encode(CharSequence rawPassword) {
-        return rawPassword.toString();
-      }
-    };
-  }
-
   private AuthenticationManager authenticationManager() throws Exception {
     try {
       return applicationContext.getBean(AuthenticationManager.class);
-    } catch (Exception e) {
+    } catch (NoSuchBeanDefinitionException e) {
       return authenticationConfiguration.getAuthenticationManager();
     }
   }
+  
+  @Configuration
+  @ConditionalOnMissingBean(PasswordEncoder.class)
+  protected static class PasswordEncoderConfiguration {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+      return new PasswordEncoder() {
+        @Override
+        public boolean matches(CharSequence rawPassword, String encodedPassword) {
+          return rawPassword.toString().equals(encodedPassword);
+        }
+
+        @Override
+        public String encode(CharSequence rawPassword) {
+          return rawPassword.toString();
+        }
+      };
+    }    
+  }  
 }

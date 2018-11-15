@@ -76,12 +76,12 @@ public class VaadinConnectOAuthConfigurerTest {
         { "Should not produce a valid token if client secret is incorrect",
           null,
           Arrays.asList(EnableSpringWebSecurity.class, ConfiguredVaadinOauth.class, InvalidSecretTest.class) },
-        { "Should produce a valid token when overriding VaadinConnectOAuthConfigurer with custom UserDetailsService and PasswordEncoder",
+        { "Should produce a valid token when providing custom UserDetailsService and PasswordEncoder",
           null,
-          Arrays.asList(EnableSpringWebSecurity.class, OverrideVaadinOauthConfigTest.class) },
+          Arrays.asList(EnableSpringWebSecurity.class, ConfiguredVaadinOauth.class, CustomUserDetailsPasswordTest.class) },
         { "Should produce a valid token when providing a custom AuthenticationManage",
             null,
-            Arrays.asList(EnableSpringWebSecurity.class, CustomAuthenticationManager.class) },
+            Arrays.asList(EnableSpringWebSecurity.class, CustomAuthenticationManagerTest.class) },
       }); // @formatter:on
   }
 
@@ -248,9 +248,7 @@ public class VaadinConnectOAuthConfigurerTest {
   }
 
   @Configuration
-  protected static class OverrideVaadinOauthConfigTest
-      extends VaadinConnectOAuthConfigurer implements TestRunner {
-
+  protected static class CustomUserDetailsPasswordTest implements TestRunner {
     @Bean
     public PasswordEncoder passwordEncoder() {
       return new PasswordEncoder() {
@@ -286,7 +284,7 @@ public class VaadinConnectOAuthConfigurerTest {
   }
 
   @Configuration
-  protected static class CustomAuthenticationManager implements TestRunner {
+  protected static class CustomAuthenticationManagerTest implements TestRunner {
     @Bean
     AuthenticationManager AuthenticationManager() {
       return new AuthenticationManager() {
