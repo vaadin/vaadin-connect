@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +38,9 @@ public class Generator {
 
   private static final String APPLICATION_TITLE = "vaadin.connect.application.title";
   private static final String APPLICATION_API_VERSION = "vaadin.connect.api.version";
-  private static final String SERVER = "vaadin.connect.endpoint";
-  private static final String SERVER_DESCRIPTION = "vaadin.connect.endpoint.description";
+  private static final String ENDPOINT = "vaadin.connect.endpoint";
+  private static final String SERVER = "vaadin.connect.server";
+  private static final String SERVER_DESCRIPTION = "vaadin.connect.server.description";
   private static final String DEFAULT_JAVA_SOURCE_PATH = "src/main/java";
   private static final String DEFAULT_OUTPUT_PATH = "target/generated-resources/openapi.json";
   private static final String DEFAULT_APPLICATION_PROPERTIES_PATH = "src/main/resources/application.properties";
@@ -115,7 +117,8 @@ public class Generator {
     } else {
       applicationProperties = Paths.get(DEFAULT_APPLICATION_PROPERTIES_PATH);
     }
-    String server = "https://localhost:8080/connect";
+    String endpoint = "connect";
+    String server = "https://localhost:8080/";
     String serverDescription = "Vaadin Connect backend";
     String applicationTitle = "Vaadin Connect Application";
     String applicationApiVersion = "0.0.1";
@@ -135,8 +138,11 @@ public class Generator {
         String propertyName = matcher.group(1);
         String propertyValue = matcher.group(2);
         switch (propertyName) {
+        case ENDPOINT:
+          endpoint = propertyValue;
+          break;
         case SERVER:
-          server = propertyValue + "/connect";
+          server = StringUtils.appendIfMissing(propertyValue, "/");
           break;
         case SERVER_DESCRIPTION:
           serverDescription = propertyValue;
@@ -155,7 +161,7 @@ public class Generator {
       LOGGER.error("Can't read the application.properties file", e);
     }
     return new OpenApiConfiguration(applicationTitle, applicationApiVersion,
-      server, serverDescription);
+      server + endpoint, serverDescription);
 
   }
 
