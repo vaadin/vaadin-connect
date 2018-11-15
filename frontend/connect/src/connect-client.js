@@ -16,10 +16,22 @@
  * The default endpoint is '/connect'.
  */
 export class ConnectClient {
+  /**
+   * @param {Object=} options={}
+   * @param {string=} options.endpoint The `endpoint` initial value.
+   */
   constructor(options = {}) {
     /**
-     * @property {string} endpoint="/connect" The Vaadin Connect backend
-     * endpoint.
+     * When set to a string, adds the `Authorization: Bearer ${accessToken}`
+     * HTTP reader to every request.
+     * @type {string}
+     */
+    this.accessToken;
+
+    /**
+     * The Vaadin Connect backend endpoint.
+     * @type {string}
+     * @default '/connect'
      */
     this.endpoint = options.endpoint || '/connect';
   }
@@ -41,15 +53,20 @@ export class ConnectClient {
       );
     }
 
+    const headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    };
+    if (this.accessToken !== undefined) {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
+
     /* global fetch */
     const response = await fetch(
       `${this.endpoint}/${service}/${method}`,
       {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: params !== undefined ? JSON.stringify(params) : undefined
       }
     );
