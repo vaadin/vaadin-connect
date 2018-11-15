@@ -2,4 +2,5 @@ vaadin.connect.endpoint=https://myhost.com
 vaadin.connect.endpoint.description=Vaadin connect backend server
 vaadin.connect.api.version=1.1.1
 vaadin.connect.application.title=My super application
-
+unrelated.property=empty value
+unexpected,format
