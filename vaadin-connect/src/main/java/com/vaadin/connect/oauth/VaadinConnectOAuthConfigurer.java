@@ -105,13 +105,16 @@ public class VaadinConnectOAuthConfigurer
   @Autowired
   private ApplicationContext applicationContext;
 
+  @Autowired
+  private JwtAccessTokenConverter accessTokensConverter;
+
   @Override
   public void configure(AuthorizationServerEndpointsConfigurer endpoints)
       throws Exception {
     // This is required for 'password' grants, which is specified below
     endpoints.authenticationManager(authenticationManager())
         .tokenStore(tokenStore())
-        .accessTokenConverter(accessTokenConverter());
+        .accessTokenConverter(accessTokensConverter);
   }
 
   @Override
@@ -129,7 +132,7 @@ public class VaadinConnectOAuthConfigurer
    * @return the JwtAccessTokenConverter
    */
   @Bean
-  public JwtAccessTokenConverter accessTokenConverter() {
+  public JwtAccessTokenConverter accessTokensConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
     converter.setSigningKey(DEFAULT_SIGNING_KEY);
     return converter;
@@ -140,7 +143,7 @@ public class VaadinConnectOAuthConfigurer
    */
   @Bean
   public TokenStore tokenStore() {
-    return new JwtTokenStore(accessTokenConverter());
+    return new JwtTokenStore(accessTokensConverter);
   }
 
   private AuthenticationManager authenticationManager() throws Exception {
