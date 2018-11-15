@@ -20,10 +20,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -32,8 +33,7 @@ import io.swagger.v3.oas.models.OpenAPI;
  * This class is used to generate OpenAPI document from a given java project.
  */
 public class Generator {
-  private static final Logger LOGGER = Logger
-    .getLogger(Generator.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(Generator.class);
 
   private static final String APPLICATION_TITLE = "vaadin.connect.application.title";
   private static final String APPLICATION_API_VERSION = "vaadin.connect.api.version";
@@ -81,12 +81,10 @@ public class Generator {
     OpenApiGenerator generator = new OpenApiJavaParserImpl();
     generator.setSourcePath(inputPath);
     generator.setOpenApiConfiguration(configuration);
-
-    LOGGER
-      .log(Level.INFO, () -> "Parsing java files from " + inputPath.toString());
+    LOGGER.info("Parsing java files from {}", inputPath);
     OpenAPI openAPI = generator.generateOpenApi();
 
-    LOGGER.log(Level.INFO, () -> "Writing output to " + outputPath.toString());
+    LOGGER.info("Writing output to {}", outputPath);
     writeToFile(openAPI, outputPath);
   }
 
@@ -122,8 +120,8 @@ public class Generator {
     String applicationTitle = "Vaadin Connect Application";
     String applicationApiVersion = "0.0.1";
     if (!applicationProperties.toFile().exists()) {
-      LOGGER.warning(() -> "There is no application.properties in " +
-        applicationProperties.toString());
+      LOGGER.warn("There is no application.properties in {}",
+        applicationProperties);
       return new OpenApiConfiguration(applicationTitle, applicationApiVersion,
         server, serverDescription);
     }
@@ -154,7 +152,7 @@ public class Generator {
         }
       }
     } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Can't read the application.properties file", e);
+      LOGGER.error("Can't read the application.properties file", e);
     }
     return new OpenApiConfiguration(applicationTitle, applicationApiVersion,
       server, serverDescription);
@@ -173,7 +171,7 @@ public class Generator {
       }
       Files.write(outputPath, Json.pretty(openAPI).getBytes());
     } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Can't write to file", e);
+      LOGGER.error("Can't write to file", e);
     }
   }
 }

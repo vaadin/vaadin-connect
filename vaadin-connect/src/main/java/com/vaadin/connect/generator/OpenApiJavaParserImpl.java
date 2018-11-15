@@ -25,12 +25,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
@@ -132,8 +131,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
-      Logger.getLogger(OpenApiJavaParserImpl.class.getName())
-        .log(Level.SEVERE, "Can't parse the java files", e);
+      LoggerFactory.getLogger(OpenApiJavaParserImpl.class)
+        .error("Can't parse the java files", e);
     }
 
     for (String s : usedSchemas) {
