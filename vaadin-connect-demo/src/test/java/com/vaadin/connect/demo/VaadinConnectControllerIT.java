@@ -15,6 +15,12 @@
  */
 package com.vaadin.connect.demo;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,15 +47,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import com.vaadin.connect.oauth.VaadinConnectOAuthConfigurer;
-
 import com.vaadin.connect.VaadinConnectProperties;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -66,9 +64,6 @@ public class VaadinConnectControllerIT {
 
   @Autowired
   private VaadinConnectProperties vaadinConnectProperties;
-
-  @Autowired
-  private VaadinConnectOAuthConfigurer oAuthConfigurer;
 
   @Before
   public void authenticate() {
@@ -91,8 +86,8 @@ public class VaadinConnectControllerIT {
       HttpHeaders headers = request.getHeaders();
       headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
       headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-      headers.setBasicAuth(oAuthConfigurer.getClientApp(),
-          oAuthConfigurer.getClientAppSecret());
+      headers.setBasicAuth(vaadinConnectProperties.getVaadinConnectClientAppname(),
+          vaadinConnectProperties.getVaadinConnectClientSecret());
       return execution.execute(request, body);
     };
 
