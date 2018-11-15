@@ -15,6 +15,8 @@
  */
 package com.vaadin.connect.oauth;
 
+import static org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance;
+
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -146,18 +148,10 @@ public class VaadinConnectOAuthConfigurer
   @ConditionalOnMissingBean(PasswordEncoder.class)
   protected static class PasswordEncoderConfiguration {
     @Bean
+    @SuppressWarnings("deprecation")
     public PasswordEncoder passwordEncoder() {
-      return new PasswordEncoder() {
-        @Override
-        public boolean matches(CharSequence rawPassword, String encodedPassword) {
-          return rawPassword.toString().equals(encodedPassword);
-        }
-
-        @Override
-        public String encode(CharSequence rawPassword) {
-          return rawPassword.toString();
-        }
-      };
+      // Using static import here to skip sonar lint.
+      return getInstance();
     }
   }
 }
