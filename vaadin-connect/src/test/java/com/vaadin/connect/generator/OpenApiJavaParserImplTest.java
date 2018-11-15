@@ -49,16 +49,16 @@ public class OpenApiJavaParserImplTest {
 
   @Test
   public void Should_GenerateCorrectOpenApiModel_When_AProperPathAndConfigurationAreSet() {
-    OpenAPI openAPI = generator.generateOpenApi();
-
-    String expectedJson = getExpectedJson();
-    Json.prettyPrint(openAPI);
+    OpenAPI openAPI = generator.getOpenApi();
+    String expectedJson = OpenApiJavaParserImplTest.getExpectedJson("expected-openapi.json");
+    Assert.assertEquals(Json.pretty(openAPI),
+      Json.pretty(generator.generateOpenApi()));
     Assert.assertEquals(expectedJson, Json.pretty(openAPI));
   }
 
-  private String getExpectedJson() {
+  static String getExpectedJson(String name) {
     try (InputStream input = OpenApiJavaParserImplTest.class
-      .getResourceAsStream("expected-openapi.json")) {
+      .getResourceAsStream(name)) {
       return new BufferedReader(new InputStreamReader(input)).lines()
         .collect(Collectors.joining("\n"));
     } catch (IOException e) {

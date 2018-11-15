@@ -1,12 +1,12 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "Test title",
-    "version" : "0.0.1"
+    "title" : "My super application",
+    "version" : "1.1.1"
   },
   "servers" : [ {
-    "url" : "https://server.test",
-    "description" : "Test description"
+    "url" : "https://myhost.com/connect",
+    "description" : "Vaadin connect backend server"
   } ],
   "paths" : {
     "/GeneratorTestClass/getAllUsers" : {

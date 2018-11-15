@@ -79,10 +79,12 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   private static final List<String> PREDEFINED_TYPES = Stream
     .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES, COLLECTION_TYPES)
     .flatMap(Collection::stream).collect(Collectors.toList());
-
+  private static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-sevices";
+  private static final String VAADIN_SERVICE_EXTENSION_NAME = "x-vaadin-sevice";
   private Path javaSourcePath;
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
+  private Map<String, OpenAPiVaadinServicesExtension> vaadinServicesExtensionMap;
   private Map<String, Schema> nonServiceSchemas;
   private OpenAPI openApiModel;
 
@@ -126,7 +128,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     openApiModel = createBasicModel();
     nonServiceSchemas = new HashMap<>();
     usedSchemas = new HashSet<>();
-
+    vaadinServicesExtensionMap = new HashMap<>();
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
@@ -140,6 +142,9 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
         openApiModel.getComponents().addSchemas(s, schema);
       }
     }
+
+    openApiModel
+      .addExtension(VAADIN_SERVICES_EXTENSION_NAME, vaadinServicesExtensionMap);
   }
 
   private OpenAPI createBasicModel() {
@@ -180,13 +185,20 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       nonServiceSchemas.put(className, parseClassAsSchema(classDeclaration));
       return;
     }
+    OpenAPiVaadinServicesExtension openAPiVaadinServicesExtension = new OpenAPiVaadinServicesExtension()
+      .description("");
+    classDeclaration.getJavadoc().ifPresent(
+      javadoc -> openAPiVaadinServicesExtension
+        .description(javadoc.getDescription().toText()));
+
+    vaadinServicesExtensionMap.put(className, openAPiVaadinServicesExtension);
 
     Map<String, PathItem> pathItems = createPathItems(classDeclaration);
+
     for (Map.Entry<String, PathItem> entry : pathItems.entrySet()) {
       String methodName = entry.getKey();
       PathItem pathItem = entry.getValue();
-      String pathName = "/" + className + "/" +
-        methodName;
+      String pathName = "/" + className + "/" + methodName;
       openApiModel.getPaths().addPathItem(pathName, pathItem);
     }
   }
@@ -245,6 +257,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
       PathItem pathItem = new PathItem().post(post);
       pathItems.put(methodName, pathItem);
+      pathItem.addExtension(VAADIN_SERVICE_EXTENSION_NAME,
+        typeDeclaration.getNameAsString());
     }
     parseInnerClasses(typeDeclaration);
     return pathItems;
