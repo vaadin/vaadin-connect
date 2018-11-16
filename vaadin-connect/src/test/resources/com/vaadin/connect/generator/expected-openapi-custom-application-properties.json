@@ -28,7 +28,7 @@
           }
         }
       },
-      "x-vaadin-sevice" : "GeneratorTestClass"
+      "x-vaadin-service" : "GeneratorTestClass"
     },
     "/GeneratorTestClass/getUserById" : {
       "post" : {
@@ -61,7 +61,7 @@
           }
         }
       },
-      "x-vaadin-sevice" : "GeneratorTestClass"
+      "x-vaadin-service" : "GeneratorTestClass"
     },
     "/GeneratorTestClass/getArrayInt" : {
       "post" : {
@@ -100,7 +100,7 @@
           }
         }
       },
-      "x-vaadin-sevice" : "GeneratorTestClass"
+      "x-vaadin-service" : "GeneratorTestClass"
     },
     "/GeneratorTestClass/countUser" : {
       "post" : {
@@ -118,7 +118,7 @@
           }
         }
       },
-      "x-vaadin-sevice" : "GeneratorTestClass"
+      "x-vaadin-service" : "GeneratorTestClass"
     },
     "/GeneratorTestClass/getAllUserRolesMap" : {
       "post" : {
@@ -139,7 +139,7 @@
           }
         }
       },
-      "x-vaadin-sevice" : "GeneratorTestClass"
+      "x-vaadin-service" : "GeneratorTestClass"
     },
     "/GeneratorTestClass/updateUser" : {
       "post" : {
@@ -164,7 +164,7 @@
           }
         }
       },
-      "x-vaadin-sevice" : "GeneratorTestClass"
+      "x-vaadin-service" : "GeneratorTestClass"
     },
     "/GeneratorTestClass/getBooleanValue" : {
       "post" : {
@@ -200,7 +200,7 @@
           }
         }
       },
-      "x-vaadin-sevice" : "GeneratorTestClass"
+      "x-vaadin-service" : "GeneratorTestClass"
     }
   },
   "components" : {
@@ -233,7 +233,7 @@
       }
     }
   },
-  "x-vaadin-sevices" : {
+  "x-vaadin-services" : {
     "GeneratorTestClass" : {
       "description" : "This class is used for OpenApi generator test"
     }

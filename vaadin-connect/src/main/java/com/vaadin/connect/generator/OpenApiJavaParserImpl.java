@@ -78,8 +78,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   private static final List<String> PREDEFINED_TYPES = Stream
     .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES, COLLECTION_TYPES)
     .flatMap(Collection::stream).collect(Collectors.toList());
-  private static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-sevices";
-  private static final String VAADIN_SERVICE_EXTENSION_NAME = "x-vaadin-sevice";
+  private static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
+  private static final String VAADIN_SERVICE_EXTENSION_NAME = "x-vaadin-service";
   private Path javaSourcePath;
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -94,7 +94,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
         "Java source path must be a valid directory");
     }
     if (!sourcePath.toFile().exists()) {
-      throw new IllegalArgumentException("Java source path is not existed");
+      throw new IllegalArgumentException("Java source path doesn't exist");
     }
     this.javaSourcePath = sourcePath;
   }
@@ -132,7 +132,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
       LoggerFactory.getLogger(OpenApiJavaParserImpl.class)
-        .error("Can't parse the java files", e);
+        .error(e.getMessage(), e);
+      throw new IllegalStateException("Can't parse the java files", e);
     }
 
     for (String s : usedSchemas) {
