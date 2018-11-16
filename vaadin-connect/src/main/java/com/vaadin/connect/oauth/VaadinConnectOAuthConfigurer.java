@@ -43,9 +43,9 @@ import com.vaadin.connect.VaadinConnectProperties;
  * Configure oauth by extending or importing this, and defining either
  * {@link UserDetailsService} or {@link AuthenticationManager}.
  *
- * This configurator automatically register a {@Link BCryptPasswordEncoder}.
+ * This configurator automatically register a {@link BCryptPasswordEncoder}.
  * If you store passwords in your database using another encoding algorithm
- * define your own {@Link PasswordEncoder}
+ * define your own {@link PasswordEncoder}
  *
  * <pre class="code">
     &#64;Configuration
