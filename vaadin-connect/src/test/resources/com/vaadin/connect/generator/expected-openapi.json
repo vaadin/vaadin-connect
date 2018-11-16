@@ -1,0 +1,241 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Test title",
+    "version" : "0.0.1"
+  },
+  "servers" : [ {
+    "url" : "https://server.test",
+    "description" : "Test description"
+  } ],
+  "paths" : {
+    "/GeneratorTestClass/getAllUsers" : {
+      "post" : {
+        "description" : "Get all users",
+        "responses" : {
+          "200" : {
+            "description" : "Return list of users",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-vaadin-service" : "GeneratorTestClass"
+    },
+    "/GeneratorTestClass/getUserById" : {
+      "post" : {
+        "description" : "Get user by id",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "id" : {
+                    "type" : "number",
+                    "description" : "id of user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return user with given id",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-vaadin-service" : "GeneratorTestClass"
+    },
+    "/GeneratorTestClass/getArrayInt" : {
+      "post" : {
+        "description" : "Get array int",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "type" : "array",
+                    "description" : "input string array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return array of int",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-vaadin-service" : "GeneratorTestClass"
+    },
+    "/GeneratorTestClass/countUser" : {
+      "post" : {
+        "description" : "Get number of users",
+        "responses" : {
+          "200" : {
+            "description" : "Return number of user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-vaadin-service" : "GeneratorTestClass"
+    },
+    "/GeneratorTestClass/getAllUserRolesMap" : {
+      "post" : {
+        "description" : "Get the map of user and roles",
+        "responses" : {
+          "200" : {
+            "description" : "Return map of user and roles",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "$ref" : "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-vaadin-service" : "GeneratorTestClass"
+    },
+    "/GeneratorTestClass/updateUser" : {
+      "post" : {
+        "description" : "Update a user",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "user" : {
+                    "$ref" : "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Request has been processed without any return result"
+          }
+        }
+      },
+      "x-vaadin-service" : "GeneratorTestClass"
+    },
+    "/GeneratorTestClass/getBooleanValue" : {
+      "post" : {
+        "description" : "Get boolean value",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "type" : "object",
+                    "additionalProperties" : {
+                      "$ref" : "#/components/schemas/User"
+                    },
+                    "description" : "input map"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return boolean value",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-vaadin-service" : "GeneratorTestClass"
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Role" : {
+        "type" : "object",
+        "properties" : {
+          "roleName" : {
+            "type" : "string"
+          }
+        },
+        "description" : "Role bean"
+      },
+      "User" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          },
+          "roles" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/Role"
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-vaadin-services" : {
+    "GeneratorTestClass" : {
+      "description" : "This class is used for OpenApi generator test"
+    }
+  }
+}
