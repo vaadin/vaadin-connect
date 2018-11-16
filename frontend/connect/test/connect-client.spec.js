@@ -137,4 +137,77 @@ describe('ConnectClient', () => {
       expect(JSON.parse(requestBody)).to.deep.equal({fooParam: 'foo'});
     });
   });
+
+  describe('accessToken', () => {
+    beforeEach(() => fetchMock
+      .post('/connect/FooService/fooMethod', {fooData: 'foo'})
+    );
+
+    afterEach(() => fetchMock.restore());
+
+    let client;
+    beforeEach(() => client = new ConnectClient());
+
+    const token = 'fooToken';
+
+    it('should not have default accessToken', () => {
+      expect(client).to.not.have.property('accessToken');
+    });
+
+    it('should allow setting string accessToken', () => {
+      client.accessToken = token;
+      expect(client).to.have.property('accessToken', token);
+    });
+
+    it('should not include Authorization header by default', async() => {
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.not.have.property('Authorization');
+    });
+
+    it('should include Authorization header when accessToken is string', async() => {
+      client.accessToken = token;
+
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.have.property('Authorization', `Bearer ${token}`);
+    });
+
+    it('should include Authorization header when accessToken is defined', async() => {
+      client.accessToken = 0;
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.have.property('Authorization', `Bearer 0`);
+
+      client.accessToken = null;
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.have.property('Authorization', `Bearer null`);
+
+      client.accessToken = false;
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.have.property('Authorization', `Bearer false`);
+
+      client.accessToken = '';
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.have.property('Authorization', `Bearer `);
+
+      client.accessToken = NaN;
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.have.property('Authorization', `Bearer NaN`);
+
+      client.accessToken = {};
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.have.property('Authorization', `Bearer [object Object]`);
+
+      client.accessToken = undefined;
+      await client.call('FooService', 'fooMethod');
+      expect(fetchMock.lastOptions().headers)
+        .to.not.have.property('Authorization');
+    });
+  });
 });
