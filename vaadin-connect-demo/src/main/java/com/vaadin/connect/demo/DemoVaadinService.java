@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vaadin.connect.VaadinService;
 
 @VaadinService
-public class TestService {
+public class DemoVaadinService {
   public static class ComplexRequest {
     private final String name;
     private final int count;

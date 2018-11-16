@@ -52,7 +52,7 @@ import com.vaadin.connect.VaadinConnectProperties;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class VaadinConnectControllerIT {
-  private static final String TEST_SERVICE_NAME = TestService.class
+  private static final String TEST_SERVICE_NAME = DemoVaadinService.class
       .getSimpleName();
   private static boolean tokenInjected = false;
 
@@ -107,9 +107,9 @@ public class VaadinConnectControllerIT {
   private MultiValueMap<String, String> getTokenRequest() {
     MultiValueMap<String, String> getTokenRequest = new LinkedMultiValueMap<>();
     getTokenRequest.put("username", Collections
-        .singletonList(VaadinConnectDemoOAuthConfiguration.TEST_LOGIN));
+        .singletonList(DemoVaadinOAuthConfiguration.TEST_LOGIN));
     getTokenRequest.put("password", Collections
-        .singletonList(VaadinConnectDemoOAuthConfiguration.TEST_PASSWORD));
+        .singletonList(DemoVaadinOAuthConfiguration.TEST_PASSWORD));
     getTokenRequest.put("grant_type", Collections.singletonList("password"));
     return getTokenRequest;
   }
@@ -237,10 +237,10 @@ public class VaadinConnectControllerIT {
     complexRequestPart.put("name", name);
     complexRequestPart.put("count", 3);
 
-    ResponseEntity<TestService.ComplexResponse> response = sendVaadinServiceRequest(
+    ResponseEntity<DemoVaadinService.ComplexResponse> response = sendVaadinServiceRequest(
         "complexEntitiesTest",
         Collections.singletonMap("request", complexRequestPart),
-        TestService.ComplexResponse.class);
+        DemoVaadinService.ComplexResponse.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -248,7 +248,7 @@ public class VaadinConnectControllerIT {
     expectedResult.put(0, Collections.emptyList());
     expectedResult.put(1, Collections.singletonList("0"));
     expectedResult.put(2, Arrays.asList("0", "1"));
-    assertEquals(new TestService.ComplexResponse(name, expectedResult),
+    assertEquals(new DemoVaadinService.ComplexResponse(name, expectedResult),
         response.getBody());
   }
 
@@ -276,7 +276,7 @@ public class VaadinConnectControllerIT {
 
   private void checkMethodPresenceInService(String method,
       boolean shouldPresent) {
-    Class<TestService> serviceClass = TestService.class;
+    Class<DemoVaadinService> serviceClass = DemoVaadinService.class;
     boolean isPresent = Stream.of(serviceClass.getDeclaredMethods())
         .map(Method::getName).anyMatch(method::equalsIgnoreCase);
     if (shouldPresent) {
