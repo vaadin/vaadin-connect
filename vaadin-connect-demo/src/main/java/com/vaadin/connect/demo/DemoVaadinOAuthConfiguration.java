@@ -33,7 +33,7 @@ import com.vaadin.connect.oauth.VaadinConnectOAuthConfigurer;
  * Class to configure the authentication of a vaadin-connect application
  */
 @Configuration
-public class VaadinConnectDemoOAuthConfiguration
+public class DemoVaadinOAuthConfiguration
     extends VaadinConnectOAuthConfigurer {
   static final String TEST_LOGIN = "test_login";
   static final String TEST_PASSWORD = "test_password";

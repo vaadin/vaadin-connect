@@ -28,7 +28,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 @EnableAuthorizationServer
 @EnableWebSecurity
 @EnableResourceServer
-public class VaadinConnectDemoApplication {
+public class DemoApplication {
 
   /**
    * Main method to run the application.
@@ -37,6 +37,6 @@ public class VaadinConnectDemoApplication {
    *          arguments
    */
   public static void main(String[] args) {
-    SpringApplication.run(VaadinConnectDemoApplication.class, args);
+    SpringApplication.run(DemoApplication.class, args);
   }
 }
