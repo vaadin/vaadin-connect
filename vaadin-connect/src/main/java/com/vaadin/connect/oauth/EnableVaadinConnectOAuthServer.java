@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
  *
  * Additionally you need to define either a {@link UserDetailsService} or a
  * {@link AuthenticationManager} Bean as it is described in
- * {@link VaadinConnectOAuthConfigurer}.
+ * {@link VaadinConnectOAuthConfiguration}.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -42,6 +42,6 @@ import org.springframework.stereotype.Component;
 @EnableWebSecurity
 @EnableAuthorizationServer
 @EnableResourceServer
-@Import({ VaadinConnectOAuthConfigurer.class })
+@Import(VaadinConnectOAuthConfiguration.class)
 public @interface EnableVaadinConnectOAuthServer {
 }
