@@ -35,8 +35,8 @@ public class VaadinConnectProperties {
   }
 
   /**
-   * Customize the application client name used in oauth.
-   * Default see {@link VaadinConnectProperties#vaadinConnectClientAppname}.
+   * Customize the application client name used in oauth. Default see
+   * {@link VaadinConnectProperties#vaadinConnectClientAppname}.
    *
    * @return client application name
    */
@@ -45,8 +45,8 @@ public class VaadinConnectProperties {
   }
 
   /**
-   * Customize the application client secret used in oauth.
-   * Default see {@link VaadinConnectProperties#vaadinConnectClientAppname}.
+   * Customize the application client secret used in oauth. Default see
+   * {@link VaadinConnectProperties#vaadinConnectClientAppname}.
    *
    * @return client application secret
    */

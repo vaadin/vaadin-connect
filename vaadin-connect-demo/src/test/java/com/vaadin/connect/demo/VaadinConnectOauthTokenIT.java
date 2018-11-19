@@ -66,13 +66,10 @@ public class VaadinConnectOauthTokenIT {
   private ResultActions getToken(String username, String password)
       throws Exception {
 
-    return mockMvc
-        .perform(post("/oauth/token")
-            .with(httpBasic("vaadin-connect-client", "c13nts3cr3t"))
-            .accept("application/json")
-            .param("username", username)
-            .param("password", password)
-            .param("grant_type", "password"));
+    return mockMvc.perform(post("/oauth/token")
+        .with(httpBasic("vaadin-connect-client", "c13nts3cr3t"))
+        .accept("application/json").param("username", username)
+        .param("password", password).param("grant_type", "password"));
   }
 
   @Test
@@ -88,7 +85,8 @@ public class VaadinConnectOauthTokenIT {
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andReturn().getResponse().getContentAsString();
 
-    String accessToken = parser.parseMap(resultString).get("access_token").toString();
+    String accessToken = parser.parseMap(resultString).get("access_token")
+        .toString();
     String[] parts = accessToken.split("\\.");
     assertEquals(3, parts.length);
   }
@@ -100,13 +98,13 @@ public class VaadinConnectOauthTokenIT {
 
   @Test
   public void should_AccessHelloService_When_ValidToken() throws Exception {
-    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD)
-        .andReturn().getResponse().getContentAsString();
+    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD).andReturn()
+        .getResponse().getContentAsString();
 
     Object accessToken = parser.parseMap(resultString).get("access_token");
 
-    mockMvc.perform(get("/hello")
-        .header("Authorization", "Bearer " + accessToken))
+    mockMvc
+        .perform(get("/hello").header("Authorization", "Bearer " + accessToken))
         .andExpect(content().string("Hello Word"));
   }
 

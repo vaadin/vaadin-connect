@@ -95,16 +95,19 @@ public class VaadinConnectOAuthConfiguration
       "exp", "user_name", "authorities");
   private VaadinConnectProperties vaadinConnectProperties;
 
-  public VaadinConnectOAuthConfiguration(VaadinConnectProperties vaadinConnectProperties){
+  public VaadinConnectOAuthConfiguration(
+      VaadinConnectProperties vaadinConnectProperties) {
     this.vaadinConnectProperties = vaadinConnectProperties;
   }
+
   /**
    * @return the JwtAccessTokenConverter
    */
   @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-    converter.setSigningKey(vaadinConnectProperties.getVaadinConnectTokenSigningKey());
+    converter.setSigningKey(
+        vaadinConnectProperties.getVaadinConnectTokenSigningKey());
     converter.setJwtClaimsSetVerifier(getJwtClaimsSetVerifier());
     return converter;
   }
