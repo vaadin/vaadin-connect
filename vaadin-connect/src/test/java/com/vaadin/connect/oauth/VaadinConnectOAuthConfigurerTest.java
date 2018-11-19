@@ -159,7 +159,6 @@ public class VaadinConnectOAuthConfigurerTest {
   @Configuration
   @EnableVaadinConnectOAuthServer
   @EnableWebMvc
-  @Import(VaadinConnectProperties.class)
   protected static class EnableVaadinOauth {
   }
 

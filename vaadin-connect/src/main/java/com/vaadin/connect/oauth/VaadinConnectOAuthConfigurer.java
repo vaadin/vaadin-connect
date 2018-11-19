@@ -17,6 +17,7 @@
 package com.vaadin.connect.oauth;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Component;
 import com.vaadin.connect.VaadinConnectProperties;
 
 @Component
+@Import(VaadinConnectProperties.class)
 public class VaadinConnectOAuthConfigurer
     extends AuthorizationServerConfigurerAdapter {
   private static final String[] SCOPES = new String[] { "read", "write" };
