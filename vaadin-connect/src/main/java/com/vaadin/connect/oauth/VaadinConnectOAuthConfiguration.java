@@ -106,8 +106,12 @@ public class VaadinConnectOAuthConfiguration
   @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-    converter.setSigningKey(
-        vaadinConnectProperties.getVaadinConnectTokenSigningKey());
+
+    String sigKey = vaadinConnectProperties.getVaadinConnectTokenSigningKey();
+    if (!sigKey.isEmpty()) {
+      converter.setSigningKey(sigKey);
+    }
+
     converter.setJwtClaimsSetVerifier(getJwtClaimsSetVerifier());
     return converter;
   }

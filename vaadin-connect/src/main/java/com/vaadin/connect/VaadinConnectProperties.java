@@ -20,7 +20,7 @@ public class VaadinConnectProperties {
   @Value("${vaadin.connect.client.secret:c13nts3cr3t}")
   private String vaadinConnectClientSecret;
 
-  @Value("${vaadin.connect.auth.token-signing-key:JustAnySigningK3y}")
+  @Value("${vaadin.connect.auth.token-signing-key:}")
   private String vaadinConnectTokenSigningKey;
 
   /**
@@ -55,8 +55,9 @@ public class VaadinConnectProperties {
   }
 
   /**
-   * Customize the application token signing key. Default see
-   * {@link VaadinConnectProperties#vaadinConnectTokenSigningKey}.
+   * Customize the application token signing key. When not given any key, the
+   * application will use a random one which is generated each time the
+   * application is run.
    *
    * @return token signing key
    */
