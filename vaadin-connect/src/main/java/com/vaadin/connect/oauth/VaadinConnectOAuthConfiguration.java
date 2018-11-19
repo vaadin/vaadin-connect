@@ -115,8 +115,7 @@ public class VaadinConnectOAuthConfiguration
   private JwtClaimsSetVerifier getJwtClaimsSetVerifier() {
     return claims -> {
       for (String requiredClaim : REQUIRED_CLAIMS) {
-        if (!claims.containsKey(requiredClaim)
-            || claims.get(requiredClaim) == null) {
+        if (claims.get(requiredClaim) == null) {
           throw new InvalidTokenException(
               "token does not contain the required claim: " + requiredClaim);
         }

@@ -103,98 +103,68 @@ public class VaadinConnectOauthTokenIT {
 
     Object accessToken = parser.parseMap(resultString).get("access_token");
 
-    mockMvc
-        .perform(get("/hello").header("Authorization", "Bearer " + accessToken))
-        .andExpect(content().string("Hello Word"));
+    requestHelloWith(accessToken).andExpect(content().string("Hello Word"));
   }
 
   @Test
   public void should_ReturnUnauthorized_When_TokenIsExpired() throws Exception {
-    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD).andReturn()
-        .getResponse().getContentAsString();
-
-    String accessToken = (String) parser.parseMap(resultString)
-        .get("access_token");
-    String[] accessTokenParts = accessToken.split("\\.");
-
-    JacksonJsonParser parser = new JacksonJsonParser();
-
-    Map<String, Object> claims = parser.parseMap(
-        new String(Base64Utils.decodeFromString(accessTokenParts[1])));
+    Map<String, Object> claims = getClaimsFromAccessToken();
     claims.put("exp",
         Instant.now().minus(1, ChronoUnit.MINUTES).getEpochSecond());
     String expiredAccessToken = generateNewToken(parser.formatMap(claims),
         "JustAnySigningK3y");
 
-    mockMvc.perform(
-        get("/hello").header("Authorization", "Bearer " + expiredAccessToken))
-        .andExpect(status().is(401));
+    requestHelloWith(expiredAccessToken).andExpect(status().is(401));
   }
 
   @Test
   public void should_ReturnUnauthorized_When_TokenHasNullClaim()
       throws Exception {
-    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD).andReturn()
-        .getResponse().getContentAsString();
-
-    String accessToken = (String) parser.parseMap(resultString)
-        .get("access_token");
-    String[] accessTokenParts = accessToken.split("\\.");
-
-    JacksonJsonParser parser = new JacksonJsonParser();
-
-    Map<String, Object> claims = parser.parseMap(
-        new String(Base64Utils.decodeFromString(accessTokenParts[1])));
+    Map<String, Object> claims = getClaimsFromAccessToken();
     claims.put("user_name", null);
-    String expiredAccessToken = generateNewToken(parser.formatMap(claims),
+    String invalidClaimToken = generateNewToken(parser.formatMap(claims),
         "JustAnySigningK3y");
 
-    mockMvc.perform(
-        get("/hello").header("Authorization", "Bearer " + expiredAccessToken))
-        .andExpect(status().is(401));
+    requestHelloWith(invalidClaimToken).andExpect(status().is(401));
   }
 
   @Test
   public void should_ReturnUnauthorized_When_TokenMissedARequiredClaim()
       throws Exception {
-    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD).andReturn()
-        .getResponse().getContentAsString();
-
-    String accessToken = (String) parser.parseMap(resultString)
-        .get("access_token");
-    String[] accessTokenParts = accessToken.split("\\.");
-
-    JacksonJsonParser parser = new JacksonJsonParser();
-
-    Map<String, Object> claims = parser.parseMap(
-        new String(Base64Utils.decodeFromString(accessTokenParts[1])));
+    Map<String, Object> claims = getClaimsFromAccessToken();
     claims.remove("user_name");
-    String expiredAccessToken = generateNewToken(parser.formatMap(claims),
+    String missingClaimToken = generateNewToken(parser.formatMap(claims),
         "JustAnySigningK3y");
 
-    mockMvc.perform(
-        get("/hello").header("Authorization", "Bearer " + expiredAccessToken))
-        .andExpect(status().is(401));
+    requestHelloWith(missingClaimToken).andExpect(status().is(401));
   }
 
   @Test
   public void should_ReturnUnauthorized_When_TokenIsSignedWithDifferentSigningKey()
       throws Exception {
-    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD).andReturn()
-        .getResponse().getContentAsString();
-
-    String accessToken = (String) parser.parseMap(resultString)
-        .get("access_token");
-    String[] accessTokenParts = accessToken.split("\\.");
-    String expiredAccessToken = generateNewToken(accessTokenParts[1],
+    String claimsString = parser.formatMap(getClaimsFromAccessToken());
+    String expiredAccessToken = generateNewToken(claimsString,
         "DifferentSigningKey");
-    mockMvc.perform(
-        get("/hello").header("Authorization", "Bearer " + expiredAccessToken))
-        .andExpect(status().is(401));
+    requestHelloWith(expiredAccessToken).andExpect(status().is(401));
+  }
+
+  private ResultActions requestHelloWith(Object accessToken) throws Exception {
+    return mockMvc.perform(
+        get("/hello").header("Authorization", "Bearer " + accessToken));
   }
 
   private String generateNewToken(String claims, String signingKey) {
     MacSigner defaultMacSigner = new MacSigner(signingKey);
     return JwtHelper.encode(claims, defaultMacSigner).getEncoded();
+  }
+
+  private Map<String, Object> getClaimsFromAccessToken() throws Exception {
+    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD).andReturn()
+        .getResponse().getContentAsString();
+    String accessToken = (String) parser.parseMap(resultString)
+        .get("access_token");
+    String[] accessTokenParts = accessToken.split("\\.");
+    return parser.parseMap(
+        new String(Base64Utils.decodeFromString(accessTokenParts[1])));
   }
 }
