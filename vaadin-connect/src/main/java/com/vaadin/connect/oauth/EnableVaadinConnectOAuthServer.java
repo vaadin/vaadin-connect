@@ -42,6 +42,8 @@ import org.springframework.stereotype.Component;
 @EnableWebSecurity
 @EnableAuthorizationServer
 @EnableResourceServer
-@Import(VaadinConnectOAuthConfiguration.class)
+@Import({
+    VaadinConnectOAuthConfiguration.class,
+    VaadinConnectOAuthAclChecker.class })
 public @interface EnableVaadinConnectOAuthServer {
 }

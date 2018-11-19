@@ -262,6 +262,19 @@ public class VaadinConnectControllerIT {
     assertVaadinErrorResponse(response.getBody(), methodName);
   }
 
+
+  @Test(expected = Exception.class)
+  public void invalidRoleTest() {
+    String methodName = "roleAdmin";
+    sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+  }
+
+  @Test(expected = Exception.class)
+  public void classAclTest() {
+    String methodName = "classAcl";
+    sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+  }
+
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,
       Object requestData, Class<T> responseType) {
     return template.postForEntity(getRequestUrl(TEST_SERVICE_NAME, methodName),
