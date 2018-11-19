@@ -28,12 +28,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -42,10 +38,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.security.oauth2.common.exceptions.UnauthorizedUserException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 
 /**
  * The controller that is responsible for processing Vaadin Connect requests.
@@ -68,6 +73,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Import({ VaadinConnectControllerConfiguration.class,
     VaadinConnectProperties.class })
 public class VaadinConnectController {
+  private static final Logger LOGGER = LoggerFactory.getLogger(VaadinConnectController.class);
   private static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
   private final ObjectMapper vaadinServiceMapper;
@@ -111,6 +117,7 @@ public class VaadinConnectController {
   public VaadinConnectController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       ApplicationContext context) {
+
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : Jackson2ObjectMapperBuilder.json()
             .visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
@@ -170,7 +177,8 @@ public class VaadinConnectController {
   public ResponseEntity<String> serveVaadinService(
       @PathVariable("service") String serviceName,
       @PathVariable("method") String methodName,
-      @RequestBody(required = false) ObjectNode body) {
+      @RequestBody(required = false) ObjectNode body,
+      VaadinConnectOAuthAclChecker oauthChecker) {
     VaadinServiceData vaadinServiceData = vaadinServices
         .get(serviceName.toLowerCase(Locale.ENGLISH));
     Method methodToInvoke = vaadinServiceData == null ? null
@@ -178,6 +186,13 @@ public class VaadinConnectController {
             .orElse(null);
     if (methodToInvoke == null) {
       return ResponseEntity.notFound().build();
+    }
+
+    try {
+      oauthChecker.check(methodToInvoke);
+    } catch (UnauthorizedUserException e) {
+      LOGGER.debug("Unauthorized intent to access " + methodToInvoke.getName());
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 
     List<JsonNode> requestParameters = getRequestParameters(body);
