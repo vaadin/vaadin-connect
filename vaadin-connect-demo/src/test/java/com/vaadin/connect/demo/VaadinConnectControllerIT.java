@@ -15,12 +15,6 @@
  */
 package com.vaadin.connect.demo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,7 +26,9 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,8 +42,15 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.ResourceAccessException;
 
 import com.vaadin.connect.VaadinConnectProperties;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -64,6 +67,9 @@ public class VaadinConnectControllerIT {
 
   @Autowired
   private VaadinConnectProperties vaadinConnectProperties;
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   @Before
   public void authenticate() {
@@ -92,6 +98,7 @@ public class VaadinConnectControllerIT {
     };
 
     interceptors.add(getAccessTokenInterceptor);
+    @SuppressWarnings("rawtypes")
     ResponseEntity<Map> response = template.postForEntity(
         String.format("http://localhost:%d/oauth/token", port),
         getTokenRequest(), Map.class);
@@ -260,6 +267,22 @@ public class VaadinConnectControllerIT {
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     assertVaadinErrorResponse(response.getBody(), methodName);
+  }
+
+  @Test
+  public void invalidRoleTest() {
+    exception.expect(ResourceAccessException.class);
+
+    String methodName = "permitRoleAdmin";
+    sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+  }
+
+  @Test
+  public void classAclTest() {
+    exception.expect(ResourceAccessException.class);
+
+    String methodName = "deniedByClass";
+    sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
   }
 
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,

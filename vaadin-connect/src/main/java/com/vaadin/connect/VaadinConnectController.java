@@ -47,6 +47,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
+
 /**
  * The controller that is responsible for processing Vaadin Connect requests.
  * Each class that is annotated with {@link VaadinService} gets its public
@@ -111,6 +113,7 @@ public class VaadinConnectController {
   public VaadinConnectController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       ApplicationContext context) {
+
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : Jackson2ObjectMapperBuilder.json()
             .visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
@@ -164,13 +167,16 @@ public class VaadinConnectController {
    * @param body
    *          optional request body, that should be specified if the method
    *          called has parameters
+   * @param oauthChecker
+   *          the ACL checker
    * @return execution result as a JSON string or an error message string
    */
   @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
   public ResponseEntity<String> serveVaadinService(
       @PathVariable("service") String serviceName,
       @PathVariable("method") String methodName,
-      @RequestBody(required = false) ObjectNode body) {
+      @RequestBody(required = false) ObjectNode body,
+      VaadinConnectOAuthAclChecker oauthChecker) {
     VaadinServiceData vaadinServiceData = vaadinServices
         .get(serviceName.toLowerCase(Locale.ENGLISH));
     Method methodToInvoke = vaadinServiceData == null ? null
@@ -178,6 +184,11 @@ public class VaadinConnectController {
             .orElse(null);
     if (methodToInvoke == null) {
       return ResponseEntity.notFound().build();
+    }
+
+    String checkError = oauthChecker.check(methodToInvoke);
+    if (checkError != null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(checkError);
     }
 
     List<JsonNode> requestParameters = getRequestParameters(body);
