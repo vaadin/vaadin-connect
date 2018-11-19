@@ -34,6 +34,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -46,6 +48,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 
 /**
  * The controller that is responsible for processing Vaadin Connect requests.
@@ -111,6 +115,7 @@ public class VaadinConnectController {
   public VaadinConnectController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       ApplicationContext context) {
+
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : Jackson2ObjectMapperBuilder.json()
             .visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
@@ -164,13 +169,16 @@ public class VaadinConnectController {
    * @param body
    *          optional request body, that should be specified if the method
    *          called has parameters
+   * @param oauthChecker
+   *          the ACL checker
    * @return execution result as a JSON string or an error message string
    */
   @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
   public ResponseEntity<String> serveVaadinService(
       @PathVariable("service") String serviceName,
       @PathVariable("method") String methodName,
-      @RequestBody(required = false) ObjectNode body) {
+      @RequestBody(required = false) ObjectNode body,
+      VaadinConnectOAuthAclChecker oauthChecker) {
     VaadinServiceData vaadinServiceData = vaadinServices
         .get(serviceName.toLowerCase(Locale.ENGLISH));
     Method methodToInvoke = vaadinServiceData == null ? null
@@ -178,6 +186,14 @@ public class VaadinConnectController {
             .orElse(null);
     if (methodToInvoke == null) {
       return ResponseEntity.notFound().build();
+    }
+
+    String checkError = oauthChecker.check(methodToInvoke);
+    if (checkError != null) {
+      getLogger()
+          .info(String.format("%s, when accessing '%s/%s' service",
+              checkError, serviceName, methodName));
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(checkError);
     }
 
     List<JsonNode> requestParameters = getRequestParameters(body);
@@ -251,5 +267,9 @@ public class VaadinConnectController {
           .forEachRemaining(entry -> parametersData.add(entry.getValue()));
     }
     return parametersData;
+  }
+
+  private Logger getLogger() {
+    return LoggerFactory.getLogger(VaadinConnectController.class);
   }
 }
