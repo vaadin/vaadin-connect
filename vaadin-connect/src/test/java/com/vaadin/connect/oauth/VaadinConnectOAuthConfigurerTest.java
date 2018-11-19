@@ -1,15 +1,10 @@
 package com.vaadin.connect.oauth;
 
-import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,17 +20,27 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
+import org.springframework.security.oauth2.common.util.JacksonJsonParser;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import com.vaadin.connect.VaadinConnectProperties;
+
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * This test is inspired in the pattern used in
@@ -82,8 +87,8 @@ public class VaadinConnectOAuthConfigurerTest {
           null,
           Arrays.asList(EnableVaadinOauth.class, ConfigureUserDetailsService.class, CustomUserDetailsPasswordTest.class) },
         { "Should produce a valid token when providing a custom AuthenticationManage",
-            null,
-            Arrays.asList(EnableVaadinOauth.class, CustomAuthenticationManager.class) },
+          null,
+          Arrays.asList(EnableVaadinOauth.class, CustomAuthenticationManagerTest.class) },
       }); // @formatter:on
   }
 
@@ -152,10 +157,8 @@ public class VaadinConnectOAuthConfigurerTest {
   }
 
   @Configuration
-  @EnableWebSecurity
-  @EnableAuthorizationServer
+  @EnableVaadinConnectOAuthServer
   @EnableWebMvc
-  @Import(VaadinConnectOAuthConfigurer.class)
   protected static class EnableVaadinOauth {
   }
 
@@ -205,11 +208,29 @@ public class VaadinConnectOAuthConfigurerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      getToken(context,
+      String resultString = getToken(context,
           "vaadin-connect-client:c13nts3cr3t", "foo", "bar", "password")
               .andExpect(status().isOk())
               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-              .andExpect(jsonPath("$.access_token", notNullValue()));
+              .andExpect(jsonPath("$.access_token", notNullValue()))
+              .andReturn().getResponse().getContentAsString();
+
+      JacksonJsonParser parser = new JacksonJsonParser();
+      String accessToken = parser.parseMap(resultString).get("access_token").toString();
+      String[] parts = accessToken.split("\\.");
+      assertEquals(3, parts.length);
+
+      Map<String, Object> map0 = parser.parseMap(new String(Base64.getDecoder().decode(parts[0])));
+      assertEquals("HS256", map0.get("alg"));
+      assertEquals("JWT", map0.get("typ"));
+
+      Map<String, Object> map1 = parser.parseMap(new String(Base64.getDecoder().decode(parts[1])));
+      assertNotNull(map1.get("exp"));
+      assertNotNull(map1.get("jti"));
+      assertNotNull(map1.get("authorities"));
+      assertNotNull(map1.get("scope"));
+      assertEquals("foo", map1.get("user_name"));
+      assertEquals("vaadin-connect-client", map1.get("client_id"));
     }
   }
 
@@ -293,7 +314,7 @@ public class VaadinConnectOAuthConfigurerTest {
   }
 
   @Configuration
-  protected static class CustomAuthenticationManager implements TestRunner {
+  protected static class CustomAuthenticationManagerTest implements TestRunner {
     @Bean
     AuthenticationManager authenticationManager() {
       return auth -> new UsernamePasswordAuthenticationToken(

@@ -27,17 +27,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.vaadin.connect.demo.account.Account;
 import com.vaadin.connect.demo.account.AccountRepository;
-import com.vaadin.connect.oauth.VaadinConnectOAuthConfigurer;
 
 /**
  * Class to configure the authentication of a vaadin-connect application
  */
 @Configuration
-public class DemoVaadinOAuthConfiguration
-    extends VaadinConnectOAuthConfigurer {
+public class DemoVaadinOAuthConfiguration {
+
   static final String TEST_LOGIN = "test_login";
   static final String TEST_PASSWORD = "test_password";
-
 
   @Bean
   public UserDetailsService userDetailsService(AccountRepository accountRepository) {

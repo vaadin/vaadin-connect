@@ -15,25 +15,27 @@
  */
 package com.vaadin.connect.demo;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import javax.servlet.http.HttpServletRequest;
 
-import com.vaadin.connect.oauth.EnableVaadinConnectOAuthServer;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Main class of the Vaadin connect demo module.
+ * Simple hello message service that is not mannaged by the vaadin-connect controller
  */
-@SpringBootApplication
-@EnableVaadinConnectOAuthServer
-public class DemoApplication {
+@RestController
+@RequestMapping("/hello")
+public class DemoRestService {
 
-  /**
-   * Main method to run the application.
-   *
-   * @param args
-   *          arguments
-   */
-  public static void main(String[] args) {
-    SpringApplication.run(DemoApplication.class, args);
-  }
+    /**
+     * A remote method served via the '/hello' endpoint.
+     *
+     * @param request
+     * @return a Hello message
+     */
+    @GetMapping
+    String sayHello(HttpServletRequest request) {
+        return "Hello Word";
+    }
 }
