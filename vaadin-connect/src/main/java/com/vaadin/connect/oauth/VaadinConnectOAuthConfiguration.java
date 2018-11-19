@@ -15,6 +15,7 @@
  */
 package com.vaadin.connect.oauth;
 
+import com.vaadin.connect.VaadinConnectProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -86,15 +87,18 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 public class VaadinConnectOAuthConfiguration
     extends AuthorizationServerConfigurerAdapter {
 
-  private static final String DEFAULT_SIGNING_KEY = "JustAnySigningK3y";
+  private VaadinConnectProperties vaadinConnectProperties;
 
+  public VaadinConnectOAuthConfiguration(VaadinConnectProperties vaadinConnectProperties){
+    this.vaadinConnectProperties = vaadinConnectProperties;
+  }
   /**
    * @return the JwtAccessTokenConverter
    */
   @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-    converter.setSigningKey(DEFAULT_SIGNING_KEY);
+    converter.setSigningKey(vaadinConnectProperties.getVaadinConnectTokenSigningKey());
     return converter;
   }
 
