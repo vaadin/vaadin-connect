@@ -15,6 +15,12 @@
  */
 package com.vaadin.connect.generator;
 
+import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,47 +29,41 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import io.swagger.v3.core.util.Json;
-import io.swagger.v3.oas.models.OpenAPI;
-
 public class OpenApiJavaParserImplTest {
 
   private OpenApiGenerator generator;
   private OpenApiConfiguration configuration;
   private Path javaSourcePath;
 
+  static String getExpectedJson(String name) {
+    try (InputStream input = OpenApiJavaParserImplTest.class
+        .getResourceAsStream(name)) {
+      return new BufferedReader(new InputStreamReader(input)).lines()
+          .collect(Collectors.joining("\n"));
+    } catch (IOException e) {
+      return "";
+    }
+  }
+
   @Before
   public void setUp() {
     generator = new OpenApiJavaParserImpl();
     configuration = new OpenApiConfiguration("Test title", "0.0.1",
-      "https://server.test", "Test description");
+        "https://server.test", "Test description");
     javaSourcePath = Paths.get("src/test/java/com/vaadin/connect/generator")
-      .toAbsolutePath();
+        .toAbsolutePath();
     generator.setSourcePath(javaSourcePath);
     generator.setOpenApiConfiguration(configuration);
   }
 
   @Test
-  public void Should_GenerateCorrectOpenApiModel_When_AProperPathAndConfigurationAreSet() {
+  public void should_GenerateCorrectOpenApiModel_When_AProperPathAndConfigurationAreSet() {
     OpenAPI openAPI = generator.getOpenApi();
-    String expectedJson = OpenApiJavaParserImplTest.getExpectedJson("expected-openapi.json");
+    String expectedJson = OpenApiJavaParserImplTest
+        .getExpectedJson("expected-openapi.json");
     Assert.assertEquals(Json.pretty(openAPI),
-      Json.pretty(generator.generateOpenApi()));
+        Json.pretty(generator.generateOpenApi()));
     Assert.assertEquals(expectedJson, Json.pretty(openAPI));
-  }
-
-  static String getExpectedJson(String name) {
-    try (InputStream input = OpenApiJavaParserImplTest.class
-      .getResourceAsStream(name)) {
-      return new BufferedReader(new InputStreamReader(input)).lines()
-        .collect(Collectors.joining("\n"));
-    } catch (IOException e) {
-      return "";
-    }
   }
 
 }
