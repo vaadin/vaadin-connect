@@ -12,6 +12,7 @@ import javax.annotation.security.RolesAllowed;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.PermitAnonymous;
 
 @VaadinService
 @DenyAll
@@ -56,6 +57,7 @@ public class DemoVaadinService {
     }
   }
 
+  @PermitAnonymous
   @RolesAllowed("ROLE_USER")
   public int addOne(int number) {
     return number + 1;
