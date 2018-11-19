@@ -20,6 +20,9 @@ public class VaadinConnectProperties {
   @Value("${vaadin.connect.client.secret:c13nts3cr3t}")
   private String vaadinConnectClientSecret;
 
+  @Value("${vaadin.connect.auth.token-signing-key:JustAnySigningK3y}")
+  private String vaadinConnectTokenSigningKey;
+
   /**
    * Customize the endpoint for all Vaadin Connect services. See default value
    * in the {@link VaadinConnectProperties#vaadinConnectEndpoint} field
@@ -32,8 +35,8 @@ public class VaadinConnectProperties {
   }
 
   /**
-   * Customize the application client name used in oauth.
-   * Default see {@link VaadinConnectProperties#vaadinConnectClientAppname}.
+   * Customize the application client name used in oauth. Default see
+   * {@link VaadinConnectProperties#vaadinConnectClientAppname}.
    *
    * @return client application name
    */
@@ -42,12 +45,22 @@ public class VaadinConnectProperties {
   }
 
   /**
-   * Customize the application client secret used in oauth.
-   * Default see {@link VaadinConnectProperties#vaadinConnectClientAppname}.
+   * Customize the application client secret used in oauth. Default see
+   * {@link VaadinConnectProperties#vaadinConnectClientAppname}.
    *
    * @return client application secret
    */
   public String getVaadinConnectClientSecret() {
     return vaadinConnectClientSecret;
+  }
+
+  /**
+   * Customize the application token signing key. Default see
+   * {@link VaadinConnectProperties#vaadinConnectTokenSigningKey}.
+   *
+   * @return token signing key
+   */
+  public String getVaadinConnectTokenSigningKey() {
+    return vaadinConnectTokenSigningKey;
   }
 }

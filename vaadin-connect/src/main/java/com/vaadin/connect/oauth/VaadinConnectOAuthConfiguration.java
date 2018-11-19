@@ -15,6 +15,7 @@
  */
 package com.vaadin.connect.oauth;
 
+import com.vaadin.connect.VaadinConnectProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,10 +24,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.JwtClaimsSetVerifier;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Class to configure the authentication of a vaadin-connect application
@@ -85,8 +91,14 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 @Import(VaadinConnectOAuthConfigurer.class)
 public class VaadinConnectOAuthConfiguration
     extends AuthorizationServerConfigurerAdapter {
+  private static final List<String> REQUIRED_CLAIMS = Arrays.asList("jti",
+      "exp", "user_name", "authorities");
+  private VaadinConnectProperties vaadinConnectProperties;
 
-  private static final String DEFAULT_SIGNING_KEY = "JustAnySigningK3y";
+  public VaadinConnectOAuthConfiguration(
+      VaadinConnectProperties vaadinConnectProperties) {
+    this.vaadinConnectProperties = vaadinConnectProperties;
+  }
 
   /**
    * @return the JwtAccessTokenConverter
@@ -94,8 +106,21 @@ public class VaadinConnectOAuthConfiguration
   @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-    converter.setSigningKey(DEFAULT_SIGNING_KEY);
+    converter.setSigningKey(
+        vaadinConnectProperties.getVaadinConnectTokenSigningKey());
+    converter.setJwtClaimsSetVerifier(getJwtClaimsSetVerifier());
     return converter;
+  }
+
+  private JwtClaimsSetVerifier getJwtClaimsSetVerifier() {
+    return claims -> {
+      for (String requiredClaim : REQUIRED_CLAIMS) {
+        if (claims.get(requiredClaim) == null) {
+          throw new InvalidTokenException(
+              "token does not contain the required claim: " + requiredClaim);
+        }
+      }
+    };
   }
 
   /**
