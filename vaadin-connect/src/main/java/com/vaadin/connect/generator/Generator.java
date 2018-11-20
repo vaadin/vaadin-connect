@@ -15,12 +15,14 @@
  */
 package com.vaadin.connect.generator;
 
+import com.google.common.base.Charsets;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,16 +41,22 @@ public class Generator {
   /**
    * This main method will take arguments:
    * <ul>
-   * <li>input="the java source path that will be parsed to OpenApi spec".
-   * Default value: "/<current-directory/src/main/java"</li>
-   * <li>output="the output path of the generated OpenApi json". Default value:
-   * "/<current-directory/target/generated-resources/openapi.json"</li>
-   * <li>applicationProperties="the spring application.properties path" which
-   * has configurations for {@link ApplicationPropertiesReader#SERVER},
+   * <li>
+   * <code>input="the java source path that will be parsed to OpenApi spec"</code>
+   * <br>
+   * Default value: "/current-directory/src/main/java"</li>
+   * <li><code>output="the output path of the generated OpenApi json"</code>
+   * <br>
+   * Default value:
+   * "/current-directory/target/generated-resources/openapi.json"</li>
+   * <li>
+   * <code>applicationProperties="the spring application.properties path"</code>
+   * which has configurations for {@link ApplicationPropertiesReader#SERVER},
    * {@link ApplicationPropertiesReader#SERVER_DESCRIPTION},
    * {@link ApplicationPropertiesReader#APPLICATION_TITLE},
-   * {@link ApplicationPropertiesReader#APPLICATION_API_VERSION}. Default value:
-   * "/<current-directory/src/main/resources/application.properties"</li>
+   * {@link ApplicationPropertiesReader#APPLICATION_API_VERSION}. <br>
+   * Default value:
+   * "/current-directory/src/main/resources/application.properties"</li>
    * </ul>
    *
    * <pre>
@@ -127,7 +135,7 @@ public class Generator {
   }
 
   /**
-   * Write to the output path a string content
+   * Write to the output path a string content.
    * 
    * @param outputPath
    *          output path
@@ -143,7 +151,10 @@ public class Generator {
       if (!outputPath.toFile().exists()) {
         Files.createFile(outputPath);
       }
-      Files.write(outputPath, content.getBytes());
+      try (BufferedWriter bufferedWriter = Files.newBufferedWriter(outputPath,
+          Charsets.UTF_8)) {
+        bufferedWriter.write(content);
+      }
     } catch (IOException e) {
       getLogger().error("Can't write to file", e);
     }

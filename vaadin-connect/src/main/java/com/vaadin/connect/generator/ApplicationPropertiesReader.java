@@ -48,7 +48,7 @@ public class ApplicationPropertiesReader {
 
   /**
    * Read the application.properties file and return a map with propertyName as
-   * key and propertyValue as value
+   * key and propertyValue as value.
    * 
    * @param inputPath
    *          input path of the application.properties

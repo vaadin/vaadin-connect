@@ -1,3 +1,18 @@
+/*
+ * Copyright 2000-2018 Vaadin Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.vaadin.connect.generator;
 
 import com.google.common.base.Charsets;
@@ -23,11 +38,13 @@ public class DefaultClientJsGenerator {
   /**
    * This main method will take arguments:
    * <ul>
-   * <li>output="Output path of the generated connect-client.default.js".
+   * <li>
+   * <code>output="Output path of the generated connect-client.default.js"</code><br>
    * Default value is {@link DefaultClientJsGenerator#DEFAULT_OUTPUT_PATH}.</li>
-   * <li>applicationProperties="application.properties file path". Default value
-   * is
-   * {@link ApplicationPropertiesReader#DEFAULT_APPLICATION_PROPERTIES_PATH}.</li>
+   * <li><code>applicationProperties="application.properties file path"<code><br>
+   *     Default value is
+   * {@link ApplicationPropertiesReader#DEFAULT_APPLICATION_PROPERTIES_PATH}.
+   * </li>
    * </ul>
    * If the {@link ApplicationPropertiesReader#ENDPOINT} is not defined in
    * application.properties, default value
