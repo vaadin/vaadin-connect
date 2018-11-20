@@ -1,3 +1,18 @@
+/*
+ * Copyright 2000-2018 Vaadin Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.vaadin.connect.generator;
 
 import org.slf4j.Logger;
@@ -13,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This class is a helper to read the application.properties file
+ * This class is a helper to read the application.properties file.
  */
 public class ApplicationPropertiesReader {
 
@@ -26,8 +41,6 @@ public class ApplicationPropertiesReader {
 
   private static final Pattern PROPERTIES_REGEX = Pattern.compile("^(.*)=(.*)$",
       Pattern.MULTILINE);
-  private static final Logger LOGGER = LoggerFactory
-      .getLogger(ApplicationPropertiesReader.class);
 
   private ApplicationPropertiesReader() {
     // noop
@@ -43,7 +56,7 @@ public class ApplicationPropertiesReader {
    */
   public static Map<String, String> readProperties(Path inputPath) {
     if (!inputPath.toFile().exists()) {
-      LOGGER.warn("There is no application.properties in {}", inputPath);
+      getLogger().warn("There is no application.properties in {}", inputPath);
       return Collections.emptyMap();
     }
     Map<String, String> applicationProperties = new HashMap<>();
@@ -56,8 +69,12 @@ public class ApplicationPropertiesReader {
         applicationProperties.put(matcher.group(1), matcher.group(2));
       }
     } catch (IOException e) {
-      LOGGER.error("Can't read the application.properties file", e);
+      getLogger().error("Can't read the application.properties file", e);
     }
     return applicationProperties;
+  }
+
+  private static Logger getLogger() {
+    return LoggerFactory.getLogger(ApplicationPropertiesReader.class);
   }
 }
