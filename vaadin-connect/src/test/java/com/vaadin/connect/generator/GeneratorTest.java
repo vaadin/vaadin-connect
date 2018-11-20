@@ -43,7 +43,8 @@ public class GeneratorTest {
   }
 
   @Test
-  public void should_GenerateOpenApiWithCustomApplicationProperties_When_InputApplicationPropertiesGiven() {
+  public void should_GenerateOpenApiWithCustomApplicationProperties_When_InputApplicationPropertiesGiven()
+      throws IOException {
     Generator.main(new String[] { "input=src/test/java",
         "output=target/generated-resources/openapi-custom-properties.json",
         "applicationProperties=src/test/resources/com/vaadin/connect/generator/application.properties"
@@ -51,15 +52,12 @@ public class GeneratorTest {
     Path resultPath = Paths
         .get("target/generated-resources/openapi-custom-properties.json");
     Assert.assertTrue(resultPath.toFile().exists());
-    try {
-      String actualJson = StringUtils.toEncodedString(
-          Files.readAllBytes(resultPath), Charset.defaultCharset());
-      String expectedJson = OpenApiJavaParserImplTest.getExpectedJson(
-          "expected-openapi-custom-application-properties.json");
-      Assert.assertEquals(expectedJson, actualJson);
-    } catch (IOException e) {
-      Assert.fail();
-    }
+    String actualJson = StringUtils.toEncodedString(
+        Files.readAllBytes(resultPath), Charset.defaultCharset());
+    String expectedJson = OpenApiJavaParserImplTest
+        .getExpectedJson("expected-openapi-custom-application-properties.json");
+    Assert.assertEquals(expectedJson, actualJson);
+
   }
 
 }

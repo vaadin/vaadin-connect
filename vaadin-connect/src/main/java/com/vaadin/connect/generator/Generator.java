@@ -18,6 +18,7 @@ package com.vaadin.connect.generator;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -173,7 +174,7 @@ public class Generator {
         bufferedWriter.write(content);
       }
     } catch (IOException e) {
-      getLogger().error("Can't write to file", e);
+      throw new UncheckedIOException(e);
     }
   }
 
