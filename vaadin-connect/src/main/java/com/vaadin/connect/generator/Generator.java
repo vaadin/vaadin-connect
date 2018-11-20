@@ -32,7 +32,6 @@ import java.util.Map;
  * This class is used to generate OpenAPI document from a given java project.
  */
 public class Generator {
-  private static final Logger LOGGER = LoggerFactory.getLogger(Generator.class);
 
   private static final String DEFAULT_JAVA_SOURCE_PATH = "src/main/java";
   private static final String DEFAULT_OUTPUT_PATH = "target/generated-resources/openapi.json";
@@ -72,10 +71,10 @@ public class Generator {
     OpenApiGenerator generator = new OpenApiJavaParserImpl();
     generator.setSourcePath(inputPath);
     generator.setOpenApiConfiguration(configuration);
-    LOGGER.info("Parsing java files from {}", inputPath);
+    getLogger().info("Parsing java files from {}", inputPath);
     OpenAPI openAPI = generator.generateOpenApi();
 
-    LOGGER.info("Writing output to {}", outputPath);
+    getLogger().info("Writing output to {}", outputPath);
     writeToFile(outputPath, Json.pretty(openAPI));
   }
 
@@ -146,7 +145,11 @@ public class Generator {
       }
       Files.write(outputPath, content.getBytes());
     } catch (IOException e) {
-      LOGGER.error("Can't write to file", e);
+      getLogger().error("Can't write to file", e);
     }
+  }
+
+  private static Logger getLogger() {
+    return LoggerFactory.getLogger(Generator.class);
   }
 }
