@@ -35,7 +35,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Class to configure the authentication of a vaadin-connect application
+ * Class to configure the authentication of a vaadin-connect application.
  *
  * Configure oauth by annotating your app with the
  * {@link EnableVaadinConnectOAuthServer} and defining either a
@@ -95,12 +95,20 @@ public class VaadinConnectOAuthConfiguration
       "exp", "user_name", "authorities");
   private VaadinConnectProperties vaadinConnectProperties;
 
+  /**
+   * Default constructor.
+   *
+   * @param vaadinConnectProperties
+   *        The Vaadin connect app configuration
+   */
   public VaadinConnectOAuthConfiguration(
       VaadinConnectProperties vaadinConnectProperties) {
     this.vaadinConnectProperties = vaadinConnectProperties;
   }
 
   /**
+   * Provide the {@link JwtAccessTokenConverter} Bean.
+   *
    * @return the JwtAccessTokenConverter
    */
   @Bean
@@ -128,6 +136,8 @@ public class VaadinConnectOAuthConfiguration
   }
 
   /**
+   * Provide the {@link TokenStore} Bean.
+   *
    * @return the TokenStore
    */
   @Bean
@@ -138,6 +148,12 @@ public class VaadinConnectOAuthConfiguration
   @Configuration
   @ConditionalOnMissingBean(PasswordEncoder.class)
   protected static class PasswordEncoderConfiguration {
+
+    /**
+     * Provide the {@link PasswordEncoder} Bean.
+     *
+     * @return the PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
       return new BCryptPasswordEncoder();
