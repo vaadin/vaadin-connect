@@ -1,3 +1,18 @@
+/*
+ * Copyright 2000-2018 Vaadin Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.vaadin.connect;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +35,7 @@ public class VaadinConnectProperties {
   @Value("${vaadin.connect.client.secret:c13nts3cr3t}")
   private String vaadinConnectClientSecret;
 
-  @Value("${vaadin.connect.auth.token-signing-key:JustAnySigningK3y}")
+  @Value("${vaadin.connect.auth.token-signing-key:}")
   private String vaadinConnectTokenSigningKey;
 
   /**
@@ -55,8 +70,9 @@ public class VaadinConnectProperties {
   }
 
   /**
-   * Customize the application token signing key. Default see
-   * {@link VaadinConnectProperties#vaadinConnectTokenSigningKey}.
+   * Customize the application token signing key. When not given any key, the
+   * application will use a random one which is generated each time the
+   * application is run.
    *
    * @return token signing key
    */
