@@ -173,8 +173,8 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
-  public void shouldAllowAnonymousAccess_whenTheClassIsAnnotated()
-      throws NoSuchMethodException {
+  public void should_AllowAnonymousAccess_When_ClassIsAnnotated()
+      throws Exception {
     @PermitAnonymous
     class AnonymousAccess {
       public void myMethod() {
@@ -188,8 +188,8 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
-  public void shouldAllowAnonymousAccess_whenTheMethodIsAnnotated()
-      throws NoSuchMethodException {
+  public void should_AllowAnonymousAccess_When_MethodIsAnnotated()
+      throws Exception {
     class MethodAnnotations {
       @PermitAnonymous
       public void myMethod() {
@@ -203,8 +203,8 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
-  public void shouldNotAllowAnonymousAccess_whenNoAnnotationsPresent()
-      throws NoSuchMethodException {
+  public void should_NotAllowAnonymousAccess_When_NoAnnotationsPresent()
+      throws Exception {
     class NoAnnotations {
       public void myMethod() {
       }
@@ -217,8 +217,8 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
-  public void shouldAllowAnonymousAccess_whenOtherSecurityAnnotationsPresent()
-      throws NoSuchMethodException {
+  public void should_AllowAnonymousAccess_When_OtherSecurityAnnotationsPresent()
+      throws Exception {
     @DenyAll
     class OtherAnnotations {
       @DenyAll
