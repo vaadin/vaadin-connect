@@ -1,0 +1,26 @@
+{
+  "functionalSuites": "e2e/**/*.spec.js",
+  "environments": [
+    {
+      "browserName": "chrome",
+      "goog:chromeOptions": {
+        "args": [
+          "headless",
+          "disable-gpu",
+          "window-size=1280,720",
+          "no-sandbox"
+        ]
+      }
+    }
+  ],
+  "serverUrl": "http://localhost:8081",
+  "tunnelOptions": {
+    "version": "3.141.59",
+    "drivers": [
+      {
+        "name": "chrome",
+        "version": "2.44"
+      }
+    ]
+  }
+}

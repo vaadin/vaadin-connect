@@ -7,7 +7,8 @@
   "license": "Apache-2.0",
   "workspaces": {
     "packages": [
-      "frontend/*"
+      "frontend/*",
+      "vaadin-connect-demo"
     ],
     "nohoist": [
       "@vaadin/connect/**"
@@ -15,6 +16,8 @@
   },
   "scripts": {
     "test": "yarn workspaces run test",
-    "lint": "yarn workspaces run lint"
+    "lint": "yarn workspaces run lint",
+    "e2e": "yarn workspaces run e2e",
+    "start": "yarn workspace vaadin-connect-demo run start"
   }
 }
