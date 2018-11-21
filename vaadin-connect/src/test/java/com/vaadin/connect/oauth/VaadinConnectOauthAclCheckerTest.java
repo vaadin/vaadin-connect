@@ -6,12 +6,15 @@ import javax.annotation.security.RolesAllowed;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
@@ -167,5 +170,74 @@ public class VaadinConnectOauthAclCheckerTest {
   public void should_Pass_When_ValidRoleClass() throws Exception {
     Method method = MyClass4.class.getMethod("myMethod");
     assertNull(checker.check(method));
+  }
+
+  @Test
+  public void shouldAllowAnonymousAccess_whenTheClassIsAnnotated()
+      throws NoSuchMethodException {
+    @PermitAnonymous
+    class AnonymousAccess {
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = AnonymousAccess.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  @Test
+  public void shouldAllowAnonymousAccess_whenTheMethodIsAnnotated()
+      throws NoSuchMethodException {
+    class MethodAnnotations {
+      @PermitAnonymous
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = MethodAnnotations.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  @Test
+  public void shouldNotAllowAnonymousAccess_whenNoAnnotationsPresent()
+      throws NoSuchMethodException {
+    class NoAnnotations {
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = NoAnnotations.class.getMethod("myMethod");
+    assertNotNull(checker.check(method));
+  }
+
+  @Test
+  public void shouldAllowAnonymousAccess_whenOtherSecurityAnnotationsPresent()
+      throws NoSuchMethodException {
+    @DenyAll
+    class OtherAnnotations {
+      @DenyAll
+      @PermitAnonymous
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = OtherAnnotations.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  private SecurityContext createAnonymousContext() {
+    SecurityContext anonymousContext = mock(SecurityContext.class);
+    when(anonymousContext.getAuthentication())
+        .thenReturn(new AnonymousAuthenticationToken("key", "principal",
+            Collections.singleton(new SimpleGrantedAuthority("ANONYMOUS"))));
+    return anonymousContext;
   }
 }
