@@ -90,7 +90,7 @@ import com.vaadin.connect.VaadinConnectProperties;
  */
 @Configuration
 @Import({ VaadinConnectOAuthConfigurer.class,
-    VaadinConnectWebSecurityConfigurer.class })
+    VaadinConnectResourceServerConfigurer.class })
 public class VaadinConnectOAuthConfiguration
     extends AuthorizationServerConfigurerAdapter {
   private static final List<String> REQUIRED_CLAIMS = Arrays.asList("jti",

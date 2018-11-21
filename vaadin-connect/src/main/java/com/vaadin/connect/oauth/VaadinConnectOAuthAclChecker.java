@@ -22,6 +22,7 @@ import javax.annotation.security.RolesAllowed;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,15 +33,21 @@ import org.springframework.stereotype.Component;
 
 /**
  * Component used for checking role-based ACL in Vaadin Services.
- *
- * It looks for {@link PermitAll}, {@link DenyAll} and {@link RolesAllowed}
- * annotations in service methods and classes containing these methods.
- *
+ * <p>
+ * For each request that is trying to access the method in the corresponding
+ * Vaadin Connect Service, the permission check is carried on.
+ * <p>
+ * It looks for {@link PermitAnonymous} {@link PermitAll}, {@link DenyAll} and
+ * {@link RolesAllowed} annotations in service methods and classes containing
+ * these methods (no super classes' annotations are taken into account).
+ * <p>
  * Method-level annotation override Class-level ones.
- *
+ * <p>
  * In the next example, since the class is denied to all, method1 is not
- * accessible to anyone, method2 can be executed by everyone, and method3 is
- * only allowed to accounts having the ROLE_USER
+ * accessible to anyone, method2 can be executed by any authorized used, method3
+ * is only allowed to the accounts having the ROLE_USER authority and method4 is
+ * available for every user, including anonymous ones that don't provide any
+ * token in their requests.
  *
  * <pre class="code">
  * &#64;VaadinService
@@ -57,6 +64,10 @@ import org.springframework.stereotype.Component;
  *   &#64;RolesAllowed("ROLE_USER")
  *   public void method3() {
  *   }
+ *
+ *   &#64;PermitAnonymous
+ *   public void method4() {
+ *   }
  * }
  * </pre>
  *
@@ -69,7 +80,8 @@ public class VaadinConnectOAuthAclChecker {
    *
    * @param method
    *          the vaadin service method to check ACL
-   * @return an error String on failure, otherwise {@code null}
+   * @return an error String with an issue description, if any validation issues
+   *         occur, {@code null} otherwise
    */
   public String check(Method method) {
     Authentication auth = SecurityContextHolder.getContext()
@@ -80,7 +92,7 @@ public class VaadinConnectOAuthAclChecker {
     } else if (auth instanceof AnonymousAuthenticationToken) {
       return verifyAnonymousUser(method);
     }
-    return "Bad authentication, app should use oauth2";
+    return "Bad authentication, the request should use oauth2";
   }
 
   private String verifyAnonymousUser(Method method) {
@@ -94,47 +106,43 @@ public class VaadinConnectOAuthAclChecker {
 
   private String verifyAuthenticatedUser(Method method,
       OAuth2Authentication auth) {
-    Class<?> clazz = method.getDeclaringClass();
     Collection<GrantedAuthority> authorities = auth.getAuthorities();
 
-    boolean methodForbidden = denyAll(method)
-        || !roleAllowed(method, authorities);
-    boolean classForbidden = denyAll(clazz) || !roleAllowed(clazz, authorities);
-
-    if (classForbidden && !isAnnotated(method) || methodForbidden) {
+    if (!hasSecurityAnnotation(method)
+        && classForbidden(method.getDeclaringClass(), authorities)
+        || methodForbidden(method, authorities)) {
       return "Unauthorized access to vaadin service";
     }
 
     return null;
   }
 
-  private boolean isAnnotated(Method method) {
-    return method.isAnnotationPresent(PermitAll.class)
-        || method.isAnnotationPresent(DenyAll.class)
-        || method.isAnnotationPresent(RolesAllowed.class);
-  }
-
-  private boolean roleAllowed(Method method,
-      Collection<GrantedAuthority> auths) {
-    return roleAllowed(method.getAnnotation(RolesAllowed.class), auths);
-  }
-
-  private boolean roleAllowed(Class<?> clazz,
+  private boolean classForbidden(Class<?> clazz,
       Collection<GrantedAuthority> authorities) {
-    return roleAllowed(clazz.getAnnotation(RolesAllowed.class), authorities);
+    return clazz.isAnnotationPresent(DenyAll.class)
+        || !roleAllowed(clazz.getAnnotation(RolesAllowed.class), authorities);
+  }
+
+  private boolean methodForbidden(Method method,
+      Collection<GrantedAuthority> authorities) {
+    return method.isAnnotationPresent(DenyAll.class)
+        || !roleAllowed(method.getAnnotation(RolesAllowed.class), authorities);
   }
 
   private boolean roleAllowed(RolesAllowed roles,
       Collection<GrantedAuthority> authorities) {
-    return roles == null || authorities.stream().anyMatch(
-        auth -> Arrays.asList(roles.value()).contains(auth.getAuthority()));
+    if (roles == null) {
+      return true;
+    }
+
+    List<String> allowedRoles = Arrays.asList(roles.value());
+    return authorities.stream().map(GrantedAuthority::getAuthority)
+        .anyMatch(allowedRoles::contains);
   }
 
-  private boolean denyAll(Method method) {
-    return method.isAnnotationPresent(DenyAll.class);
-  }
-
-  private boolean denyAll(Class<?> clazz) {
-    return clazz.isAnnotationPresent(DenyAll.class);
+  private boolean hasSecurityAnnotation(Method method) {
+    return method.isAnnotationPresent(PermitAll.class)
+        || method.isAnnotationPresent(DenyAll.class)
+        || method.isAnnotationPresent(RolesAllowed.class);
   }
 }
