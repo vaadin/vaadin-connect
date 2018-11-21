@@ -1,0 +1,10 @@
+{
+  "extends": "vaadin",
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "sourceType": "module"
+  },
+  "globals": {
+    "Promise": true
+  }
+}
