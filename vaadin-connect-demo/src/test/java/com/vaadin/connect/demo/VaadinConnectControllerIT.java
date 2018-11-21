@@ -92,7 +92,8 @@ public class VaadinConnectControllerIT {
       HttpHeaders headers = request.getHeaders();
       headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
       headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-      headers.setBasicAuth(vaadinConnectProperties.getVaadinConnectClientAppname(),
+      headers.setBasicAuth(
+          vaadinConnectProperties.getVaadinConnectClientAppname(),
           vaadinConnectProperties.getVaadinConnectClientSecret());
       return execution.execute(request, body);
     };
@@ -113,10 +114,10 @@ public class VaadinConnectControllerIT {
 
   private MultiValueMap<String, String> getTokenRequest() {
     MultiValueMap<String, String> getTokenRequest = new LinkedMultiValueMap<>();
-    getTokenRequest.put("username", Collections
-        .singletonList(DemoVaadinOAuthConfiguration.TEST_LOGIN));
-    getTokenRequest.put("password", Collections
-        .singletonList(DemoVaadinOAuthConfiguration.TEST_PASSWORD));
+    getTokenRequest.put("username",
+        Collections.singletonList(DemoVaadinOAuthConfiguration.TEST_LOGIN));
+    getTokenRequest.put("password",
+        Collections.singletonList(DemoVaadinOAuthConfiguration.TEST_PASSWORD));
     getTokenRequest.put("grant_type", Collections.singletonList("password"));
     return getTokenRequest;
   }
@@ -283,6 +284,18 @@ public class VaadinConnectControllerIT {
 
     String methodName = "deniedByClass";
     sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+  }
+
+  @Test
+  public void shouldAllowAnonymousAccessToCorrespondingMethods() {
+    template.getRestTemplate().getInterceptors().clear();
+    tokenInjected = false;
+
+    ResponseEntity<String> response = sendVaadinServiceRequest(
+        "hasAnonymousAccess", Collections.emptyMap(), String.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals("\"anonymous success\"", response.getBody());
   }
 
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,
