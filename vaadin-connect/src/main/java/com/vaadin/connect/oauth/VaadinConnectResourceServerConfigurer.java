@@ -34,6 +34,12 @@ public class VaadinConnectResourceServerConfigurer
     extends ResourceServerConfigurerAdapter {
   private final VaadinConnectProperties connectProperties;
 
+  /**
+   * Creates the configurer instance.
+   *
+   * @param connectProperties
+   *          the properties to get the endpoint information from
+   */
   public VaadinConnectResourceServerConfigurer(
       VaadinConnectProperties connectProperties) {
     this.connectProperties = connectProperties;
