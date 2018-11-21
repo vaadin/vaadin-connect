@@ -3,6 +3,7 @@ package com.vaadin.connect.demo;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
