@@ -20,9 +20,11 @@ import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -97,37 +99,32 @@ public class VaadinConnectOAuthAclChecker {
   }
 
   private String verifyAnonymousUser(Method method) {
-    if (method.isAnnotationPresent(AnonymousAllowed.class) || method
-        .getDeclaringClass().isAnnotationPresent(AnonymousAllowed.class)) {
+    Class<?> clazz = method.getDeclaringClass();
+    if (method.isAnnotationPresent(AnonymousAllowed.class)
+        && !entityForbidden(method, Collections.emptyList())
+        || clazz.isAnnotationPresent(AnonymousAllowed.class)
+            && !entityForbidden(clazz, Collections.emptyList())) {
       return null;
     }
     return "Anonymous access is not allowed";
-
   }
 
   private String verifyAuthenticatedUser(Method method,
       OAuth2Authentication auth) {
     Collection<GrantedAuthority> authorities = auth.getAuthorities();
 
-    if (!hasSecurityAnnotation(method)
-        && classForbidden(method.getDeclaringClass(), authorities)
-        || methodForbidden(method, authorities)) {
+    if (hasSecurityAnnotation(method) ? entityForbidden(method, authorities)
+        : entityForbidden(method.getDeclaringClass(), authorities)) {
       return "Unauthorized access to vaadin service";
     }
-
     return null;
   }
 
-  private boolean classForbidden(Class<?> clazz,
+  private boolean entityForbidden(AnnotatedElement entity,
       Collection<GrantedAuthority> authorities) {
-    return clazz.isAnnotationPresent(DenyAll.class)
-        || !roleAllowed(clazz.getAnnotation(RolesAllowed.class), authorities);
-  }
-
-  private boolean methodForbidden(Method method,
-      Collection<GrantedAuthority> authorities) {
-    return method.isAnnotationPresent(DenyAll.class)
-        || !roleAllowed(method.getAnnotation(RolesAllowed.class), authorities);
+    return entity.isAnnotationPresent(DenyAll.class) || (!entity
+        .isAnnotationPresent(AnonymousAllowed.class)
+        && !roleAllowed(entity.getAnnotation(RolesAllowed.class), authorities));
   }
 
   private boolean roleAllowed(RolesAllowed roles,
@@ -142,7 +139,8 @@ public class VaadinConnectOAuthAclChecker {
   }
 
   private boolean hasSecurityAnnotation(Method method) {
-    return method.isAnnotationPresent(PermitAll.class)
+    return method.isAnnotationPresent(AnonymousAllowed.class)
+        || method.isAnnotationPresent(PermitAll.class)
         || method.isAnnotationPresent(DenyAll.class)
         || method.isAnnotationPresent(RolesAllowed.class);
   }
