@@ -13,7 +13,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.oauth.PermitAnonymous;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
 @VaadinService
 @DenyAll
@@ -97,7 +97,7 @@ public class DemoVaadinService {
   public void deniedByClass() {
   }
 
-  @PermitAnonymous
+  @AnonymousAllowed
   public String hasAnonymousAccess() {
     return "anonymous success";
   }

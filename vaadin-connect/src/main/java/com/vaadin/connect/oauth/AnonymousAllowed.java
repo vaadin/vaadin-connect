@@ -35,11 +35,11 @@ import java.lang.annotation.Target;
  * related to the authorized users.
  * <p>
  * For example, when the same Vaadin Connect service method is annotated with
- * both {@link javax.annotation.security.DenyAll} and {@link PermitAnonymous}
+ * both {@link javax.annotation.security.DenyAll} and {@link AnonymousAllowed}
  * annotations, no authorized user will be able to access the method and any
  * anonymous user will be able to access it.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
-public @interface PermitAnonymous {
+public @interface AnonymousAllowed {
 }

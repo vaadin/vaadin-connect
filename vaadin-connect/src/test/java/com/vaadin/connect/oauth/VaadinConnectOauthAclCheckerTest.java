@@ -175,7 +175,7 @@ public class VaadinConnectOauthAclCheckerTest {
   @Test
   public void should_AllowAnonymousAccess_When_ClassIsAnnotated()
       throws Exception {
-    @PermitAnonymous
+    @AnonymousAllowed
     class AnonymousAccess {
       public void myMethod() {
       }
@@ -191,7 +191,7 @@ public class VaadinConnectOauthAclCheckerTest {
   public void should_AllowAnonymousAccess_When_MethodIsAnnotated()
       throws Exception {
     class MethodAnnotations {
-      @PermitAnonymous
+      @AnonymousAllowed
       public void myMethod() {
       }
     }
@@ -222,7 +222,7 @@ public class VaadinConnectOauthAclCheckerTest {
     @DenyAll
     class OtherAnnotations {
       @DenyAll
-      @PermitAnonymous
+      @AnonymousAllowed
       public void myMethod() {
       }
     }

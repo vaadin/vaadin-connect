@@ -291,7 +291,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void should_AllowAnonymousAccess_When_PermitAnonymous() {
+  public void should_AllowAnonymousAccess_When_AnonymousAllowed() {
     template.getRestTemplate().getInterceptors().clear();
     tokenInjected = false;
 

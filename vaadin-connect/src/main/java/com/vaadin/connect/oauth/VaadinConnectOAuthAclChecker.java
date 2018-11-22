@@ -19,6 +19,7 @@ package com.vaadin.connect.oauth;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +38,7 @@ import org.springframework.stereotype.Component;
  * For each request that is trying to access the method in the corresponding
  * Vaadin Connect Service, the permission check is carried on.
  * <p>
- * It looks for {@link PermitAnonymous} {@link PermitAll}, {@link DenyAll} and
+ * It looks for {@link AnonymousAllowed} {@link PermitAll}, {@link DenyAll} and
  * {@link RolesAllowed} annotations in service methods and classes containing
  * these methods (no super classes' annotations are taken into account).
  * <p>
@@ -65,7 +66,7 @@ import org.springframework.stereotype.Component;
  *   public void method3() {
  *   }
  *
- *   &#64;PermitAnonymous
+ *   &#64;AnonymousAllowed
  *   public void method4() {
  *   }
  * }
@@ -96,8 +97,8 @@ public class VaadinConnectOAuthAclChecker {
   }
 
   private String verifyAnonymousUser(Method method) {
-    if (method.isAnnotationPresent(PermitAnonymous.class) || method
-        .getDeclaringClass().isAnnotationPresent(PermitAnonymous.class)) {
+    if (method.isAnnotationPresent(AnonymousAllowed.class) || method
+        .getDeclaringClass().isAnnotationPresent(AnonymousAllowed.class)) {
       return null;
     }
     return "Anonymous access is not allowed";
