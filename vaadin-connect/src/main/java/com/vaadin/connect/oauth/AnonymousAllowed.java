@@ -28,16 +28,21 @@ import java.lang.annotation.Target;
  * on a service class) or the particular service method (if placed on a service
  * method) without providing an authentication token.
  * <p>
- * Note that this annotation is processed separately from the
- * {@link javax.annotation.security.DenyAll},
- * {@link javax.annotation.security.PermitAll} and
- * {@link javax.annotation.security.RolesAllowed} annotations, since those are
- * related to the authorized users.
  * <p>
- * For example, when the same Vaadin Connect service method is annotated with
- * both {@link javax.annotation.security.DenyAll} and {@link AnonymousAllowed}
- * annotations, no authorized user will be able to access the method and any
- * anonymous user will be able to access it.
+ * If there are other supported security annotations present on the same class
+ * or method:
+ * <ul>
+ * <li>{@link AnonymousAllowed} is overridden by
+ * {@link javax.annotation.security.DenyAll} annotation, disallowing any user
+ * from accessing the method</li>
+ * <li>{@link AnonymousAllowed} annotation overrides
+ * {@link javax.annotation.security.PermitAll} and
+ * {@link javax.annotation.security.RolesAllowed} annotations, allowing all
+ * users to access the method (anonymous and authenticated users with any
+ * security roles)</li>
+ * </ul>
+ *
+ * @see VaadinConnectOAuthAclChecker for security rules check implementation
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
