@@ -99,25 +99,33 @@ public class VaadinConnectOAuthAclChecker {
   }
 
   private String verifyAnonymousUser(Method method) {
-    Class<?> clazz = method.getDeclaringClass();
-    if (method.isAnnotationPresent(AnonymousAllowed.class)
-        && !entityForbidden(method, Collections.emptyList())
-        || clazz.isAnnotationPresent(AnonymousAllowed.class)
-            && !entityForbidden(clazz, Collections.emptyList())) {
-      return null;
+    if (cannotAccessAnonymously(method)
+        || cannotAccessMethod(method, Collections.emptyList())) {
+      return "Anonymous access is not allowed";
     }
-    return "Anonymous access is not allowed";
+    return null;
+  }
+
+  private boolean cannotAccessAnonymously(Method method) {
+    if (hasSecurityAnnotation(method)) {
+      return !method.isAnnotationPresent(AnonymousAllowed.class);
+    }
+    Class<?> clazz = method.getDeclaringClass();
+    return !clazz.isAnnotationPresent(AnonymousAllowed.class);
   }
 
   private String verifyAuthenticatedUser(Method method,
       OAuth2Authentication auth) {
-    Collection<GrantedAuthority> authorities = auth.getAuthorities();
-
-    if (hasSecurityAnnotation(method) ? entityForbidden(method, authorities)
-        : entityForbidden(method.getDeclaringClass(), authorities)) {
+    if (cannotAccessMethod(method, auth.getAuthorities())) {
       return "Unauthorized access to vaadin service";
     }
     return null;
+  }
+
+  private boolean cannotAccessMethod(Method method,
+      Collection<GrantedAuthority> authorities) {
+    return hasSecurityAnnotation(method) ? entityForbidden(method, authorities)
+        : entityForbidden(method.getDeclaringClass(), authorities);
   }
 
   private boolean entityForbidden(AnnotatedElement entity,

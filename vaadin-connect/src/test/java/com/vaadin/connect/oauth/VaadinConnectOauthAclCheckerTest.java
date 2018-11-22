@@ -306,6 +306,57 @@ public class VaadinConnectOauthAclCheckerTest {
     assertNotNull(checker.check(method));
   }
 
+  @Test
+  public void should_DisallowAnonymousAccess_When_AnonymousAllowedIsOverriddenWithDenyAll()
+      throws Exception {
+    @AnonymousAllowed
+    class AnonymousAllowedOverriddenWithDenyAll {
+      @DenyAll
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = AnonymousAllowedOverriddenWithDenyAll.class
+        .getMethod("myMethod");
+    assertNotNull(checker.check(method));
+  }
+
+  @Test
+  public void should_DisallowAnonymousAccess_When_AnonymousAllowedIsOverriddenWithRolesAllowed()
+      throws Exception {
+    @AnonymousAllowed
+    class AnonymousAllowedOverriddenWithRolesAllowed {
+      @RolesAllowed(ROLE_USER)
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = AnonymousAllowedOverriddenWithRolesAllowed.class
+        .getMethod("myMethod");
+    assertNotNull(checker.check(method));
+  }
+
+  @Test
+  public void should_DisallowAnonymousAccess_When_AnonymousAllowedIsOverriddenWithPermitAll()
+      throws Exception {
+    @AnonymousAllowed
+    class AnonymousAllowedOverriddenWithPermitAll {
+      @PermitAll
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = AnonymousAllowedOverriddenWithPermitAll.class
+        .getMethod("myMethod");
+    assertNotNull(checker.check(method));
+  }
+
   private SecurityContext createAnonymousContext() {
     SecurityContext anonymousContext = mock(SecurityContext.class);
     when(anonymousContext.getAuthentication())
