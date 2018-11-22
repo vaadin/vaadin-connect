@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class VaadinConnectOauthAclCheckerTest {
+  private static final String ROLE_USER = "ROLE_USER";
 
   private static SecurityContext securityContext;
 
@@ -57,16 +58,13 @@ public class VaadinConnectOauthAclCheckerTest {
         .setStrategyName(MockSecurityContextHolderStrategy.class.getName());
 
     GrantedAuthority authority = mock(GrantedAuthority.class);
-    when(authority.getAuthority())
-        .thenReturn("ROLE_USER");
+    when(authority.getAuthority()).thenReturn(ROLE_USER);
 
     OAuth2Authentication authentication = mock(OAuth2Authentication.class);
-    when(authentication.getAuthorities())
-        .thenReturn(Arrays.asList(authority));
+    when(authentication.getAuthorities()).thenReturn(Arrays.asList(authority));
 
     securityContext = mock(SecurityContext.class);
-    when(securityContext.getAuthentication())
-        .thenReturn(authentication);
+    when(securityContext.getAuthentication()).thenReturn(authentication);
   }
 
   @After
@@ -101,7 +99,7 @@ public class VaadinConnectOauthAclCheckerTest {
     public void myMethod() {
     }
 
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed(ROLE_USER)
     public void myMethod2() {
     }
 
@@ -128,12 +126,12 @@ public class VaadinConnectOauthAclCheckerTest {
     assertNull(checker.check(method));
   }
 
-  @RolesAllowed({"ROLE_ADMIN"})
+  @RolesAllowed({ "ROLE_ADMIN" })
   public static class MyClass3 {
     public void myMethod() {
     }
 
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed(ROLE_USER)
     public void myMethod2() {
     }
 
@@ -149,18 +147,20 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test()
-  public void should_Pass_When_InvalidRoleClass_ValidRoleMethod() throws Exception {
+  public void should_Pass_When_InvalidRoleClass_ValidRoleMethod()
+      throws Exception {
     Method method = MyClass3.class.getMethod("myMethod2");
     assertNull(checker.check(method));
   }
 
   @Test()
-  public void should_Pass_When_InvalidRoleClass_PermitAllMethod() throws Exception {
+  public void should_Pass_When_InvalidRoleClass_PermitAllMethod()
+      throws Exception {
     Method method = MyClass3.class.getMethod("myMethod3");
     assertNull(checker.check(method));
   }
 
-  @RolesAllowed("ROLE_USER")
+  @RolesAllowed(ROLE_USER)
   public static class MyClass4 {
     public void myMethod() {
     }
@@ -217,10 +217,83 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
-  public void should_AllowAnonymousAccess_When_OtherSecurityAnnotationsPresent()
+  public void should_AllowAnyAuthenticatedAccess_When_PermitAllAndAnonymousAllowed()
       throws Exception {
-    @DenyAll
     class OtherAnnotations {
+      @PermitAll
+      @AnonymousAllowed
+      public void myMethod() {
+      }
+    }
+
+    Method method = OtherAnnotations.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  @Test
+  public void should_AllowAnonymousAccess_When_PermitAllAndAnonymousAllowed()
+      throws Exception {
+    class PermitAllAndAnonymousAllowed {
+      @PermitAll
+      @AnonymousAllowed
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = PermitAllAndAnonymousAllowed.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  @Test
+  public void should_AllowAnyAuthenticatedAccess_When_RolesAllowedAndAnonymousAllowed()
+      throws Exception {
+    class RolesAllowedAndAnonymousAllowed {
+      @RolesAllowed("ADMIN")
+      @AnonymousAllowed
+      public void myMethod() {
+      }
+    }
+
+    Method method = RolesAllowedAndAnonymousAllowed.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  @Test
+  public void should_AllowAnonymousAccess_When_RolesAllowedAndAnonymousAllowed()
+      throws Exception {
+    class RolesAllowedAndAnonymousAllowed {
+      @RolesAllowed("ADMIN")
+      @AnonymousAllowed
+      public void myMethod() {
+      }
+    }
+
+    securityContext = createAnonymousContext();
+
+    Method method = RolesAllowedAndAnonymousAllowed.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  @Test
+  public void should_AllowAnyAuthenticatedAccess_When_DenyAllAndAnonymousAllowed()
+      throws Exception {
+    class DenyAllAndAnonymousAllowed {
+      @DenyAll
+      @AnonymousAllowed
+      public void myMethod() {
+      }
+    }
+
+    Method method = DenyAllAndAnonymousAllowed.class.getMethod("myMethod");
+    assertNotNull(checker.check(method));
+  }
+
+  @Test
+  public void should_AllowAnonymousAccess_When_DenyAllAndAnonymousAllowed()
+      throws Exception {
+    class DenyAllAndAnonymousAllowed {
       @DenyAll
       @AnonymousAllowed
       public void myMethod() {
@@ -229,8 +302,8 @@ public class VaadinConnectOauthAclCheckerTest {
 
     securityContext = createAnonymousContext();
 
-    Method method = OtherAnnotations.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    Method method = DenyAllAndAnonymousAllowed.class.getMethod("myMethod");
+    assertNotNull(checker.check(method));
   }
 
   private SecurityContext createAnonymousContext() {
