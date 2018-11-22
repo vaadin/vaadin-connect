@@ -7,64 +7,43 @@ layout: page
 
 = Security in Vaadin Connect
 
-== The Authentication flow
+== Authentication flow
 
-=== Vaadin Connect OAuth flow
 
-In Vaadin Connect, the `_client_` that consumes services, is the front-end application running in the user's browser, whereas the java server acts as both: the `_resource server_` exposing services, and the `_authentication server_` verifying the user credentials.
+*_Vaadin Connect Authentication flow_* meets a simplified specification of the *_OAuth 2.0_* known as the *_Password Grant flow_*, which is explained in the <<appendix,appendix>>.
 
-The *_Vaadin Connect authentication flow_* is originated in the browser, when the javascript application accesses a service for the first time. The user's browser sends an authentication request with the password credentials, then the server validates those and emits an `_access token_` that the javascript application will use in sucesive service requests.
+In Vaadin Connect, the `_client application_` that consumes services, is the front-end JavaScript running in the user's browser, whereas the Java server acts as both: the `_resource server_` exposing services, and the `_authorization server_` verifying user's credentials.
 
-Besides the `_access token_`, the server returns a `_refresh token_` that will be used to get a new `_access token_` when the previous one expires, avoiding to send credentials again.
+The *_Vaadin Connect authentication flow_* is originated in the browser, when the JavaScript application accesses a service for the first time. The user's browser sends an authentication request with the password credentials, then the server validates those and emits an `_access token_` that the  JavaScript application will use in successive service requests.
 
-[NOTE]
-====
-It is application responsability to provide a proper form to introduce username and password.
-====
+Besides the `_access token_`, the server returns a `_refresh token_` that will be used to get a new `_access token_` when the previous one expires.
 
 image::vaadin-connect-oauth-flow.png[Vaadin Connect Authentication Diagram]
-=== _Password Grant_ flow
 
-Vaadin Connect flow meets the standars defined in the OAuth 2.0 https://tools.ietf.org/html/rfc6749#section-4.3[_Resource Owner Password Credentials Grant_] type, which is applicable for clients capable of obtaining the user's credentials directly.
+== Implementation
 
-The *_Password Grant flow_* is originated when the `_resource owner_` (aka user) introduces its username and password to the client application, then the client authenticates with the `_authorization server_` token endpoint requesting an `_access token_` by including the credentials received. Finally the `_authorization server_` validates the credentials, and issues an _access token_
+The Vaadin Connect Java runtime comes with a built-in auth endpoint that by default makes it easy to configure authentication for the exposed services. It includes everything needed for the *authentication* providing easy mechanisms to validate credentials and tokens, and for the *authorization* of which roles can access certain services.
 
-image::password-grant-oauth-flow.png[Password Grant Diagram]
+In addition, the Vaadin Connect front-end API covers out-of-the-box the flow whether to ask for the `user/password` pair, or use the `refresh token` when requesting the `access token` from the server endpoint. Also, it automatically adds headers with the `access token` to each request made to consume services. Therefore the developer does not have to worry about implementing anything related with OAuth in the front-end.
 
-
-=== _Authorization Code Grant_ flow
-===== (TODO: we can still remove this section)
-
-Therefore, Vaadin Connect authentication is a simplified case of the entire OAuth 2.0 authentication process, that is described bellow for clarification.
-
-The *_Authorization Code Grant flow_* describes how the user is redirected to the `_authorization server_` in order to, once authenticated, get an  `_authentication code_` that is passed back to the `_client server_` through the user's browser. The `_client server_` uses the `_authentication code_` besides the `_client secret_` to get an `_access token_` from the `_authorization server_` that will be used to consume the service from the `_resource server_`.
-
-image::authorizarion-code-grant-oauth-flow.png[Authentication Code Grant Diagram]
-
-== The Implementation
-
-The Vaadin Connect runtime comes with a built-in auth server by default that makes easy to configure authentication for the provided services. It includes everything needed for the authentication providing easy mechanisms to validate credentials and tokens, and for the authorization of which roles can access certain services.
-
-In addition the javascript API, includes everything to request an `_access token_` to the server endpoint using the user credentials, and to add it to each request made to service endpoints.
-
-Since Vaadin Connect is implemented on top of Spring, the OAuth part relies on https://spring.io/projects/spring-security-oauth[Spring Security OAuth].
-
-Vaadin Connect OAuth simplifies the process by providing the `@EnableVaadinConnectOAuthServer` which configures everything, except the users repository which must be provided by the developer via the `UserDetailsService` Bean.
+Since Vaadin Connect is implemented on top of Spring, the OAuth part relies on https://spring.io/projects/spring-security-oauth[Spring Security OAuth], though Vaadin Connect simplifies the process by providing the `@EnableVaadinConnectOAuthServer` annotation which configures everything, except the users repository that must be provided by the developer via the `UserDetailsService` Bean.
 
 [NOTE]
 ====
-By default, Vaadin Connects uses BCrypted passwords, but you can override it by providint your own `PasswordEncoder` Bean.
+By default, Vaadin Connect uses BCrypted passwords, but you can override it by providing your own `PasswordEncoder` Bean.
 ====
 
 == Server Configuration
 
 === Authentication
 
-In order to enable built-int authentication, you need to mark your application with the `@EnableVaadinConnectOAuthServer` annotation, and provide a valid `UserDetailsService` and optionally a `PasswordEncoder`
+In order to enable built-int authentication, you need to mark your application with the `@EnableVaadinConnectOAuthServer` annotation, and provide a valid `UserDetailsService`.
 
-==== Basic example
+==== Harcoded User Account example
 
-The following example defines just one user for the entire applicaton with a plain password.
+The following example defines just one valid user for the entire application.
+
+Take in account that the password must be bcrypt-ed in order to be compatible with the default encoder provided in Vaadin Connect.
 
 [source,java]
 ----
@@ -72,24 +51,25 @@ The following example defines just one user for the entire applicaton with a pla
 public class MyDemoApplication {
 
   private UserDetails myUser = User.builder()
-    .username("daffy").password("duck").roles("ROLE_USER").build();
+    .username("daffy") // password is duck
+    .password("$2a$04$zm9sHQ5ELrUglsbZTj3DFuP9osJKURNHCWq59e2x1eRlwWLQSWMZi")
+    .roles("USER").build();
 
-  @Bean
-  PasswordEncoder encoder encoder() {
-    return NoOpPasswordEncoder.getInstance();
-  }
   @Bean
   public UserDetailsService userDetailsService() {
       return username ->
-          myUser.getUsername().equals(username) ? myUser : null;
+          username.equals(myUser.getUsername()) ? myUser : null;
   }
+
   ...
 }
 ----
 
-==== JPA User repository
+==== JPA User repository example
 
-The next example defines a user persistent database using JPA.
+The next example uses Spring Data Repositories with JPA for the persistent database with the user accounts.
+
+Notice that the default encoder is called to bcrypt passwords before storing them in the database.
 
 [source,java]
 ----
@@ -102,27 +82,35 @@ public class MyDemoApplication {
         .map(account -> User.builder()
             .username(account.getUsername())
             .password(account.getPassword())
-            .roles("ROLE_USER").build())
+            .roles("USER").build())
         .orElseThrow(() -> new UsernameNotFoundException(username));
   }
+
+  @Bean
+  CommandLineRunner init(AccountRepository accountRepository, PasswordEncoder encoder) {
+    accountRepository.save(new UserAccount(
+      "daffy",
+      encoder.encode("duck")));
+  };
+
   ...
 }
 
-/** The JPA Accounts Repository */
-public interface AccountRepository extends JpaRepository<Account, Long> {
-  Optional<Account> findByUsername(String username);
+/** The JPA User Accounts Repository */
+public interface AccountRepository extends JpaRepository<UserAccount, Long> {
+  Optional<UserAccount> findByUsername(String username);
 }
 
-/** The JPA Account Entity */
+/** The JPA User Account Entity */
 @Entity
-public class Account {
+public class UserAccount {
   @Id @GeneratedValue private Long id;
   @NotEmpty private String username;
-  @JsonIgnor private String password;
+  @JsonIgnore private String password;
 
-  public Account() {
+  public UserAccount() {
   }
-  public Account(String username, String password) {
+  public UserAccount(String username, String password) {
     this.username = username;
     this.password = password;
   }
@@ -139,11 +127,11 @@ public class Account {
 }
 ----
 
-==== Custom AuthenticationManager
+==== LDAP repository example
 
-Finally you could configure your Vaadin Connect to use a custom authentication mechanism by providing an `AuthenticationManager` implementation.
+Finally you could configure Vaadin Connect to use a custom authentication mechanism by providing a personalized `AuthenticationManager` Bean.
 
-In this example, any user password combination should work.
+In this example, an LDAP directory is used to retrieve user accounts.
 
 [source,java]
 ----
@@ -151,15 +139,23 @@ In this example, any user password combination should work.
 public class MyDemoApplication {
 
   @Bean
-  AuthenticationManager authenticationManager(PasswordEncoder encoder) {
-   return new AuthenticationManager() {
-     @Override
-     public Authentication authenticate(Authentication auth)
-       throws AuthenticationException {
-         return new UsernamePasswordAuthenticationToken(
-           auth.getName(), encoder.encode(auth.getCredentials()), new ArrayList<>());
-     }
-   };
+  AuthenticationManager authenticationManager(
+    ObjectPostProcessor<Object> objectPostProcessor) throws Exception {
+
+    AuthenticationManagerBuilder builder =
+      new AuthenticationManagerBuilder(objectPostProcessor);
+
+    builder
+      .ldapAuthentication()
+        .userDnPatterns("uid={0},ou=people")
+        .groupSearchBase("ou=groups")
+        .contextSource()
+        .url("ldap://localhost:8389/dc=example,dc=com")
+        .and()
+      .passwordCompare()
+        .passwordAttribute("userPassword");
+
+    return builder.getObject();
   }
   ...
 }
@@ -167,21 +163,56 @@ public class MyDemoApplication {
 
 === Authorization
 
-Vaadin Connect provides access control (aka ACL) to service classes via annotations:
+Vaadin Connect provides access control (aka ACL) to service classes via the following annotations:
 
 - `@PermitAll`: grants access to any authenticated user
 - `@RolesAllowed`: grants access to users having the specified roles
 - `@DenyAll`: deny access to all users
-- `@PermitAnonymous`: grants anonymous access
+- `@AnonymousAllowed`: grants anonymous access
 
-The anonymous annotation is processed separately from authenticated ones, meaning that, for instance, a service might be permitted to anonymous but denied to authenticated users.
+The rules of thumb are that: when no annotation is given `permitAll` applies, _method-level_ has preference over _class-level_ annotations, and the most restrictive rule wins.
 
-_method-level_ annotations have preference over _class-level_ annotations
+So, `DenyAll` overrides `AnonymousAllowed`, and `AnonymousAllowed` overrides `PermitAll` and `RolesAllowed`.
 
-By default Vaadin connect deny anonymous accesses
+==== Method-level Examples
 
-==== Examples
+[source,java]
+----
+@VaadinService
+public class MyService {
 
+  public void notAnnotatedService() {
+    // Permited to all authenticated users
+  }
+
+  @PermitAll
+  public void permittedToAllService() {
+    // Permited to all authenticated users
+  }
+
+  @AnonymousAllowed
+  public void anonymousService() {
+    // Permitted to all (authenticated & anonymous) users
+  }
+
+  @PermitAll @AnonymousAllowed
+  public void permittedToAllAndAnonymousService() {
+    // Permited to all users
+  }
+
+  @DenyAll @AnonymousAllowed
+  public void deniedService() {
+    // Denied to all users
+  }
+
+  @RolesAllowed("ROLE_ADMIN") @AnonymousAllowed
+  public void permittedToToleService() {
+    // Permited to all users
+  }
+}
+----
+
+==== Class-level Examples
 
 [source,java]
 ----
@@ -190,7 +221,12 @@ By default Vaadin connect deny anonymous accesses
 public class MyService {
 
   public void deniedService() {
-    // Dennied to all users
+    // Denied to all users
+  }
+
+  @AnonymousAllowed
+  public void anonymousService() {
+   // Permited to all users
   }
 
   @PermitAll
@@ -202,21 +238,35 @@ public class MyService {
   public void permittedToToleService() {
     // Permited to all authenticated users belonging to the ROLE_ADMIN
   }
-
-  @PermitAnonymous
-  public void anonymousService() {
-    // Permitted anonymous users but denied to authenticated users
-  }
 }
 ----
 
-== Application Configuration
+== [[appendix]]APPENDIX
+=== The OAuth 2.0 Specification
 
-Vaadin Connect can be configured via the `application.properties` file.
-For the OAuth feature, you only can customize the token endpoint which by default is set by default to `/oauth/token`
+https://tools.ietf.org/html/rfc6749[OAuth 2.0 Authorization Framework] is mainly intended for federated login and server-to-server requests, but It can also be used for other purposes.
 
-.application.properties
-[source,java]
-----
-vaadin.connect.token.endpoint=/token
-----
+Based on the authentication process it defines different types, the typical one is the https://tools.ietf.org/html/rfc6749#section-4.1[*_Authorization Code grant_*] that describes the most complex OAuth flow, thouth,  we are interested in the https://tools.ietf.org/html/rfc6749#section-4.3[*_Password grant_*] which is a simplified case of that, and is used in the *_Vaadin Connect Authentication flow_*.
+
+[NOTE]
+====
+These two types are described in the following sections as a reference, and to avoid confussion. You don't need to implement anything to use Vaadin Connect OAuth.
+====
+
+=== _Password Grant_ flow
+
+It is applicable for clients capable of obtaining the user's credentials directly, it means that the user trusts in the `_client application_` which has an interactive form for typing the username and password.
+
+The *_Password Grant flow_* is originated when the `_resource owner_` (aka user) introduces its username and password to the `_client application_`, then the client sends a request with the provided credentials to the `_authorization server_` to get an `_access token_`. Finally the `_authorization server_` validates the credentials, and issues an `_access token_` that the client utilizes to consume `_resource server_` services.
+
+image::password-grant-oauth-flow.png[Password Grant Diagram]
+
+=== _Authorization Code Grant_ flow
+
+It is applicable for more complex scenarios, the typical case is when the the `_resource server_` does not have any authorization system and trusts on 3rd party user-accout databases like Google, Twitter, etc.
+
+The *_Authorization Code Grant flow_* describes how the `_user_` is redirected to the `_authorization server_` in order to, once authenticated, get an  `_authentication code_` that is passed back to the `_client application_` through the user's browser. The `_client application_` uses the `_authentication code_` besides the `_client secret_` to get an `_access token_` from the `_authorization server_` that the `_client_` will use to consume the service from the `_resource server_`.
+
+
+
+image::authorizarion-code-grant-oauth-flow.png[Authentication Code Grant Diagram]
