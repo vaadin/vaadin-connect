@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -30,6 +31,10 @@ import org.springframework.stereotype.Component;
 
 import com.vaadin.connect.VaadinConnectProperties;
 
+/**
+ * A class to configure Spring OAUth2 Authorization Server with Vaadin Connect
+ * defaults.
+ */
 @Component
 @Import(VaadinConnectProperties.class)
 public class VaadinConnectOAuthConfigurer
@@ -43,17 +48,20 @@ public class VaadinConnectOAuthConfigurer
   private final TokenStore tokenStore;
   private final JwtAccessTokenConverter accessTokenConverter;
   private final AuthenticationManager authenticationManager;
+  private final UserDetailsService userDetails;
 
   public VaadinConnectOAuthConfigurer(PasswordEncoder encoder,
       VaadinConnectProperties vaadinConnectProperties, TokenStore tokenStore,
       JwtAccessTokenConverter accessTokenConverter,
       AuthenticationConfiguration authenticationConfiguration,
+      @Autowired(required = false) UserDetailsService userDetails,
       @Autowired(required = false) AuthenticationManager authenticationManager)
       throws Exception {
     this.encoder = encoder;
     this.vaadinConnectProperties = vaadinConnectProperties;
     this.tokenStore = tokenStore;
     this.accessTokenConverter = accessTokenConverter;
+    this.userDetails = userDetails;
     this.authenticationManager = authenticationManager != null
         ? authenticationManager
         : authenticationConfiguration.getAuthenticationManager();
@@ -61,9 +69,13 @@ public class VaadinConnectOAuthConfigurer
 
   @Override
   public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
-    // This is required for 'password' grants, which is specified below
-    endpoints.authenticationManager(authenticationManager)
-        .tokenStore(tokenStore).accessTokenConverter(accessTokenConverter);
+    // This is required for 'password' and 'refresh_token' grants, which is
+    // specified below
+    endpoints
+        .userDetailsService(userDetails)
+        .authenticationManager(authenticationManager)
+        .tokenStore(tokenStore)
+        .accessTokenConverter(accessTokenConverter);
   }
 
   @Override
@@ -75,5 +87,4 @@ public class VaadinConnectOAuthConfigurer
             .encode(vaadinConnectProperties.getVaadinConnectClientSecret()))
         .scopes(SCOPES).authorizedGrantTypes(GRANT_TYPES);
   }
-
 }
