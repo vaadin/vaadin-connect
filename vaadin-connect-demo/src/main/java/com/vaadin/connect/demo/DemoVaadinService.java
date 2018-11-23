@@ -1,17 +1,19 @@
 package com.vaadin.connect.demo;
 
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
 @VaadinService
 @DenyAll
@@ -93,5 +95,10 @@ public class DemoVaadinService {
   }
 
   public void deniedByClass() {
+  }
+
+  @AnonymousAllowed
+  public String hasAnonymousAccess() {
+    return "anonymous success";
   }
 }

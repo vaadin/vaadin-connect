@@ -15,7 +15,9 @@
  */
 package com.vaadin.connect.oauth;
 
-import com.vaadin.connect.VaadinConnectProperties;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,8 +33,7 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
 import org.springframework.security.oauth2.provider.token.store.JwtClaimsSetVerifier;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
-import java.util.Arrays;
-import java.util.List;
+import com.vaadin.connect.VaadinConnectProperties;
 
 /**
  * Class to configure the authentication of a vaadin-connect application.
@@ -88,7 +89,8 @@ import java.util.List;
  * </pre>
  */
 @Configuration
-@Import(VaadinConnectOAuthConfigurer.class)
+@Import({ VaadinConnectOAuthConfigurer.class,
+    VaadinConnectResourceServerConfigurer.class })
 public class VaadinConnectOAuthConfiguration
     extends AuthorizationServerConfigurerAdapter {
   private static final List<String> REQUIRED_CLAIMS = Arrays.asList("jti",

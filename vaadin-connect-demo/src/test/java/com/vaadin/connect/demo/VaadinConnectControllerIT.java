@@ -92,7 +92,8 @@ public class VaadinConnectControllerIT {
       HttpHeaders headers = request.getHeaders();
       headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
       headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-      headers.setBasicAuth(vaadinConnectProperties.getVaadinConnectClientAppname(),
+      headers.setBasicAuth(
+          vaadinConnectProperties.getVaadinConnectClientAppname(),
           vaadinConnectProperties.getVaadinConnectClientSecret());
       return execution.execute(request, body);
     };
@@ -113,16 +114,16 @@ public class VaadinConnectControllerIT {
 
   private MultiValueMap<String, String> getTokenRequest() {
     MultiValueMap<String, String> getTokenRequest = new LinkedMultiValueMap<>();
-    getTokenRequest.put("username", Collections
-        .singletonList(DemoVaadinOAuthConfiguration.TEST_LOGIN));
-    getTokenRequest.put("password", Collections
-        .singletonList(DemoVaadinOAuthConfiguration.TEST_PASSWORD));
+    getTokenRequest.put("username",
+        Collections.singletonList(DemoVaadinOAuthConfiguration.TEST_LOGIN));
+    getTokenRequest.put("password",
+        Collections.singletonList(DemoVaadinOAuthConfiguration.TEST_PASSWORD));
     getTokenRequest.put("grant_type", Collections.singletonList("password"));
     return getTokenRequest;
   }
 
   @Test
-  public void simpleMethodExecutedSuccessfully() {
+  public void should_ReceiveCorrectResponse_When_CorrectRequestIsProvided() {
     int argument = 3;
     String methodName = "addOne";
     ResponseEntity<Integer> response = sendVaadinServiceRequest(methodName,
@@ -135,7 +136,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void wrongNumberOfArgumentsCallFails() {
+  public void should_ReceiveBadRequest_When_IncorrectNumberOfParametersProvided() {
     Map<String, Integer> requestObject = new HashMap<>();
     requestObject.put("number", 3);
     requestObject.put("bad_number", 33);
@@ -149,7 +150,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void noArgumentCallFails() {
+  public void should_ReceiveBadRequest_When_NoParametersProvided() {
     String methodName = "addOne";
     ResponseEntity<String> response = sendVaadinServiceRequest(methodName,
         Collections.emptyMap(), String.class);
@@ -159,7 +160,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void wrongArgumentTypeFails() {
+  public void should_ReceiveBadRequest_When_IncorrectParameterTypesProvided() {
     String methodName = "addOne";
     ResponseEntity<String> response = sendVaadinServiceRequest(methodName,
         Collections.singletonMap("number",
@@ -171,7 +172,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void wrongServiceNameReturns404() {
+  public void should_ReceiveNotFound_When_WrongServiceNameProvided() {
     String serviceMethod = "addOne";
     checkMethodPresenceInService(serviceMethod, true);
 
@@ -182,7 +183,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void wrongMethodNameReturns404() {
+  public void should_ReceiveNotFound_When_WrongMethodNameProvided() {
     String absentMethodName = "absentMethod";
     checkMethodPresenceInService(absentMethodName, false);
 
@@ -192,7 +193,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void privateMethodReturns404() {
+  public void should_ReceiveNotFound_When_PrivateMethodNameProvided() {
     String methodToCall = "privateMethod";
     checkMethodPresenceInService(methodToCall, true);
 
@@ -202,7 +203,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void noReturnNoArgumentsMethodExecutedSuccessfully() {
+  public void should_ReceiveCorrectResponse_When_MethodWithNoReturnCalled() {
     ResponseEntity<String> response = sendVaadinServiceRequest(
         "noReturnNoArguments", Collections.emptyMap(), String.class);
 
@@ -211,7 +212,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void methodAndServiceCaseDoesNotMatter() {
+  public void should_ReceiveSameResponses_When_DifferentNameCaseUsed() {
     String serviceName1 = TEST_SERVICE_NAME.toUpperCase(Locale.ENGLISH);
     String serviceName2 = TEST_SERVICE_NAME.toLowerCase(Locale.ENGLISH);
     assertNotEquals(serviceName1, serviceName2);
@@ -238,7 +239,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void complexRequestAndResponseAreSupported() {
+  public void should_ReceiveCorrectResponse_When_ComplexObjectIsReturnedByServiceMethod() {
     String name = "test";
     Map<String, Object> complexRequestPart = new HashMap<>();
     complexRequestPart.put("name", name);
@@ -260,7 +261,7 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void exceptionTest() {
+  public void should_ReceiveInternalError_When_ServiceMethodThrowsException() {
     String methodName = "throwsException";
     ResponseEntity<String> response = sendVaadinServiceRequest(methodName,
         Collections.emptyMap(), String.class);
@@ -270,19 +271,35 @@ public class VaadinConnectControllerIT {
   }
 
   @Test
-  public void invalidRoleTest() {
-    exception.expect(ResourceAccessException.class);
-
+  public void should_RequestFail_When_InvalidRoleUsedInRequest() {
     String methodName = "permitRoleAdmin";
+
+    exception.expect(ResourceAccessException.class);
+    exception.expectMessage(methodName);
+
     sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
   }
 
   @Test
-  public void classAclTest() {
-    exception.expect(ResourceAccessException.class);
-
+  public void should_RequestFail_When_MethodCallProhibitedByClassAnnotation() {
     String methodName = "deniedByClass";
+
+    exception.expect(ResourceAccessException.class);
+    exception.expectMessage(methodName);
+
     sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+  }
+
+  @Test
+  public void should_AllowAnonymousAccess_When_AnonymousAllowed() {
+    template.getRestTemplate().getInterceptors().clear();
+    tokenInjected = false;
+
+    ResponseEntity<String> response = sendVaadinServiceRequest(
+        "hasAnonymousAccess", Collections.emptyMap(), String.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals("\"anonymous success\"", response.getBody());
   }
 
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,
