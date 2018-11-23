@@ -27,18 +27,30 @@ import org.springframework.security.oauth2.common.util.JacksonJsonParser;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.Base64Utils;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.security.oauth2.common.OAuth2AccessToken.ACCESS_TOKEN;
+import static org.springframework.security.oauth2.common.OAuth2AccessToken.REFRESH_TOKEN;
+import static org.springframework.security.oauth2.provider.token.AccessTokenConverter.ATI;
+import static org.springframework.security.oauth2.provider.token.AccessTokenConverter.AUTHORITIES;
+import static org.springframework.security.oauth2.provider.token.AccessTokenConverter.CLIENT_ID;
+import static org.springframework.security.oauth2.provider.token.AccessTokenConverter.EXP;
+import static org.springframework.security.oauth2.provider.token.AccessTokenConverter.JTI;
+import static org.springframework.security.oauth2.provider.token.AccessTokenConverter.SCOPE;
+import static org.springframework.security.oauth2.provider.token.UserAuthenticationConverter.USERNAME;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
  * This test is inspired in the pattern used in
  * `AuthorizationServerConfigurationTests.java` in the spring oauth2 project
@@ -96,6 +108,8 @@ public class VaadinConnectOAuthConfigurerTest {
 
   private List<Class<?>> resources;
 
+  private static JacksonJsonParser jsParser = new JacksonJsonParser();
+
   @FunctionalInterface
   public interface TestRunner {
     void run(AnnotationConfigWebApplicationContext ctx) throws Exception;
@@ -134,6 +148,10 @@ public class VaadinConnectOAuthConfigurerTest {
 
   @Configuration
   protected static class ConfigureUserDetailsService {
+    // Lock the account if user is validated more than 2 times
+    // Used to check that UserDetailsChecker is run when using refresh tokens
+    int usageCount = 0;
+
     @Bean
     public UserDetailsService userDetailsService() {
       // Password in database should be BCrypted by default.
@@ -145,6 +163,7 @@ public class VaadinConnectOAuthConfigurerTest {
               .username("foo")
               .password(crypted)
               .roles("baz")
+              .accountLocked(++usageCount > 2)
               .build();
         } else {
           return null;
@@ -173,8 +192,18 @@ public class VaadinConnectOAuthConfigurerTest {
    */
   private static ResultActions getToken(
       AnnotationConfigWebApplicationContext webContext,
-      String client, String username, String password, String granttype)
+      String client, String userOrClient, String passwordOrRefresh,
+      String granttype)
       throws Exception {
+
+    MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+    if ("refresh_token".equals(granttype)) {
+      map.add("client_id", userOrClient);
+      map.add("refresh_token", passwordOrRefresh);
+    } else {
+      map.add("username", userOrClient);
+      map.add("password", passwordOrRefresh);
+    }
 
     return MockMvcBuilders
         .webAppContextSetup(webContext)
@@ -184,8 +213,7 @@ public class VaadinConnectOAuthConfigurerTest {
             .header(HttpHeaders.AUTHORIZATION, "Basic " +
                 Base64Utils.encodeToString(client.getBytes()))
             .header(HttpHeaders.ACCEPT, "application/json")
-            .param("username", username)
-            .param("password", password)
+            .params(map)
             .param("grant_type", granttype));
   }
 
@@ -205,30 +233,71 @@ public class VaadinConnectOAuthConfigurerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      String resultString = getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "foo", "bar", "password")
-              .andExpect(status().isOk())
-              .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-              .andExpect(jsonPath("$.access_token", notNullValue()))
-              .andReturn().getResponse().getContentAsString();
 
-      JacksonJsonParser parser = new JacksonJsonParser();
-      String accessToken = parser.parseMap(resultString).get("access_token").toString();
-      String[] parts = accessToken.split("\\.");
-      assertEquals(3, parts.length);
+      // Validate via User/Password
+      String refreshToken = assertValidTokenResponse(
+          getToken(context,
+              "vaadin-connect-client:c13nts3cr3t", "foo", "bar", "password"));
 
-      Map<String, Object> map0 = parser.parseMap(new String(Base64.getDecoder().decode(parts[0])));
-      assertEquals("HS256", map0.get("alg"));
-      assertEquals("JWT", map0.get("typ"));
+      // Re-validate via refreshToken
+      refreshToken = assertValidTokenResponse(
+          getToken(context,
+              "vaadin-connect-client:c13nts3cr3t", "vaadin-connect-client",
+              refreshToken, "refresh_token"));
 
-      Map<String, Object> map1 = parser.parseMap(new String(Base64.getDecoder().decode(parts[1])));
-      assertNotNull(map1.get("exp"));
-      assertNotNull(map1.get("jti"));
-      assertNotNull(map1.get("authorities"));
-      assertNotNull(map1.get("scope"));
-      assertEquals("foo", map1.get("user_name"));
-      assertEquals("vaadin-connect-client", map1.get("client_id"));
+      // This re-validate should fail because user is locked after the second
+      // validation
+      getToken(context,
+          "vaadin-connect-client:c13nts3cr3t", "vaadin-connect-client",
+          refreshToken, "refresh_token").andExpect(status().is(401));
     }
+  }
+
+  private static String assertValidTokenResponse(ResultActions results)
+      throws Exception {
+    String resultString = results
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+        .andReturn().getResponse().getContentAsString();
+
+    Map<String, Object> responseMap = jsParser.parseMap(resultString);
+    String accessToken = responseMap.get(ACCESS_TOKEN).toString();
+    String refreshToken = responseMap.get(REFRESH_TOKEN).toString();
+    assertNotNull(accessToken);
+    assertNotNull(refreshToken);
+
+    Map<String, Object> accessTokenBody = assertJWTStructure(accessToken);
+    assertNull(accessTokenBody.get(ATI));
+    int accessTokenExpiration = Integer
+        .parseInt(accessTokenBody.get(EXP).toString());
+
+    Map<String, Object> refreshTokenBody = assertJWTStructure(refreshToken);
+    assertNotNull(refreshTokenBody.get(ATI));
+    int refreshTokenExpiration = Integer
+        .parseInt(refreshTokenBody.get(EXP).toString());
+
+    assertTrue(refreshTokenExpiration > accessTokenExpiration);
+    return refreshToken;
+  }
+
+  private static Map<String, Object> assertJWTStructure(String token) {
+    String[] parts = token.split("\\.");
+    assertEquals(3, parts.length);
+
+    Map<String, Object> tokenHeader = jsParser
+        .parseMap(new String(Base64.getDecoder().decode(parts[0])));
+    assertEquals("HS256", tokenHeader.get("alg"));
+    assertEquals("JWT", tokenHeader.get("typ"));
+
+    Map<String, Object> tokenBody = jsParser
+        .parseMap(new String(Base64.getDecoder().decode(parts[1])));
+    assertNotNull(tokenBody.get(EXP));
+    assertNotNull(tokenBody.get(JTI));
+    assertNotNull(tokenBody.get(AUTHORITIES));
+    assertNotNull(tokenBody.get(SCOPE));
+    assertEquals("vaadin-connect-client", tokenBody.get(CLIENT_ID));
+    assertEquals("foo", tokenBody.get(USERNAME));
+    return tokenBody;
   }
 
   @Configuration
@@ -315,7 +384,7 @@ public class VaadinConnectOAuthConfigurerTest {
     @Bean
     AuthenticationManager authenticationManager() {
       return auth -> new UsernamePasswordAuthenticationToken(
-        auth.getName(), auth.getCredentials(), new ArrayList<>());
+          auth.getName(), auth.getCredentials(), new ArrayList<>());
     }
 
     @Override

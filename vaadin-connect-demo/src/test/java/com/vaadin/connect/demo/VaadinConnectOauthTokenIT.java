@@ -72,6 +72,16 @@ public class VaadinConnectOauthTokenIT {
         .param("password", password).param("grant_type", "password"));
   }
 
+  private ResultActions getToken(String refreshToken)
+      throws Exception {
+
+    return mockMvc.perform(post("/oauth/token")
+        .with(httpBasic("vaadin-connect-client", "c13nts3cr3t"))
+        .accept("application/json").param("client_id", "vaadin-connect-client")
+        .param("refresh_token", refreshToken)
+        .param("grant_type", "refresh_token"));
+  }
+
   @Test
   public void should_NotGetValidToken_When_InvalidCredentials()
       throws Exception {
@@ -81,6 +91,27 @@ public class VaadinConnectOauthTokenIT {
   @Test
   public void should_GetValidToken_When_ValidCredentials() throws Exception {
     String resultString = getToken(TEST_LOGIN, TEST_PASSWORD)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andReturn().getResponse().getContentAsString();
+
+    String accessToken = parser.parseMap(resultString).get("access_token")
+        .toString();
+    String[] parts = accessToken.split("\\.");
+    assertEquals(3, parts.length);
+  }
+
+  @Test
+  public void should_GetValidToken_When_UsingRefreshToken() throws Exception {
+    String resultString = getToken(TEST_LOGIN, TEST_PASSWORD)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andReturn().getResponse().getContentAsString();
+
+    String refreshToken = parser.parseMap(resultString).get("refresh_token")
+        .toString();
+
+    resultString = getToken(refreshToken)
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andReturn().getResponse().getContentAsString();
