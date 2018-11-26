@@ -22,9 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
@@ -45,6 +48,9 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String OBJECT_TYPE = "object";
   private static final String ARRAY_TYPE = "array";
   private static final String BOXED_ARRAY_TYPE = "Array";
+  private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
+  private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
+  private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
 
   /**
    * Create vaadin connect js codegen instance
@@ -216,6 +222,36 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   }
 
   @Override
+  public CodegenOperation fromOperation(String path, String httpMethod,
+      Operation operation, Map<String, Schema> schemas, OpenAPI openAPI) {
+    CodegenOperation codegenOperation = super.fromOperation(path, httpMethod,
+        operation, schemas, openAPI);
+    String removedTrailingSlash = StringUtils.removeEndIgnoreCase(path, "/");
+    int i = removedTrailingSlash.lastIndexOf('/') + 1;
+    String methodName = path.substring(i);
+    codegenOperation.getVendorExtensions()
+        .put(EXTENSION_VAADIN_CONNECT_METHOD_NAME, methodName);
+    return codegenOperation;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Map<String, Object> postProcessOperations(Map<String, Object> objs) {
+    Map<String, Object> operations = (Map<String, Object>) objs
+        .get("operations");
+    Object vaadinServicesExtension = vendorExtensions()
+        .get(OpenApiJavaParserImpl.VAADIN_SERVICES_EXTENSION_NAME);
+    if (vaadinServicesExtension instanceof Map) {
+      String classname = (String) operations.get("classname");
+      Object classDescription = ((Map<String, OpenAPiVaadinServicesExtension>) vaadinServicesExtension)
+          .get(classname);
+      objs.put(VAADIN_CONNECT_CLASS_DESCRIPTION, classDescription);
+    }
+    return super.postProcessOperations(objs);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
   public CodegenParameter fromRequestBody(RequestBody body,
       Map<String, Schema> schemas, Set<String> imports) {
     CodegenParameter codegenParameter = super.fromRequestBody(body, schemas,
@@ -223,10 +259,12 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     Schema requestBodySchema = getRequestBodySchema(body);
     if (requestBodySchema != null
         && StringUtils.isNotBlank(requestBodySchema.get$ref())) {
-      Schema o = schemas.get(getSimpleRef(requestBodySchema.get$ref()));
-      List<ParameterInformation> paramsList = getParamsList(o.getProperties());
-      codegenParameter.getVendorExtensions().put("x-vaadin-parameters",
-          paramsList);
+      Schema requestSchema = schemas
+          .get(getSimpleRef(requestBodySchema.get$ref()));
+      List<ParameterInformation> paramsList = getParamsList(
+          requestSchema.getProperties());
+      codegenParameter.getVendorExtensions()
+          .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);
     }
 
     return codegenParameter;

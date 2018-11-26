@@ -60,8 +60,8 @@ public class ESModuleGenerator {
 
     Path outputPath = getOutputPath(args);
     configurator.setOutputDir(outputPath.toString());
-
-    new VaadinConnectDefaultGenerator().opts(configurator.toClientOptInput())
+    configurator.addSystemProperty("debugOperations", "true");
+    new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
         .generate();
   }
 
@@ -79,7 +79,7 @@ public class ESModuleGenerator {
     return Paths.get(input).toAbsolutePath();
   }
 
-  private static class VaadinConnectDefaultGenerator extends DefaultGenerator {
+  private static class VaadinConnectJSOnlyGenerator extends DefaultGenerator {
     @Override
     public File writeToFile(String filename, String contents)
         throws IOException {

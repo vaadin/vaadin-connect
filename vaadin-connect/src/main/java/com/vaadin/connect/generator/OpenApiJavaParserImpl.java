@@ -16,7 +16,6 @@
 package com.vaadin.connect.generator;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,8 +79,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES,
           COLLECTION_TYPES)
       .flatMap(Collection::stream).collect(Collectors.toList());
-  private static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
-  private static final String VAADIN_SERVICE_EXTENSION_NAME = "x-vaadin-service";
+  public static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
   private Path javaSourcePath;
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -257,8 +255,6 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       ApiResponses responses = createApiResponses(methodDeclaration);
       post.setResponses(responses);
       post.tags(Collections.singletonList(typeDeclaration.getNameAsString()));
-      post.addExtension("x-vaadin-method-name",
-          methodDeclaration.getNameAsString());
       PathItem pathItem = new PathItem().post(post);
       pathItems.put(methodName, pathItem);
     }
