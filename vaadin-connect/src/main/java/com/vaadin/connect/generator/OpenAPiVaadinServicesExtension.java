@@ -45,7 +45,7 @@ public class OpenAPiVaadinServicesExtension {
    * Set description for the service and return the instance
    *
    * @param description
-   *         descrition to be set
+   *         description to be set
    * @return the current object model instance
    */
   public OpenAPiVaadinServicesExtension description(String description) {
