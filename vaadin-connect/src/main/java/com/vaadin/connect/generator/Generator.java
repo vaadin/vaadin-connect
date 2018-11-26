@@ -15,64 +15,73 @@
  */
 package com.vaadin.connect.generator;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.PropertyResourceBundle;
 
+import com.google.common.base.Charsets;
+import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.swagger.v3.core.util.Json;
-import io.swagger.v3.oas.models.OpenAPI;
 
 /**
  * This class is used to generate OpenAPI document from a given java project.
  */
 public class Generator {
-  private static final Logger LOGGER = LoggerFactory.getLogger(Generator.class);
+
+  static final String DEFAULT_APPLICATION_PROPERTIES_PATH = "src/main/resources/application.properties";
+  static final String ENDPOINT = "vaadin.connect.endpoint";
+  static final String DEFAULT_ENDPOINT = "/connect";
 
   private static final String APPLICATION_TITLE = "vaadin.connect.application.title";
   private static final String APPLICATION_API_VERSION = "vaadin.connect.api.version";
-  private static final String ENDPOINT = "vaadin.connect.endpoint";
   private static final String SERVER = "vaadin.connect.server";
   private static final String SERVER_DESCRIPTION = "vaadin.connect.server.description";
+  private static final String DEFAULT_SERVER = "http://localhost:8080";
+  private static final String DEFAULT_SERVER_DESCRIPTION = "Vaadin Connect backend";
+  private static final String DEFAULT_APPLICATION_TITLE = "Vaadin Connect Application";
+  private static final String DEFAULT_APPLICATION_API_VERSION = "0.0.1";
+
   private static final String DEFAULT_JAVA_SOURCE_PATH = "src/main/java";
   private static final String DEFAULT_OUTPUT_PATH = "target/generated-resources/openapi.json";
-  private static final String DEFAULT_APPLICATION_PROPERTIES_PATH = "src/main/resources/application.properties";
 
   /**
-   * This main method will take:
+   * This main method will take arguments:
    * <ul>
-   * <li>The first program argument as the java source path
-   * that will be parsed to OpenApi spec. Default value:
-   * "/<current-directory/src/main/java"
-   * </li>
    * <li>
-   * The second program argument as the output path of the generated OpenApi
-   * json. Default value: "/<current-directory/target/generated-resources/openapi.json"
-   * </li>
-   * <li>The third program argument as the spring application.properties path
-   * which has configurations for {@link Generator#SERVER}, {@link
-   * Generator#SERVER_DESCRIPTION}, {@link Generator#APPLICATION_TITLE}, {@link
-   * Generator#APPLICATION_API_VERSION}. Default value: "/<current-directory/src/main/resources/application.properties"
-   * </li>
+   * <code>input="the java source path that will be parsed to OpenApi spec"</code>
+   * <br>
+   * Default value: "/current-directory/src/main/java"</li>
+   * <li><code>output="the output path of the generated OpenApi json"</code>
+   * <br>
+   * Default value:
+   * "/current-directory/target/generated-resources/openapi.json"</li>
+   * <li>
+   * <code>applicationProperties="the spring application.properties path"</code>
+   * which has configurations for {@link Generator#SERVER},
+   * {@link Generator#SERVER_DESCRIPTION}, {@link Generator#APPLICATION_TITLE},
+   * {@link Generator#APPLICATION_API_VERSION}. <br>
+   * Default value:
+   * "/current-directory/src/main/resources/application.properties"</li>
    * </ul>
    *
    * <pre>
    * Example usage:
    * <code>java -cp vaadin-connect.jar com.vaadin.connect.generator.Generator
-   * "/home/user/my-input-source/" "/home/user/output/openapi.json"
-   * "/home/user/myapp/src/main/resources/application.properties"</code>
+   * input=/home/user/my-input-source/ output=/home/user/output/openapi.json
+   * applicationProperties=/home/user/myapp/src/main/resources/application.properties</code>
    *
    * </pre>
    *
    * @param args
-   *         arguments list
+   *          arguments list
    */
   public static void main(String[] args) {
 
@@ -83,90 +92,75 @@ public class Generator {
     OpenApiGenerator generator = new OpenApiJavaParserImpl();
     generator.setSourcePath(inputPath);
     generator.setOpenApiConfiguration(configuration);
-    LOGGER.info("Parsing java files from {}", inputPath);
+    getLogger().info("Parsing java files from {}", inputPath);
     OpenAPI openAPI = generator.generateOpenApi();
 
-    LOGGER.info("Writing output to {}", outputPath);
-    writeToFile(openAPI, outputPath);
+    getLogger().info("Writing output to {}", outputPath);
+    writeToFile(outputPath, Json.pretty(openAPI));
   }
 
   private static Path getOutputPath(String[] args) {
-    Path outputPath;
-    if (args.length >= 2) {
-      outputPath = Paths.get(args[1]);
-    } else {
-      outputPath = Paths.get(DEFAULT_OUTPUT_PATH).toAbsolutePath();
-    }
-    return outputPath;
+    String input = getArgument(args, "output", DEFAULT_OUTPUT_PATH);
+    return Paths.get(input).toAbsolutePath();
   }
 
   private static Path getJavaSourcePath(String[] args) {
-    Path inputPath;
-    if (args.length >= 1) {
-      inputPath = Paths.get(args[0]);
-    } else {
-      inputPath = Paths.get(DEFAULT_JAVA_SOURCE_PATH).toAbsolutePath();
+    String input = getArgument(args, "input", DEFAULT_JAVA_SOURCE_PATH);
+    return Paths.get(input).toAbsolutePath();
+  }
+
+  static Path getApplicationPropertiesPath(String[] args) {
+    String input = getArgument(args, "applicationProperties",
+        DEFAULT_APPLICATION_PROPERTIES_PATH);
+    return Paths.get(input).toAbsolutePath();
+  }
+
+  static String getArgument(String[] args, String argumentName,
+      String defaultValue) {
+    for (String input : args) {
+      String[] parts = input.split("=");
+      if (argumentName.equalsIgnoreCase(parts[0])) {
+        return parts[1];
+      }
     }
-    return inputPath;
+    return defaultValue;
   }
 
   private static OpenApiConfiguration readApplicationProperties(String[] args) {
-    Path applicationProperties;
-    if (args.length >= 3) {
-      applicationProperties = Paths.get(args[2]);
-    } else {
-      applicationProperties = Paths.get(DEFAULT_APPLICATION_PROPERTIES_PATH);
-    }
-    String endpoint = "connect";
-    String server = "https://localhost:8080/";
-    String serverDescription = "Vaadin Connect backend";
-    String applicationTitle = "Vaadin Connect Application";
-    String applicationApiVersion = "0.0.1";
-    if (!applicationProperties.toFile().exists()) {
-      LOGGER.warn("There is no application.properties in {}",
-        applicationProperties);
-      return new OpenApiConfiguration(applicationTitle, applicationApiVersion,
-        server, serverDescription);
-    }
+    Path applicationProperties = getApplicationPropertiesPath(args);
     try {
-      Pattern regex = Pattern.compile("^(.*)=(.*)$", Pattern.MULTILINE);
-      for (String line : Files.readAllLines(applicationProperties)) {
-        Matcher matcher = regex.matcher(line);
-        if (!matcher.matches()) {
-          continue;
-        }
-        String propertyName = matcher.group(1);
-        String propertyValue = matcher.group(2);
-        switch (propertyName) {
-        case ENDPOINT:
-          endpoint = propertyValue;
-          break;
-        case SERVER:
-          server = StringUtils.appendIfMissing(propertyValue, "/");
-          break;
-        case SERVER_DESCRIPTION:
-          serverDescription = propertyValue;
-          break;
-        case APPLICATION_TITLE:
-          applicationTitle = propertyValue;
-          break;
-        case APPLICATION_API_VERSION:
-          applicationApiVersion = propertyValue;
-          break;
-        default:
-          break;
-        }
-      }
+      PropertyResourceBundle propertyResourceBundle = new PropertyResourceBundle(
+          Files.newBufferedReader(applicationProperties));
+      String endpoint = getProperties(propertyResourceBundle, ENDPOINT,
+          DEFAULT_ENDPOINT);
+      String server = StringUtils.removeEnd(
+          getProperties(propertyResourceBundle, SERVER, DEFAULT_SERVER), "/");
+      String serverDescription = getProperties(propertyResourceBundle,
+          SERVER_DESCRIPTION, DEFAULT_SERVER_DESCRIPTION);
+      String applicationTitle = getProperties(propertyResourceBundle,
+          APPLICATION_TITLE, DEFAULT_APPLICATION_TITLE);
+      String applicationApiVersion = getProperties(propertyResourceBundle,
+          APPLICATION_API_VERSION, DEFAULT_APPLICATION_API_VERSION);
+      return new OpenApiConfiguration(applicationTitle, applicationApiVersion,
+          server + endpoint, serverDescription);
     } catch (IOException e) {
-      LOGGER.error("Can't read the application.properties file", e);
+      getLogger().info("Can't read the application.properties file from "
+          + applicationProperties, e);
     }
-    return new OpenApiConfiguration(applicationTitle, applicationApiVersion,
-      server + endpoint, serverDescription);
-
+    return new OpenApiConfiguration(DEFAULT_APPLICATION_TITLE,
+        DEFAULT_APPLICATION_API_VERSION, DEFAULT_SERVER + DEFAULT_ENDPOINT,
+        DEFAULT_SERVER_DESCRIPTION);
   }
 
-  private static void writeToFile(OpenAPI openAPI, Path outputPath) {
-
+  /**
+   * Write to the output path a string content.
+   *
+   * @param outputPath
+   *          output path
+   * @param content
+   *          content to write
+   */
+  public static void writeToFile(Path outputPath, String content) {
     try {
       File parentFolder = outputPath.toFile().getParentFile();
       if (!parentFolder.exists()) {
@@ -175,9 +169,24 @@ public class Generator {
       if (!outputPath.toFile().exists()) {
         Files.createFile(outputPath);
       }
-      Files.write(outputPath, Json.pretty(openAPI).getBytes());
+      try (BufferedWriter bufferedWriter = Files.newBufferedWriter(outputPath,
+          Charsets.UTF_8)) {
+        bufferedWriter.write(content);
+      }
     } catch (IOException e) {
-      LOGGER.error("Can't write to file", e);
+      throw new UncheckedIOException(e);
     }
+  }
+
+  private static Logger getLogger() {
+    return LoggerFactory.getLogger(Generator.class);
+  }
+
+  private static String getProperties(
+      PropertyResourceBundle propertyResourceBundle, String propertyName,
+      String defaultValue) {
+    String propertyValue = (String) propertyResourceBundle
+        .handleGetObject(propertyName);
+    return propertyValue != null ? propertyValue : defaultValue;
   }
 }

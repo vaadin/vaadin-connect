@@ -1,5 +1,9 @@
 package com.vaadin.connect.demo;
 
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,8 +13,10 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
 @VaadinService
+@DenyAll
 public class DemoVaadinService {
   public static class ComplexRequest {
     private final String name;
@@ -52,21 +58,26 @@ public class DemoVaadinService {
     }
   }
 
+  @RolesAllowed("ROLE_USER")
   public int addOne(int number) {
     return number + 1;
   }
 
+  @PermitAll
   private String privateMethod() {
     return "no-op";
   }
 
+  @PermitAll
   public void noReturnNoArguments() {
   }
 
+  @PermitAll
   public String throwsException() {
     throw new IllegalStateException("Ooops");
   }
 
+  @PermitAll
   public ComplexResponse complexEntitiesTest(ComplexRequest request) {
     Map<Integer, List<String>> results = new HashMap<>();
     for (int i = 0; i < request.count; i++) {
@@ -77,5 +88,17 @@ public class DemoVaadinService {
       results.put(i, subresults);
     }
     return new ComplexResponse(request.name, results);
+  }
+
+  @RolesAllowed("ROLE_ADMIN")
+  public void permitRoleAdmin() {
+  }
+
+  public void deniedByClass() {
+  }
+
+  @AnonymousAllowed
+  public String hasAnonymousAccess() {
+    return "anonymous success";
   }
 }

@@ -15,7 +15,9 @@
  */
 package com.vaadin.connect.oauth;
 
-import com.vaadin.connect.VaadinConnectProperties;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,11 +33,10 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
 import org.springframework.security.oauth2.provider.token.store.JwtClaimsSetVerifier;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
-import java.util.Arrays;
-import java.util.List;
+import com.vaadin.connect.VaadinConnectProperties;
 
 /**
- * Class to configure the authentication of a vaadin-connect application
+ * Class to configure the authentication of a vaadin-connect application.
  *
  * Configure oauth by annotating your app with the
  * {@link EnableVaadinConnectOAuthServer} and defining either a
@@ -88,26 +89,39 @@ import java.util.List;
  * </pre>
  */
 @Configuration
-@Import(VaadinConnectOAuthConfigurer.class)
+@Import({ VaadinConnectOAuthConfigurer.class,
+    VaadinConnectResourceServerConfigurer.class })
 public class VaadinConnectOAuthConfiguration
     extends AuthorizationServerConfigurerAdapter {
   private static final List<String> REQUIRED_CLAIMS = Arrays.asList("jti",
       "exp", "user_name", "authorities");
   private VaadinConnectProperties vaadinConnectProperties;
 
+  /**
+   * Default constructor.
+   *
+   * @param vaadinConnectProperties
+   *        The Vaadin connect app configuration
+   */
   public VaadinConnectOAuthConfiguration(
       VaadinConnectProperties vaadinConnectProperties) {
     this.vaadinConnectProperties = vaadinConnectProperties;
   }
 
   /**
+   * Provide the {@link JwtAccessTokenConverter} Bean.
+   *
    * @return the JwtAccessTokenConverter
    */
   @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-    converter.setSigningKey(
-        vaadinConnectProperties.getVaadinConnectTokenSigningKey());
+
+    String sigKey = vaadinConnectProperties.getVaadinConnectTokenSigningKey();
+    if (!sigKey.isEmpty()) {
+      converter.setSigningKey(sigKey);
+    }
+
     converter.setJwtClaimsSetVerifier(getJwtClaimsSetVerifier());
     return converter;
   }
@@ -124,6 +138,8 @@ public class VaadinConnectOAuthConfiguration
   }
 
   /**
+   * Provide the {@link TokenStore} Bean.
+   *
    * @return the TokenStore
    */
   @Bean
@@ -134,6 +150,12 @@ public class VaadinConnectOAuthConfiguration
   @Configuration
   @ConditionalOnMissingBean(PasswordEncoder.class)
   protected static class PasswordEncoderConfiguration {
+
+    /**
+     * Provide the {@link PasswordEncoder} Bean.
+     *
+     * @return the PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
       return new BCryptPasswordEncoder();
