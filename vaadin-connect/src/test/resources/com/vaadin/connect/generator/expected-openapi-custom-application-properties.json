@@ -11,6 +11,7 @@
   "paths" : {
     "/GeneratorTestClass/getAllUsers" : {
       "post" : {
+        "tags" : [ "GeneratorTestClass" ],
         "description" : "Get all users",
         "responses" : {
           "200" : {
@@ -27,11 +28,11 @@
             }
           }
         }
-      },
-      "x-vaadin-service" : "GeneratorTestClass"
+      }
     },
     "/GeneratorTestClass/getUserById" : {
       "post" : {
+        "tags" : [ "GeneratorTestClass" ],
         "description" : "Get user by id",
         "requestBody" : {
           "content" : {
@@ -60,11 +61,48 @@
             }
           }
         }
-      },
-      "x-vaadin-service" : "GeneratorTestClass"
+      }
+    },
+    "/GeneratorTestClass/getTwoParameters" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Two parameters input method",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "type" : "string",
+                    "description" : "first input description"
+                  },
+                  "secondInput" : {
+                    "type" : "number",
+                    "description" : "second input description"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return boolean value",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "/GeneratorTestClass/getArrayInt" : {
       "post" : {
+        "tags" : [ "GeneratorTestClass" ],
         "description" : "Get array int",
         "requestBody" : {
           "content" : {
@@ -99,11 +137,11 @@
             }
           }
         }
-      },
-      "x-vaadin-service" : "GeneratorTestClass"
+      }
     },
     "/GeneratorTestClass/countUser" : {
       "post" : {
+        "tags" : [ "GeneratorTestClass" ],
         "description" : "Get number of users",
         "responses" : {
           "200" : {
@@ -117,11 +155,11 @@
             }
           }
         }
-      },
-      "x-vaadin-service" : "GeneratorTestClass"
+      }
     },
     "/GeneratorTestClass/getAllUserRolesMap" : {
       "post" : {
+        "tags" : [ "GeneratorTestClass" ],
         "description" : "Get the map of user and roles",
         "responses" : {
           "200" : {
@@ -138,11 +176,11 @@
             }
           }
         }
-      },
-      "x-vaadin-service" : "GeneratorTestClass"
+      }
     },
     "/GeneratorTestClass/updateUser" : {
       "post" : {
+        "tags" : [ "GeneratorTestClass" ],
         "description" : "Update a user",
         "requestBody" : {
           "content" : {
@@ -163,11 +201,11 @@
             "description" : "Request has been processed without any return result"
           }
         }
-      },
-      "x-vaadin-service" : "GeneratorTestClass"
+      }
     },
     "/GeneratorTestClass/getBooleanValue" : {
       "post" : {
+        "tags" : [ "GeneratorTestClass" ],
         "description" : "Get boolean value",
         "requestBody" : {
           "content" : {
@@ -199,8 +237,7 @@
             }
           }
         }
-      },
-      "x-vaadin-service" : "GeneratorTestClass"
+      }
     }
   },
   "components" : {
