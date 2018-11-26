@@ -64,6 +64,7 @@ import com.vaadin.connect.VaadinService;
 
 public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
+  public static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
   private static final List<String> NUMBER_TYPES = Arrays.asList("int",
       "integer", "short", "long", "double", "float");
   private static final List<String> STRING_TYPES = Arrays.asList("string",
@@ -79,7 +80,6 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES,
           COLLECTION_TYPES)
       .flatMap(Collection::stream).collect(Collectors.toList());
-  public static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
   private Path javaSourcePath;
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;

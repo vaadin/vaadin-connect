@@ -85,7 +85,7 @@ export class GeneratorTestClass {
   /**
    * Update a user
    *
-   * @param {object} user
+   * @param {User} user
    * @returns Request has been processed without any return result
    */
   updateUser(user) {
