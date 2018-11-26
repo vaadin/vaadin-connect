@@ -53,7 +53,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
 
   /**
-   * Create vaadin connect js codegen instance
+   * Create vaadin connect js codegen instance.
    */
   public VaadinConnectJsGenerator() {
     super();
@@ -335,7 +335,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   /**
    * Parameter information object which is used to store body parameters in a
-   * convenient way to process in the template
+   * convenient way to process in the template.
    */
   private static class ParameterInformation {
     private final String name;
