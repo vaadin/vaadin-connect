@@ -24,7 +24,7 @@ import io.swagger.codegen.v3.DefaultGenerator;
 import io.swagger.codegen.v3.config.CodegenConfigurator;
 
 /**
- * ES modules generator for vaadin-connect
+ * ES modules generator for vaadin-connect.
  */
 public class ESModuleGenerator {
 
