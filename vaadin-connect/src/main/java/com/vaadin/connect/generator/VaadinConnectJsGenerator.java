@@ -275,13 +275,22 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     List<ParameterInformation> paramsList = new ArrayList<>();
     for (Map.Entry<String, Schema> entry : properties.entrySet()) {
       String name = entry.getKey();
-      String type = StringUtils.defaultIfBlank(entry.getValue().getType(),
-          OBJECT_TYPE);
+      String type = getTypeFromSchema(entry.getValue());
       ParameterInformation parameterInformation = new ParameterInformation(name,
           type, entry.getValue().getDescription());
       paramsList.add(parameterInformation);
     }
     return paramsList;
+  }
+
+  private String getTypeFromSchema(Schema schema) {
+    if (StringUtils.isNotBlank(schema.getType())) {
+      return schema.getType();
+    }
+    if (StringUtils.isNotBlank(schema.get$ref())) {
+      return getSimpleRef(schema.get$ref());
+    }
+    return OBJECT_TYPE;
   }
 
   private Schema getRequestBodySchema(RequestBody body) {
