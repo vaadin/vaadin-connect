@@ -48,4 +48,22 @@ public class ESModuleGeneratorTest {
         .getExpectedJson("expected-GeneratorTestClass.js");
     Assert.assertEquals(expectedJson, actualJson);
   }
+
+  // The swagger codegen catches all the exceptions and rethrows with
+  // RuntimeException
+  @Test(expected = RuntimeException.class)
+  public void should_ThrowException_When_PathHasTrailingSlash() {
+    String outputPath = "target/generated-resources/js";
+    ESModuleGenerator.main(new String[] {
+        "input=src/test/resources/com/vaadin/connect/generator/wrong-input-path-openapi.json",
+        "output=" + outputPath });
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void should_ThrowException_When_JsonHasGetOperation() {
+    String outputPath = "target/generated-resources/js";
+    ESModuleGenerator.main(new String[] {
+        "input=src/test/resources/com/vaadin/connect/generator/get-operation-openapi.json",
+        "output=" + outputPath });
+  }
 }

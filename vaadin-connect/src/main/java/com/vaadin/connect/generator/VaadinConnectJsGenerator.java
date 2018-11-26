@@ -193,29 +193,6 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   }
 
   @Override
-  public String toEnumVarName(String value, String datatype) {
-    if (value.length() == 0) {
-      return "empty";
-    }
-
-    // for symbol, e.g. $, #
-    if (getSymbolName(value) != null) {
-      return (getSymbolName(value)).toUpperCase();
-    }
-
-    return value;
-  }
-
-  @Override
-  public String toEnumValue(String value, String datatype) {
-    if ("Integer".equals(datatype) || "Number".equals(datatype)) {
-      return value;
-    } else {
-      return "\"" + escapeText(value) + "\"";
-    }
-  }
-
-  @Override
   public String escapeQuotationMark(String input) {
     // remove ', " to avoid code injection
     return input.replace("\"", "").replace("'", "");
@@ -224,10 +201,17 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   @Override
   public CodegenOperation fromOperation(String path, String httpMethod,
       Operation operation, Map<String, Schema> schemas, OpenAPI openAPI) {
+    if (!"POST".equalsIgnoreCase(httpMethod)) {
+      throw new GeneratorException(
+          "Code generator only supports POST requests.");
+    }
+    if (!path.matches("^/([^/]+)/([^/]+)$")) {
+      throw new GeneratorException(
+        "Path must be in form of \"/<ServiceName>/<MethodName>\".");
+    }
     CodegenOperation codegenOperation = super.fromOperation(path, httpMethod,
         operation, schemas, openAPI);
-    String removedTrailingSlash = StringUtils.removeEndIgnoreCase(path, "/");
-    int i = removedTrailingSlash.lastIndexOf('/') + 1;
+    int i = path.lastIndexOf('/') + 1;
     String methodName = path.substring(i);
     codegenOperation.getVendorExtensions()
         .put(EXTENSION_VAADIN_CONNECT_METHOD_NAME, methodName);
