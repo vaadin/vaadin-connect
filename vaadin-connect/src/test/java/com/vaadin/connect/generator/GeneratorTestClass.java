@@ -48,7 +48,7 @@ public class GeneratorTestClass {
    * Update a user
    *
    * @param user
-   *         User to be updated
+   *          User to be updated
    */
   public void updateUser(User user) {
     // NO implementation
@@ -67,7 +67,7 @@ public class GeneratorTestClass {
    * Get user by id
    *
    * @param id
-   *         id of user
+   *          id of user
    * @return user with given id
    */
   public User getUserById(int id) {
@@ -78,7 +78,7 @@ public class GeneratorTestClass {
    * Get array int
    *
    * @param input
-   *         input string array
+   *          input string array
    * @return array of int
    */
   public int[] getArrayInt(String[] input) {
@@ -89,10 +89,23 @@ public class GeneratorTestClass {
    * Get boolean value
    *
    * @param input
-   *         input map
+   *          input map
    * @return boolean value
    */
   public boolean getBooleanValue(Map<String, User> input) {
+    return false;
+  }
+
+  /**
+   * Two parameters input method
+   * 
+   * @param input
+   *          first input description
+   * @param secondInput
+   *          second input description
+   * @return boolean value
+   */
+  public boolean getTwoParameters(String input, int secondInput) {
     return false;
   }
 
