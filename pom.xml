@@ -41,6 +41,7 @@
 
     <modules>
         <module>vaadin-connect</module>
+        <module>vaadin-connect-maven-plugin</module>
         <module>vaadin-connect-demo</module>
     </modules>
 

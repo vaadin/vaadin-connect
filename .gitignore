@@ -2,6 +2,7 @@
 node_modules
 dist
 coverage
+vaadin-connect-demo/frontend/src/generated/
 
 ### STS ###
 .apt_generated
