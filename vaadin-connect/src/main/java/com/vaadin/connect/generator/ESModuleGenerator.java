@@ -53,7 +53,7 @@ public class ESModuleGenerator {
   public static void main(String[] args) {
     CodegenConfigurator configurator = new CodegenConfigurator();
 
-    configurator.setLang("javascript-vaadin-connect");
+    configurator.setLang(VaadinConnectJsGenerator.GENERATOR_NAME);
 
     Path inputPath = getInputPath(args);
     configurator.setInputSpecURL(inputPath.toUri().toString());
