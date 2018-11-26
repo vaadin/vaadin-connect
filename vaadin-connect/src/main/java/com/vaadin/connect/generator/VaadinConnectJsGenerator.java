@@ -66,7 +66,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
      * apiTemplateFiles map. as with models, add multiple entries with different
      * extensions for multiple files per class
      */
-    apiTemplateFiles.put("esmoduleApiTemplate.mustache", // the template to use
+    apiTemplateFiles.put("ESModuleApiTemplate.mustache", // the template to use
         ".js"); // the extension for each file to write
 
     /*
