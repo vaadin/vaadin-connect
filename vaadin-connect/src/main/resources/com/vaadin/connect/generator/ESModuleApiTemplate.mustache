@@ -19,7 +19,7 @@ export class {{classname}} {
   {{#operation}}
   /**
    * {{notes}}
-   *{{#each bodyParam.vendorExtensions.x-vaadin-parameters}}
+   *{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
    * @param {{=<% %>=}}{<%type%>}<%={{ }}=%> {{name}}{{#description}} - {{description}}{{/description}}{{/each}}
    * {{#responses}}@returns{{#../returnType}}{{=<% %>=}} {<%../returnType%>}<%={{ }}=%>{{/../returnType}} {{message}}{{/responses}}
    */

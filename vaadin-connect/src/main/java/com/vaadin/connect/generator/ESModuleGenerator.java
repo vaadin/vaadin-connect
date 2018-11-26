@@ -60,7 +60,6 @@ public class ESModuleGenerator {
 
     Path outputPath = getOutputPath(args);
     configurator.setOutputDir(outputPath.toString());
-    configurator.addSystemProperty("debugOperations", "true");
     new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
         .generate();
   }
