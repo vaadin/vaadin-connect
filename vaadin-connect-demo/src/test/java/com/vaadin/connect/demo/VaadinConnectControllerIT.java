@@ -273,7 +273,7 @@ public class VaadinConnectControllerIT {
 
   @Test
   @Ignore // Re-enable after move swagger-codegen to maven plugin module
-  @SuppressWarnings("squid:S1607") // Remove after move swagger-codegen to maven plugin module
+  @SuppressWarnings("squid:S1607")
   public void should_RequestFail_When_InvalidRoleUsedInRequest() {
     String methodName = "permitRoleAdmin";
 
@@ -285,7 +285,7 @@ public class VaadinConnectControllerIT {
 
   @Test
   @Ignore // Re-enable after move swagger-codegen to maven plugin module
-  @SuppressWarnings("squid:S1607") // Remove after move swagger-codegen to maven plugin module
+  @SuppressWarnings("squid:S1607")
   public void should_RequestFail_When_MethodCallProhibitedByClassAnnotation() {
     String methodName = "deniedByClass";
 

@@ -62,6 +62,10 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
 
+/**
+ * Java parser class which scans for all {@link VaadinService} classes and
+ * produces OpenApi json
+ */
 public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
   public static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";

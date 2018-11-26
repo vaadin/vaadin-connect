@@ -35,7 +35,7 @@ public class OpenAPiVaadinServicesExtension {
    * Set description for the service
    *
    * @param description
-   *          description of the service
+   *         description of the service
    */
   public void setDescription(String description) {
     this.description = description;
@@ -45,7 +45,7 @@ public class OpenAPiVaadinServicesExtension {
    * Set description for the service and return the instance
    *
    * @param description
-   *          description to be set
+   *         descrition to be set
    * @return the current object model instance
    */
   public OpenAPiVaadinServicesExtension description(String description) {
