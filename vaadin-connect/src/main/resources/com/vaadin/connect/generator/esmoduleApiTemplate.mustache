@@ -1,0 +1,36 @@
+// Generated from {{classname}}.java
+import defaultClient from './connect-client.default.js';
+
+export class {{classname}} {
+
+  /**
+   * Create a {{classname}} instance.
+   * @param {ConnectClient=} client - an instance of ConnectClient
+   */
+  constructor(client = defaultClient) {
+    this._client = client;
+  }
+  {{#operations}}
+
+  {{#operation}}
+  /**
+   * {{notes}}
+   *{{#each bodyParam.vendorExtensions.x-vaadin-parameters}}
+   * @param {{=<% %>=}}{<%type%>}<%={{ }}=%> {{name}}{{#description}} - {{description}}{{/description}}{{/each}}
+   * {{#responses}}@returns{{#../returnType}}{{=<% %>=}} {<%../returnType%>}<%={{ }}=%>{{/../returnType}} {{message}}{{/responses}}
+   */
+  {{vendorExtensions.x-vaadin-method-name}}({{#each bodyParam.vendorExtensions.x-vaadin-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}}) {
+    return await this._client.call('{{classname}}', '{{vendorExtensions.x-vaadin-method-name}}'{{#bodyParams}}, { {{#each bodyParam.vendorExtensions.x-vaadin-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}} }{{/bodyParams}});
+  }
+
+  {{/operation}}
+  {{/operations}}
+}
+
+const service = new {{classname}}(defaultClient);
+
+{{#operations}}
+{{#operation}}
+export const {{vendorExtensions.x-vaadin-method-name}} = service.{{vendorExtensions.x-vaadin-method-name}}.bind(service);
+{{/operation}}
+{{/operations}}
