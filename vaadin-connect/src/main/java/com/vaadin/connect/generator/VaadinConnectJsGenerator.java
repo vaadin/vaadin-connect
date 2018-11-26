@@ -1,3 +1,18 @@
+/*
+ * Copyright 2000-2018 Vaadin Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.vaadin.connect.generator;
 
 import java.util.ArrayList;
@@ -7,30 +22,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.swagger.codegen.v3.CodegenModel;
 import io.swagger.codegen.v3.CodegenParameter;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
-import io.swagger.util.Json;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import org.apache.commons.lang3.StringUtils;
 
-public class VaddinConnectJsGenerator extends DefaultCodegenConfig {
+/**
+ * Vaadin connect javascript generator implementation for swagger-codegen. Some
+ * parts of the implementation are copied from
+ * {@link io.swagger.codegen.languages.JavascriptClientCodegen}
+ */
+public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
-  // source folder where to write the files
-  protected String sourceFolder = "src";
-  protected String apiVersion = "1.0.0";
+  public static final String GENERATOR_NAME = "javascript-vaadin-connect";
+  private static final String NUMBER_TYPE = "number";
+  private static final String BOOLEAN_TYPE = "boolean";
+  private static final String STRING_TYPE = "string";
+  private static final String OBJECT_TYPE = "object";
+  private static final String ARRAY_TYPE = "array";
+  private static final String BOXED_ARRAY_TYPE = "Array";
 
-  public VaddinConnectJsGenerator() {
+  /**
+   * Create vaadin connect js codegen instance
+   */
+  public VaadinConnectJsGenerator() {
     super();
 
     // set the output folder here
     outputFolder = "target/generated-resources/js";
 
-    /**
+    /*
      * Api classes. You can write classes for each Api file with the
      * apiTemplateFiles map. as with models, add multiple entries with different
      * extensions for multiple files per class
@@ -38,94 +63,59 @@ public class VaddinConnectJsGenerator extends DefaultCodegenConfig {
     apiTemplateFiles.put("esmoduleApiTemplate.mustache", // the template to use
         ".js"); // the extension for each file to write
 
-    /**
+    /*
      * Template Location. This is the location which templates will be read
      * from. The generator will use the resource stream to attempt to read the
      * templates.
      */
     templateDir = "com/vaadin/connect/generator";
 
-    /**
-     * Api Package. Optional, if needed, this can be used in templates
+    /*
+     * Reserved words copied from https://www.w3schools.com/js/js_reserved.asp
      */
-    apiPackage = "io.swagger.client.api";
+    reservedWords = new HashSet<>(Arrays.asList("abstract", "arguments",
+        "await", BOOLEAN_TYPE, "break", "byte", "case", "catch", "char",
+        "class", "const", "continue", "debugger", "default", "delete", "do",
+        "double", "else", "enum", "eval", "export", "extends", "false", "final",
+        "finally", "float", "for", "function", "goto", "if", "implements",
+        "import", "in", "instanceof", "int", "interface", "let", "long",
+        "native", "new", "null", "package", "private", "protected", "public",
+        "return", "short", "static", "super", "switch", "synchronized", "this",
+        "throw", "throws", "transient", "true", "try", "typeof", "var", "void",
+        "volatile", "while", "with", "yield"));
 
-    /**
-     * Model Package. Optional, if needed, this can be used in templates
-     */
-    modelPackage = "io.swagger.client.model";
-
-    /**
-     * Reserved words. Override this with reserved words specific to your
-     * language
-     */
-    reservedWords = new HashSet<String>(Arrays.asList("abstract", "arguments",
-        "boolean", "break", "byte", "case", "catch", "char", "class", "const",
-        "continue", "debugger", "default", "delete", "do", "double", "else",
-        "enum", "eval", "export", "extends", "false", "final", "finally",
-        "float", "for", "function", "goto", "if", "implements", "import", "in",
-        "instanceof", "int", "interface", "let", "long", "native", "new",
-        "null", "package", "private", "protected", "public", "return", "short",
-        "static", "super", "switch", "synchronized", "this", "throw", "throws",
-        "transient", "true", "try", "typeof", "var", "void", "volatile",
-        "while", "with", "yield", "Array", "Date", "eval", "function",
-        "hasOwnProperty", "Infinity", "isFinite", "isNaN", "isPrototypeOf",
-        "Math", "NaN", "Number", "Object", "prototype", "String", "toString",
-        "undefined", "valueOf"));
-
-    /**
-     * Additional Properties. These values can be passed to the templates and
-     * are available in models, apis, and supporting files
-     */
-    additionalProperties.put("apiVersion", apiVersion);
-
-    /**
-     * Supporting Files. You can write single files for the generator with the
-     * entire object tree available. If the input file has a suffix of
-     * `.mustache it will be processed by the template engine. Otherwise, it
-     * will be copied
-     */
-//    supportingFiles.add(new SupportingFile("myFile.mustache", // the input
-//                                                              // template or
-//                                                              // file
-//        "", // the destination folder, relative `outputFolder`
-//        "myFile.sample") // the output file
-//    );
-
-    /**
+    /*
      * Language Specific Primitives. These types will not trigger imports by the
      * client generator
      */
-    languageSpecificPrimitives = new HashSet<String>(Arrays.asList("String",
-        "Boolean", "Number", "Array", "Object", "Date", "File", "Blob"));
+    languageSpecificPrimitives = new HashSet<>(
+        Arrays.asList("String", "Boolean", "Number", BOXED_ARRAY_TYPE, "Object",
+            "Date", "File", "Blob"));
 
-    instantiationTypes.put("array", "Array");
-    instantiationTypes.put("list", "Array");
+    instantiationTypes.put(ARRAY_TYPE, BOXED_ARRAY_TYPE);
+    instantiationTypes.put("list", BOXED_ARRAY_TYPE);
     instantiationTypes.put("map", "Object");
     typeMapping.clear();
-    typeMapping.put("array", "array");
-    typeMapping.put("map", "object");
-    typeMapping.put("List", "array");
-    typeMapping.put("boolean", "boolean");
-    typeMapping.put("string", "string");
-    typeMapping.put("int", "number");
-    typeMapping.put("float", "number");
-    typeMapping.put("number", "Number");
+    typeMapping.put(ARRAY_TYPE, ARRAY_TYPE);
+    typeMapping.put("map", OBJECT_TYPE);
+    typeMapping.put("List", ARRAY_TYPE);
+    typeMapping.put(BOOLEAN_TYPE, BOOLEAN_TYPE);
+    typeMapping.put(STRING_TYPE, STRING_TYPE);
+    typeMapping.put("int", NUMBER_TYPE);
+    typeMapping.put("float", NUMBER_TYPE);
+    typeMapping.put(NUMBER_TYPE, NUMBER_TYPE);
     typeMapping.put("DateTime", "date");
     typeMapping.put("date", "date");
-    typeMapping.put("long", "number");
-    typeMapping.put("short", "number");
-    typeMapping.put("char", "string");
-    typeMapping.put("double", "number");
-    typeMapping.put("object", "object");
-    typeMapping.put("integer", "number");
-    // binary not supported in JavaScript client right now, using String as a
-    // workaround
-    typeMapping.put("ByteArray", "blob"); // I don't see ByteArray defined in
-                                          // the Swagger docs.
+    typeMapping.put("long", NUMBER_TYPE);
+    typeMapping.put("short", NUMBER_TYPE);
+    typeMapping.put("char", STRING_TYPE);
+    typeMapping.put("double", NUMBER_TYPE);
+    typeMapping.put(OBJECT_TYPE, OBJECT_TYPE);
+    typeMapping.put("integer", NUMBER_TYPE);
+    typeMapping.put("ByteArray", "blob");
     typeMapping.put("binary", "blob");
-    typeMapping.put("UUID", "string");
-    typeMapping.put("BigDecimal", "number");
+    typeMapping.put("UUID", STRING_TYPE);
+    typeMapping.put("BigDecimal", NUMBER_TYPE);
   }
 
   /**
@@ -145,7 +135,7 @@ public class VaddinConnectJsGenerator extends DefaultCodegenConfig {
    * @return the friendly name for the generator
    */
   public String getName() {
-    return "javascript-vaadin-connect";
+    return GENERATOR_NAME;
   }
 
   /**
@@ -177,6 +167,7 @@ public class VaddinConnectJsGenerator extends DefaultCodegenConfig {
    * Location to write model files. You can use the modelPackage() as defined
    * when the class is instantiated
    */
+  @Override
   public String modelFileFolder() {
     return outputFolder;
   }
@@ -247,7 +238,7 @@ public class VaddinConnectJsGenerator extends DefaultCodegenConfig {
     for (Map.Entry<String, Schema> entry : properties.entrySet()) {
       String name = entry.getKey();
       String type = StringUtils.defaultIfBlank(entry.getValue().getType(),
-          "object");
+          OBJECT_TYPE);
       ParameterInformation parameterInformation = new ParameterInformation(name,
           type, entry.getValue().getDescription());
       paramsList.add(parameterInformation);
@@ -295,6 +286,10 @@ public class VaddinConnectJsGenerator extends DefaultCodegenConfig {
     return templateDir;
   }
 
+  /**
+   * Parameter information object which is used to store body parameters in a
+   * convenient way to process in the template
+   */
   private static class ParameterInformation {
     private final String name;
     private final String type;
