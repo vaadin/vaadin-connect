@@ -24,7 +24,7 @@ export class {{classname}} {
    * {{#responses}}@returns{{#../returnType}}{{=<% %>=}} {<%../returnType%>}<%={{ }}=%>{{/../returnType}} {{message}}{{/responses}}
    */
   {{vendorExtensions.x-vaadin-connect-method-name}}({{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}}) {
-    return await this._client.call('{{classname}}', '{{vendorExtensions.x-vaadin-connect-method-name}}'{{#bodyParams}}, { {{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}} }{{/bodyParams}});
+    return await this._client.call('{{vendorExtensions.x-vaadin-connect-service-name}}', '{{vendorExtensions.x-vaadin-connect-method-name}}'{{#bodyParams}}, { {{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}} }{{/bodyParams}});
   }
 
   {{/operation}}

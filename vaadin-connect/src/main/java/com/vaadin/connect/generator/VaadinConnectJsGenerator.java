@@ -33,6 +33,8 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Vaadin connect javascript generator implementation for swagger-codegen. Some
@@ -50,6 +52,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String BOXED_ARRAY_TYPE = "Array";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
+  private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
 
   /**
@@ -110,8 +113,8 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     typeMapping.put("int", NUMBER_TYPE);
     typeMapping.put("float", NUMBER_TYPE);
     typeMapping.put(NUMBER_TYPE, NUMBER_TYPE);
-    typeMapping.put("DateTime", "date");
-    typeMapping.put("date", "date");
+    typeMapping.put("DateTime", "Date");
+    typeMapping.put("date", "Date");
     typeMapping.put("long", NUMBER_TYPE);
     typeMapping.put("short", NUMBER_TYPE);
     typeMapping.put("char", STRING_TYPE);
@@ -120,8 +123,13 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     typeMapping.put("integer", NUMBER_TYPE);
     typeMapping.put("ByteArray", "blob");
     typeMapping.put("binary", "blob");
+    typeMapping.put("file", "blob");
     typeMapping.put("UUID", STRING_TYPE);
     typeMapping.put("BigDecimal", NUMBER_TYPE);
+  }
+
+  private static Logger getLogger() {
+    return LoggerFactory.getLogger(VaadinConnectJsGenerator.class);
   }
 
   /**
@@ -163,10 +171,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
    */
   @Override
   public String escapeReservedWord(String name) {
-    if (this.reservedWordsMappings().containsKey(name)) {
-      return this.reservedWordsMappings().get(name);
-    }
-    return "_" + name; // add an underscore to the name
+    return this.reservedWordsMappings().getOrDefault(name, "_" + name);
   }
 
   /**
@@ -202,20 +207,39 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   public CodegenOperation fromOperation(String path, String httpMethod,
       Operation operation, Map<String, Schema> schemas, OpenAPI openAPI) {
     if (!"POST".equalsIgnoreCase(httpMethod)) {
-      throw new GeneratorException(
+      throw getGeneratorException(
           "Code generator only supports POST requests.");
     }
-    if (!path.matches("^/([^/]+)/([^/]+)$")) {
-      throw new GeneratorException(
-        "Path must be in form of \"/<ServiceName>/<MethodName>\".");
+    String[] split = path.split("/");
+    if (!path.matches("^/([^/{}\n\t]+)/([^/{}\n\t]+)$") || split.length != 3) {
+      throw getGeneratorException(
+          "Path must be in form of \"/<ServiceName>/<MethodName>\".");
     }
     CodegenOperation codegenOperation = super.fromOperation(path, httpMethod,
         operation, schemas, openAPI);
-    int i = path.lastIndexOf('/') + 1;
-    String methodName = path.substring(i);
+    String methodName = split[2];
+    String serviceName = split[1];
     codegenOperation.getVendorExtensions()
         .put(EXTENSION_VAADIN_CONNECT_METHOD_NAME, methodName);
+    codegenOperation.getVendorExtensions()
+        .put(EXTENSION_VAADIN_CONNECT_SERVICE_NAME, serviceName);
+    validateOperationTags(path, httpMethod, operation);
     return codegenOperation;
+  }
+
+  private void validateOperationTags(String path, String httpMethod,
+      Operation operation) {
+    List<String> tags = operation.getTags();
+    if (tags == null || tags.isEmpty()) {
+      getLogger().warn(
+          "The {} operation with path \"{}\" does not have any tag. The generated method will be included in Default class.",
+          httpMethod, path);
+    } else if (tags.size() > 1) {
+      String fileList = String.join(", ", tags);
+      getLogger().warn(
+          "The {} operation with path \"{}\" contains multiple tags. The generated method will be included in classes: \"{}\".",
+          httpMethod, path, fileList);
+    }
   }
 
   @Override
@@ -291,20 +315,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   @Override
   public String toApiName(String name) {
-    if (name.length() == 0) {
-      return "DefaultService";
-    }
     return initialCaps(name);
-  }
-
-  @Override
-  public String toApiFilename(String name) {
-    return name;
-  }
-
-  @Override
-  public String getArgumentsLocation() {
-    return null;
   }
 
   @Override
@@ -315,6 +326,13 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   @Override
   public String getDefaultTemplateDir() {
     return templateDir;
+  }
+
+  private RuntimeException getGeneratorException(String message) {
+    // Link should be replaced later
+    return new RuntimeException(message
+        + " For more information, please checkout the Vaadin Connect Generator "
+        + "documentation page at https://vaadin.com/vaadin-connect.");
   }
 
   /**
