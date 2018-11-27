@@ -1,6 +1,12 @@
 const {describe, it, beforeEach, afterEach} = intern.getPlugin('interface.bdd');
 const {expect} = intern.getPlugin('chai');
 const {fetchMock} = intern.getPlugin('fetchMock');
+const {sinon} = intern.getPlugin('sinon');
+
+// Specific Browser API used in Vaadin Client and not present in node
+intern.getPlugin('btoa');
+intern.getPlugin('url-search-params');
+intern.getPlugin('window-console');
 
 import {ConnectClient} from '../src/connect-client.js';
 
@@ -18,6 +24,11 @@ describe('ConnectClient', () => {
     it('should support endpoint', () => {
       const client = new ConnectClient({endpoint: '/foo'});
       expect(client).to.have.property('endpoint', '/foo');
+    });
+
+    it('should support tokenEndpoint', () => {
+      const client = new ConnectClient({tokenEndpoint: '/foo'});
+      expect(client).to.have.property('tokenEndpoint', '/foo');
     });
   });
 
@@ -208,6 +219,96 @@ describe('ConnectClient', () => {
       await client.call('FooService', 'fooMethod');
       expect(fetchMock.lastOptions().headers)
         .to.not.have.property('Authorization');
+    });
+  });
+
+  describe('getToken', () => {
+    let client;
+    const service = 'FooService', method = 'fooMethod';
+    const vaadinEndpoint = `/connect/${service}/${method}`;
+
+    beforeEach(() => {
+      client = new ConnectClient();
+    });
+
+    afterEach(() => fetchMock.restore());
+
+    it(`when requesting a service
+        should ask for user and password and use the accessToken`, async() => {
+      client.credentials = sinon.fake.returns({username: 'user', password: 'abc123'});
+
+      fetchMock
+        .post(client.tokenEndpoint, {access_token: 'accessT'})
+        .post(vaadinEndpoint, {fooData: 'foo'});
+
+      const data = await client.call(service, method);
+      expect(data.fooData).to.be.equal('foo');
+
+      expect(client.credentials.callCount).to.be.equal(1);
+      expect(client.accessToken).to.be.equal('accessT');
+
+      expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
+      expect(fetchMock.calls()[0][1].headers).to.have.property('Authorization');
+
+      expect(fetchMock.calls()[1][0]).to.be.equal(vaadinEndpoint);
+      expect(fetchMock.calls()[1][1].headers).to.have.property('Authorization');
+      expect(fetchMock.calls()[1][1].headers['Authorization']).to.be.equal('Bearer accessT');
+    });
+
+    it(`when token response is invalid
+        should avoid looping credentials, log an error, and proceed with the call without accessToken`, async() => {
+      client.credentials = sinon.fake.returns({username: 'user', password: 'abc123'});
+
+      const errorSpy = sinon.spy(window.console, 'error');
+
+      fetchMock
+        .post(client.tokenEndpoint, {body: 'Bad Request', status: 500})
+        .post(vaadinEndpoint, {fooData: 'foo'});
+
+      const data = await client.call(service, method);
+      expect(data.fooData).to.be.equal('foo');
+
+      expect(client.accessToken).to.be.undefined;
+
+      expect(errorSpy.callCount).to.be.equal(1);
+      expect(errorSpy.getCall(0).args[0]).to.match(/Bad Request/);
+      errorSpy.restore();
+
+      expect(client.credentials.callCount).to.be.equal(1);
+
+      expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
+      expect(fetchMock.calls()[0][1].headers).to.have.property('Authorization');
+
+      expect(fetchMock.calls()[1][0]).to.be.equal(vaadinEndpoint);
+      expect(fetchMock.calls()[1][1].headers).not.to.have.property('Authorization');
+    });
+
+    it(`when token response is 40X
+        should continue asking for user and password until credentials returns false`, async() => {
+      client.credentials = sinon.stub();
+      client.credentials.onCall(0).returns({username: 'user', password: 'abc123'});
+      client.credentials.onCall(1).returns({username: 'user', password: 'abc123'});
+      client.credentials.onCall(2).returns(false);
+
+      fetchMock
+        .post(client.tokenEndpoint, {body: {error: 'invalid_grant', error_description: 'Bad credentials'}, status: 400})
+        .post(vaadinEndpoint, {fooData: 'foo'});
+
+      const data = await client.call(service, method);
+      expect(data.fooData).to.be.equal('foo');
+
+      expect(fetchMock.calls().length).to.be.equal(3);
+
+      expect(client.accessToken).to.be.undefined;
+
+      expect(client.credentials.callCount).to.be.equal(3);
+
+      expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
+      expect(fetchMock.calls()[0][1].headers).to.have.property('Authorization');
+      expect(fetchMock.calls()[1][0]).to.be.equal(client.tokenEndpoint);
+      expect(fetchMock.calls()[1][1].headers).to.have.property('Authorization');
+      expect(fetchMock.calls()[2][0]).to.be.equal(vaadinEndpoint);
+      expect(fetchMock.calls()[2][1].headers).not.to.have.property('Authorization');
     });
   });
 });

@@ -32,3 +32,24 @@ intern.registerPlugin('fetchMock', async() => {
     return {fetchMock: fetchMockLocal};
   }
 });
+
+intern.registerPlugin('btoa', async() => {
+  if (intern.environment === 'node') {
+    global.window = global.window || {};
+    window.btoa = require('btoa');
+  }
+});
+
+intern.registerPlugin('url-search-params', async() => {
+  if (intern.environment === 'node') {
+    global.window = global.window || {};
+    window.URLSearchParams = require('url-search-params');
+  }
+});
+
+intern.registerPlugin('window-console', async() => {
+  if (intern.environment === 'node') {
+    global.window = global.window || {};
+    global.window.console = global.window.console || {log: () => {}, error: () => {}};
+  }
+});

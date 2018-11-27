@@ -34,6 +34,48 @@ export class ConnectClient {
      * @default '/connect'
      */
     this.endpoint = options.endpoint || '/connect';
+
+    /**
+     * The Vaadin Connect token endpoint.
+     * @type {string}
+     * @default '/oauth/token'
+     */
+    this.tokenEndpoint = options.tokenEndpoint || '/oauth/token';
+
+    /**
+     * The async method to call when needed a username/password pair
+     *
+     * @type {Function}
+     * @default 'undefined, meaning to proceed with the call without adding an auth header'
+     */
+    this.credentials = options.credentials;
+
+    // TODO: remove these when #58
+    this._clientId = 'vaadin-connect-client';
+    this._clientSecret = 'c13nts3cr3t';
+  }
+
+  async getToken(userOrRefresh, password) {
+    const params = new window.URLSearchParams();
+    params.append('username', userOrRefresh);
+    params.append('password', password);
+    params.append('grant_type', 'password');
+
+    const response = await fetch(this.tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${window.btoa(this._clientId + ':' + this._clientSecret)}`
+      },
+      body: params
+    });
+
+    this.accessToken = undefined;
+
+    if (response.status == 200) {
+      this.accessToken = (await response.json()).access_token;
+    }
+
+    return response;
   }
 
   /**
@@ -53,10 +95,30 @@ export class ConnectClient {
       );
     }
 
+    if (!this.accessToken && this.credentials) {
+      let message = 'Please login';
+      while (!this.accessToken) {
+        const creds = await this.credentials(message ? message : 'Please login');
+        if (!creds) {
+          break;
+        }
+        if (creds.username && creds.password) {
+          const response = await this.getToken(creds.username, creds.password);
+          if (response.status >= 400 && response.status < 500) {
+            message = (await response.json()).error_description;
+          } else if (!this.accessToken) {
+            window.console.error(`${response.statusText} ${response.body}`);
+            break;
+          }
+        }
+      }
+    }
+
     const headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     };
+
     if (this.accessToken !== undefined) {
       headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
