@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
@@ -54,6 +56,8 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
   private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
+  private static final Pattern PATH_REGEX = Pattern
+      .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
 
   /**
    * Create vaadin connect js codegen instance.
@@ -211,15 +215,15 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       throw getGeneratorException(
           "Code generator only supports POST requests.");
     }
-    String[] split = path.split("/");
-    if (!path.matches("^/([^/{}\n\t]+)/([^/{}\n\t]+)$") || split.length != 3) {
+    Matcher matcher = PATH_REGEX.matcher(path);
+    if (!matcher.matches()) {
       throw getGeneratorException(
           "Path must be in form of \"/<ServiceName>/<MethodName>\".");
     }
     CodegenOperation codegenOperation = super.fromOperation(path, httpMethod,
         operation, schemas, openAPI);
-    String methodName = split[2];
-    String serviceName = split[1];
+    String serviceName = matcher.group(1);
+    String methodName = matcher.group(2);
     codegenOperation.getVendorExtensions()
         .put(EXTENSION_VAADIN_CONNECT_METHOD_NAME, methodName);
     codegenOperation.getVendorExtensions()
