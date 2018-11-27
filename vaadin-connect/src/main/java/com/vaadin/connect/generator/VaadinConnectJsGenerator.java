@@ -194,6 +194,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   @Override
   public String escapeUnsafeCharacters(String input) {
+    // Escape opening/closing block comment to avoid code injection
     return input.replace("*/", "*_/").replace("/*", "/_*");
   }
 
@@ -249,13 +250,28 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
         .get("operations");
     Object vaadinServicesExtension = vendorExtensions()
         .get(OpenApiJavaParserImpl.VAADIN_SERVICES_EXTENSION_NAME);
+    String classname = (String) operations.get("classname");
     if (vaadinServicesExtension instanceof Map) {
-      String classname = (String) operations.get("classname");
       Object classDescription = ((Map<String, OpenAPiVaadinServicesExtension>) vaadinServicesExtension)
           .get(classname);
-      objs.put(VAADIN_CONNECT_CLASS_DESCRIPTION, classDescription);
+      if (classDescription == null) {
+        warnNoClassInformation(classname);
+      } else {
+        objs.put(VAADIN_CONNECT_CLASS_DESCRIPTION, classDescription);
+      }
+    } else {
+      warnNoClassInformation(classname);
     }
     return super.postProcessOperations(objs);
+  }
+
+  private void warnNoClassInformation(String classname) {
+    // Link should be replace later
+    getLogger().warn(
+        "The operations with tag {} doesn't have {} extension or it doesn't have information for class {}."
+            + "For more information, please visit https://vaadin.com/vaadin-connect#vaadin-services-extension-in-open-api.",
+        classname, OpenApiJavaParserImpl.VAADIN_SERVICES_EXTENSION_NAME,
+        classname);
   }
 
   @Override

@@ -1,4 +1,3 @@
-// Generated from Default.java
 import defaultClient from './connect-client.default.js';
 
 export class Default {

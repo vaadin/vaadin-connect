@@ -1,4 +1,3 @@
-// Generated from MySecondJsClass.java
 import defaultClient from './connect-client.default.js';
 
 export class MySecondJsClass {
