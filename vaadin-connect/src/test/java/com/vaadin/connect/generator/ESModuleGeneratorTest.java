@@ -41,7 +41,6 @@ public class ESModuleGeneratorTest {
         "output=" + outputPath });
     Path outputFilePath = Paths.get(
         outputPath + "/" + GeneratorTestClass.class.getSimpleName() + ".js");
-
     String actualJson = StringUtils.toEncodedString(
         Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
     String expectedJson = OpenApiJavaParserImplTest
@@ -65,5 +64,47 @@ public class ESModuleGeneratorTest {
     ESModuleGenerator.main(new String[] {
         "input=src/test/resources/com/vaadin/connect/generator/get-operation-openapi.json",
         "output=" + outputPath });
+  }
+
+  @Test
+  public void should_GenerateTwoClasses_When_OperationContainsTwoTags()
+      throws IOException {
+    String outputPath = "target/generated-resources/js";
+    ESModuleGenerator.main(new String[] {
+        "input=src/test/resources/com/vaadin/connect/generator/multiple-tags-operation.json",
+        "output=" + outputPath });
+    Path firstOutputFilePath = Paths.get(outputPath + "/MyFirstJsClass.js");
+    Path secondOutputFilePath = Paths.get(outputPath + "/MySecondJsClass.js");
+    String firstActualJson = StringUtils
+        .toEncodedString(Files.readAllBytes(firstOutputFilePath),
+            Charset.defaultCharset())
+        .trim();
+    String secondActualJson = StringUtils
+        .toEncodedString(Files.readAllBytes(secondOutputFilePath),
+            Charset.defaultCharset())
+        .trim();
+    String expectedFirstClass = OpenApiJavaParserImplTest
+        .getExpectedJson("expected-first-class-multiple-tags.js");
+    String expectedSecondClass = OpenApiJavaParserImplTest
+        .getExpectedJson("expected-second-class-multiple-tags.js");
+    Assert.assertEquals(expectedFirstClass, firstActualJson);
+    Assert.assertEquals(expectedSecondClass, secondActualJson);
+  }
+
+  @Test
+  public void should_GenerateDefaultClass_When_OperationHasNoTag()
+      throws IOException {
+    String outputPath = "target/generated-resources/js";
+    ESModuleGenerator.main(new String[] {
+        "input=src/test/resources/com/vaadin/connect/generator/no-tag-operation.json",
+        "output=" + outputPath });
+    Path outputFilePath = Paths.get(outputPath + "/Default.js");
+    String actualJs = StringUtils
+        .toEncodedString(Files.readAllBytes(outputFilePath),
+            Charset.defaultCharset())
+        .trim();
+    String expectedFirstClass = OpenApiJavaParserImplTest
+        .getExpectedJson("expected-default-class-no-tag.js");
+    Assert.assertEquals(expectedFirstClass, actualJs);
   }
 }
