@@ -2,7 +2,7 @@ import {ConnectClient} from '@vaadin/connect';
 
 const client = new ConnectClient({
   endpoint: '/connect',
-  credentials: msg => {
+  credentials: (options = {}) => {
     return {username: 'test_login', password: 'test_password'};
   }
 });
