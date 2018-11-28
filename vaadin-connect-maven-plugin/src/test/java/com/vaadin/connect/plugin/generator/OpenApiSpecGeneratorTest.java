@@ -45,7 +45,7 @@ public class OpenApiSpecGeneratorTest {
   @Test
   public void should_GenerateOpenApi_When_NoApplicationPropertiesInput() {
     new OpenApiSpecGenerator(new Properties())
-        .generate(Paths.get("src/test/java"), outputPath);
+        .generateOpenApiSpec(Paths.get("src/test/java"), outputPath);
 
     Assert.assertTrue(outputPath.toFile().exists());
   }
@@ -55,7 +55,7 @@ public class OpenApiSpecGeneratorTest {
       throws Exception {
     new OpenApiSpecGenerator(TestUtils.readProperties(
         "src/test/resources/com/vaadin/connect/plugin/generator/application.properties.for.testing"))
-            .generate(Paths.get("src/test/java"), outputPath);
+            .generateOpenApiSpec(Paths.get("src/test/java"), outputPath);
 
     Assert.assertTrue(outputPath.toFile().exists());
 

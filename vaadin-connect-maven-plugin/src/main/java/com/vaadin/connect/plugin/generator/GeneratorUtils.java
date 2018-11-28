@@ -44,7 +44,7 @@ final class GeneratorUtils {
   static void writeToFile(Path outputPath, String content) {
     try {
       Path parentFolder = outputPath.getParent();
-      if (!parentFolder.toFile().exists()) {
+      if (parentFolder != null && !parentFolder.toFile().exists()) {
         Files.createDirectories(parentFolder);
       }
       if (!outputPath.toFile().exists()) {

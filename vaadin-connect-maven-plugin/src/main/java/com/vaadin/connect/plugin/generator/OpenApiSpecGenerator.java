@@ -28,6 +28,10 @@ import org.slf4j.LoggerFactory;
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.DEFAULT_ENDPOINT;
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
 
+/**
+ * A generator class that creates the open api specification file from the
+ * sources provided.
+ */
 public class OpenApiSpecGenerator {
   private static final String APPLICATION_TITLE = "vaadin.connect.application.title";
   private static final String APPLICATION_API_VERSION = "vaadin.connect.api.version";
@@ -42,15 +46,30 @@ public class OpenApiSpecGenerator {
       .getLogger(OpenApiSpecGenerator.class);
   private final OpenApiParser generator;
 
+  /**
+   * Creates the generator, getting the data needed for the generation out of
+   * the application properties.
+   *
+   * @param applicationProperties
+   *          the properties with the data required for the generation
+   */
   public OpenApiSpecGenerator(Properties applicationProperties) {
     generator = new OpenApiParser();
     generator.setOpenApiConfiguration(
         extractOpenApiConfiguration(applicationProperties));
   }
 
-  public void generate(Path inputPath, Path specOutputFile) {
-    generator.setSourcePath(inputPath);
-    log.info("Parsing java files from {}", inputPath);
+  /**
+   * Generates the open api spec file based on the sources provided.
+   *
+   * @param sourcesPath
+   *          the source root to be analyzed
+   * @param specOutputFile
+   *          the target file to write the generation output to
+   */
+  public void generateOpenApiSpec(Path sourcesPath, Path specOutputFile) {
+    generator.setSourcePath(sourcesPath);
+    log.info("Parsing java files from {}", sourcesPath);
     OpenAPI openAPI = generator.generateOpenApi();
 
     log.info("Writing output to {}", specOutputFile);

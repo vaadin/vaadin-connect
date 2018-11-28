@@ -19,6 +19,7 @@ package com.vaadin.connect.plugin.generator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ public class VaadinConnectClientGenerator {
    * Generates the client file in the file specified.
    *
    * @param outputFilePath
-   *          the file to generate the client code into
+   *          the file to generateOpenApiSpec the client code into
    */
   public void generateVaadinConnectClientFile(Path outputFilePath) {
     String generatedDefaultClientJs = getDefaultClientJsTemplate()
@@ -59,8 +60,10 @@ public class VaadinConnectClientGenerator {
 
   private String getDefaultClientJsTemplate() {
     try (BufferedReader bufferedReader = new BufferedReader(
-        new InputStreamReader(getClass().getClassLoader()
-            .getResourceAsStream("connect-client.default.js.template")))) {
+        new InputStreamReader(
+            getClass().getClassLoader()
+                .getResourceAsStream("connect-client.default.js.template"),
+            StandardCharsets.UTF_8))) {
       return bufferedReader.lines().collect(Collectors.joining("\n"));
     } catch (IOException e) {
       throw new IllegalStateException(

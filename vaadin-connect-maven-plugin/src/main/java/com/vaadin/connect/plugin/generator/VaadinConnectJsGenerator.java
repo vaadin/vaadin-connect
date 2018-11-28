@@ -74,7 +74,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
    * @param openApiJsonFile
    *          the api spec file to analyze
    * @param generatedFrontendDirectory
-   *          the directory to generate the files into
+   *          the directory to generateOpenApiSpec the files into
    */
   public static void launch(File openApiJsonFile,
       File generatedFrontendDirectory) {
