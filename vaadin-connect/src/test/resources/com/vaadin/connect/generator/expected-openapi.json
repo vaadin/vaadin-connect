@@ -8,6 +8,10 @@
     "url" : "https://server.test",
     "description" : "Test description"
   } ],
+  "tags" : [ {
+    "name" : "GeneratorTestClass",
+    "description" : "This class is used for OpenApi generator test"
+  } ],
   "paths" : {
     "/GeneratorTestClass/getAllUsers" : {
       "post" : {
@@ -268,11 +272,6 @@
           }
         }
       }
-    }
-  },
-  "x-vaadin-services" : {
-    "GeneratorTestClass" : {
-      "description" : "This class is used for OpenApi generator test"
     }
   }
 }

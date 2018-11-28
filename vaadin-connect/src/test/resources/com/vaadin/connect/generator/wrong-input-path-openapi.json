@@ -8,6 +8,10 @@
     "url" : "https://myhost.com/myendpoint",
     "description" : "Vaadin connect backend server"
   } ],
+  "tags" : [ {
+    "name" : "GeneratorTestClass",
+    "description" : "This class is used for OpenApi generator test"
+  } ],
   "paths" : {
     "/GeneratorTestClass/getAllUsers/" : {
       "post" : {
@@ -59,11 +63,6 @@
           }
         }
       }
-    }
-  },
-  "x-vaadin-services" : {
-    "GeneratorTestClass" : {
-      "description" : "This class is used for OpenApi generator test"
     }
   }
 }
