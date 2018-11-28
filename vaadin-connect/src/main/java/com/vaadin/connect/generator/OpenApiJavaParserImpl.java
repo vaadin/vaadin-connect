@@ -57,6 +57,7 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,6 @@ import com.vaadin.connect.VaadinService;
  */
 public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
-  public static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
   private static final List<String> NUMBER_TYPES = Arrays.asList("int",
       "integer", "short", "long", "double", "float");
   private static final List<String> STRING_TYPES = Arrays.asList("string",
@@ -87,7 +87,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   private Path javaSourcePath;
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
-  private Map<String, OpenAPiVaadinServicesExtension> vaadinServicesExtensionMap;
+  private Map<String, String> servicesJavadoc;
   private Map<String, Schema> nonServiceSchemas;
   private OpenAPI openApiModel;
 
@@ -131,7 +131,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     openApiModel = createBasicModel();
     nonServiceSchemas = new HashMap<>();
     usedSchemas = new HashSet<>();
-    vaadinServicesExtensionMap = new HashMap<>();
+    servicesJavadoc = new HashMap<>();
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
@@ -146,9 +146,17 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
         openApiModel.getComponents().addSchemas(s, schema);
       }
     }
+    addTagsInformation();
+  }
 
-    openApiModel.addExtension(VAADIN_SERVICES_EXTENSION_NAME,
-        vaadinServicesExtensionMap);
+  private void addTagsInformation() {
+    for (Map.Entry<String, String> serviceJavadoc : servicesJavadoc
+        .entrySet()) {
+      Tag tag = new Tag();
+      tag.name(serviceJavadoc.getKey());
+      tag.description(serviceJavadoc.getValue());
+      openApiModel.addTagsItem(tag);
+    }
   }
 
   private OpenAPI createBasicModel() {
@@ -189,13 +197,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       nonServiceSchemas.put(className, parseClassAsSchema(classDeclaration));
       return;
     }
-    OpenAPiVaadinServicesExtension openAPiVaadinServicesExtension = new OpenAPiVaadinServicesExtension()
-        .description("");
-    classDeclaration.getJavadoc()
-        .ifPresent(javadoc -> openAPiVaadinServicesExtension
-            .description(javadoc.getDescription().toText()));
-
-    vaadinServicesExtensionMap.put(className, openAPiVaadinServicesExtension);
+    classDeclaration.getJavadoc().ifPresent(javadoc -> servicesJavadoc
+        .put(className, javadoc.getDescription().toText()));
 
     Map<String, PathItem> pathItems = createPathItems(classDeclaration);
 

@@ -17,6 +17,7 @@ package com.vaadin.connect.generator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
+import io.swagger.v3.oas.models.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +60,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
+  private List<Tag> tags;
 
   /**
    * Create vaadin connect js codegen instance.
@@ -234,13 +237,13 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   private void validateOperationTags(String path, String httpMethod,
       Operation operation) {
-    List<String> tags = operation.getTags();
-    if (tags == null || tags.isEmpty()) {
+    List<String> operationTags = operation.getTags();
+    if (operationTags == null || operationTags.isEmpty()) {
       getLogger().warn(
           "The {} operation with path \"{}\" does not have any tag. The generated method will be included in Default class.",
           httpMethod, path);
-    } else if (tags.size() > 1) {
-      String fileList = String.join(", ", tags);
+    } else if (operationTags.size() > 1) {
+      String fileList = String.join(", ", operationTags);
       getLogger().warn(
           "The {} operation with path \"{}\" contains multiple tags. The generated method will be included in classes: \"{}\".",
           httpMethod, path, fileList);
@@ -252,29 +255,30 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   public Map<String, Object> postProcessOperations(Map<String, Object> objs) {
     Map<String, Object> operations = (Map<String, Object>) objs
         .get("operations");
-    Object vaadinServicesExtension = vendorExtensions()
-        .get(OpenApiJavaParserImpl.VAADIN_SERVICES_EXTENSION_NAME);
     String classname = (String) operations.get("classname");
-    if (vaadinServicesExtension instanceof Map) {
-      Object classDescription = ((Map<String, OpenAPiVaadinServicesExtension>) vaadinServicesExtension)
-          .get(classname);
-      if (classDescription == null) {
-        warnNoClassInformation(classname);
-      } else {
-        objs.put(VAADIN_CONNECT_CLASS_DESCRIPTION, classDescription);
+    for (Tag tag : tags) {
+      if (tag.getName().equals(classname)) {
+        objs.put(VAADIN_CONNECT_CLASS_DESCRIPTION, tag.getDescription());
+        break;
       }
-    } else {
+    }
+    if (objs.get(VAADIN_CONNECT_CLASS_DESCRIPTION) == null) {
       warnNoClassInformation(classname);
     }
     return super.postProcessOperations(objs);
   }
 
+  @Override
+  public void preprocessOpenAPI(OpenAPI openAPI) {
+    super.processOpenAPI(openAPI);
+    List<Tag> openAPITags = openAPI.getTags();
+    this.tags = openAPITags != null ? openAPITags : Collections.emptyList();
+  }
+
   private void warnNoClassInformation(String classname) {
     // Link should be replace later
-    getLogger().warn(
-        "The operations with tag {} doesn't have {} extension or it doesn't have information for class {}."
-            + "For more information, please visit https://vaadin.com/vaadin-connect#vaadin-services-extension-in-open-api.",
-        classname, OpenApiJavaParserImpl.VAADIN_SERVICES_EXTENSION_NAME,
+    getLogger().warn("The operations with tag {} doesn't have description."
+        + "For more information, please visit https://vaadin.com/vaadin-connect#vaadin-services-extension-in-open-api.",
         classname);
   }
 
