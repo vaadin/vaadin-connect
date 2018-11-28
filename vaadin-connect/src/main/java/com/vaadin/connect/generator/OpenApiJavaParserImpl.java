@@ -28,9 +28,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.LoggerFactory;
-
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
@@ -41,8 +38,6 @@ import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import com.github.javaparser.utils.SourceRoot;
-import com.vaadin.connect.VaadinService;
-
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -52,6 +47,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
@@ -61,25 +57,33 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.servers.Server;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 
+import com.vaadin.connect.VaadinService;
+
+/**
+ * Java parser class which scans for all {@link VaadinService} classes and
+ * produces OpenApi json.
+ */
 public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
-  private static final List<String> NUMBER_TYPES = Arrays
-    .asList("int", "integer", "short", "long", "double", "float");
-  private static final List<String> STRING_TYPES = Arrays
-    .asList("string", "char");
+  public static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
+  private static final List<String> NUMBER_TYPES = Arrays.asList("int",
+      "integer", "short", "long", "double", "float");
+  private static final List<String> STRING_TYPES = Arrays.asList("string",
+      "char");
   private static final List<String> BOOLEAN_TYPES = Collections
-    .singletonList("boolean");
-  private static final List<String> MAP_TYPES = Arrays
-    .asList("map", "hashmap", "hashtable", "treemap", "sortedmap");
-  private static final List<String> COLLECTION_TYPES = Arrays
-    .asList("collection", "list", "arraylist", "linkedlist", "set", "hashset",
+      .singletonList("boolean");
+  private static final List<String> MAP_TYPES = Arrays.asList("map", "hashmap",
+      "hashtable", "treemap", "sortedmap");
+  private static final List<String> COLLECTION_TYPES = Arrays.asList(
+      "collection", "list", "arraylist", "linkedlist", "set", "hashset",
       "sortedset", "treeset");
   private static final List<String> PREDEFINED_TYPES = Stream
-    .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES, COLLECTION_TYPES)
-    .flatMap(Collection::stream).collect(Collectors.toList());
-  private static final String VAADIN_SERVICES_EXTENSION_NAME = "x-vaadin-services";
-  private static final String VAADIN_SERVICE_EXTENSION_NAME = "x-vaadin-service";
+      .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES,
+          COLLECTION_TYPES)
+      .flatMap(Collection::stream).collect(Collectors.toList());
   private Path javaSourcePath;
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -91,7 +95,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   public void setSourcePath(Path sourcePath) {
     if (sourcePath == null) {
       throw new IllegalArgumentException(
-        "Java source path must be a valid directory");
+          "Java source path must be a valid directory");
     }
     if (!sourcePath.toFile().exists()) {
       throw new IllegalArgumentException("Java source path doesn't exist");
@@ -121,7 +125,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   private void init() {
     if (javaSourcePath == null || configuration == null) {
       throw new IllegalStateException(
-        "Java source path and configuration should not be null");
+          "Java source path and configuration should not be null");
     }
     SourceRoot sourceRoot = new SourceRoot(javaSourcePath);
     openApiModel = createBasicModel();
@@ -131,8 +135,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiJavaParserImpl.class)
-        .error(e.getMessage(), e);
+      LoggerFactory.getLogger(OpenApiJavaParserImpl.class).error(e.getMessage(),
+          e);
       throw new IllegalStateException("Can't parse the java files", e);
     }
 
@@ -143,8 +147,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       }
     }
 
-    openApiModel
-      .addExtension(VAADIN_SERVICES_EXTENSION_NAME, vaadinServicesExtensionMap);
+    openApiModel.addExtension(VAADIN_SERVICES_EXTENSION_NAME,
+        vaadinServicesExtensionMap);
   }
 
   private OpenAPI createBasicModel() {
@@ -168,28 +172,28 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
   @SuppressWarnings("squid:S1172")
   private SourceRoot.Callback.Result process(Path localPath, Path absolutePath,
-    ParseResult<CompilationUnit> result) {
+      ParseResult<CompilationUnit> result) {
     result.ifSuccessful(compilationUnit -> compilationUnit.getPrimaryType()
-      .ifPresent(typeDeclaration -> {
-        if (typeDeclaration.isClassOrInterfaceDeclaration()) {
-          parseClass(typeDeclaration.asClassOrInterfaceDeclaration());
-        }
-      }));
+        .ifPresent(typeDeclaration -> {
+          if (typeDeclaration.isClassOrInterfaceDeclaration()) {
+            parseClass(typeDeclaration.asClassOrInterfaceDeclaration());
+          }
+        }));
     return SourceRoot.Callback.Result.DONT_SAVE;
   }
 
   private void parseClass(ClassOrInterfaceDeclaration classDeclaration) {
     String className = classDeclaration.getNameAsString();
     if (!classDeclaration
-      .isAnnotationPresent(VaadinService.class.getSimpleName())) {
+        .isAnnotationPresent(VaadinService.class.getSimpleName())) {
       nonServiceSchemas.put(className, parseClassAsSchema(classDeclaration));
       return;
     }
     OpenAPiVaadinServicesExtension openAPiVaadinServicesExtension = new OpenAPiVaadinServicesExtension()
-      .description("");
-    classDeclaration.getJavadoc().ifPresent(
-      javadoc -> openAPiVaadinServicesExtension
-        .description(javadoc.getDescription().toText()));
+        .description("");
+    classDeclaration.getJavadoc()
+        .ifPresent(javadoc -> openAPiVaadinServicesExtension
+            .description(javadoc.getDescription().toText()));
 
     vaadinServicesExtensionMap.put(className, openAPiVaadinServicesExtension);
 
@@ -204,10 +208,10 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   }
 
   private Schema parseClassAsSchema(
-    TypeDeclaration<ClassOrInterfaceDeclaration> typeDeclaration) {
+      TypeDeclaration<ClassOrInterfaceDeclaration> typeDeclaration) {
     Schema schema = new ObjectSchema();
     typeDeclaration.getJavadoc().ifPresent(
-      javadoc -> schema.description(javadoc.getDescription().toText()));
+        javadoc -> schema.description(javadoc.getDescription().toText()));
     for (FieldDeclaration field : typeDeclaration.getFields()) {
       if (field.isTransient()) {
         continue;
@@ -215,17 +219,17 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
       field.getVariables().forEach(variableDeclarator -> {
         if (isBeanType(variableDeclarator.getType())) {
           Schema propertyItem = new Schema()
-            .$ref(variableDeclarator.getTypeAsString());
-          schema
-            .addProperties(variableDeclarator.getNameAsString(), propertyItem);
+              .$ref(variableDeclarator.getTypeAsString());
+          schema.addProperties(variableDeclarator.getNameAsString(),
+              propertyItem);
           usedSchemas.add(variableDeclarator.getTypeAsString());
         } else if (isMapType(variableDeclarator.getType())) {
           schema.addProperties(variableDeclarator.getNameAsString(),
-            parseTypeToSchema(variableDeclarator.getType()));
+              parseTypeToSchema(variableDeclarator.getType()));
         } else {
           Schema propertyItem = parseTypeToSchema(variableDeclarator.getType());
-          schema
-            .addProperties(variableDeclarator.getNameAsString(), propertyItem);
+          schema.addProperties(variableDeclarator.getNameAsString(),
+              propertyItem);
         }
       });
     }
@@ -238,7 +242,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   }
 
   private Map<String, PathItem> createPathItems(
-    ClassOrInterfaceDeclaration typeDeclaration) {
+      ClassOrInterfaceDeclaration typeDeclaration) {
     Map<String, PathItem> pathItems = new HashMap<>();
     for (MethodDeclaration methodDeclaration : typeDeclaration.getMethods()) {
       if (!methodDeclaration.isPublic()) {
@@ -254,11 +258,9 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
 
       ApiResponses responses = createApiResponses(methodDeclaration);
       post.setResponses(responses);
-
+      post.tags(Collections.singletonList(typeDeclaration.getNameAsString()));
       PathItem pathItem = new PathItem().post(post);
       pathItems.put(methodName, pathItem);
-      pathItem.addExtension(VAADIN_SERVICE_EXTENSION_NAME,
-        typeDeclaration.getNameAsString());
     }
     parseInnerClasses(typeDeclaration);
     return pathItems;
@@ -268,9 +270,9 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     for (BodyDeclaration member : typeDeclaration.getMembers()) {
       if (member.isClassOrInterfaceDeclaration()) {
         ClassOrInterfaceDeclaration classDeclaration = member
-          .asClassOrInterfaceDeclaration();
+            .asClassOrInterfaceDeclaration();
         nonServiceSchemas.put(classDeclaration.getNameAsString(),
-          parseClassAsSchema(classDeclaration));
+            parseClassAsSchema(classDeclaration));
       }
     }
   }
@@ -278,33 +280,33 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   private Operation createPostOperation(MethodDeclaration methodDeclaration) {
     Operation post = new Operation();
     methodDeclaration.getJavadoc().ifPresent(
-      javadoc -> post.setDescription(javadoc.getDescription().toText()));
+        javadoc -> post.setDescription(javadoc.getDescription().toText()));
     return post;
   }
 
   private ApiResponses createApiResponses(MethodDeclaration methodDeclaration) {
     ApiResponse successfulResponse = createApiSuccessfulResponse(
-      methodDeclaration);
+        methodDeclaration);
     ApiResponses responses = new ApiResponses();
     responses.addApiResponse("200", successfulResponse);
     return responses;
   }
 
   private ApiResponse createApiSuccessfulResponse(
-    MethodDeclaration methodDeclaration) {
+      MethodDeclaration methodDeclaration) {
     Content successfulContent = new Content();
     ApiResponse successfulResponse = new ApiResponse();
     methodDeclaration.getJavadoc().ifPresent(javadoc -> {
       for (JavadocBlockTag blockTag : javadoc.getBlockTags()) {
         if (blockTag.getType() == JavadocBlockTag.Type.RETURN) {
           successfulResponse
-            .setDescription("Return " + blockTag.getContent().toText());
+              .setDescription("Return " + blockTag.getContent().toText());
         }
       }
     });
     if (StringUtils.isBlank(successfulResponse.getDescription())) {
-      successfulResponse
-        .setDescription("Request has been processed without any return result");
+      successfulResponse.setDescription(
+          "Request has been processed without any return result");
     }
     if (!methodDeclaration.getType().isVoidType()) {
       MediaType mediaItem = createReturnMediaType(methodDeclaration);
@@ -333,8 +335,8 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     methodDeclaration.getJavadoc().ifPresent(javadoc -> {
       for (JavadocBlockTag blockTag : javadoc.getBlockTags()) {
         if (blockTag.getType() == JavadocBlockTag.Type.PARAM) {
-          paramsDescription
-            .put(blockTag.getName().orElse(""), blockTag.getContent().toText());
+          paramsDescription.put(blockTag.getName().orElse(""),
+              blockTag.getContent().toText());
         }
       }
     });
@@ -356,7 +358,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
         paramSchema = parseTypeToSchema(parameter.getType());
       }
       paramSchema
-        .description(paramsDescription.get(parameter.getNameAsString()));
+          .description(paramsDescription.get(parameter.getNameAsString()));
       requestSchema.addProperties(parameter.getNameAsString(), paramSchema);
     });
     return requestBody;
@@ -400,7 +402,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
     String typeName;
     if (javaType.isClassOrInterfaceType()) {
       typeName = javaType.asClassOrInterfaceType().getNameAsString()
-        .toLowerCase(Locale.ENGLISH);
+          .toLowerCase(Locale.ENGLISH);
     } else {
       typeName = javaType.asString().toLowerCase(Locale.ENGLISH);
     }
@@ -408,7 +410,7 @@ public class OpenApiJavaParserImpl implements OpenApiGenerator {
   }
 
   private Schema createMapSchema(Type javaType) {
-    Schema mapSchema = new ObjectSchema();
+    Schema mapSchema = new MapSchema();
     Type mapValueType = (Type) javaType.getChildNodes().get(2);
     mapSchema.additionalProperties(parseTypeToSchema(mapValueType));
     return mapSchema;

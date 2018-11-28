@@ -17,7 +17,7 @@ package com.vaadin.connect.generator;
 
 /**
  * Object model for vaadin services extension in OpenAPI spec file. It supposes
- * to provide additional information for a service
+ * to provide additional information for a service.
  */
 public class OpenAPiVaadinServicesExtension {
   private String description;
@@ -35,7 +35,7 @@ public class OpenAPiVaadinServicesExtension {
    * Set description for the service
    *
    * @param description
-   *         description of the service
+   *          description of the service
    */
   public void setDescription(String description) {
     this.description = description;
@@ -45,7 +45,7 @@ public class OpenAPiVaadinServicesExtension {
    * Set description for the service and return the instance
    *
    * @param description
-   *         descrition to be set
+   *          description to be set
    * @return the current object model instance
    */
   public OpenAPiVaadinServicesExtension description(String description) {
