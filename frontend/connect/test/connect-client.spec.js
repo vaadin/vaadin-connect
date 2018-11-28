@@ -3,11 +3,6 @@ const {expect} = intern.getPlugin('chai');
 const {fetchMock} = intern.getPlugin('fetchMock');
 const {sinon} = intern.getPlugin('sinon');
 
-// Specific Browser API used in Vaadin Client and not present in node
-intern.getPlugin('btoa');
-intern.getPlugin('url-search-params');
-intern.getPlugin('window-console');
-
 import {ConnectClient} from '../src/connect-client.js';
 
 describe('ConnectClient', () => {
@@ -184,107 +179,91 @@ describe('ConnectClient', () => {
         .to.have.property('Authorization', `Bearer ${token}`);
     });
 
-    it('should include Authorization header when accessToken is defined', async() => {
-      client.accessToken = 0;
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.have.property('Authorization', `Bearer 0`);
-
-      client.accessToken = null;
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.have.property('Authorization', `Bearer null`);
-
-      client.accessToken = false;
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.have.property('Authorization', `Bearer false`);
-
-      client.accessToken = '';
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.have.property('Authorization', `Bearer `);
-
-      client.accessToken = NaN;
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.have.property('Authorization', `Bearer NaN`);
+    it('should not include Authorization header when accessToken is falsy', async() => {
+      for (const falsy of [false, '', 0, null, undefined, NaN]) {
+        client.accessToken = falsy;
+        await client.call('FooService', 'fooMethod');
+        expect(fetchMock.lastOptions().headers)
+          .to.not.have.property('Authorization');
+      }
 
       client.accessToken = {};
       await client.call('FooService', 'fooMethod');
       expect(fetchMock.lastOptions().headers)
         .to.have.property('Authorization', `Bearer [object Object]`);
-
-      client.accessToken = undefined;
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.not.have.property('Authorization');
     });
   });
 
-  describe('getToken', () => {
+  describe('tokenEndpoint', () => {
+    it('should have default tokenEndpoint', () => {
+      expect(new ConnectClient())
+        .to.have.property('tokenEndpoint', '/oauth/token');
+    });
+
+    it('should allow setting new tokenEndpoint', () => {
+      const client = new ConnectClient();
+      client.tokenEndpoint = '/foo';
+      expect(client).to.have.property('tokenEndpoint', '/foo');
+    });
+  });
+
+  describe('credentials', () => {
     let client;
-    const service = 'FooService', method = 'fooMethod';
-    const vaadinEndpoint = `/connect/${service}/${method}`;
+    const vaadinEndpoint = '/connect/FooService/fooMethod';
 
     beforeEach(() => {
-      client = new ConnectClient();
+      const credentials = sinon.fake
+        .returns({username: 'user', password: 'abc123'});
+      client = new ConnectClient({credentials});
+      fetchMock.post(vaadinEndpoint, {fooData: 'foo'});
     });
 
-    afterEach(() => fetchMock.restore());
-
-    it(`when requesting a service
-        should ask for user and password and use the accessToken`, async() => {
-      client.credentials = sinon.fake.returns({username: 'user', password: 'abc123'});
-
-      fetchMock
-        .post(client.tokenEndpoint, {access_token: 'accessT'})
-        .post(vaadinEndpoint, {fooData: 'foo'});
-
-      const data = await client.call(service, method);
-      expect(data.fooData).to.be.equal('foo');
-
-      expect(client.credentials.callCount).to.be.equal(1);
-      expect(client.accessToken).to.be.equal('accessT');
-
-      expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
-      expect(fetchMock.calls()[0][1].headers).to.have.property('Authorization');
-
-      expect(fetchMock.calls()[1][0]).to.be.equal(vaadinEndpoint);
-      expect(fetchMock.calls()[1][1].headers).to.have.property('Authorization');
-      expect(fetchMock.calls()[1][1].headers['Authorization']).to.be.equal('Bearer accessT');
+    afterEach(() => {
+      fetchMock.restore();
     });
 
-    it(`when token response is invalid
-        should avoid looping credentials, log an error, and proceed with the call without accessToken`, async() => {
-      client.credentials = sinon.fake.returns({username: 'user', password: 'abc123'});
-
-      const errorSpy = sinon.spy(window.console, 'error');
-
-      fetchMock
-        .post(client.tokenEndpoint, {body: 'Bad Request', status: 500})
-        .post(vaadinEndpoint, {fooData: 'foo'});
-
-      const data = await client.call(service, method);
-      expect(data.fooData).to.be.equal('foo');
-
-      expect(client.accessToken).to.be.undefined;
-
-      expect(errorSpy.callCount).to.be.equal(1);
-      expect(errorSpy.getCall(0).args[0]).to.match(/Bad Request/);
-      errorSpy.restore();
-
-      expect(client.credentials.callCount).to.be.equal(1);
-
-      expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
-      expect(fetchMock.calls()[0][1].headers).to.have.property('Authorization');
-
-      expect(fetchMock.calls()[1][0]).to.be.equal(vaadinEndpoint);
-      expect(fetchMock.calls()[1][1].headers).not.to.have.property('Authorization');
+    it('should ask for credentials when accessToken is missing', async() => {
+      fetchMock.post(client.tokenEndpoint, {access_token: 'accessT'});
+      await client.call('FooService', 'fooMethod');
+      expect(client.credentials).to.be.calledOnce;
+      expect(client.credentials.lastCall).to.be.calledWithExactly();
     });
 
-    it(`when token response is 400 or 401
-        should continue asking for user and password until credentials returns false`, async() => {
+    it('should not request token endpoint when credentials are falsy', async() => {
+      for (const falsy of [false, '', 0, null, undefined, NaN]) {
+        client.credentials = sinon.fake.returns(falsy);
+        await client.call('FooService', 'fooMethod');
+        expect(fetchMock.lastUrl()).to.not.equal(client.tokenEndpoint);
+      }
+    });
+
+    it('should ask for credencials again when one is missing', async() => {
+      client.credentials = sinon.stub();
+      client.credentials.onCall(0).returns({password: 'abc123'});
+      client.credentials.onCall(1).returns({username: 'user'});
+      client.credentials.onCall(2).returns(false);
+
+      await client.call('FooService', 'fooMethod');
+      expect(client.credentials).to.be.calledThrice;
+    });
+
+    it('should request token endpoint with credentials', async() => {
+      fetchMock.post(client.tokenEndpoint, {access_token: 'accessT'});
+
+      await client.call('FooService', 'fooMethod');
+
+      const [[url, {method, headers, body}]] = fetchMock.calls();
+
+      // TODO: remove when #58
+      expect(headers).to.have.property('Authorization');
+
+      expect(method).to.equal('POST');
+      expect(url).to.equal('/oauth/token');
+      expect(body.toString())
+        .to.equal('grant_type=password&username=user&password=abc123');
+    });
+
+    it('should ask for credentials again when token response is 400 or 401', async() => {
       client.credentials = sinon.stub();
       client.credentials.onCall(0).returns({username: 'user', password: 'abc123'});
       client.credentials.onCall(1).returns({username: 'user', password: 'abc123'});
@@ -295,25 +274,56 @@ describe('ConnectClient', () => {
           {body: {error: 'invalid_grant', error_description: 'Bad credentials'}, status: 400},
           {repeat: 1})
         .post(client.tokenEndpoint,
-          {body: {errot: 'unathorized', error_description: 'Unauthorized access to vaadin service'}, status: 401},
-          {repeat: 1, overwriteRoutes: false})
-        .post(vaadinEndpoint, {fooData: 'foo'});
+          {body: {error: 'unathorized', error_description: 'Unauthorized'}, status: 401},
+          {repeat: 1, overwriteRoutes: false});
 
-      const data = await client.call(service, method);
-      expect(data.fooData).to.be.equal('foo');
+      const data = await client.call('FooService', 'fooMethod');
+      expect(data).to.deep.equal({fooData: 'foo'});
 
       expect(fetchMock.calls().length).to.be.equal(3);
 
       expect(client.accessToken).to.be.undefined;
 
-      expect(client.credentials.callCount).to.be.equal(3);
+      expect(client.credentials).to.be.calledThrice;
+      expect(client.credentials.getCall(0)).to.be.calledWithExactly();
+      expect(client.credentials.getCall(1).args)
+        .to.deep.equal([{message: 'Bad credentials'}]);
+      expect(client.credentials.getCall(2).args)
+        .to.deep.equal([{message: 'Unauthorized'}]);
 
       expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
-      expect(fetchMock.calls()[0][1].headers).to.have.property('Authorization');
       expect(fetchMock.calls()[1][0]).to.be.equal(client.tokenEndpoint);
-      expect(fetchMock.calls()[1][1].headers).to.have.property('Authorization');
       expect(fetchMock.calls()[2][0]).to.be.equal(vaadinEndpoint);
       expect(fetchMock.calls()[2][1].headers).not.to.have.property('Authorization');
+    });
+
+    it('should throw when token response is bad', async() => {
+      fetchMock.post(
+        client.tokenEndpoint,
+        {body: 'Server Internal Error', status: 500}
+      );
+
+      try {
+        await client.call('FooService', 'fooMethod');
+      } catch (err) {
+        expect(err).to.be.instanceOf(TypeError)
+          .and.have.property('message')
+          .that.has.string('500 Internal Server Error');
+        expect(client.credentials).to.be.calledOnce;
+      }
+    });
+
+    it('should use accessToken when token response is ok', async() => {
+      fetchMock.post(client.tokenEndpoint, {access_token: 'accessT'});
+
+      const data = await client.call('FooService', 'fooMethod');
+      expect(client).to.have.property('accessToken', 'accessT');
+
+      const [url, {method, headers}] = fetchMock.calls()[1];
+      expect(method).to.equal('POST');
+      expect(url).to.equal('/connect/FooService/fooMethod');
+      expect(headers).to.have.property('Authorization', 'Bearer accessT');
+      expect(data).to.deep.equal({fooData: 'foo'});
     });
   });
 });
