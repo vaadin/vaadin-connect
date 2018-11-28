@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -44,8 +45,8 @@ public class OpenApiSpecGeneratorTest {
 
   @Test
   public void should_GenerateOpenApi_When_NoApplicationPropertiesInput() {
-    new OpenApiSpecGenerator(new Properties())
-        .generateOpenApiSpec(Paths.get("src/test/java"), outputPath);
+    new OpenApiSpecGenerator(new Properties()).generateOpenApiSpec(
+        Collections.singletonList(Paths.get("src/test/java")), outputPath);
 
     Assert.assertTrue(outputPath.toFile().exists());
   }
@@ -55,7 +56,9 @@ public class OpenApiSpecGeneratorTest {
       throws Exception {
     new OpenApiSpecGenerator(TestUtils.readProperties(
         "src/test/resources/com/vaadin/connect/plugin/generator/application.properties.for.testing"))
-            .generateOpenApiSpec(Paths.get("src/test/java"), outputPath);
+            .generateOpenApiSpec(
+                Collections.singletonList(Paths.get("src/test/java")),
+                outputPath);
 
     Assert.assertTrue(outputPath.toFile().exists());
 

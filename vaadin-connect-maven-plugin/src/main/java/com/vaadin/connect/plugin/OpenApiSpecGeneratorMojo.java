@@ -17,9 +17,8 @@
 package com.vaadin.connect.plugin;
 
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -33,22 +32,17 @@ import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
  * needed for the generation and generates the file into the *
  * {@link VaadinConnectMojoBase#openApiJsonFile} path.
  */
-@Mojo(name = "generateOpenApiSpec-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
   private MavenProject project;
 
   @Override
-  public void execute() throws MojoExecutionException {
-    List<String> compileSourceRoots = project.getCompileSourceRoots();
-    // TODO support multiple source roots
-    if (compileSourceRoots.size() != 1) {
-      throw new MojoExecutionException(String.format(
-          "Expected exactly one source root in the project, but got: '%s'",
-          compileSourceRoots));
-    }
+  public void execute() {
     new OpenApiSpecGenerator(readApplicationProperties()).generateOpenApiSpec(
-        Paths.get(compileSourceRoots.get(0)), openApiJsonFile.toPath());
+        project.getCompileSourceRoots().stream().map(Paths::get)
+            .collect(Collectors.toList()),
+        openApiJsonFile.toPath());
   }
 }
