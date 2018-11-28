@@ -33,7 +33,7 @@ import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
  * needed for the generation and generates the file into the *
  * {@link VaadinConnectMojoBase#openApiJsonFile} path.
  */
-@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+@Mojo(name = "generateOpenApiSpec-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -48,7 +48,7 @@ public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
           "Expected exactly one source root in the project, but got: '%s'",
           compileSourceRoots));
     }
-    new OpenApiSpecGenerator(readApplicationProperties()).generate(
+    new OpenApiSpecGenerator(readApplicationProperties()).generateOpenApiSpec(
         Paths.get(compileSourceRoots.get(0)), openApiJsonFile.toPath());
   }
 }
