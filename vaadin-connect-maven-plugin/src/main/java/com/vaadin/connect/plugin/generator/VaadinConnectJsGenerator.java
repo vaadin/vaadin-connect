@@ -66,26 +66,6 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
   private List<Tag> tags;
 
-  /**
-   * Runs the code generation based on the data from the open api json.
-   * Generates the target files in the directory specified, overwriting the
-   * files and creating the target directory, if necessary.
-   *
-   * @param openApiJsonFile
-   *          the api spec file to analyze
-   * @param generatedFrontendDirectory
-   *          the directory to generateOpenApiSpec the files into
-   */
-  public static void launch(File openApiJsonFile,
-      File generatedFrontendDirectory) {
-    CodegenConfigurator configurator = new CodegenConfigurator();
-    configurator.setLang(VaadinConnectJsGenerator.class.getName());
-    configurator.setInputSpecURL(openApiJsonFile.toString());
-    configurator.setOutputDir(generatedFrontendDirectory.toString());
-    new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
-        .generate();
-  }
-
   private static class VaadinConnectJSOnlyGenerator extends DefaultGenerator {
     @Override
     public File writeToFile(String filename, String contents)
@@ -168,6 +148,26 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     typeMapping.put("file", "blob");
     typeMapping.put("UUID", STRING_TYPE);
     typeMapping.put("BigDecimal", NUMBER_TYPE);
+  }
+
+  /**
+   * Runs the code generation based on the data from the open api json.
+   * Generates the target files in the directory specified, overwriting the
+   * files and creating the target directory, if necessary.
+   *
+   * @param openApiJsonFile
+   *          the api spec file to analyze
+   * @param generatedFrontendDirectory
+   *          the directory to generateOpenApiSpec the files into
+   */
+  public static void launch(File openApiJsonFile,
+                            File generatedFrontendDirectory) {
+    CodegenConfigurator configurator = new CodegenConfigurator();
+    configurator.setLang(VaadinConnectJsGenerator.class.getName());
+    configurator.setInputSpecURL(openApiJsonFile.toString());
+    configurator.setOutputDir(generatedFrontendDirectory.toString());
+    new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
+      .generate();
   }
 
   private static Logger getLogger() {

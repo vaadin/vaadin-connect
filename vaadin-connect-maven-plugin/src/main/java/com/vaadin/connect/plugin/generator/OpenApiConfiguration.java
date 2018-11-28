@@ -26,7 +26,7 @@ public class OpenApiConfiguration {
   private final String serverDescription;
 
   /**
-   * Create a new OpenApi configuration
+   * Create a new OpenApi configuration.
    *
    * @param applicationTitle
    *         Title of the application
@@ -46,7 +46,7 @@ public class OpenApiConfiguration {
   }
 
   /**
-   * Get application title
+   * Get application title.
    *
    * @return application title
    */
@@ -55,7 +55,7 @@ public class OpenApiConfiguration {
   }
 
   /**
-   * Get application api version
+   * Get application api version.
    *
    * @return application api version
    */
@@ -64,7 +64,7 @@ public class OpenApiConfiguration {
   }
 
   /**
-   * Get server url
+   * Get server url.
    *
    * @return server url
    */
@@ -73,7 +73,7 @@ public class OpenApiConfiguration {
   }
 
   /**
-   * Get server description
+   * Get server description.
    *
    * @return server description
    */

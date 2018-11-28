@@ -23,7 +23,7 @@ public class OpenAPiVaadinServicesExtension {
   private String description;
 
   /**
-   * Get description of the service
+   * Get description of the service.
    *
    * @return description
    */
@@ -32,7 +32,7 @@ public class OpenAPiVaadinServicesExtension {
   }
 
   /**
-   * Set description for the service
+   * Set description for the service.
    *
    * @param description
    *          description of the service
@@ -42,7 +42,7 @@ public class OpenAPiVaadinServicesExtension {
   }
 
   /**
-   * Set description for the service and return the instance
+   * Set description for the service and return the instance.
    *
    * @param description
    *          description to be set
