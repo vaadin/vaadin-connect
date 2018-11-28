@@ -137,6 +137,9 @@
                                     <directory>
                                         ${project.basedir}/../vaadin-connect/target/
                                     </directory>
+                                    <directory>
+                                        ${project.basedir}/../vaadin-connect-maven-plugin/target/
+                                    </directory>
                                     <includes>
                                         <include>*.exec</include>
                                     </includes>
