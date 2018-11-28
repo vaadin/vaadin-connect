@@ -48,7 +48,7 @@ export class GeneratorTestClass {
    * @returns {array} Return array of int
    */
   getArrayInt(input) {
-    return this._client.call('GeneratorTestClass', 'getArrayInt', { input });
+    return this._client.call('GeneratorTestClass', 'getArrayInt', {input});
   }
 
   /**
@@ -58,7 +58,7 @@ export class GeneratorTestClass {
    * @returns {boolean} Return boolean value
    */
   getBooleanValue(input) {
-    return this._client.call('GeneratorTestClass', 'getBooleanValue', { input });
+    return this._client.call('GeneratorTestClass', 'getBooleanValue', {input});
   }
 
   /**
@@ -69,7 +69,7 @@ export class GeneratorTestClass {
    * @returns {boolean} Return boolean value
    */
   getTwoParameters(input, secondInput) {
-    return this._client.call('GeneratorTestClass', 'getTwoParameters', { input, secondInput });
+    return this._client.call('GeneratorTestClass', 'getTwoParameters', {input, secondInput});
   }
 
   /**
@@ -79,7 +79,7 @@ export class GeneratorTestClass {
    * @returns {User} Return user with given id
    */
   getUserById(id) {
-    return this._client.call('GeneratorTestClass', 'getUserById', { id });
+    return this._client.call('GeneratorTestClass', 'getUserById', {id});
   }
 
   /**
@@ -89,7 +89,7 @@ export class GeneratorTestClass {
    * @returns Request has been processed without any return result
    */
   updateUser(user) {
-    return this._client.call('GeneratorTestClass', 'updateUser', { user });
+    return this._client.call('GeneratorTestClass', 'updateUser', {user});
   }
 
 }
