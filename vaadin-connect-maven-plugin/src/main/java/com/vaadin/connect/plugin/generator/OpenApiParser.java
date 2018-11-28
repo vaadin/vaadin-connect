@@ -16,6 +16,7 @@
 package com.vaadin.connect.plugin.generator;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -83,14 +84,14 @@ class OpenApiParser {
       .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES,
           COLLECTION_TYPES)
       .flatMap(Collection::stream).collect(Collectors.toList());
-  private Path javaSourcePath;
+  private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
   private Map<String, String> servicesJavadoc;
   private Map<String, Schema> nonServiceSchemas;
   private OpenAPI openApiModel;
 
-  void setSourcePath(Path sourcePath) {
+  void addSourcePath(Path sourcePath) {
     if (sourcePath == null) {
       throw new IllegalArgumentException(
           "Java source path must be a valid directory");
@@ -98,7 +99,7 @@ class OpenApiParser {
     if (!sourcePath.toFile().exists()) {
       throw new IllegalArgumentException("Java source path doesn't exist");
     }
-    this.javaSourcePath = sourcePath;
+    this.javaSourcePaths.add(sourcePath);
   }
 
   void setOpenApiConfiguration(OpenApiConfiguration configuration) {
@@ -118,22 +119,17 @@ class OpenApiParser {
   }
 
   private void init() {
-    if (javaSourcePath == null || configuration == null) {
+    if (javaSourcePaths == null || configuration == null) {
       throw new IllegalStateException(
           "Java source path and configuration should not be null");
     }
-    SourceRoot sourceRoot = new SourceRoot(javaSourcePath);
     openApiModel = createBasicModel();
     nonServiceSchemas = new HashMap<>();
     usedSchemas = new HashSet<>();
     servicesJavadoc = new HashMap<>();
-    try {
-      sourceRoot.parse("", this::process);
-    } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiParser.class)
-        .error(e.getMessage(), e);
-      throw new IllegalStateException("Can't parse the java files", e);
-    }
+
+    javaSourcePaths.stream().map(SourceRoot::new)
+        .forEach(this::parseSourceRoot);
 
     for (String s : usedSchemas) {
       Schema schema = nonServiceSchemas.get(s);
@@ -142,6 +138,16 @@ class OpenApiParser {
       }
     }
     addTagsInformation();
+  }
+
+  private void parseSourceRoot(SourceRoot sourceRoot) {
+    try {
+      sourceRoot.parse("", this::process);
+    } catch (Exception e) {
+      LoggerFactory.getLogger(OpenApiParser.class).error(e.getMessage(), e);
+      throw new IllegalStateException(String.format(
+          "Can't parse the java files in the source root '%s'", sourceRoot), e);
+    }
   }
 
   private void addTagsInformation() {

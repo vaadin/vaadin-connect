@@ -38,7 +38,7 @@ public class OpenApiParserTest {
     Path javaSourcePath = Paths
         .get("src/test/java/com/vaadin/connect/plugin/generator")
         .toAbsolutePath();
-    generator.setSourcePath(javaSourcePath);
+    generator.addSourcePath(javaSourcePath);
     generator.setOpenApiConfiguration(configuration);
   }
 

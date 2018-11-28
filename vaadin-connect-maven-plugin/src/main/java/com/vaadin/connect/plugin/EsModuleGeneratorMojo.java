@@ -28,7 +28,7 @@ import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
  * {@link VaadinConnectMojoBase#generatedFrontendDirectory} directory,
  * owerwriting the target files and creating the target directory, if needed.
  */
-@Mojo(name = "generateOpenApiSpec-connect-modules", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+@Mojo(name = "generate-connect-modules", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class EsModuleGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override

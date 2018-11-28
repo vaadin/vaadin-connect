@@ -17,6 +17,7 @@
 package com.vaadin.connect.plugin.generator;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Properties;
 
 import io.swagger.v3.core.util.Json;
@@ -62,14 +63,14 @@ public class OpenApiSpecGenerator {
   /**
    * Generates the open api spec file based on the sources provided.
    *
-   * @param sourcesPath
+   * @param sourcesPaths
    *          the source root to be analyzed
    * @param specOutputFile
    *          the target file to write the generation output to
    */
-  public void generateOpenApiSpec(Path sourcesPath, Path specOutputFile) {
-    generator.setSourcePath(sourcesPath);
-    log.info("Parsing java files from {}", sourcesPath);
+  public void generateOpenApiSpec(Collection<Path> sourcesPaths, Path specOutputFile) {
+    sourcesPaths.forEach(generator::addSourcePath);
+    log.info("Parsing java files from {}", sourcesPaths);
     OpenAPI openAPI = generator.generateOpenApi();
 
     log.info("Writing output to {}", specOutputFile);

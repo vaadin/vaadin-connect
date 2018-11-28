@@ -27,8 +27,8 @@ import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
  * for the generation and generates the file in the
  * {@link VaadinConnectMojoBase#generatedFrontendDirectory} directory.
  */
-@Mojo(name = "generateOpenApiSpec-vaadin-client", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
-public class DefaultClientGeneratorMojo extends VaadinConnectMojoBase {
+@Mojo(name = "generate-vaadin-client", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+public class VaadinClientGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override
   public void execute() {
