@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
+import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
 import io.swagger.codegen.v3.config.CodegenConfigurator;
@@ -59,6 +60,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String ARRAY_TYPE = "array";
   private static final String BOXED_ARRAY_TYPE = "Array";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
+  private static final String EXTENSION_VAADIN_CONNECT_SHOW_JSDOC = "x-vaadin-connect-show-jsdoc";
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
   private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
@@ -300,7 +302,46 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     if (objs.get(VAADIN_CONNECT_CLASS_DESCRIPTION) == null) {
       warnNoClassInformation(classname);
     }
+    setShouldShowJsDoc(operations);
     return super.postProcessOperations(objs);
+  }
+
+  private void setShouldShowJsDoc(Map<String, Object> operations) {
+    if (!(operations.get("operation") instanceof List)) {
+      return;
+    }
+    List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
+        .get("operation");
+    for (CodegenOperation coop : codegenOperations) {
+      boolean hasDescription = StringUtils.isNotBlank(coop.getNotes());
+      boolean hasParameter = hasParameter(coop);
+      boolean hasReturnType = StringUtils.isNotBlank(coop.getReturnType());
+      boolean hasResponseDescription = hasResponseDescription(coop);
+      if (hasDescription || hasParameter || hasReturnType
+          || hasResponseDescription) {
+        coop.getVendorExtensions().put(EXTENSION_VAADIN_CONNECT_SHOW_JSDOC,
+            true);
+      }
+    }
+  }
+
+  private boolean hasResponseDescription(CodegenOperation coop) {
+    for (CodegenResponse response : coop.getResponses()) {
+      if (StringUtils.isNotBlank(response.getMessage())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean hasParameter(CodegenOperation coop) {
+    for (CodegenParameter bodyParam : coop.getBodyParams()) {
+      if (bodyParam.getVendorExtensions()
+          .get(EXTENSION_VAADIN_CONNECT_PARAMETERS) != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
