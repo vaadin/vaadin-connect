@@ -1,26 +1,72 @@
 {
   "functionalSuites": "e2e/**/*.spec.js",
-  "environments": [
-    {
-      "browserName": "chrome",
-      "goog:chromeOptions": {
-        "args": [
-          "headless",
-          "disable-gpu",
-          "window-size=1280,720",
-          "no-sandbox"
-        ]
-      }
-    }
-  ],
   "serverUrl": "http://localhost:8081",
+  "environments": [
+    "chrome"
+  ],
   "tunnelOptions": {
     "version": "3.141.59",
     "drivers": [
-      {
-        "name": "chrome",
-        "version": "2.44"
-      }
+      {"name": "chrome", "version": "2.44"},
+      {"name": "firefox", "version": "0.21.0"}
     ]
+  },
+  "configs": {
+    "sauce-disabled": {
+      "tunnel": "saucelabs",
+      "environments": [
+        {
+          "platform": "Windows 10",
+          "browserName": "MicrosoftEdge",
+          "version": ["latest-1", "latest"],
+          "fixSessionCapabilities": false
+        },
+        {
+          "platform": "Windows 10",
+          "browserName": "internet explorer",
+          "version": "11",
+          "fixSessionCapabilities": false
+        }
+      ]
+    },
+    "sauce": {
+      "tunnel": "saucelabs",
+      "environments": [
+        {
+          "platform": "Windows 10",
+          "browserName": "chrome",
+          "version": ["latest-1", "latest"],
+          "fixSessionCapabilities": false
+        },
+        {
+          "platform": "Windows 10",
+          "browserName": "firefox",
+          "version": ["latest-1", "latest"],
+          "fixSessionCapabilities": false
+        },
+        {
+          "platform": "OS X 10.13",
+          "browserName": "safari",
+          "version": ["latest-1", "latest"],
+          "fixSessionCapabilities": false
+        },
+        {
+          "platform": "OS X 10.13",
+          "browserName": "iphone",
+          "version": ["11.3", "12.0"],
+          "fixSessionCapabilities": false
+        },
+        {
+          "platform": "Linux",
+          "browserName": "android",
+          "version": "6.0",
+          "fixSessionCapabilities": false
+        }
+      ]
+    },
+    "ci-public": {},
+    "ci": {
+      "extends": ["sauce"]
+    }
   }
 }

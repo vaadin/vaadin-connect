@@ -18,5 +18,9 @@
   "plugins": {
     "script": "test/utils.js",
     "useLoader": true
+  },
+  "configs": {
+    "ci-public": {},
+    "ci": {}
   }
 }

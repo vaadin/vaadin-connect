@@ -146,9 +146,10 @@ export class ConnectClient {
         const tokenResponse = await fetch(this.tokenEndpoint, {
           method: 'POST',
           headers: {
-            'Authorization': `Basic ${btoa('vaadin-connect-client:c13nts3cr3t')}`
+            'Authorization': `Basic ${btoa('vaadin-connect-client:c13nts3cr3t')}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body
+          body: body.toString()
         });
         if (tokenResponse.status === 400 || tokenResponse.status === 401) {
           // Wrong credentials response, loop to ask again with the message
