@@ -1,25 +1,24 @@
+// Generated from GeneratorTestClass.java
 import defaultClient from './connect-client.default';
 
-export class Default {
+/**
+ * This class is used for OpenApi generator test
+ */
+export class GeneratorTestClass {
 
   /**
-   * Create a Default instance.
+   * Create a GeneratorTestClass instance.
    * @param {ConnectClient=} client - an instance of ConnectClient
    */
   constructor(client = defaultClient) {
     this._client = client;
   }
 
-  /**
-   * Get all users
-   *
-   * @returns {Promise<array>} Return list of users
-   */
   getAllUsers() {
     return this._client.call('GeneratorTestClass', 'getAllUsers');
   }
 }
 
-const service = new Default(defaultClient);
+const service = new GeneratorTestClass(defaultClient);
 
 export const getAllUsers = service.getAllUsers.bind(service);

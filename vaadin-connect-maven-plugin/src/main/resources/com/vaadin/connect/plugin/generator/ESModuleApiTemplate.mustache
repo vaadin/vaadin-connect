@@ -22,25 +22,20 @@ export class {{classname}} {
     this._client = client;
   }
   {{#operations}}
-
   {{#operation}}
-  /**
-   {{#notes}}
+  {{#vendorExtensions.x-vaadin-connect-show-jsdoc}}
+
+  /**{{#notes}}
    * {{notes}}
-   {{/notes}}
-   {{^notes}}
-   *
-   {{/notes}}
-   *{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
-   * @param {{=<% %>=}}{<%type%>}<%={{ }}=%> {{name}}{{#description}} - {{description}}{{/description}}{{/each}}
-   * {{#responses}}@returns{{#../returnType}}{{=<% %>=}} {<%../returnType%>}<%={{ }}=%>{{/../returnType}} {{message}}{{/responses}}
-   */
+   *{{/notes}}{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
+   * @param {{=<% %>=}}{<%type%>}<%={{ }}=%>{{#name}} {{name}}{{/name}}{{#description}} - {{description}}{{/description}}{{/each}}
+   *{{#responses}}{{#../returnType}} @returns{{=<% %>=}} {Promise<<%../returnType%>>}<%={{ }}=%>{{/../returnType}}{{#message}} {{message}}{{/message}}{{/responses}}
+   */{{/vendorExtensions.x-vaadin-connect-show-jsdoc}}
   {{vendorExtensions.x-vaadin-connect-method-name}}({{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}}) {
   {{=<% %>=}}
     return this._client.call('<%vendorExtensions.x-vaadin-connect-service-name%>', '<%vendorExtensions.x-vaadin-connect-method-name%>'<%#bodyParams%>, {<%#each bodyParam.vendorExtensions.x-vaadin-connect-parameters%><%name%><%#if @last%><%else%>, <%/if%><%/each%>}<%/bodyParams%>);
   <%={{ }}=%>
   }
-
   {{/operation}}
   {{/operations}}
 }

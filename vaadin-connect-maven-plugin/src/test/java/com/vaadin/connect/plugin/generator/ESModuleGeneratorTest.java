@@ -89,6 +89,40 @@ public class ESModuleGeneratorTest {
   }
 
   @Test
+  public void should_GenerateNoJsDoc_When_JsonHasNoJsDocOperation()
+      throws Exception {
+    VaadinConnectJsGenerator.launch(getResourcePath("no-jsdoc-operation.json"),
+        outputDirectory.getRoot());
+
+    Path outputPath = Paths
+        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
+    String actual = StringUtils.toEncodedString(Files.readAllBytes(outputPath),
+        Charset.defaultCharset()).trim();
+
+    String expected = TestUtils.getExpectedJson(this.getClass(),
+      "expected-no-jsdoc.js");
+
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
+  public void should_GeneratePartlyJsDoc_When_JsonHasParametersAndReturnType()
+    throws Exception {
+    VaadinConnectJsGenerator.launch(getResourcePath("parameters-and-return-jsdoc.json"),
+      outputDirectory.getRoot());
+
+    Path outputPath = Paths
+      .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
+    String actual = StringUtils.toEncodedString(Files.readAllBytes(outputPath),
+      Charset.defaultCharset()).trim();
+
+    String expected = TestUtils.getExpectedJson(this.getClass(),
+      "expected-partly-jsdoc.js");
+
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
   public void should_GenerateTwoClasses_When_OperationContainsTwoTags()
       throws Exception {
     VaadinConnectJsGenerator.launch(

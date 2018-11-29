@@ -59,7 +59,6 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
@@ -308,10 +307,6 @@ class OpenApiParser {
         }
       }
     });
-    if (StringUtils.isBlank(successfulResponse.getDescription())) {
-      successfulResponse.setDescription(
-          "Request has been processed without any return result");
-    }
     if (!methodDeclaration.getType().isVoidType()) {
       MediaType mediaItem = createReturnMediaType(methodDeclaration);
       successfulContent.addMediaType("application/json", mediaItem);
