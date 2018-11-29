@@ -1,19 +1,19 @@
 ---
-title: Vaadin Connect Javascript Services Generator
+title: Vaadin Connect JavaScript Services Generator
 order: 801
 layout: page
 ---
 
-= Javascript Services Generator in Vaadin Connect
+= JavaScript Services Generator in Vaadin Connect
 
-The Javascript generator produces Javascript files based on the information from an OpenApi document which is generated from Java files in `_src/main/java_` folder by default.
+The JavaScript generator produces JavaScript files based on the information from an OpenApi document which is generated from Java files in `_src/main/java_` folder by default.
 
 [NOTE]
 ====
-Vaadin Connect uses https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between Java services and Javascript service wrappers. The current implementation is based on OpenAPI specification 3.0.
+Vaadin Connect uses https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between Java services and JavaScript service wrappers. The current implementation is based on OpenAPI specification 3.0.
 ====
 
-A simple generated Javascript files will look like the following snippet:
+A simple generated JavaScript files will look like the following snippet:
 
 .UserService.js
 [[UserService.js]]
@@ -58,7 +58,7 @@ The `_import_`, `_constructor_`, and `_export_` statements are static parts of a
 
 === Classes
 
-The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding Javascript file. The tag name is used for Javascript class name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
+The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding JavaScript file. The tag name is used for JavaScript class name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
 
 
 === Methods
@@ -69,7 +69,7 @@ Each method in a generated class is corresponding to a https://github.com/OAI/Op
 Currently, the generator only supports `_POST_` operation. If a path item contains other operations than `_POST_`, the generator will stop processing.
 ====
 
-The path *must* start with `/` and end without any slash. It is parsed as `_/<service name>/<method name>_` which are used as parameters to call to Java services in the backend. Method name from the path is also reused as the method name in the generated Javascript file.
+The path *must* start with `/` and end without any slash. It is parsed as `_/<service name>/<method name>_` which are used as parameters to call to Java services in the backend. Method name from the path is also reused as the method name in the generated JavaScript file.
 
 ==== Method's Parameters
 Parameters of the method are detected base on the `_application/json_` content of https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#requestBodyObject[request body object]. To get the result as <<UserService.js>>, the request body content should be:
@@ -169,11 +169,11 @@ The JsDoc of the generated method is stored as `_description_` value of the `_PO
 }
 ----
 
-<1> As mentioned in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in Vaadin Connect Generator, `_tags_` are used to classify operations into Javascript files. It means each tag will have a corresponding generated Javascript file. The operations, which contain more than one tag, will appear in all generated files. Empty tags operations will be placed in `_Default.js_` file.
+<1> As mentioned in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in Vaadin Connect Generator, `_tags_` are used to classify operations into JavaScript files. It means each tag will have a corresponding generated JavaScript file. The operations, which contain more than one tag, will appear in all generated files. Empty tags operations will be placed in `_Default.js_` file.
 
 [NOTE]
 ====
-Although multiple tags do not break the generator, it might be confused in the development time when there are two exact same methods in different Javascript files. It is recommended to have only one tag per operation.
+Although multiple tags do not break the generator, it might be confused in the development time when there are two exact same methods in different JavaScript files. It is recommended to have only one tag per operation.
 ====
 
 Here is an example OpenAPI document which could generate the above <<UserService.js>>.
