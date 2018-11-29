@@ -13,12 +13,11 @@ export class MySecondJsClass {
   /**
    * Get all users
    *
-   * @returns {array} Return list of users
+   * @returns {Promise<array>} Return list of users
    */
   getAllUsers() {
     return this._client.call('GeneratorTestClass', 'getAllUsers');
   }
-
 }
 
 const service = new MySecondJsClass(defaultClient);

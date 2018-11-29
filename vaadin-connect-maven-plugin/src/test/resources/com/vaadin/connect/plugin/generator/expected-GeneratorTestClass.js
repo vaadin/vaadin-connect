@@ -17,7 +17,7 @@ export class GeneratorTestClass {
   /**
    * Get number of users
    *
-   * @returns {number} Return number of user
+   * @returns {Promise<number>} Return number of user
    */
   countUser() {
     return this._client.call('GeneratorTestClass', 'countUser');
@@ -26,7 +26,7 @@ export class GeneratorTestClass {
   /**
    * Get the map of user and roles
    *
-   * @returns {object} Return map of user and roles
+   * @returns {Promise<object>} Return map of user and roles
    */
   getAllUserRolesMap() {
     return this._client.call('GeneratorTestClass', 'getAllUserRolesMap');
@@ -35,7 +35,7 @@ export class GeneratorTestClass {
   /**
    * Get all users
    *
-   * @returns {array} Return list of users
+   * @returns {Promise<array>} Return list of users
    */
   getAllUsers() {
     return this._client.call('GeneratorTestClass', 'getAllUsers');
@@ -45,7 +45,7 @@ export class GeneratorTestClass {
    * Get array int
    *
    * @param {array} input - input string array
-   * @returns {array} Return array of int
+   * @returns {Promise<array>} Return array of int
    */
   getArrayInt(input) {
     return this._client.call('GeneratorTestClass', 'getArrayInt', {input});
@@ -55,7 +55,7 @@ export class GeneratorTestClass {
    * Get boolean value
    *
    * @param {object} input - input map
-   * @returns {boolean} Return boolean value
+   * @returns {Promise<boolean>} Return boolean value
    */
   getBooleanValue(input) {
     return this._client.call('GeneratorTestClass', 'getBooleanValue', {input});
@@ -66,7 +66,7 @@ export class GeneratorTestClass {
    *
    * @param {string} input - first input description
    * @param {number} secondInput - second input description
-   * @returns {boolean} Return boolean value
+   * @returns {Promise<boolean>} Return boolean value
    */
   getTwoParameters(input, secondInput) {
     return this._client.call('GeneratorTestClass', 'getTwoParameters', {input, secondInput});
@@ -76,7 +76,7 @@ export class GeneratorTestClass {
    * Get user by id
    *
    * @param {number} id - id of user
-   * @returns {User} Return user with given id
+   * @returns {Promise<User>} Return user with given id
    */
   getUserById(id) {
     return this._client.call('GeneratorTestClass', 'getUserById', {id});
@@ -86,12 +86,11 @@ export class GeneratorTestClass {
    * Update a user
    *
    * @param {User} user
-   * @returns Request has been processed without any return result
+   *
    */
   updateUser(user) {
     return this._client.call('GeneratorTestClass', 'updateUser', {user});
   }
-
 }
 
 const service = new GeneratorTestClass(defaultClient);
