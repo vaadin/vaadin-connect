@@ -208,9 +208,10 @@ export class ConnectClient {
         const tokenResponse = await fetch(this.tokenEndpoint, {
           method: 'POST',
           headers: {
-            'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`
+            'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body
+          body: body.toString()
         });
 
         if (tokenResponse.status === 400 || tokenResponse.status === 401) {
