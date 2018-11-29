@@ -1,0 +1,233 @@
+---
+title: Vaadin Connect JavaScript Services Generator
+order: 801
+layout: page
+---
+
+= JavaScript Services Generator in Vaadin Connect
+
+The JavaScript generator produces JavaScript files based on the information from an OpenApi document which is generated from Java files in `_src/main/java_` folder by default.
+
+[NOTE]
+====
+Vaadin Connect uses https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between Java services and JavaScript service wrappers. The current implementation is based on OpenAPI specification 3.0.
+====
+
+A simple generated JavaScript files will look like the following snippet:
+
+.UserService.js
+[[UserService.js]]
+[source,javascript]
+----
+// Generated from UserService.java
+import defaultClient from './connect-client.default';
+
+/**
+ * User service class.
+ */
+export class UserService {
+
+  /**
+   * Create a UserService instance.
+   * @param {ConnectClient=} client - an instance of ConnectClient
+   */
+  constructor(client = defaultClient) {
+    this._client = client;
+  }
+
+  /**
+   * Check if a user is admin or not.
+   *
+   * @param {number} id - User id to be checked
+   * @returns {Promise<boolean>} Return true if the given user is an admin, otherwise false.
+   */
+  isAdmin(id) {
+    return this._client.call('UserService', 'isAdmin', {id});
+  }
+}
+
+const service = new UserService(defaultClient);
+
+export const isAdmin = service.isAdmin.bind(service);
+----
+
+=== Static code
+The `_import_`, `_constructor_`, and `_export_` statements are static parts of any generated file.
+`_connect-client.default.js_` is another generated file which includes default configurations for the `_ConnectClient_` and exports its instance as `_defaultClient_`.
+
+=== Classes
+
+The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding JavaScript file. The tag name is used for JavaScript class name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
+
+
+=== Methods
+Each method in a generated class is corresponding to a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[POST operation] of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathItemObject[path item] in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathsObject[paths object].
+
+[NOTE]
+====
+Currently, the generator only supports `_POST_` operation. If a path item contains other operations than `_POST_`, the generator will stop processing.
+====
+
+The path *must* start with `/` as described in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#patterned-fields[Patterned Fields]. It is parsed as `_/<service name>/<method name>_` which are used as parameters to call to Java services in the backend. Method name from the path is also reused as the method name in the generated JavaScript file.
+
+==== Method's Parameters
+Parameters of the method are taken from the `_application/json_` content of https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#requestBodyObject[request body object]. To get the result as <<UserService.js>>, the request body content should be:
+
+.Request Body
+[source, json]
+[[request-body]]
+----
+{
+ "content": {
+    "application/json": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "User id to be checked"
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+Type and description of each property are used for JsDoc that describes the parameter in more details.
+
+[NOTE]
+====
+All the other content types of request body object are not ignored by Vaadin Connect Generator. It means that without the `application/json` content type, the method is considered as a no parameter one.
+====
+
+==== Method's Return Type
+
+Return type and its description are taken from the `_200_` https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responseObject[response object]. As same as request body object, the generator is only interested at `application/json` content type. The schema type indicates the return type and the description describes the result. Here is an example of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responsesObject[responses objects]:
+
+.Responses Object
+[source, json]
+[[response-object]]
+----
+{
+  "200": {
+    "description": "Return true if the given user is an admin, otherwise false.",
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
+----
+
+[NOTE]
+====
+At this point, the generator only takes the advantage of `_200_` response objects. Other response objects are ignored.
+====
+
+==== Method's JsDoc
+
+The JsDoc of the generated method is stored as `_description_` value of the `_POST_` operation in path item. A valid `_POST_` operation combined with <<request-body>> and <<response-object>> would look like:
+
+.Post Operation
+[source, json]
+----
+{
+  "tags": ["UserService"], // <1>
+  "description": "Check if a user is admin or not.",
+  "requestBody": {
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "description": "User id to be checked"
+            }
+          }
+        }
+      }
+    }
+  },
+  "responses": {
+    "200": {
+      "description": "Return true if the given user is an admin, otherwise false.",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+<1> As mentioned in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in Vaadin Connect Generator, `_tags_` are used to classify operations into JavaScript files. It means each tag will have a corresponding generated JavaScript file. The operations, which contain more than one tag, will appear in all generated files. Empty tags operations will be placed in `_Default.js_` file.
+
+[NOTE]
+====
+Although multiple tags do not break the generator, it might be confusing in the development time when there are two exact same methods in different JavaScript files. It is recommended to have only one tag per operation.
+====
+
+Here is an example OpenAPI document which could generate the above <<UserService.js>>.
+
+.User service OpenApi document
+[source, json]
+----
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "My example application",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "https://myhost.com/myendpoint",
+    "description" : "Vaadin connect backend server"
+  } ],
+  "tags" : [ {
+    "name" : "UserService",
+    "description" : "User service class."
+  } ],
+  "paths" : {
+    "/UserService/isAdmin" : {
+      "post": {
+        "tags": ["UserService"],
+        "description": "Check if a user is admin or not.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number",
+                    "description": "User id to be checked"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return true if the given user is an admin, otherwise false.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+----
