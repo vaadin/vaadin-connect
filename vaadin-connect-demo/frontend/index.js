@@ -5,6 +5,7 @@ client.credentials = (options = {}) => {
   return {username: 'test_login', password: 'test_password'};
 };
 
-document.getElementById("addOne").onclick = async () => {
-  number.textContent = await addOne(number.textContent);
+const numberLabel = document.getElementById('addOne');
+document.getElementById('addOne').onclick = async() => {
+  numberLabel.textContent = await addOne(numberLabel.textContent);
 };
