@@ -22,9 +22,9 @@ import org.apache.maven.plugins.annotations.Mojo;
 import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
 
 /**
- * The mojo to generateOpenApiSpec the Vaadin Client file. Uses the
- * {@link VaadinConnectMojoBase#applicationProperties} to read the data needed
- * for the generation and generates the file in the
+ * The mojo to generate the open api v3 specification of the Vaadin Client
+ * file. Uses the {@link VaadinConnectMojoBase#applicationProperties} to read
+ * the data needed for the generation and generates the file in the
  * {@link VaadinConnectMojoBase#generatedFrontendDirectory} directory.
  */
 @Mojo(name = "generate-vaadin-client", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)

@@ -23,8 +23,8 @@ import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
 /**
  * ES modules generator for vaadin-connect.
  *
- * Uses the {@link VaadinConnectMojoBase#openApiJsonFile} file to generateOpenApiSpec the
- * Vaadin Connect modules in
+ * Uses the {@link VaadinConnectMojoBase#openApiJsonFile} file to generate the
+ * open api v3 specification of the Vaadin Connect modules in
  * {@link VaadinConnectMojoBase#generatedFrontendDirectory} directory,
  * owerwriting the target files and creating the target directory, if needed.
  */
