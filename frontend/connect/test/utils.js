@@ -1,9 +1,27 @@
+if (intern.environment === 'node') {
+  // Fill in global APIs possibly missing in Node
+  /* global require, global */
+
+  if (!global.fetch) {
+    global.fetch = require('node-fetch');
+  }
+
+  if (!global.URLSearchParams) {
+    global.URLSearchParams = require('url').URLSearchParams;
+  }
+
+  if (!global.btoa) {
+    /* global Buffer */
+    global.btoa = str => Buffer.from(str).toString('base64');
+  }
+}
+
 intern.registerPlugin('sinon', async() => {
   const chai = intern.getPlugin('chai');
 
   let sinon;
   if (intern.environment === 'node') {
-    /* global require, global */
+    /* global require */
     sinon = require('sinon');
     chai.use(require('sinon-chai'));
   } else {
@@ -20,8 +38,7 @@ intern.registerPlugin('sinon', async() => {
 
 intern.registerPlugin('fetchMock', async() => {
   if (intern.environment === 'node') {
-    /* global require, global */
-    global.fetch = require('node-fetch');
+    /* global require */
     const fetchMock = require('fetch-mock');
     return {fetchMock};
   } else {
