@@ -69,6 +69,22 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-connect-maven-plugin</artifactId>
+                <version>${project.parent.version}</version>
+                <executions>
+                    <execution>
+                        <id>vaadin-connect-resources</id>
+                        <goals>
+                            <goal>generate-openapi-spec</goal>
+                            <goal>generate-vaadin-client</goal>
+                            <goal>generate-connect-modules</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
@@ -120,6 +136,9 @@
                                 <fileSet>
                                     <directory>
                                         ${project.basedir}/../vaadin-connect/target/
+                                    </directory>
+                                    <directory>
+                                        ${project.basedir}/../vaadin-connect-maven-plugin/target/
                                     </directory>
                                     <includes>
                                         <include>*.exec</include>

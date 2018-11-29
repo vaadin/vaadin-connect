@@ -1,0 +1,54 @@
+{{#operations}}{{#vaadinConnectClassDescription}}
+// Generated from {{../classname}}.java
+{{/vaadinConnectClassDescription}}{{/operations}}
+import defaultClient from './connect-client.default';
+{{#operations}}{{#vaadinConnectClassDescription}}
+
+/**
+ {{#vaadinConnectClassDescription}}
+ * {{vaadinConnectClassDescription}}
+ {{/vaadinConnectClassDescription}}
+ {{^vaadinConnectClassDescription}}
+ *
+ {{/vaadinConnectClassDescription}}
+ */{{/vaadinConnectClassDescription}}{{/operations}}
+export class {{classname}} {
+
+  /**
+   * Create a {{classname}} instance.
+   * @param {ConnectClient=} client - an instance of ConnectClient
+   */
+  constructor(client = defaultClient) {
+    this._client = client;
+  }
+  {{#operations}}
+
+  {{#operation}}
+  /**
+   {{#notes}}
+   * {{notes}}
+   {{/notes}}
+   {{^notes}}
+   *
+   {{/notes}}
+   *{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
+   * @param {{=<% %>=}}{<%type%>}<%={{ }}=%> {{name}}{{#description}} - {{description}}{{/description}}{{/each}}
+   * {{#responses}}@returns{{#../returnType}}{{=<% %>=}} {<%../returnType%>}<%={{ }}=%>{{/../returnType}} {{message}}{{/responses}}
+   */
+  {{vendorExtensions.x-vaadin-connect-method-name}}({{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}}) {
+  {{=<% %>=}}
+    return this._client.call('<%vendorExtensions.x-vaadin-connect-service-name%>', '<%vendorExtensions.x-vaadin-connect-method-name%>'<%#bodyParams%>, {<%#each bodyParam.vendorExtensions.x-vaadin-connect-parameters%><%name%><%#if @last%><%else%>, <%/if%><%/each%>}<%/bodyParams%>);
+  <%={{ }}=%>
+  }
+
+  {{/operation}}
+  {{/operations}}
+}
+
+const service = new {{classname}}(defaultClient);
+
+{{#operations}}
+{{#operation}}
+export const {{vendorExtensions.x-vaadin-connect-method-name}} = service.{{vendorExtensions.x-vaadin-connect-method-name}}.bind(service);
+{{/operation}}
+{{/operations}}

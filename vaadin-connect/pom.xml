@@ -11,13 +11,6 @@
     <name>Vaadin Connect</name>
     <description>Vaadin Connect</description>
     <url>http://vaadin.com</url>
-    <properties>
-        <swagger.core.version>2.0.5</swagger.core.version>
-        <javaparser.version>3.7.0</javaparser.version>
-        <validation-api.version>2.0.1.Final</validation-api.version>
-        <swagger.codegen.version>3.0.2</swagger.codegen.version>
-        <swagger.codegen.generators.version>1.0.2</swagger.codegen.generators.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -60,31 +53,6 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.javaparser</groupId>
-            <artifactId>javaparser-symbol-solver-core</artifactId>
-            <version>${javaparser.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-core</artifactId>
-            <version>${swagger.core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.codegen.v3</groupId>
-            <artifactId>swagger-codegen</artifactId>
-            <version>${swagger.codegen.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.codegen.v3</groupId>
-            <artifactId>swagger-codegen-generators</artifactId>
-            <version>${swagger.codegen.generators.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <version>${validation-api.version}</version>
         </dependency>
     </dependencies>
     <build>
