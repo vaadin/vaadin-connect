@@ -50,10 +50,10 @@ import com.vaadin.connect.VaadinConnectProperties;
  *
  *   &#64;Bean
  *   public UserDetailsService userDetailsService() {
- *     return username -> this.accountRepository.findByUsername(username)
- *         .map(account -> User.builder().username(account.getUsername())
+ *     return username -&gt; this.accountRepository.findByUsername(username)
+ *         .map(account -&gt; User.builder().username(account.getUsername())
  *             .password(account.getPassword()).roles("USER").build())
- *         .orElseThrow(() -> new UsernameNotFoundException(username));
+ *         .orElseThrow(() -&gt; new UsernameNotFoundException(username));
  *   }
  * }
  *
@@ -67,7 +67,7 @@ import com.vaadin.connect.VaadinConnectProperties;
  *           throws AuthenticationException {
  *
  *         return new UsernamePasswordAuthenticationToken(auth.getName(),
- *             auth.getCredentials(), new ArrayList<>());
+ *             auth.getCredentials(), new ArrayList&lt;&gt;());
  *       }
  *     };
  *   }

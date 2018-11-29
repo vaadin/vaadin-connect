@@ -28,7 +28,6 @@ import java.lang.annotation.Target;
  * on a service class) or the particular service method (if placed on a service
  * method) without providing an authentication token.
  * <p>
- * <p>
  * If there are other supported security annotations present on the same class
  * or method:
  * <ul>
