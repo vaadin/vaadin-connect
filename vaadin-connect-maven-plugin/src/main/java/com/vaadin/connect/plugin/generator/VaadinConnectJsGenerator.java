@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Vaadin connect javascript generator implementation for swagger-codegen. Some
+ * Vaadin connect JavaScript generator implementation for swagger-codegen. Some
  * parts of the implementation are copied from
  * {@link io.swagger.codegen.languages.JavascriptClientCodegen}
  */
@@ -153,23 +153,26 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   }
 
   /**
-   * Runs the code generation based on the data from the open api json.
-   * Generates the target files in the directory specified, overwriting the
-   * files and creating the target directory, if necessary.
+   * Runs the code generation based on the data from the OpenAPI json. Generates
+   * the target files in the directory specified, overwriting the files and
+   * creating the target directory, if necessary.
    *
    * @param openApiJsonFile
    *          the api spec file to analyze
    * @param generatedFrontendDirectory
    *          the directory to generateOpenApiSpec the files into
+   *
+   * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
+   *      specification</a>
    */
   public static void launch(File openApiJsonFile,
-                            File generatedFrontendDirectory) {
+      File generatedFrontendDirectory) {
     CodegenConfigurator configurator = new CodegenConfigurator();
     configurator.setLang(VaadinConnectJsGenerator.class.getName());
     configurator.setInputSpecURL(openApiJsonFile.toString());
     configurator.setOutputDir(generatedFrontendDirectory.toString());
     new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
-      .generate();
+        .generate();
   }
 
   private static Logger getLogger() {

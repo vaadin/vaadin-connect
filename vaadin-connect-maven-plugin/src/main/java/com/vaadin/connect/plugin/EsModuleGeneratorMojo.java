@@ -24,9 +24,12 @@ import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
  * ES modules generator for vaadin-connect.
  *
  * Uses the {@link VaadinConnectMojoBase#openApiJsonFile} file to generate the
- * open api v3 specification of the Vaadin Connect modules in
+ * OpenAPI v3 specification of the Vaadin Connect modules in
  * {@link VaadinConnectMojoBase#generatedFrontendDirectory} directory,
- * owerwriting the target files and creating the target directory, if needed.
+ * overwriting the target files and creating the target directory, if needed.
+ *
+ * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
+ *      specification</a>
  */
 @Mojo(name = "generate-connect-modules", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class EsModuleGeneratorMojo extends VaadinConnectMojoBase {
