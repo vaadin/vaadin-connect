@@ -27,10 +27,13 @@ import org.apache.maven.project.MavenProject;
 import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
 
 /**
- * Generates the open api specification file based on the application contents.
+ * Generates the OpenAPI specification file based on the application contents.
  * Uses the {@link VaadinConnectMojoBase#applicationProperties} to read the data
  * needed for the generation and generates the file into the *
  * {@link VaadinConnectMojoBase#openApiJsonFile} path.
+ *
+ * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
+ *      specification</a>
  */
 @Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {

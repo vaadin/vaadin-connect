@@ -30,8 +30,11 @@ import static com.vaadin.connect.plugin.generator.GeneratorUtils.DEFAULT_ENDPOIN
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
 
 /**
- * A generator class that creates the open api specification file from the
+ * A generator class that creates the OpenAPI specification file from the
  * sources provided.
+ *
+ * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
+ *      specification</a>
  */
 public class OpenApiSpecGenerator {
   private static final String APPLICATION_TITLE = "vaadin.connect.application.title";
@@ -68,7 +71,8 @@ public class OpenApiSpecGenerator {
    * @param specOutputFile
    *          the target file to write the generation output to
    */
-  public void generateOpenApiSpec(Collection<Path> sourcesPaths, Path specOutputFile) {
+  public void generateOpenApiSpec(Collection<Path> sourcesPaths,
+      Path specOutputFile) {
     sourcesPaths.forEach(generator::addSourcePath);
     log.info("Parsing java files from {}", sourcesPaths);
     OpenAPI openAPI = generator.generateOpenApi();
