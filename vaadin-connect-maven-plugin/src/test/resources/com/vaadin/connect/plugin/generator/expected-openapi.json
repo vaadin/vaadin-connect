@@ -201,9 +201,7 @@
           }
         },
         "responses" : {
-          "200" : {
-            "description" : "Request has been processed without any return result"
-          }
+          "200" : { }
         }
       }
     },
