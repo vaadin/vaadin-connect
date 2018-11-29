@@ -50,8 +50,11 @@ public class VaadinConnectClientGenerator {
    * Generates the client file in the file specified.
    *
    * @param outputFilePath
-   *          the file to generate the open api v3 specification of the client
+   *          the file to generate the OpenAPI v3 specification of the client
    *          code into
+   *
+   * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
+   *      specification</a>
    */
   public void generateVaadinConnectClientFile(Path outputFilePath) {
     String generatedDefaultClientJs = getDefaultClientJsTemplate()
