@@ -161,6 +161,19 @@ public class ESModuleGeneratorTest {
     Assert.assertEquals(expectedFirstClass, actualJs);
   }
 
+  @Test
+  public void should_RenderMultipleLinesHTMLCorrectly_When_JavaDocHasMultipleLines()
+    throws Exception {
+    VaadinConnectJsGenerator.launch(getResourcePath("multiplelines-description.json"),
+      outputDirectory.getRoot());
+    Path output = Paths.get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
+    String actualJs = StringUtils.toEncodedString(
+      Files.readAllBytes(output), Charset.defaultCharset()).trim();
+    String expectedJs = TestUtils.getExpectedJson(this.getClass(),
+      "expected-multiple-lines-description.js");
+    Assert.assertEquals(expectedJs, actualJs);
+  }
+
   private File getResourcePath(String resourceName) {
     try {
       return new File(getClass().getResource(resourceName).toURI());

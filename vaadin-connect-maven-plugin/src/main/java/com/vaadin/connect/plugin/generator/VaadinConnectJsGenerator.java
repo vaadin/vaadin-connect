@@ -27,6 +27,11 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.jknack.handlebars.Context;
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.Helper;
+import com.github.jknack.handlebars.Options;
+import com.github.jknack.handlebars.Template;
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
 import io.swagger.codegen.v3.CodegenResponse;
@@ -436,6 +441,25 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     return new RuntimeException(message
         + " For more information, please checkout the Vaadin Connect Generator "
         + "documentation page at https://vaadin.com/vaadin-connect.");
+  }
+
+  @Override
+  public void addHandlebarHelpers(Handlebars handlebars) {
+    super.addHandlebarHelpers(handlebars);
+    handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
+  }
+
+  private Helper<String> getMultipleLinesHelper() {
+    return (context, options) -> {
+      Options.Buffer buffer = options.buffer();
+      String[] lines = context.split("\n");
+      Context parent = options.context;
+      Template fn = options.fn;
+      for (String line : lines) {
+        buffer.append(options.apply(fn, parent.combine("@line", line)));
+      }
+      return buffer;
+    };
   }
 
   /**
