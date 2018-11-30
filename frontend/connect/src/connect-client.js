@@ -29,7 +29,7 @@ class Token {
     this.json = JSON.parse(atob(token.split('.')[1]));
   }
   isExpired() {
-    return Date.now() > this.json.exp;
+    return Date.now() / 1000 > this.json.exp;
   }
 }
 
@@ -45,6 +45,7 @@ class AuthTokens {
   save() {
     if (this.refreshToken) {
       localStorage.setItem(refreshTokenKey, this.refreshToken.token);
+      this.stayLoggedIn = true;
     } else {
       localStorage.removeItem(refreshTokenKey);
     }
@@ -54,6 +55,7 @@ class AuthTokens {
     const token = localStorage.getItem(refreshTokenKey);
     if (token) {
       this.refreshToken = new Token(token);
+      this.stayLoggedIn = true;
     }
     return this;
   }
@@ -71,6 +73,7 @@ class AuthTokens {
  * @typedef {Object} Credentials
  * @property {string} username
  * @property {string} password
+ * @property {boolean} stayLoggedIn
  */
 
 /**
@@ -180,13 +183,16 @@ export class ConnectClient {
 
     let message;
     while (tokens.get(this).isAccessTokenExpired()) {
+      const prevTokens = tokens.get(this);
+      let stayLoggedIn = prevTokens.stayLoggedIn;
+      tokens.set(this, new AuthTokens().save());
+
       /* global URLSearchParams btoa */
       const body = new URLSearchParams();
-
-      if (!tokens.get(this).isRefreshTokenExpired()) {
+      if (!prevTokens.isRefreshTokenExpired()) {
         body.append('grant_type', 'refresh_token');
         body.append('client_id', clientId);
-        body.append('refresh_token', tokens.get(this).refreshToken.token);
+        body.append('refresh_token', prevTokens.refreshToken.token);
       } else if (this.credentials) {
         const creds = message !== undefined
           ? await this.credentials({message})
@@ -199,6 +205,7 @@ export class ConnectClient {
           body.append('grant_type', 'password');
           body.append('username', creds.username);
           body.append('password', creds.password);
+          stayLoggedIn = creds.stayLoggedIn;
         }
       } else {
         break;
@@ -216,13 +223,15 @@ export class ConnectClient {
         if (tokenResponse.status === 400 || tokenResponse.status === 401) {
           // Wrong credentials response, loop to ask again with the message
           message = (await tokenResponse.json()).error_description;
-          tokens.set(this, new AuthTokens().save());
         } else {
           assertResponseIsOk(tokenResponse);
           // Successful token response
           const json = await tokenResponse.json();
-          tokens.set(this, new AuthTokens(json).save());
           this.accessToken = json.access_token;
+          tokens.set(this, new AuthTokens(json));
+          if (stayLoggedIn) {
+            tokens.get(this).save();
+          }
           break;
         }
       }

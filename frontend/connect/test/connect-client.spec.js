@@ -10,8 +10,10 @@ describe('ConnectClient', () => {
 
   function generateOAuthJson() {
     const jwt = btoa('{"alg": "HS256", "typ": "JWT"}');
-    const accessToken = btoa(`{"exp": ${Date.now() + 400}}`);
-    const refreshToken = btoa(`{"exp": ${Date.now() + 800}}`);
+    // expiration comes in seconds from Vaadin Connect Server
+    // We add 400ms to accessToken and 800ms to refreshToken
+    const accessToken = btoa(`{"exp": ${Date.now() / 1000 + 0.400}}`);
+    const refreshToken = btoa(`{"exp": ${Date.now() / 1000 + 0.800}}`);
 
     return {
       access_token: `${jwt}.${accessToken}.SIGNATURE`,
@@ -395,18 +397,40 @@ describe('ConnectClient', () => {
         expect(body.get('password')).to.be.equal('abc123');
       });
 
-      it('should use refreshToken from localStorage when client refreshes', async() => {
-        expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
+      it('should not save refreshToken when stayLoggedIn is false', async() => {
+        expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
 
+        // emulate refresh page
         const newClient = new ConnectClient();
         newClient.credentials = client.credentials;
-
         await newClient.call('FooService', 'fooMethod');
+        expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
 
-        expect(client.credentials).to.be.calledOnce;
+        expect(client.credentials).to.be.calledTwice;
         expect(fetchMock.calls().length).to.be.equal(4);
 
         const [, {body}] = fetchMock.calls()[2];
+        expect(body.get('grant_type')).to.be.equal('password');
+      });
+
+      it('should use refreshToken from localStorage when client refreshes', async() => {
+        // refresh with stayLoggedIn
+        const newClient1 = new ConnectClient();
+        newClient1.credentials = sinon.fake.returns({
+          username: 'user', password: 'abc123',
+          stayLoggedIn: true});
+        await newClient1.call('FooService', 'fooMethod');
+        expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
+
+        // refresh should re-use refreshToken but not credentials
+        const newClient2 = new ConnectClient();
+        newClient2.credentials = client.credentials;
+        await newClient2.call('FooService', 'fooMethod');
+
+        expect(client.credentials).to.be.calledOnce;
+        expect(fetchMock.calls().length).to.be.equal(6);
+
+        const [, {body}] = fetchMock.calls()[4];
         expect(body.get('grant_type')).to.be.equal('refresh_token');
       });
 

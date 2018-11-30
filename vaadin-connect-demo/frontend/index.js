@@ -2,7 +2,7 @@ import client from './src/generated/connect-client.default';
 import {addOne} from './src/generated/DemoVaadinService';
 
 client.credentials = (options = {}) => {
-  return {username: 'test_login', password: 'test_password'};
+  return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
 };
 
 const numberLabel = document.getElementById('number');
