@@ -12,11 +12,62 @@ const assertResponseIsOk = response => {
   }
 };
 
+/** @private */
+const tokens = new WeakMap();
+/** @private */
+const refreshTokenKey = 'vaadin.connect.refreshToken';
+/** @private */
+const clientId = 'vaadin-connect-client';
+/** @private */
+const clientSecret = 'c13nts3cr3t';
+
+/** @private */
+class Token {
+  /* global atob */
+  constructor(token) {
+    this.token = token;
+    this.json = JSON.parse(atob(token.split('.')[1]));
+  }
+  isValid() {
+    return this.json.exp > Date.now() / 1000;
+  }
+}
+
+/** @private */
+class AuthTokens {
+  /* global localStorage */
+  constructor(authJson) {
+    if (authJson) {
+      this.accessToken = new Token(authJson.access_token);
+      this.refreshToken = new Token(authJson.refresh_token);
+    }
+  }
+  save() {
+    if (this.refreshToken) {
+      localStorage.setItem(refreshTokenKey, this.refreshToken.token);
+      this.stayLoggedIn = true;
+    } else {
+      localStorage.removeItem(refreshTokenKey);
+    }
+    return this;
+  }
+  restore() {
+    const token = localStorage.getItem(refreshTokenKey);
+    if (token) {
+      this.refreshToken = new Token(token);
+      this.stayLoggedIn = true;
+    }
+    return this;
+  }
+}
+
 /**
- * A username/password pair.
+ * An object to provide user credentials for authorization grants.
+ *
  * @typedef {Object} Credentials
  * @property {string} username
  * @property {string} password
+ * @property {boolean} stayLoggedIn
  */
 
 /**
@@ -41,7 +92,7 @@ const assertResponseIsOk = response => {
  *
  * Supports an `endpoint` constructor option:
  * ```js
- * const client = new ConnectClient({endpoint: '/my-connect-endpont'});
+ * const client = new ConnectClient({endpoint: '/my-connect-endpoint'});
  * ```
  *
  * The default endpoint is '/connect'.
@@ -72,6 +123,8 @@ export class ConnectClient {
    * @param {CredentialsCallback=} options.credentials The `credentials` initial value.
    */
   constructor(options = {}) {
+    // TODO: remove this since tokens is a private object. Do we need
+    // to maintain this API?
     /**
      * When set to a string, adds the `Authorization: Bearer ${accessToken}`
      * HTTP reader to every request.
@@ -101,6 +154,8 @@ export class ConnectClient {
      * @type {CredentialsCallback}
      */
     this.credentials = options.credentials;
+
+    tokens.set(this, new AuthTokens().restore());
   }
 
   /**
@@ -121,42 +176,59 @@ export class ConnectClient {
     }
 
     let message;
-    while (!this.accessToken) {
-      if (!this.credentials) {
+    const current = tokens.get(this);
+    while (!(current.accessToken && current.accessToken.isValid())) {
+
+      let stayLoggedIn = current.stayLoggedIn;
+
+      // delete current credentials because we are goint to take new ones
+      tokens.set(this, new AuthTokens().save());
+
+      /* global URLSearchParams btoa */
+      const body = new URLSearchParams();
+      if (current.refreshToken && current.refreshToken.isValid()) {
+        body.append('grant_type', 'refresh_token');
+        body.append('client_id', clientId);
+        body.append('refresh_token', current.refreshToken.token);
+      } else if (this.credentials) {
+        const creds = message !== undefined
+          ? await this.credentials({message})
+          : await this.credentials();
+        if (!creds) {
+          // No credentials returned, skip the token request
+          break;
+        }
+        if (creds.username && creds.password) {
+          body.append('grant_type', 'password');
+          body.append('username', creds.username);
+          body.append('password', creds.password);
+          stayLoggedIn = creds.stayLoggedIn;
+        }
+      } else {
         break;
       }
 
-      const creds = message !== undefined
-        ? await this.credentials({message})
-        : await this.credentials();
-      if (!creds) {
-        // No credentials returned, skip the token request
-        break;
-      }
-
-      if (creds.username && creds.password) {
-        /* global URLSearchParams */
-        const body = new URLSearchParams();
-        body.append('grant_type', 'password');
-        body.append('username', creds.username);
-        body.append('password', creds.password);
-
-        // TODO: remove the "Authorization" header when #58
-        /* global btoa */
+      if (body.has('grant_type')) {
         const tokenResponse = await fetch(this.tokenEndpoint, {
           method: 'POST',
           headers: {
-            'Authorization': `Basic ${btoa('vaadin-connect-client:c13nts3cr3t')}`
+            'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`
           },
           body
         });
+
         if (tokenResponse.status === 400 || tokenResponse.status === 401) {
           // Wrong credentials response, loop to ask again with the message
           message = (await tokenResponse.json()).error_description;
         } else {
           assertResponseIsOk(tokenResponse);
           // Successful token response
-          this.accessToken = (await tokenResponse.json()).access_token;
+          const json = await tokenResponse.json();
+          this.accessToken = json.access_token;
+          tokens.set(this, new AuthTokens(json));
+          if (stayLoggedIn) {
+            tokens.get(this).save();
+          }
           break;
         }
       }

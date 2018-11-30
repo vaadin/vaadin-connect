@@ -5,6 +5,7 @@
     "sourceType": "module"
   },
   "globals": {
-    "Promise": true
+    "Promise": true,
+    "WeakMap": true
   }
 }

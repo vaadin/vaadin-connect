@@ -13,6 +13,28 @@ if (intern.environment === 'node') {
   if (!global.btoa) {
     /* global Buffer */
     global.btoa = str => Buffer.from(str).toString('base64');
+    global.atob = str => Buffer.from(str, 'base64').toString('ascii');
+  }
+
+  if (!global.localStorage) {
+    class LocalStorage {
+      constructor() {
+        this.clear();
+      }
+      getItem(key) {
+        return this._store[key];
+      }
+      setItem(key, value) {
+        this._store[key] = value;
+      }
+      removeItem(key) {
+        delete this._store[key];
+      }
+      clear() {
+        this._store = {};
+      }
+    }
+    global.localStorage = new LocalStorage();
   }
 }
 

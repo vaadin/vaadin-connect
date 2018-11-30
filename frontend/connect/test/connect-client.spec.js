@@ -5,7 +5,29 @@ const {sinon} = intern.getPlugin('sinon');
 
 import {ConnectClient} from '../src/connect-client.js';
 
+/* global btoa localStorage setTimeout */
 describe('ConnectClient', () => {
+
+  function generateOAuthJson() {
+    const jwt = btoa('{"alg": "HS256", "typ": "JWT"}');
+    // expiration comes in seconds from Vaadin Connect Server
+    // We add 400ms to accessToken and 800ms to refreshToken
+    const accessToken = btoa(`{"exp": ${Date.now() / 1000 + 0.400}}`);
+    const refreshToken = btoa(`{"exp": ${Date.now() / 1000 + 0.800}}`);
+
+    return {
+      access_token: `${jwt}.${accessToken}.SIGNATURE`,
+      refresh_token: `${jwt}.${refreshToken}.SIGNATURE`,
+      exp: 10
+    };
+  }
+
+  async function sleep(ms) {
+    await new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  beforeEach(() => localStorage.clear());
+
   it('should be exported', () => {
     expect(ConnectClient).to.be.ok;
   });
@@ -223,7 +245,7 @@ describe('ConnectClient', () => {
     });
 
     it('should ask for credentials when accessToken is missing', async() => {
-      fetchMock.post(client.tokenEndpoint, {access_token: 'accessT'});
+      fetchMock.post(client.tokenEndpoint, generateOAuthJson);
       await client.call('FooService', 'fooMethod');
       expect(client.credentials).to.be.calledOnce;
       expect(client.credentials.lastCall).to.be.calledWithExactly();
@@ -248,7 +270,7 @@ describe('ConnectClient', () => {
     });
 
     it('should request token endpoint with credentials', async() => {
-      fetchMock.post(client.tokenEndpoint, {access_token: 'accessT'});
+      fetchMock.post(client.tokenEndpoint, generateOAuthJson);
 
       await client.call('FooService', 'fooMethod');
 
@@ -314,16 +336,104 @@ describe('ConnectClient', () => {
     });
 
     it('should use accessToken when token response is ok', async() => {
-      fetchMock.post(client.tokenEndpoint, {access_token: 'accessT'});
+      const response = generateOAuthJson();
+      fetchMock.post(client.tokenEndpoint, response);
 
       const data = await client.call('FooService', 'fooMethod');
-      expect(client).to.have.property('accessToken', 'accessT');
+      expect(client).to.have.property('accessToken', response.access_token);
 
-      const [url, {method, headers}] = fetchMock.calls()[1];
+      let [url, {method, headers, body}] = fetchMock.calls()[0];
+      expect(body.get('grant_type')).to.be.equal('password');
+      expect(body.get('username')).to.be.equal('user');
+      expect(body.get('password')).to.be.equal('abc123');
+
+      [url, {method, headers, body}] = fetchMock.calls()[1];
       expect(method).to.equal('POST');
       expect(url).to.equal('/connect/FooService/fooMethod');
-      expect(headers).to.have.property('Authorization', 'Bearer accessT');
+      expect(headers).to.have.property('Authorization', `Bearer ${response.access_token}`);
       expect(data).to.deep.equal({fooData: 'foo'});
+    });
+
+    describe('refreshToken', () => {
+
+      beforeEach(async() => {
+        client.credentials = sinon.fake.returns({username: 'user', password: 'abc123'});
+
+        fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+
+        // do a First request to get an accessToken and a refreshToken
+        await client.call('FooService', 'fooMethod');
+      });
+
+      it('should use refreshToken when accessToken is expired', async() => {
+        // Wait until accessToken expires but not the refreshToken
+        // generated response has a expiration of 400ms for token and 800 for refresh
+        await sleep(600);
+        const data = await client.call('FooService', 'fooMethod');
+
+        expect(data).to.deep.equal({fooData: 'foo'});
+        expect(client.credentials).to.be.calledOnce;
+        expect(fetchMock.calls().length).to.be.equal(4);
+
+        const [, {body}] = fetchMock.calls()[2];
+        expect(body.get('grant_type')).to.be.equal('refresh_token');
+        expect(body.get('client_id')).to.be.equal('vaadin-connect-client');
+        expect(body.get('refresh_token')).to.be.ok;
+        expect(body.get('username')).to.be.null;
+      });
+
+      it('should call credentials if refreshToken is expired', async() => {
+        // Wait until both accessToken and refresToken expire
+        await sleep(1000);
+        const data = await client.call('FooService', 'fooMethod');
+
+        expect(data).to.deep.equal({fooData: 'foo'});
+        expect(client.credentials).to.be.calledTwice;
+        expect(fetchMock.calls().length).to.be.equal(4);
+
+        const [, {body}] = fetchMock.calls()[2];
+        expect(body.get('grant_type')).to.be.equal('password');
+        expect(body.get('username')).to.be.equal('user');
+        expect(body.get('password')).to.be.equal('abc123');
+      });
+
+      it('should not save refreshToken when stayLoggedIn is false', async() => {
+        expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
+
+        // emulate refresh page
+        const newClient = new ConnectClient();
+        newClient.credentials = client.credentials;
+        await newClient.call('FooService', 'fooMethod');
+        expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
+
+        expect(client.credentials).to.be.calledTwice;
+        expect(fetchMock.calls().length).to.be.equal(4);
+
+        const [, {body}] = fetchMock.calls()[2];
+        expect(body.get('grant_type')).to.be.equal('password');
+      });
+
+      it('should use refreshToken from localStorage when client refreshes', async() => {
+        // refresh with stayLoggedIn
+        const newClient1 = new ConnectClient();
+        newClient1.credentials = sinon.fake.returns({
+          username: 'user', password: 'abc123',
+          stayLoggedIn: true});
+        await newClient1.call('FooService', 'fooMethod');
+        expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
+
+        // refresh should re-use refreshToken but not credentials
+        const newClient2 = new ConnectClient();
+        newClient2.credentials = client.credentials;
+        await newClient2.call('FooService', 'fooMethod');
+
+        expect(client.credentials).to.be.calledOnce;
+        expect(fetchMock.calls().length).to.be.equal(6);
+
+        const [, {body}] = fetchMock.calls()[4];
+        expect(body.get('grant_type')).to.be.equal('refresh_token');
+      });
+
     });
   });
 });
