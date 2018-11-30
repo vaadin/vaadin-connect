@@ -9,6 +9,12 @@
  */
 
 const {spawnSync} = require('child_process');
+const fs = require('fs');
+
+const hasFilesWithExtension = (directory, extension) => {
+  return fs.existsSync(directory)
+    && fs.readdirSync(directory).filter(path => path.endsWith(extension)).length > 0;
+};
 
 const endOfOptionsIndex = process.argv.indexOf('--');
 const [chainedExecutable, ...chainedArgs] = endOfOptionsIndex > -1
@@ -18,8 +24,10 @@ const [chainedExecutable, ...chainedArgs] = endOfOptionsIndex > -1
 if (chainedExecutable) {
   process.exit(
     spawnSync(
-      'mvn',
+      'mvn -e',
       [
+        hasFilesWithExtension('./frontend/src/generated', ".js") && hasFilesWithExtension('./target', ".jar")
+          ? '' : 'package -DskipTests',
         'spring-boot:start',
         'exec:exec',
         `-Dexec.executable="${chainedExecutable}"`,
@@ -31,7 +39,7 @@ if (chainedExecutable) {
 } else {
   process.exit(
     spawnSync(
-      'mvn',
+      'mvn -e',
       ['spring-boot:run'],
       {stdio: 'inherit', shell: true}
     ).status
