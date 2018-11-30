@@ -166,56 +166,6 @@ describe('ConnectClient', () => {
     });
   });
 
-  describe('accessToken', () => {
-    beforeEach(() => fetchMock
-      .post('/connect/FooService/fooMethod', {fooData: 'foo'})
-    );
-
-    afterEach(() => fetchMock.restore());
-
-    let client;
-    beforeEach(() => client = new ConnectClient());
-
-    const token = 'fooToken';
-
-    it('should not have default accessToken', () => {
-      expect(client).to.not.have.property('accessToken');
-    });
-
-    it('should allow setting string accessToken', () => {
-      client.accessToken = token;
-      expect(client).to.have.property('accessToken', token);
-    });
-
-    it('should not include Authorization header by default', async() => {
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.not.have.property('Authorization');
-    });
-
-    it('should include Authorization header when accessToken is string', async() => {
-      client.accessToken = token;
-
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.have.property('Authorization', `Bearer ${token}`);
-    });
-
-    it('should not include Authorization header when accessToken is falsy', async() => {
-      for (const falsy of [false, '', 0, null, undefined, NaN]) {
-        client.accessToken = falsy;
-        await client.call('FooService', 'fooMethod');
-        expect(fetchMock.lastOptions().headers)
-          .to.not.have.property('Authorization');
-      }
-
-      client.accessToken = {};
-      await client.call('FooService', 'fooMethod');
-      expect(fetchMock.lastOptions().headers)
-        .to.have.property('Authorization', `Bearer [object Object]`);
-    });
-  });
-
   describe('tokenEndpoint', () => {
     it('should have default tokenEndpoint', () => {
       expect(new ConnectClient())
@@ -234,9 +184,7 @@ describe('ConnectClient', () => {
     const vaadinEndpoint = '/connect/FooService/fooMethod';
 
     beforeEach(() => {
-      const credentials = sinon.fake
-        .returns({username: 'user', password: 'abc123'});
-      client = new ConnectClient({credentials});
+      client = new ConnectClient();
       fetchMock.post(vaadinEndpoint, {fooData: 'foo'});
     });
 
@@ -244,196 +192,228 @@ describe('ConnectClient', () => {
       fetchMock.restore();
     });
 
-    it('should ask for credentials when accessToken is missing', async() => {
-      fetchMock.post(client.tokenEndpoint, generateOAuthJson);
-      await client.call('FooService', 'fooMethod');
-      expect(client.credentials).to.be.calledOnce;
-      expect(client.credentials.lastCall).to.be.calledWithExactly();
-    });
-
-    it('should not request token endpoint when credentials are falsy', async() => {
-      for (const falsy of [false, '', 0, null, undefined, NaN]) {
-        client.credentials = sinon.fake.returns(falsy);
+    describe('without credentials', () => {
+      it('should not include Authorization header by default', async() => {
         await client.call('FooService', 'fooMethod');
-        expect(fetchMock.lastUrl()).to.not.equal(client.tokenEndpoint);
-      }
+        expect(fetchMock.lastOptions().headers)
+          .to.not.have.property('Authorization');
+      });
     });
 
-    it('should ask for credencials again when one is missing', async() => {
-      client.credentials = sinon.stub();
-      client.credentials.onCall(0).returns({password: 'abc123'});
-      client.credentials.onCall(1).returns({username: 'user'});
-      client.credentials.onCall(2).returns(false);
+    describe('with credentials', () => {
+      beforeEach(() => {
+        const credentials = sinon.fake
+          .returns({username: 'user', password: 'abc123'});
+        client.credentials = credentials;
+      });
 
-      await client.call('FooService', 'fooMethod');
-      expect(client.credentials).to.be.calledThrice;
-    });
-
-    it('should request token endpoint with credentials', async() => {
-      fetchMock.post(client.tokenEndpoint, generateOAuthJson);
-
-      await client.call('FooService', 'fooMethod');
-
-      const [[url, {method, headers, body}]] = fetchMock.calls();
-
-      // TODO: remove when #58
-      expect(headers).to.have.property('Authorization');
-
-      expect(method).to.equal('POST');
-      expect(url).to.equal('/oauth/token');
-      expect(body.toString())
-        .to.equal('grant_type=password&username=user&password=abc123');
-    });
-
-    it('should ask for credentials again when token response is 400 or 401', async() => {
-      client.credentials = sinon.stub();
-      client.credentials.onCall(0).returns({username: 'user', password: 'abc123'});
-      client.credentials.onCall(1).returns({username: 'user', password: 'abc123'});
-      client.credentials.onCall(2).returns(false);
-
-      fetchMock
-        .post(client.tokenEndpoint,
-          {body: {error: 'invalid_grant', error_description: 'Bad credentials'}, status: 400},
-          {repeat: 1})
-        .post(client.tokenEndpoint,
-          {body: {error: 'unathorized', error_description: 'Unauthorized'}, status: 401},
-          {repeat: 1, overwriteRoutes: false});
-
-      const data = await client.call('FooService', 'fooMethod');
-      expect(data).to.deep.equal({fooData: 'foo'});
-
-      expect(fetchMock.calls().length).to.be.equal(3);
-
-      expect(client.accessToken).to.be.undefined;
-
-      expect(client.credentials).to.be.calledThrice;
-      expect(client.credentials.getCall(0)).to.be.calledWithExactly();
-      expect(client.credentials.getCall(1).args)
-        .to.deep.equal([{message: 'Bad credentials'}]);
-      expect(client.credentials.getCall(2).args)
-        .to.deep.equal([{message: 'Unauthorized'}]);
-
-      expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
-      expect(fetchMock.calls()[1][0]).to.be.equal(client.tokenEndpoint);
-      expect(fetchMock.calls()[2][0]).to.be.equal(vaadinEndpoint);
-      expect(fetchMock.calls()[2][1].headers).not.to.have.property('Authorization');
-    });
-
-    it('should throw when token response is bad', async() => {
-      fetchMock.post(
-        client.tokenEndpoint,
-        {body: 'Server Internal Error', status: 500}
-      );
-
-      try {
+      it('should ask for credentials when accessToken is missing', async() => {
+        fetchMock.post(client.tokenEndpoint, generateOAuthJson);
         await client.call('FooService', 'fooMethod');
-      } catch (err) {
-        expect(err).to.be.instanceOf(TypeError)
-          .and.have.property('message')
-          .that.has.string('500 Internal Server Error');
         expect(client.credentials).to.be.calledOnce;
-      }
-    });
+        expect(client.credentials.lastCall).to.be.calledWithExactly();
+      });
 
-    it('should use accessToken when token response is ok', async() => {
-      const response = generateOAuthJson();
-      fetchMock.post(client.tokenEndpoint, response);
+      it('should not request token endpoint when credentials are falsy', async() => {
+        for (const falsy of [false, '', 0, null, undefined, NaN]) {
+          client.credentials = sinon.fake.returns(falsy);
+          await client.call('FooService', 'fooMethod');
+          expect(fetchMock.lastUrl()).to.not.equal(client.tokenEndpoint);
+        }
+      });
 
-      const data = await client.call('FooService', 'fooMethod');
-      expect(client).to.have.property('accessToken', response.access_token);
+      it('should ask for credencials again when one is missing', async() => {
+        client.credentials = sinon.stub();
+        client.credentials.onCall(0).returns({password: 'abc123'});
+        client.credentials.onCall(1).returns({username: 'user'});
+        client.credentials.onCall(2).returns(false);
 
-      let [url, {method, headers, body}] = fetchMock.calls()[0];
-      expect(body.get('grant_type')).to.be.equal('password');
-      expect(body.get('username')).to.be.equal('user');
-      expect(body.get('password')).to.be.equal('abc123');
+        await client.call('FooService', 'fooMethod');
+        expect(client.credentials).to.be.calledThrice;
+      });
 
-      [url, {method, headers, body}] = fetchMock.calls()[1];
-      expect(method).to.equal('POST');
-      expect(url).to.equal('/connect/FooService/fooMethod');
-      expect(headers).to.have.property('Authorization', `Bearer ${response.access_token}`);
-      expect(data).to.deep.equal({fooData: 'foo'});
-    });
-
-    describe('refreshToken', () => {
-
-      beforeEach(async() => {
-        client.credentials = sinon.fake.returns({username: 'user', password: 'abc123'});
-
+      it('should request token endpoint with credentials', async() => {
         fetchMock.post(client.tokenEndpoint, generateOAuthJson);
 
-        // do a First request to get an accessToken and a refreshToken
         await client.call('FooService', 'fooMethod');
+
+        const [[url, {method, headers, body}]] = fetchMock.calls();
+
+        // TODO: remove when #58
+        expect(headers).to.have.property('Authorization');
+
+        expect(method).to.equal('POST');
+        expect(url).to.equal('/oauth/token');
+        expect(body.toString())
+          .to.equal('grant_type=password&username=user&password=abc123');
       });
 
-      it('should use refreshToken when accessToken is expired', async() => {
-        // Wait until accessToken expires but not the refreshToken
-        // generated response has a expiration of 400ms for token and 800 for refresh
-        await sleep(600);
+      it('should ask for credentials again when token response is 400 or 401', async() => {
+        client.credentials = sinon.stub();
+        client.credentials.onCall(0).returns({username: 'user', password: 'abc123'});
+        client.credentials.onCall(1).returns({username: 'user', password: 'abc123'});
+        client.credentials.onCall(2).returns(false);
+
+        fetchMock
+          .post(client.tokenEndpoint,
+            {body: {error: 'invalid_grant', error_description: 'Bad credentials'}, status: 400},
+            {repeat: 1})
+          .post(client.tokenEndpoint,
+            {body: {error: 'unathorized', error_description: 'Unauthorized'}, status: 401},
+            {repeat: 1, overwriteRoutes: false});
+
         const data = await client.call('FooService', 'fooMethod');
-
         expect(data).to.deep.equal({fooData: 'foo'});
-        expect(client.credentials).to.be.calledOnce;
-        expect(fetchMock.calls().length).to.be.equal(4);
 
-        const [, {body}] = fetchMock.calls()[2];
-        expect(body.get('grant_type')).to.be.equal('refresh_token');
-        expect(body.get('client_id')).to.be.equal('vaadin-connect-client');
-        expect(body.get('refresh_token')).to.be.ok;
-        expect(body.get('username')).to.be.null;
+        expect(fetchMock.calls().length).to.be.equal(3);
+
+        expect(client.accessToken).to.be.undefined;
+
+        expect(client.credentials).to.be.calledThrice;
+        expect(client.credentials.getCall(0)).to.be.calledWithExactly();
+        expect(client.credentials.getCall(1).args)
+          .to.deep.equal([{message: 'Bad credentials'}]);
+        expect(client.credentials.getCall(2).args)
+          .to.deep.equal([{message: 'Unauthorized'}]);
+
+        expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
+        expect(fetchMock.calls()[1][0]).to.be.equal(client.tokenEndpoint);
+        expect(fetchMock.calls()[2][0]).to.be.equal(vaadinEndpoint);
+        expect(fetchMock.calls()[2][1].headers).not.to.have.property('Authorization');
       });
 
-      it('should call credentials if refreshToken is expired', async() => {
-        // Wait until both accessToken and refresToken expire
-        await sleep(1000);
+      it('should throw when token response is bad', async() => {
+        fetchMock.post(
+          client.tokenEndpoint,
+          {body: 'Server Internal Error', status: 500}
+        );
+
+        try {
+          await client.call('FooService', 'fooMethod');
+        } catch (err) {
+          expect(err).to.be.instanceOf(TypeError)
+            .and.have.property('message')
+            .that.has.string('500 Internal Server Error');
+          expect(client.credentials).to.be.calledOnce;
+        }
+      });
+
+      it('should use accessToken when token response is ok', async() => {
+        const response = generateOAuthJson();
+        fetchMock.post(client.tokenEndpoint, response);
+
         const data = await client.call('FooService', 'fooMethod');
 
-        expect(data).to.deep.equal({fooData: 'foo'});
-        expect(client.credentials).to.be.calledTwice;
-        expect(fetchMock.calls().length).to.be.equal(4);
-
-        const [, {body}] = fetchMock.calls()[2];
+        let [url, {method, headers, body}] = fetchMock.calls()[0];
         expect(body.get('grant_type')).to.be.equal('password');
         expect(body.get('username')).to.be.equal('user');
         expect(body.get('password')).to.be.equal('abc123');
+
+        [url, {method, headers, body}] = fetchMock.calls()[1];
+        expect(method).to.equal('POST');
+        expect(url).to.equal('/connect/FooService/fooMethod');
+        expect(headers).to.have.property('Authorization', `Bearer ${response.access_token}`);
+        expect(data).to.deep.equal({fooData: 'foo'});
       });
 
-      it('should not save refreshToken when stayLoggedIn is false', async() => {
-        expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
+      describe('refreshToken', () => {
+        beforeEach(async() => {
+          fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+        });
 
-        // emulate refresh page
-        const newClient = new ConnectClient();
-        newClient.credentials = client.credentials;
-        await newClient.call('FooService', 'fooMethod');
-        expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
+        it('should use refreshToken when accessToken is expired', async() => {
+          // do a First request to get an accessToken and a refreshToken
+          await client.call('FooService', 'fooMethod');
 
-        expect(client.credentials).to.be.calledTwice;
-        expect(fetchMock.calls().length).to.be.equal(4);
+          // Wait until accessToken expires but not the refreshToken
+          // generated response has a expiration of 400ms for token and 800 for refresh
+          await sleep(600);
+          const data = await client.call('FooService', 'fooMethod');
 
-        const [, {body}] = fetchMock.calls()[2];
-        expect(body.get('grant_type')).to.be.equal('password');
+          expect(data).to.deep.equal({fooData: 'foo'});
+          expect(client.credentials).to.be.calledOnce;
+          expect(fetchMock.calls().length).to.be.equal(4);
+
+          const [, {body}] = fetchMock.calls()[2];
+          expect(body.get('grant_type')).to.be.equal('refresh_token');
+          expect(body.get('client_id')).to.be.equal('vaadin-connect-client');
+          expect(body.get('refresh_token')).to.be.ok;
+          expect(body.get('username')).to.be.null;
+        });
+
+        it('should call credentials if refreshToken is expired', async() => {
+          // do a First request to get an accessToken and a refreshToken
+          await client.call('FooService', 'fooMethod');
+
+          // Wait until both accessToken and refresToken expire
+          await sleep(1000);
+          const data = await client.call('FooService', 'fooMethod');
+
+          expect(data).to.deep.equal({fooData: 'foo'});
+          expect(client.credentials).to.be.calledTwice;
+          expect(fetchMock.calls().length).to.be.equal(4);
+
+          const [, {body}] = fetchMock.calls()[2];
+          expect(body.get('grant_type')).to.be.equal('password');
+          expect(body.get('username')).to.be.equal('user');
+          expect(body.get('password')).to.be.equal('abc123');
+        });
+
+        it('should not save refreshToken when stayLoggedIn is false', async() => {
+          // A first request to get authentication but not storing refreshToken
+          await client.call('FooService', 'fooMethod');
+          expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
+
+          // emulate refresh page
+          const newClient = new ConnectClient();
+          newClient.credentials = client.credentials;
+          await newClient.call('FooService', 'fooMethod');
+          expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
+
+          expect(client.credentials).to.be.calledTwice;
+          expect(fetchMock.calls().length).to.be.equal(4);
+
+          const [, {body}] = fetchMock.calls()[2];
+          expect(body.get('grant_type')).to.be.equal('password');
+        });
+
+        it('should use refreshToken from localStorage when client refreshes', async() => {
+
+          // A request with stayLoggedIn credentials
+          const newClient1 = new ConnectClient();
+          newClient1.credentials = sinon.fake.returns({
+            username: 'user', password: 'abc123',
+            stayLoggedIn: true});
+          await newClient1.call('FooService', 'fooMethod');
+          expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
+
+          // refresh should re-use refreshToken
+          const newClient2 = new ConnectClient();
+          newClient2.credentials = sinon.fake();
+          await newClient2.call('FooService', 'fooMethod');
+
+          expect(newClient2.credentials).not.be.called;
+          expect(fetchMock.calls().length).to.be.equal(4);
+
+          const [, {body}] = fetchMock.calls()[2];
+          expect(body.get('grant_type')).to.be.equal('refresh_token');
+        });
+
+        it('should not fail if stored accessToken is corrupted', async() => {
+          localStorage.setItem('vaadin.connect.refreshToken', 'CORRUPTED-TOKEN');
+
+          const newClient = new ConnectClient();
+          newClient.credentials = client.credentials;
+          await newClient.call('FooService', 'fooMethod');
+
+          expect(client.credentials).to.be.calledOnce;
+          expect(fetchMock.calls().length).to.be.equal(2);
+
+          const [, {body}] = fetchMock.calls()[0];
+          expect(body.get('grant_type')).to.be.equal('password');
+        });
+
       });
-
-      it('should use refreshToken from localStorage when client refreshes', async() => {
-        // refresh with stayLoggedIn
-        const newClient1 = new ConnectClient();
-        newClient1.credentials = sinon.fake.returns({
-          username: 'user', password: 'abc123',
-          stayLoggedIn: true});
-        await newClient1.call('FooService', 'fooMethod');
-        expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
-
-        // refresh should re-use refreshToken but not credentials
-        const newClient2 = new ConnectClient();
-        newClient2.credentials = client.credentials;
-        await newClient2.call('FooService', 'fooMethod');
-
-        expect(client.credentials).to.be.calledOnce;
-        expect(fetchMock.calls().length).to.be.equal(6);
-
-        const [, {body}] = fetchMock.calls()[4];
-        expect(body.get('grant_type')).to.be.equal('refresh_token');
-      });
-
     });
   });
 });

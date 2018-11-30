@@ -54,8 +54,13 @@ class AuthTokens {
   restore() {
     const token = localStorage.getItem(refreshTokenKey);
     if (token) {
-      this.refreshToken = new Token(token);
-      this.stayLoggedIn = true;
+      try {
+        this.refreshToken = new Token(token);
+        this.stayLoggedIn = true;
+      } catch (e) {
+        // stored token is corrupted, remove it
+        this.save();
+      }
     }
     return this;
   }
@@ -123,15 +128,6 @@ export class ConnectClient {
    * @param {CredentialsCallback=} options.credentials The `credentials` initial value.
    */
   constructor(options = {}) {
-    // TODO: remove this since tokens is a private object. Do we need
-    // to maintain this API?
-    /**
-     * When set to a string, adds the `Authorization: Bearer ${accessToken}`
-     * HTTP reader to every request.
-     * @type {string}
-     */
-    this.accessToken;
-
     /**
      * The Vaadin Connect backend endpoint.
      * @type {string}
@@ -176,7 +172,7 @@ export class ConnectClient {
     }
 
     let message;
-    const current = tokens.get(this);
+    let current = tokens.get(this);
     while (!(current.accessToken && current.accessToken.isValid())) {
 
       let stayLoggedIn = current.stayLoggedIn;
@@ -223,14 +219,15 @@ export class ConnectClient {
         } else {
           assertResponseIsOk(tokenResponse);
           // Successful token response
-          const json = await tokenResponse.json();
-          this.accessToken = json.access_token;
-          tokens.set(this, new AuthTokens(json));
+          current = new AuthTokens(await tokenResponse.json());
+          tokens.set(this, current);
           if (stayLoggedIn) {
-            tokens.get(this).save();
+            current.save();
           }
           break;
         }
+      } else {
+        current = tokens.get(this);
       }
     }
 
@@ -238,8 +235,8 @@ export class ConnectClient {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     };
-    if (this.accessToken) {
-      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    if (current.accessToken) {
+      headers['Authorization'] = `Bearer ${current.accessToken.token}`;
     }
 
     /* global fetch */
