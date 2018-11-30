@@ -6,6 +6,7 @@
   },
   "globals": {
     "Promise": true,
-    "document": false
+    "document": false,
+    "console": false
   }
 }
