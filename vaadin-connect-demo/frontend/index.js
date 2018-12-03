@@ -1,7 +1,7 @@
 // The code that uses the generated Vaadin Connect modules:
-
 import client from './src/generated/connect-client.default';
 import {addOne} from './src/generated/DemoVaadinService';
+// Same code without the generated JavaScript, using vaadin-connect NPM module api instead:
 import {ConnectClient} from '@vaadin/connect';
 
 client.credentials = (options = {}) => {
@@ -9,25 +9,19 @@ client.credentials = (options = {}) => {
 };
 
 const numberLabel = document.getElementById('number');
-document.getElementById('addOne').onclick = async() => {
+document.getElementById('addOne').addEventListener('click', async() => {
   numberLabel.textContent = await addOne(numberLabel.textContent);
-};
-
-// If you don't want to generate the modules and the client, the client npm module itself is enough to work with the Vaadin Connect backend:
+});
 
 const customClient = new ConnectClient({
   endpoint: '/connect',
   credentials: (options = {}) => {
-    return {username: 'test_login', password: 'test_password'};
+    return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
   }
 });
 
-customClient.call('DemoVaadinService', 'addOne', {
-  number: 5
-}).then(incrementedValue => {
-  if (incrementedValue !== 6) {
-    console.error(`Received unexpected incremented value: ${incrementedValue}`);
-  }
+document.getElementById('addAnotherOne').addEventListener('click', async() => {
+  customClient.call('DemoVaadinService', 'addOne', {
+    number: numberLabel.textContent
+  }).then(incrementedValue => numberLabel.textContent = incrementedValue);
 });
-
-// Or you can handle everything yourself, sending POST requests to Vaadin Connect backend to get tokens and interact with the services.
