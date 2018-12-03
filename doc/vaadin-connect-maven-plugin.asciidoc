@@ -54,6 +54,8 @@ The generation creates all the necessary files and directories, if they are abse
 It also rewrites the generated files each time it is performed.
 ====
 
+If you feel interested in the modules' generation details, the process in depth is described in the
+<<./javascript-generator#,JavaScript generator page>>.
 
 == Usage in Maven
 
