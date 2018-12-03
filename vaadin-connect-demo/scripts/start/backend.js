@@ -13,7 +13,7 @@ const fs = require('fs');
 
 const hasFilesWithExtension = (directory, extension) => {
   return fs.existsSync(directory)
-    && fs.readdirSync(directory).filter(path => path.endsWith(extension)).length > 0;
+    && fs.readdirSync(directory).find(path => path.endsWith(extension));
 };
 
 const endOfOptionsIndex = process.argv.indexOf('--');
