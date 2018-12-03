@@ -5,7 +5,7 @@ const {sinon} = intern.getPlugin('sinon');
 
 import {ConnectClient} from '../src/connect-client.js';
 
-/* global btoa localStorage setTimeout */
+/* global btoa localStorage setTimeout URLSearchParams */
 describe('ConnectClient', () => {
 
   function generateOAuthJson() {
@@ -305,6 +305,7 @@ describe('ConnectClient', () => {
         const data = await client.call('FooService', 'fooMethod');
 
         let [url, {method, headers, body}] = fetchMock.calls()[0];
+        body = new URLSearchParams(body);
         expect(body.get('grant_type')).to.be.equal('password');
         expect(body.get('username')).to.be.equal('user');
         expect(body.get('password')).to.be.equal('abc123');
@@ -334,7 +335,8 @@ describe('ConnectClient', () => {
           expect(client.credentials).to.be.calledOnce;
           expect(fetchMock.calls().length).to.be.equal(4);
 
-          const [, {body}] = fetchMock.calls()[2];
+          let [, {body}] = fetchMock.calls()[2];
+          body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('refresh_token');
           expect(body.get('client_id')).to.be.equal('vaadin-connect-client');
           expect(body.get('refresh_token')).to.be.ok;
@@ -353,7 +355,8 @@ describe('ConnectClient', () => {
           expect(client.credentials).to.be.calledTwice;
           expect(fetchMock.calls().length).to.be.equal(4);
 
-          const [, {body}] = fetchMock.calls()[2];
+          let [, {body}] = fetchMock.calls()[2];
+          body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('password');
           expect(body.get('username')).to.be.equal('user');
           expect(body.get('password')).to.be.equal('abc123');
@@ -373,7 +376,8 @@ describe('ConnectClient', () => {
           expect(client.credentials).to.be.calledTwice;
           expect(fetchMock.calls().length).to.be.equal(4);
 
-          const [, {body}] = fetchMock.calls()[2];
+          let [, {body}] = fetchMock.calls()[2];
+          body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('password');
         });
 
@@ -395,7 +399,8 @@ describe('ConnectClient', () => {
           expect(newClient2.credentials).not.be.called;
           expect(fetchMock.calls().length).to.be.equal(4);
 
-          const [, {body}] = fetchMock.calls()[2];
+          let [, {body}] = fetchMock.calls()[2];
+          body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('refresh_token');
         });
 
@@ -409,7 +414,8 @@ describe('ConnectClient', () => {
           expect(client.credentials).to.be.calledOnce;
           expect(fetchMock.calls().length).to.be.equal(2);
 
-          const [, {body}] = fetchMock.calls()[0];
+          let [, {body}] = fetchMock.calls()[0];
+          body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('password');
         });
 
