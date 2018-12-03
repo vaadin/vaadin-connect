@@ -26,8 +26,7 @@ if (chainedExecutable) {
     spawnSync(
       'mvn -e',
       [
-        hasFilesWithExtension('./frontend/src/generated', '.js') && hasFilesWithExtension('./target', '.jar')
-          ? '' : 'package -DskipTests',
+        hasFilesWithExtension('./target', '.jar') ? 'generate-resources' : 'package -DskipTests',
         'spring-boot:start',
         'exec:exec',
         `-Dexec.executable="${chainedExecutable}"`,
