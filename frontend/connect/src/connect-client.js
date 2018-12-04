@@ -85,6 +85,15 @@ class AuthTokens {
  * @returns {Credentials}
  */
 
+ /**
+  * The Access Token structure returned by the authentication server.
+  *
+  * @typedef {Object} AccessToken
+  * @property {String} user_name the user used in credentials
+  * @property {Number} exp expiration time in seconds from since January 1, 1970
+  * @property {Array<string>} authorities list of the roles that meets the token
+  */
+
 /**
  * Vaadin Connect client class is a low-level network calling utility. It stores
  * an endpoint and facilitates remote calls to services and methods
@@ -152,6 +161,16 @@ export class ConnectClient {
     this.credentials = options.credentials;
 
     tokens.set(this, new AuthTokens().restore());
+  }
+
+  /**
+   * The access token returned by the authorization server.
+   *
+   * @type {AccessToken}
+   */
+  get token() {
+    const token = tokens.get(this).accessToken;
+    return token && Object.assign({}, token.json);
   }
 
   /**
