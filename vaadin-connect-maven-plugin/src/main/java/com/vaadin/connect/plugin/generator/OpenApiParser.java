@@ -18,7 +18,6 @@ package com.vaadin.connect.plugin.generator;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,8 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
@@ -79,10 +76,6 @@ class OpenApiParser {
   private static final List<String> COLLECTION_TYPES = Arrays.asList(
       "collection", "list", "arraylist", "linkedlist", "set", "hashset",
       "sortedset", "treeset");
-  private static final List<String> PREDEFINED_TYPES = Stream
-      .of(NUMBER_TYPES, STRING_TYPES, BOOLEAN_TYPES, MAP_TYPES,
-          COLLECTION_TYPES)
-      .flatMap(Collection::stream).collect(Collectors.toList());
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -219,29 +212,13 @@ class OpenApiParser {
       if (field.isTransient()) {
         continue;
       }
-      field.getVariables().forEach(variableDeclarator -> {
-        if (isBeanType(variableDeclarator.getType())) {
-          Schema propertyItem = new Schema()
-              .$ref(variableDeclarator.getTypeAsString());
-          schema.addProperties(variableDeclarator.getNameAsString(),
-              propertyItem);
-          usedSchemas.add(variableDeclarator.getTypeAsString());
-        } else if (isMapType(variableDeclarator.getType())) {
-          schema.addProperties(variableDeclarator.getNameAsString(),
-              parseTypeToSchema(variableDeclarator.getType()));
-        } else {
-          Schema propertyItem = parseTypeToSchema(variableDeclarator.getType());
-          schema.addProperties(variableDeclarator.getNameAsString(),
-              propertyItem);
-        }
-      });
+      field.getVariables()
+          .forEach(variableDeclarator -> schema.addProperties(
+              variableDeclarator.getNameAsString(),
+              parseTypeToSchema(variableDeclarator.getType())));
     }
     parseInnerClasses(typeDeclaration.asClassOrInterfaceDeclaration());
     return schema;
-  }
-
-  private boolean isMapType(Type type) {
-    return MAP_TYPES.contains(getTypeName(type));
   }
 
   private Map<String, PathItem> createPathItems(
@@ -317,15 +294,8 @@ class OpenApiParser {
 
   private MediaType createReturnMediaType(MethodDeclaration methodDeclaration) {
     MediaType mediaItem = new MediaType();
-    Schema schema;
-    if (isBeanType(methodDeclaration.getType())) {
-      String type = methodDeclaration.getType().asString();
-      schema = new Schema().$ref(type);
-      usedSchemas.add(type);
-    } else {
-      schema = parseTypeToSchema(methodDeclaration.getType());
-    }
-    mediaItem.schema(schema);
+    Type methodReturnType = methodDeclaration.getType();
+    mediaItem.schema(parseTypeToSchema(methodReturnType));
     return mediaItem;
   }
 
@@ -348,14 +318,7 @@ class OpenApiParser {
     Schema requestSchema = new ObjectSchema();
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
-      Schema paramSchema;
-      if (isBeanType(parameter.getType())) {
-        paramSchema = new Schema().$ref(parameter.getTypeAsString());
-        usedSchemas.add(parameter.getTypeAsString());
-      } else {
-        parameter.getType().getElementType();
-        paramSchema = parseTypeToSchema(parameter.getType());
-      }
+      Schema paramSchema = parseTypeToSchema(parameter.getType());
       paramSchema
           .description(paramsDescription.get(parameter.getNameAsString()));
       requestSchema.addProperties(parameter.getNameAsString(), paramSchema);
@@ -363,20 +326,11 @@ class OpenApiParser {
     return requestBody;
   }
 
-  private boolean isBeanType(Type type) {
-    if (type.isPrimitiveType()) {
-      return false;
-    }
-    String typeName = getTypeName(type);
-    boolean isPredefinedType = PREDEFINED_TYPES.contains(typeName);
-    return !type.isArrayType() && type.isReferenceType() && !isPredefinedType;
-  }
-
   private Schema parseTypeToSchema(Type javaType) {
     if (javaType.isArrayType()) {
       return createArraySchema(javaType);
     }
-    String typeName = getTypeName(javaType);
+    String typeName = getTypeName(javaType).toLowerCase(Locale.ENGLISH);
     if (NUMBER_TYPES.contains(typeName)) {
       return new NumberSchema();
     } else if (STRING_TYPES.contains(typeName)) {
@@ -392,7 +346,7 @@ class OpenApiParser {
   }
 
   private Schema createUserBeanSchema(Type javaType) {
-    String userType = javaType.asString();
+    String userType = getTypeName(javaType);
     usedSchemas.add(userType);
     return new ObjectSchema().$ref(userType);
   }
@@ -400,10 +354,9 @@ class OpenApiParser {
   private String getTypeName(Type javaType) {
     String typeName;
     if (javaType.isClassOrInterfaceType()) {
-      typeName = javaType.asClassOrInterfaceType().getNameAsString()
-          .toLowerCase(Locale.ENGLISH);
+      typeName = javaType.asClassOrInterfaceType().getNameAsString();
     } else {
-      typeName = javaType.asString().toLowerCase(Locale.ENGLISH);
+      typeName = javaType.asString();
     }
     return typeName;
   }
