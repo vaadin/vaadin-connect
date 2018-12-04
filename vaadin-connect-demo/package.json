@@ -14,7 +14,7 @@
     "lint": "eslint frontend/ scripts/ e2e/"
   },
   "dependencies": {
-    "@vaadin/connect": "0.0.0"
+    "@vaadin/connect": "*"
   },
   "devDependencies": {
     "eslint": "^5.9.0",
