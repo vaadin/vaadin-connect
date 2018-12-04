@@ -12,7 +12,7 @@ describe('ConnectClient', () => {
     const jwt = btoa('{"alg": "HS256", "typ": "JWT"}');
     // expiration comes in seconds from Vaadin Connect Server
     // We add 400ms to accessToken and 800ms to refreshToken
-    const accessToken = btoa(`{"exp": ${Date.now() / 1000 + 0.400}}`);
+    const accessToken = btoa(`{"exp": ${Date.now() / 1000 + 0.400}, "user_name": "foo"}`);
     const refreshToken = btoa(`{"exp": ${Date.now() / 1000 + 0.800}}`);
 
     return {
@@ -248,6 +248,23 @@ describe('ConnectClient', () => {
           .to.equal('grant_type=password&username=user&password=abc123');
       });
 
+      it('should expose accessToken data', async() => {
+        fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+
+        await client.call('FooService', 'fooMethod');
+        expect(client.token).to.be.ok;
+        expect(client.token.exp).to.be.above(Date.now() / 1000);
+        expect(client.token.user_name).to.be.equal('foo');
+      });
+
+      it('should not be able to modify accessToken data', async() => {
+        fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+
+        await client.call('FooService', 'fooMethod');
+        client.token.user_name = 'bar';
+        expect(client.token.user_name).to.be.equal('foo');
+      });
+
       it('should ask for credentials again when token response is 400 or 401', async() => {
         client.credentials = sinon.stub();
         client.credentials.onCall(0).returns({username: 'user', password: 'abc123'});
@@ -266,8 +283,6 @@ describe('ConnectClient', () => {
         expect(data).to.deep.equal({fooData: 'foo'});
 
         expect(fetchMock.calls().length).to.be.equal(3);
-
-        expect(client.accessToken).to.be.undefined;
 
         expect(client.credentials).to.be.calledThrice;
         expect(client.credentials.getCall(0)).to.be.calledWithExactly();
