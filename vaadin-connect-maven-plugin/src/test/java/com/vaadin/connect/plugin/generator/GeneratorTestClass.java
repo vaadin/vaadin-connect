@@ -15,6 +15,7 @@
  */
 package com.vaadin.connect.plugin.generator;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +108,15 @@ public class GeneratorTestClass {
    */
   public boolean getTwoParameters(String input, int secondInput) {
     return false;
+  }
+
+  /**
+   * Get instant nano
+   * @param input input parameter
+   * @return current time as an Instant
+   */
+  public java.time.Instant fullFQNMethod(java.lang.Integer input) {
+    return Instant.now();
   }
 
   protected void hiddenMethod() {
