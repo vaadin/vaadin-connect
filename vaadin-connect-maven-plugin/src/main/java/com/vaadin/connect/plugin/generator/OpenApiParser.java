@@ -36,6 +36,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.github.javaparser.ParseResult;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -46,6 +47,9 @@ import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.utils.SourceRoot;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -135,8 +139,11 @@ class OpenApiParser {
     nonServiceSchemas = new HashMap<>();
     usedSchemas = new HashSet<>();
     servicesJavadoc = new HashMap<>();
-
-    javaSourcePaths.stream().map(SourceRoot::new)
+    ParserConfiguration parserConfiguration = new ParserConfiguration()
+        .setSymbolResolver(new JavaSymbolSolver(
+            new CombinedTypeSolver(new ReflectionTypeSolver(false))));
+    javaSourcePaths.stream()
+        .map(path -> new SourceRoot(path, parserConfiguration))
         .forEach(this::parseSourceRoot);
 
     for (String s : usedSchemas) {
