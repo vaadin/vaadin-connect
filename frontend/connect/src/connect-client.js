@@ -128,6 +128,18 @@ class AuthTokens {
  * ```
  *
  * The default token endpoint is '/oauth/token'.
+ *
+ * By default, the client requires authorization for calls, therefore
+ * the `credentials` callback is called before a non-authorized client
+ * is about to make a call. You can omit the authorization requirement using
+ * the `requireCredentials: false` call option:
+ *
+ * ```js
+ * const params = {};
+ * await client.call('MyVaadinService', 'myMethod', params, {
+ *   requireCredentials: false
+ * });
+ * ```
  */
 export class ConnectClient {
   /**
@@ -181,9 +193,11 @@ export class ConnectClient {
    * @param {string} service Service class name.
    * @param {string} method Method name to call in the service class.
    * @param {Object=} params Optional object to be send in JSON request body.
+   * @param {Object=} options Optional client options for this call.
+   * @param {boolean=true} options.requireCredentials Require authorization.
    * @returns {} Decoded JSON response data.
    */
-  async call(service, method, params) {
+  async call(service, method, params, options = {requireCredentials: true}) {
     if (arguments.length < 2) {
       throw new TypeError(
         `2 arguments required, but got only ${arguments.length}`
@@ -193,6 +207,10 @@ export class ConnectClient {
     let message;
     let current = tokens.get(this);
     while (!(current.accessToken && current.accessToken.isValid())) {
+      if ('requireCredentials' in options && !options.requireCredentials) {
+        // The authorization is omitted
+        break;
+      }
 
       let stayLoggedIn = current.stayLoggedIn;
 
