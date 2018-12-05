@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lifecycleMappingMetadata>
+  <pluginExecutions>
+    <pluginExecution>
+      <pluginExecutionFilter>
+        <goals>
+          <goal>generate-openapi-spec</goal>
+          <goal>generate-vaadin-client</goal>
+          <goal>generate-connect-modules</goal>
+        </goals>
+      </pluginExecutionFilter>
+      <action>
+        <ignore></ignore>
+      </action>
+    </pluginExecution>
+  </pluginExecutions>
+</lifecycleMappingMetadata>
+
