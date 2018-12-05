@@ -143,6 +143,39 @@
         }
       }
     },
+    "/GeneratorTestClass/fullFQNMethod" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Get instant nano",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "type" : "number",
+                    "description" : "input parameter"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return current time as an Instant",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Instant"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/GeneratorTestClass/countUser" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
