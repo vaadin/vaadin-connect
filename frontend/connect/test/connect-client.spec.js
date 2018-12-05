@@ -433,7 +433,37 @@ describe('ConnectClient', () => {
           body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('password');
         });
+      });
 
+      describe('with {requireCredentials: false} option', () => {
+        it('should include Authorization header if authorized before', async() => {
+          // Simulate login
+          const response = generateOAuthJson();
+          fetchMock.post(client.tokenEndpoint, response);
+          await client.call('FooService', 'fooMethod');
+
+          await client.call('FooService', 'fooMethod', undefined,
+            {requireCredentials: false});
+
+          expect(fetchMock.lastOptions().headers)
+            .to.have.property('Authorization', `Bearer ${response.access_token}`);
+        });
+
+        it('should not include Authorization header by default', async() => {
+          await client.call('FooService', 'fooMethod', undefined,
+            {requireCredentials: false});
+
+          expect(fetchMock.calls().length).to.equal(1);
+          expect(fetchMock.lastOptions().headers)
+            .to.not.have.property('Authorization');
+        });
+
+        it('should not ask for credentials', async() => {
+          await client.call('FooService', 'fooMethod', undefined,
+            {requireCredentials: false});
+
+          expect(client.credentials).to.not.be.called;
+        });
       });
     });
   });
