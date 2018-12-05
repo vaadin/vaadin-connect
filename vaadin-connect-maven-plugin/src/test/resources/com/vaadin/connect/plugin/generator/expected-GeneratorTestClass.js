@@ -24,6 +24,16 @@ export class GeneratorTestClass {
   }
 
   /**
+   * Get instant nano
+   *
+   * @param {number} input - input parameter
+   * @returns {Promise<Instant>} Return current time as an Instant
+   */
+  fullFQNMethod(input) {
+    return this._client.call('GeneratorTestClass', 'fullFQNMethod', {input});
+  }
+
+  /**
    * Get the map of user and roles
    *
    * @returns {Promise<object>} Return map of user and roles
@@ -96,6 +106,7 @@ export class GeneratorTestClass {
 const service = new GeneratorTestClass(defaultClient);
 
 export const countUser = service.countUser.bind(service);
+export const fullFQNMethod = service.fullFQNMethod.bind(service);
 export const getAllUserRolesMap = service.getAllUserRolesMap.bind(service);
 export const getAllUsers = service.getAllUsers.bind(service);
 export const getArrayInt = service.getArrayInt.bind(service);
