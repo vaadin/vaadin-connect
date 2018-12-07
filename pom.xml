@@ -140,6 +140,53 @@
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <executions>
+                        <execution>
+                            <id>jacoco-initialize</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>jacoco-check</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>report</goal>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <rule implementation="org.jacoco.maven.RuleConfiguration">
+                                        <element>BUNDLE</element>
+                                        <limits>
+                                            <limit implementation="org.jacoco.report.check.Limit">
+                                                <counter>INSTRUCTION</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.9</minimum>
+                                            </limit>
+                                            <limit implementation="org.jacoco.report.check.Limit">
+                                                <counter>CLASS</counter>
+                                                <value>MISSEDCOUNT</value>
+                                                <maximum>0</maximum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                                <excludes>
+                                    <!--exclude mojo classes from coverage reports, since we don't test them with unit tests-->
+                                    <exclude>com/vaadin/connect/plugin/*</exclude>
+                                    <!--TODO write unit tests and remove this-->
+                                    <exclude>com/vaadin/connect/VaadinConnectController*</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
 
