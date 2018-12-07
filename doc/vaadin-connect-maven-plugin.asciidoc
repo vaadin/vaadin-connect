@@ -73,8 +73,11 @@ If you're starting the project from scratch and not sure which steps to use, use
             <!--Steps for generating Vaadin Connect helpers for the application-->
             <id>vaadin-connect-resources</id>
             <goals>
+                <!--Generates Open Api v3 spec, happens on process-sources phase by default-->
                 <goal>generate-openapi-spec</goal>
+                <!--Generates the default Vaadin Connect client for sending requests to Vaadin Connect services, happens on generate-resources phase by default-->
                 <goal>generate-vaadin-client</goal>
+                <!--Generates Vaadin Connect services' modules to ease their method access, happens on generate-resources phase by default-->
                 <goal>generate-connect-modules</goal>
             </goals>
         </execution>
@@ -109,3 +112,38 @@ The following parameters with their default values are:
 
 Refer to https://github.com/vaadin/base-starter-connect[Vaadin Connect starter project] for the working project with
 the plugin configured.
+
+== Automatic resources generation
+
+Due to the fact that all the plugin generation goals are tied to the Maven lifecycle phases that happen before `compile` phase,
+it's possible to regenerate the files by using the plugin that recompiles the project on Java code change.
+For example, https://github.com/fizzed/maven-plugins#watcher-fizzed-watcher-maven-plugin[fizzed-watcher-maven-plugin] can be used the following way:
+
+First, add the both plugins (Vaadin Connect and watcher ones) to the project's pom.xml.
+The watcher plugin can be declared the following way:
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.fizzed</groupId>
+    <artifactId>fizzed-watcher-maven-plugin</artifactId>
+    <version>1.0.6</version>
+    <configuration>
+        <watches>
+            <watch>
+                <directory>src/main/java</directory>
+            </watch>
+        </watches>
+        <goals>
+            <goal>compile</goal>
+        </goals>
+    </configuration>
+</plugin>
+----
+
+Then, start the watcher process via `mvn fizzed-watcher:run` command.
+
+After that, on each Java sources' change (some IDEs require to explicitly save the changes before they update the actual files),
+the Vaadin Connect resources will be regenerated.
+
+See https://github.com/vaadin/base-starter-connect[Vaadin Connect starter project] for a working example.
