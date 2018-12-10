@@ -15,7 +15,7 @@ export class GeneratorTestClass {
   }
 
   getAllUsers() {
-    return this._client.call('GeneratorTestClass', 'getAllUsers');
+    return this._client.call('GeneratorTestClass', 'getAllUsers', undefined, {requireCredentials: false});
   }
 }
 

@@ -55,6 +55,7 @@ public class ESModuleGeneratorTest {
         Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
     String expectedJson = TestUtils.getExpectedJson(this.getClass(),
         "expected-GeneratorTestClass.js");
+
     Assert.assertEquals(expectedJson, actualJson);
   }
 
