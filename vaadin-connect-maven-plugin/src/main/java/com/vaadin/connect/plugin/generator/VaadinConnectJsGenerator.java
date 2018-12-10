@@ -185,15 +185,24 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
     if (parseResult == null) {
-      throw new IllegalStateException("Can't parse the OpenAPI spec");
+      throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(), "");
     }
     if (parseResult.getMessages().isEmpty()) {
       new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
           .generate();
     } else {
-      throw new IllegalStateException(
+      throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(),
           StringUtils.join(parseResult.getMessages().toArray()));
     }
+  }
+
+  private static IllegalStateException getUnexpectedOpenAPIException(
+      String inputFile, String errorMessage) {
+    return new IllegalStateException(
+        "Unexpected error happens while generating vaadin-connect JavaScript service wrappers."
+            + " The input file " + inputFile
+            + " might be corrupted, please try running the generating tasks again. "
+            + errorMessage);
   }
 
   private static SwaggerParseResult getParseResult(
@@ -207,7 +216,10 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       return new OpenAPIParser().readContents(inputSpec,
           Collections.emptyList(), options);
     } catch (Exception e) {
-      throw new IllegalStateException(e);
+      throw new IllegalStateException(
+          "Unexpected error happens while generating vaadin-connect JavaScript service wrappers. "
+              + "Can't read file " + configurator.getInputSpecURL(),
+          e);
     }
   }
 
