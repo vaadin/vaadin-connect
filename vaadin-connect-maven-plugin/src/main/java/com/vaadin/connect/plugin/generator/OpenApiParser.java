@@ -54,6 +54,7 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,8 @@ class OpenApiParser {
   private static final List<String> COLLECTION_TYPES = Arrays.asList(
       "collection", "list", "arraylist", "linkedlist", "set", "hashset",
       "sortedset", "treeset");
+  private static final String VAADIN_CONNECT_JWT_SECURITY_SCHEME = "vaadin-connect-jwt";
+
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -167,7 +170,14 @@ class OpenApiParser {
     server.setUrl(configuration.getServerUrl());
     server.setDescription(configuration.getServerDescription());
     openAPI.setServers(Collections.singletonList(server));
-    openAPI.components(new Components());
+    Components components = new Components();
+    SecurityScheme vaadinConnectJwtScheme = new SecurityScheme();
+    vaadinConnectJwtScheme.type(SecurityScheme.Type.HTTP);
+    vaadinConnectJwtScheme.scheme("bearer");
+    vaadinConnectJwtScheme.bearerFormat("JWT");
+    components.addSecuritySchemes(VAADIN_CONNECT_JWT_SECURITY_SCHEME,
+        vaadinConnectJwtScheme);
+    openAPI.components(components);
     return openAPI;
   }
 

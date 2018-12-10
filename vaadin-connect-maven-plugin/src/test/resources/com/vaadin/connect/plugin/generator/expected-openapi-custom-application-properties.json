@@ -303,6 +303,13 @@
           }
         }
       }
+    },
+    "securitySchemes" : {
+      "vaadin-connect-jwt" : {
+        "type" : "http",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
     }
   }
 }
