@@ -56,6 +56,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
+import joptsimple.internal.Strings;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
@@ -199,6 +200,11 @@ class OpenApiParser {
       String methodName = entry.getKey();
       PathItem pathItem = entry.getValue();
       String pathName = "/" + className + "/" + methodName;
+      pathItem.readOperationsMap()
+          .forEach((httpMethod,
+              operation) -> operation.setOperationId(Strings.join(
+                  new String[] { className, methodName, httpMethod.name() },
+                  "_")));
       openApiModel.getPaths().addPathItem(pathName, pathItem);
     }
   }
@@ -231,7 +237,6 @@ class OpenApiParser {
       String methodName = methodDeclaration.getNameAsString();
 
       Operation post = createPostOperation(methodDeclaration);
-
       if (methodDeclaration.getParameters().isNonEmpty()) {
         post.setRequestBody(createRequestBody(methodDeclaration));
       }
