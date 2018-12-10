@@ -199,6 +199,9 @@ class OpenApiParser {
       String methodName = entry.getKey();
       PathItem pathItem = entry.getValue();
       String pathName = "/" + className + "/" + methodName;
+      pathItem.readOperationsMap()
+          .forEach((httpMethod, operation) -> operation.setOperationId(
+              String.join("_", className, methodName, httpMethod.name())));
       openApiModel.getPaths().addPathItem(pathName, pathItem);
     }
   }
@@ -231,7 +234,6 @@ class OpenApiParser {
       String methodName = methodDeclaration.getNameAsString();
 
       Operation post = createPostOperation(methodDeclaration);
-
       if (methodDeclaration.getParameters().isNonEmpty()) {
         post.setRequestBody(createRequestBody(methodDeclaration));
       }
