@@ -18,7 +18,9 @@ package com.vaadin.connect.plugin.generator;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +28,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
@@ -34,6 +38,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import com.github.javaparser.utils.SourceRoot;
@@ -77,6 +82,7 @@ class OpenApiParser {
   private static final List<String> COLLECTION_TYPES = Arrays.asList(
       "collection", "list", "arraylist", "linkedlist", "set", "hashset",
       "sortedset", "treeset");
+
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -176,18 +182,25 @@ class OpenApiParser {
   private SourceRoot.Callback.Result process(Path localPath, Path absolutePath,
       ParseResult<CompilationUnit> result) {
     result.ifSuccessful(compilationUnit -> compilationUnit.getPrimaryType()
-        .ifPresent(typeDeclaration -> {
-          if (typeDeclaration.isClassOrInterfaceDeclaration()) {
-            parseClass(typeDeclaration.asClassOrInterfaceDeclaration());
-          }
-        }));
+        .filter(BodyDeclaration::isClassOrInterfaceDeclaration)
+        .map(BodyDeclaration::asClassOrInterfaceDeclaration)
+        .map(this::appendNestedClasses).orElse(Collections.emptyList())
+        .forEach(this::parseClass));
     return SourceRoot.Callback.Result.DONT_SAVE;
+  }
+
+  private Collection<ClassOrInterfaceDeclaration> appendNestedClasses(
+      ClassOrInterfaceDeclaration topLevelClass) {
+    return topLevelClass.getMembers().addLast(topLevelClass).stream()
+        .filter(BodyDeclaration::isClassOrInterfaceDeclaration)
+        .map(BodyDeclaration::asClassOrInterfaceDeclaration)
+        .collect(Collectors.toCollection(() -> new TreeSet<>(
+            Comparator.comparing(NodeWithSimpleName::getNameAsString))));
   }
 
   private void parseClass(ClassOrInterfaceDeclaration classDeclaration) {
     String className = classDeclaration.getNameAsString();
-    if (!classDeclaration
-        .isAnnotationPresent(VaadinService.class.getSimpleName())) {
+    if (!classDeclaration.isAnnotationPresent(VaadinService.class)) {
       nonServiceSchemas.put(className, parseClassAsSchema(classDeclaration));
       return;
     }
@@ -221,7 +234,6 @@ class OpenApiParser {
               variableDeclarator.getNameAsString(),
               parseTypeToSchema(variableDeclarator.getType())));
     }
-    parseInnerClasses(typeDeclaration.asClassOrInterfaceDeclaration());
     return schema;
   }
 
@@ -245,19 +257,7 @@ class OpenApiParser {
       PathItem pathItem = new PathItem().post(post);
       pathItems.put(methodName, pathItem);
     }
-    parseInnerClasses(typeDeclaration);
     return pathItems;
-  }
-
-  private void parseInnerClasses(ClassOrInterfaceDeclaration typeDeclaration) {
-    for (BodyDeclaration member : typeDeclaration.getMembers()) {
-      if (member.isClassOrInterfaceDeclaration()) {
-        ClassOrInterfaceDeclaration classDeclaration = member
-            .asClassOrInterfaceDeclaration();
-        nonServiceSchemas.put(classDeclaration.getNameAsString(),
-            parseClassAsSchema(classDeclaration));
-      }
-    }
   }
 
   private Operation createPostOperation(MethodDeclaration methodDeclaration) {

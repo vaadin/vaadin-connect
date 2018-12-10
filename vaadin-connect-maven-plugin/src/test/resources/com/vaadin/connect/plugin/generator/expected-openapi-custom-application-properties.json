@@ -9,10 +9,57 @@
     "description" : "Vaadin connect backend server"
   } ],
   "tags" : [ {
+    "name" : "GeneratorAnonymousAllowedTestClass",
+    "description" : "This nested class is also used in the OpenApi generator test"
+  }, {
     "name" : "GeneratorTestClass",
     "description" : "This class is used for OpenApi generator test"
   } ],
   "paths" : {
+    "/GeneratorAnonymousAllowedTestClass/anonymousAllowed" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "operationId" : "GeneratorAnonymousAllowedTestClass_anonymousAllowed_POST",
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        }
+      }
+    },
+    "/GeneratorAnonymousAllowedTestClass/permissionAltered1" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "operationId" : "GeneratorAnonymousAllowedTestClass_permissionAltered1_POST",
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        }
+      }
+    },
+    "/GeneratorAnonymousAllowedTestClass/permissionAltered2" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "operationId" : "GeneratorAnonymousAllowedTestClass_permissionAltered2_POST",
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        }
+      }
+    },
+    "/GeneratorAnonymousAllowedTestClass/restricted" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "operationId" : "GeneratorAnonymousAllowedTestClass_restricted_POST",
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        }
+      }
+    },
     "/GeneratorTestClass/countUser" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
