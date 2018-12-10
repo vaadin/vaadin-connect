@@ -1,25 +1,39 @@
 // The code that uses the generated Vaadin Connect modules:
-import client from './src/generated/connect-client.default';
-import {addOne} from './src/generated/DemoVaadinService';
+import client from './src/generated/connect-client.default.js';
+import {addOne, hasAnonymousAccess} from './src/generated/DemoVaadinService.js';
 
-client.credentials = (options = {}) => {
+const credentials = (options = {}) => {
   return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
 };
+
+switch (new URLSearchParams(location.search).get('credentials')) {
+  case 'none':
+    // TODO: use `client.logout();` here
+    break;
+  case 'wrong':
+    client.credentials = (options = {}) => {
+      return {username: 'foo', password: 'wrong'};
+    };
+    break;
+  default:
+    client.credentials = credentials;
+}
+
+document.getElementById('checkAnonymousAccess').addEventListener('click',
+  async() => {
+    alert(await hasAnonymousAccess());
+  });
 
 const numberLabel = document.getElementById('number');
 document.getElementById('addOne').addEventListener('click', async() => {
   numberLabel.textContent = await addOne(numberLabel.textContent);
 });
 
-// Same code without the generated JavaScript, using vaadin-connect NPM module api instead:
+// Same code without the generated JavaScript, using '@vaadin/connect' npm module
+// API instead:
 import {ConnectClient} from '@vaadin/connect';
 
-const customClient = new ConnectClient({
-  endpoint: '/connect',
-  credentials: (options = {}) => {
-    return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
-  }
-});
+const customClient = new ConnectClient({endpoint: '/connect', credentials});
 
 document.getElementById('addAnotherOne').addEventListener('click', async() => {
   customClient.call('DemoVaadinService', 'addOne', {
