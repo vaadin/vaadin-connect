@@ -19,7 +19,7 @@ export class GeneratorTestClass {
    * @returns {Promise<ComplexResponse>}
    */
   complexEntitiesTest(request) {
-    return this._client.call('GeneratorTestClass', 'complexEntitiesTest', {request});
+    return this._client.call('GeneratorTestClass', 'complexEntitiesTest', {request}, {requireCredentials: true});
   }
 }
 
