@@ -20,7 +20,7 @@ export class GeneratorTestClass {
    * @returns {Promise<number>} Return number of user
    */
   countUser() {
-    return this._client.call('GeneratorTestClass', 'countUser');
+    return this._client.call('GeneratorTestClass', 'countUser', undefined, {requiredCredentials: false});
   }
 
   /**
@@ -30,7 +30,7 @@ export class GeneratorTestClass {
    * @returns {Promise<Instant>} Return current time as an Instant
    */
   fullFQNMethod(input) {
-    return this._client.call('GeneratorTestClass', 'fullFQNMethod', {input});
+    return this._client.call('GeneratorTestClass', 'fullFQNMethod', {input}, {requiredCredentials: false});
   }
 
   /**
@@ -39,7 +39,7 @@ export class GeneratorTestClass {
    * @returns {Promise<object>} Return map of user and roles
    */
   getAllUserRolesMap() {
-    return this._client.call('GeneratorTestClass', 'getAllUserRolesMap');
+    return this._client.call('GeneratorTestClass', 'getAllUserRolesMap', undefined, {requiredCredentials: false});
   }
 
   /**
@@ -48,7 +48,7 @@ export class GeneratorTestClass {
    * @returns {Promise<array>} Return list of users
    */
   getAllUsers() {
-    return this._client.call('GeneratorTestClass', 'getAllUsers');
+    return this._client.call('GeneratorTestClass', 'getAllUsers', undefined, {requiredCredentials: false});
   }
 
   /**
@@ -58,7 +58,7 @@ export class GeneratorTestClass {
    * @returns {Promise<array>} Return array of int
    */
   getArrayInt(input) {
-    return this._client.call('GeneratorTestClass', 'getArrayInt', {input});
+    return this._client.call('GeneratorTestClass', 'getArrayInt', {input}, {requiredCredentials: false});
   }
 
   /**
@@ -68,7 +68,7 @@ export class GeneratorTestClass {
    * @returns {Promise<boolean>} Return boolean value
    */
   getBooleanValue(input) {
-    return this._client.call('GeneratorTestClass', 'getBooleanValue', {input});
+    return this._client.call('GeneratorTestClass', 'getBooleanValue', {input}, {requiredCredentials: false});
   }
 
   /**
@@ -79,7 +79,7 @@ export class GeneratorTestClass {
    * @returns {Promise<boolean>} Return boolean value
    */
   getTwoParameters(input, secondInput) {
-    return this._client.call('GeneratorTestClass', 'getTwoParameters', {input, secondInput});
+    return this._client.call('GeneratorTestClass', 'getTwoParameters', {input, secondInput}, {requiredCredentials: false});
   }
 
   /**
@@ -89,7 +89,7 @@ export class GeneratorTestClass {
    * @returns {Promise<User>} Return user with given id
    */
   getUserById(id) {
-    return this._client.call('GeneratorTestClass', 'getUserById', {id});
+    return this._client.call('GeneratorTestClass', 'getUserById', {id}, {requiredCredentials: false});
   }
 
   /**
@@ -99,7 +99,7 @@ export class GeneratorTestClass {
    *
    */
   updateUser(user) {
-    return this._client.call('GeneratorTestClass', 'updateUser', {user});
+    return this._client.call('GeneratorTestClass', 'updateUser', {user}, {requiredCredentials: false});
   }
 }
 
