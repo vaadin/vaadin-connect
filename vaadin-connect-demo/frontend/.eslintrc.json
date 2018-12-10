@@ -1,0 +1,9 @@
+{
+  "globals": {
+    "document": true,
+    "location": true,
+    "alert": true,
+    "localStorage": true,
+    "URLSearchParams": true
+  }
+}
