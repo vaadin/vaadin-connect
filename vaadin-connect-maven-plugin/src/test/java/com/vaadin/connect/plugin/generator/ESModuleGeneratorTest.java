@@ -37,7 +37,7 @@ public class ESModuleGeneratorTest {
   @Rule
   public TemporaryFolder outputDirectory = new TemporaryFolder();
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = IllegalStateException.class)
   public void should_ThrowException_When_NoOpenApiInput() {
     VaadinConnectJsGenerator.launch(new File("whatever"),
         outputDirectory.getRoot());

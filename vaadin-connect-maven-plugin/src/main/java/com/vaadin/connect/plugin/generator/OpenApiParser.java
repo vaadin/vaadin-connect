@@ -275,7 +275,8 @@ class OpenApiParser {
   private ApiResponse createApiSuccessfulResponse(
       MethodDeclaration methodDeclaration) {
     Content successfulContent = new Content();
-    ApiResponse successfulResponse = new ApiResponse();
+    // "description" is a REQUIRED property of Response
+    ApiResponse successfulResponse = new ApiResponse().description("");
     methodDeclaration.getJavadoc().ifPresent(javadoc -> {
       for (JavadocBlockTag blockTag : javadoc.getBlockTags()) {
         if (blockTag.getType() == JavadocBlockTag.Type.RETURN) {
