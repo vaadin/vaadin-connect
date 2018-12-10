@@ -174,6 +174,20 @@ public class ESModuleGeneratorTest {
     Assert.assertEquals(expectedJs, actualJs);
   }
 
+  @Test(expected = IllegalStateException.class)
+  public void should_ThrowError_WhenOpenAPIHasNoDescriptionInResponse() {
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("no-description-response-openapi.json"),
+        outputDirectory.getRoot());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void should_ThrowError_WhenOpenAPIHasInvalidTypeReference() {
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("invalid-schema-type-openapi.json"),
+        outputDirectory.getRoot());
+  }
+
   private File getResourcePath(String resourceName) {
     try {
       return new File(getClass().getResource(resourceName).toURI());
