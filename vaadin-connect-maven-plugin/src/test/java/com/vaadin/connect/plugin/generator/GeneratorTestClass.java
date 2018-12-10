@@ -76,6 +76,8 @@ public class GeneratorTestClass {
    *          id of user
    * @return user with given id
    */
+  @AnonymousAllowed
+  @RolesAllowed("overridden_by_anonymous")
   public User getUserById(int id) {
     return null;
   }
@@ -87,6 +89,8 @@ public class GeneratorTestClass {
    *          input string array
    * @return array of int
    */
+  @AnonymousAllowed
+  @PermitAll
   public int[] getArrayInt(String[] input) {
     return new int[] { 1, 2 };
   }
@@ -98,6 +102,8 @@ public class GeneratorTestClass {
    *          input map
    * @return boolean value
    */
+  @AnonymousAllowed
+  @DenyAll
   public boolean getBooleanValue(Map<String, User> input) {
     return false;
   }
@@ -111,6 +117,7 @@ public class GeneratorTestClass {
    *          second input description
    * @return boolean value
    */
+  @AnonymousAllowed
   public boolean getTwoParameters(String input, int secondInput) {
     return false;
   }
