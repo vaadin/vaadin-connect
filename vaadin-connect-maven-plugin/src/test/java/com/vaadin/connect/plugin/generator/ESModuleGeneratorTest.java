@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
+import com.vaadin.connect.plugin.generator.services.GeneratorTestClass;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

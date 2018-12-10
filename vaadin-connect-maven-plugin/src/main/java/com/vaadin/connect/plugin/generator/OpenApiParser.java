@@ -15,6 +15,10 @@
  */
 package com.vaadin.connect.plugin.generator;
 
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +37,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import com.github.javaparser.utils.SourceRoot;
@@ -54,12 +59,14 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
 /**
  * Java parser class which scans for all {@link VaadinService} classes and
@@ -195,8 +202,7 @@ class OpenApiParser {
 
   private void parseClass(ClassOrInterfaceDeclaration classDeclaration) {
     String className = classDeclaration.getNameAsString();
-    if (!classDeclaration
-        .isAnnotationPresent(VaadinService.class.getSimpleName())) {
+    if (!classDeclaration.isAnnotationPresent(VaadinService.class)) {
       nonServiceSchemas.put(className, parseClassAsSchema(classDeclaration));
       return;
     }
@@ -240,7 +246,8 @@ class OpenApiParser {
       }
       String methodName = methodDeclaration.getNameAsString();
 
-      Operation post = createPostOperation(methodDeclaration);
+      Operation post = createPostOperation(methodDeclaration,
+          requiresAuthentication(typeDeclaration, methodDeclaration));
 
       if (methodDeclaration.getParameters().isNonEmpty()) {
         post.setRequestBody(createRequestBody(methodDeclaration));
@@ -256,6 +263,26 @@ class OpenApiParser {
     return pathItems;
   }
 
+  private boolean requiresAuthentication(
+      ClassOrInterfaceDeclaration typeDeclaration,
+      MethodDeclaration methodDeclaration) {
+    if (hasSecurityAnnotation(methodDeclaration)) {
+      return !methodDeclaration.isAnnotationPresent(AnonymousAllowed.class)
+          || methodDeclaration.isAnnotationPresent(DenyAll.class);
+    } else if (hasSecurityAnnotation(typeDeclaration)) {
+      return !typeDeclaration.isAnnotationPresent(AnonymousAllowed.class)
+          || methodDeclaration.isAnnotationPresent(DenyAll.class);
+    }
+    return true;
+  }
+
+  private boolean hasSecurityAnnotation(NodeWithAnnotations<?> node) {
+    return node.isAnnotationPresent(AnonymousAllowed.class)
+        || node.isAnnotationPresent(PermitAll.class)
+        || node.isAnnotationPresent(DenyAll.class)
+        || node.isAnnotationPresent(RolesAllowed.class);
+  }
+
   private void parseInnerClasses(ClassOrInterfaceDeclaration typeDeclaration) {
     for (BodyDeclaration member : typeDeclaration.getMembers()) {
       if (member.isClassOrInterfaceDeclaration()) {
@@ -267,8 +294,15 @@ class OpenApiParser {
     }
   }
 
-  private Operation createPostOperation(MethodDeclaration methodDeclaration) {
+  private Operation createPostOperation(MethodDeclaration methodDeclaration,
+      boolean requiresAuthentication) {
     Operation post = new Operation();
+    if (requiresAuthentication) {
+      SecurityRequirement securityItem = new SecurityRequirement();
+      securityItem.addList(VAADIN_CONNECT_JWT_SECURITY_SCHEME);
+      post.addSecurityItem(securityItem);
+    }
+
     methodDeclaration.getJavadoc().ifPresent(
         javadoc -> post.setDescription(javadoc.getDescription().toText()));
     return post;

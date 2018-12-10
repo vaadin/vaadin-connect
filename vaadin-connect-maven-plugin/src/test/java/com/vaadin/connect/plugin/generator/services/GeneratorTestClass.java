@@ -13,14 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator;
+package com.vaadin.connect.plugin.generator.services;
 
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
 /**
  * This class is used for OpenApi generator test
@@ -33,7 +37,7 @@ public class GeneratorTestClass {
    * @return list of users
    */
   public List<User> getAllUsers() {
-    return Collections.EMPTY_LIST;
+    return Collections.emptyList();
   }
 
   /**
@@ -42,7 +46,7 @@ public class GeneratorTestClass {
    * @return map of user and roles
    */
   public Map<String, User> getAllUserRolesMap() {
-    return Collections.EMPTY_MAP;
+    return Collections.emptyMap();
   }
 
   /**
@@ -71,6 +75,8 @@ public class GeneratorTestClass {
    *          id of user
    * @return user with given id
    */
+  @AnonymousAllowed
+  @RolesAllowed("overridden_by_anonymous")
   public User getUserById(int id) {
     return null;
   }
@@ -82,6 +88,8 @@ public class GeneratorTestClass {
    *          input string array
    * @return array of int
    */
+  @AnonymousAllowed
+  @PermitAll
   public int[] getArrayInt(String[] input) {
     return new int[] { 1, 2 };
   }
@@ -93,6 +101,8 @@ public class GeneratorTestClass {
    *          input map
    * @return boolean value
    */
+  @AnonymousAllowed
+  @DenyAll
   public boolean getBooleanValue(Map<String, User> input) {
     return false;
   }
@@ -106,6 +116,7 @@ public class GeneratorTestClass {
    *          second input description
    * @return boolean value
    */
+  @AnonymousAllowed
   public boolean getTwoParameters(String input, int secondInput) {
     return false;
   }

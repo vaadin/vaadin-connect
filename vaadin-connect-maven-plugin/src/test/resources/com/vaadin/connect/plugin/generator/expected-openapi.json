@@ -9,10 +9,54 @@
     "description" : "Test description"
   } ],
   "tags" : [ {
+    "name" : "GeneratorAnonymousAllowedTestClass",
+    "description" : "This class is used for OpenApi generator test"
+  }, {
     "name" : "GeneratorTestClass",
     "description" : "This class is used for OpenApi generator test"
   } ],
   "paths" : {
+    "/GeneratorAnonymousAllowedTestClass/permissionAltered1" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "responses" : {
+          "200" : { }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
+    "/GeneratorAnonymousAllowedTestClass/restricted" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "responses" : {
+          "200" : { }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
+    "/GeneratorAnonymousAllowedTestClass/permissionAltered2" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "responses" : {
+          "200" : { }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
+    "/GeneratorAnonymousAllowedTestClass/anonymousAllowed" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "responses" : {
+          "200" : { }
+        }
+      }
+    },
     "/GeneratorTestClass/getAllUsers" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
@@ -31,7 +75,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
       }
     },
     "/GeneratorTestClass/getUserById" : {
@@ -173,7 +220,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
       }
     },
     "/GeneratorTestClass/countUser" : {
@@ -191,7 +241,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
       }
     },
     "/GeneratorTestClass/getAllUserRolesMap" : {
@@ -212,7 +265,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
       }
     },
     "/GeneratorTestClass/updateUser" : {
@@ -235,7 +291,10 @@
         },
         "responses" : {
           "200" : { }
-        }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
       }
     },
     "/GeneratorTestClass/getBooleanValue" : {
@@ -271,7 +330,10 @@
               }
             }
           }
-        }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
       }
     }
   },
