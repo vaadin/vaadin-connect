@@ -17,6 +17,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Get all users",
+        "operationId" : "GeneratorTestClass_getAllUsers_POST",
         "responses" : {
           "200" : {
             "description" : "Return list of users",
@@ -38,6 +39,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Get user by id",
+        "operationId" : "GeneratorTestClass_getUserById_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -71,6 +73,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Two parameters input method",
+        "operationId" : "GeneratorTestClass_getTwoParameters_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -108,6 +111,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Get array int",
+        "operationId" : "GeneratorTestClass_getArrayInt_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -147,6 +151,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Get instant nano",
+        "operationId" : "GeneratorTestClass_fullFQNMethod_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -180,6 +185,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Get number of users",
+        "operationId" : "GeneratorTestClass_countUser_POST",
         "responses" : {
           "200" : {
             "description" : "Return number of user",
@@ -198,6 +204,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Get the map of user and roles",
+        "operationId" : "GeneratorTestClass_getAllUserRolesMap_POST",
         "responses" : {
           "200" : {
             "description" : "Return map of user and roles",
@@ -219,6 +226,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Update a user",
+        "operationId" : "GeneratorTestClass_updateUser_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -234,7 +242,9 @@
           }
         },
         "responses" : {
-          "200" : { }
+          "200" : {
+            "description" : ""
+          }
         }
       }
     },
@@ -242,6 +252,7 @@
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
         "description" : "Get boolean value",
+        "operationId" : "GeneratorTestClass_getBooleanValue_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {

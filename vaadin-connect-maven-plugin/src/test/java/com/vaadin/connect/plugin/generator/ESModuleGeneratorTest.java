@@ -37,7 +37,7 @@ public class ESModuleGeneratorTest {
   @Rule
   public TemporaryFolder outputDirectory = new TemporaryFolder();
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = IllegalStateException.class)
   public void should_ThrowException_When_NoOpenApiInput() {
     VaadinConnectJsGenerator.launch(new File("whatever"),
         outputDirectory.getRoot());
@@ -172,6 +172,20 @@ public class ESModuleGeneratorTest {
     String expectedJs = TestUtils.getExpectedJson(this.getClass(),
       "expected-multiple-lines-description.js");
     Assert.assertEquals(expectedJs, actualJs);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void should_ThrowError_WhenOpenAPIHasNoDescriptionInResponse() {
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("no-description-response-openapi.json"),
+        outputDirectory.getRoot());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void should_ThrowError_WhenOpenAPIHasInvalidTypeReference() {
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("invalid-schema-type-openapi.json"),
+        outputDirectory.getRoot());
   }
 
   private File getResourcePath(String resourceName) {

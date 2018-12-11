@@ -22,8 +22,8 @@
               "schema" : {
                 "type" : "object",
                 "properties" : {
-                  "request" : {
-                    "$ref" : "#/components/schemas/ComplexRequest"
+                  "instant" : {
+                    "$ref" : "./java.time.Instant"
                   }
                 }
               }
