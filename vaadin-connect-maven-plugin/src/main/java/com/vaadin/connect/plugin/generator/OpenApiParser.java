@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
@@ -226,7 +227,7 @@ class OpenApiParser {
 
   private Map<String, PathItem> createPathItems(
       ClassOrInterfaceDeclaration typeDeclaration) {
-    Map<String, PathItem> pathItems = new HashMap<>();
+    Map<String, PathItem> pathItems = new TreeMap<>();
     for (MethodDeclaration methodDeclaration : typeDeclaration.getMethods()) {
       if (!methodDeclaration.isPublic()) {
         continue;
