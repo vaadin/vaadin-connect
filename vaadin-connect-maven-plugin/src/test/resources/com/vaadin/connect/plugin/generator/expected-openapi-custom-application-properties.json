@@ -55,20 +55,6 @@
         } ]
       }
     },
-    "/GeneratorAnonymousAllowedTestClass/restricted" : {
-      "post" : {
-        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
-        "operationId" : "GeneratorAnonymousAllowedTestClass_restricted_POST",
-        "responses" : {
-          "200" : {
-            "description" : ""
-          }
-        },
-        "security" : [ {
-          "vaadin-connect-jwt" : [ ]
-        } ]
-      }
-    },
     "/GeneratorTestClass/countUser" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
