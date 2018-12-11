@@ -13,6 +13,22 @@ describe('demo application', () => {
         );
     });
 
+    it('should not have logged in', async() => {
+      await page
+        .findById('loginMessage').getVisibleText().then(text =>
+          expect(text).to.equal('')
+        );
+    });
+
+    it('should say hello after logging in', async() => {
+      await page
+        .findById('login').click().end()
+        .sleep(5000)
+        .findById('loginMessage').getVisibleText().then(text =>
+          expect(text).to.equal('Hello, test_login!')
+        );
+    });
+
     it('should increment number on button click', async() => {
       await page
         .findById('addOne').click().end()
