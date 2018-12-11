@@ -13,6 +13,81 @@
     "description" : "This class is used for OpenApi generator test"
   } ],
   "paths" : {
+    "/GeneratorTestClass/countUser" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Get number of users",
+        "operationId" : "GeneratorTestClass_countUser_POST",
+        "responses" : {
+          "200" : {
+            "description" : "Return number of user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GeneratorTestClass/fullFQNMethod" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Get instant nano",
+        "operationId" : "GeneratorTestClass_fullFQNMethod_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "type" : "number",
+                    "description" : "input parameter"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return current time as an Instant",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Instant"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GeneratorTestClass/getAllUserRolesMap" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Get the map of user and roles",
+        "operationId" : "GeneratorTestClass_getAllUserRolesMap_POST",
+        "responses" : {
+          "200" : {
+            "description" : "Return map of user and roles",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "$ref" : "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/GeneratorTestClass/getAllUsers" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
@@ -28,78 +103,6 @@
                   "items" : {
                     "$ref" : "#/components/schemas/User"
                   }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/GeneratorTestClass/getUserById" : {
-      "post" : {
-        "tags" : [ "GeneratorTestClass" ],
-        "description" : "Get user by id",
-        "operationId" : "GeneratorTestClass_getUserById_POST",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "id" : {
-                    "type" : "number",
-                    "description" : "id of user"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Return user with given id",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/User"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/GeneratorTestClass/getTwoParameters" : {
-      "post" : {
-        "tags" : [ "GeneratorTestClass" ],
-        "description" : "Two parameters input method",
-        "operationId" : "GeneratorTestClass_getTwoParameters_POST",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "input" : {
-                    "type" : "string",
-                    "description" : "first input description"
-                  },
-                  "secondInput" : {
-                    "type" : "number",
-                    "description" : "second input description"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Return boolean value",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "boolean"
                 }
               }
             }
@@ -147,107 +150,6 @@
         }
       }
     },
-    "/GeneratorTestClass/fullFQNMethod" : {
-      "post" : {
-        "tags" : [ "GeneratorTestClass" ],
-        "description" : "Get instant nano",
-        "operationId" : "GeneratorTestClass_fullFQNMethod_POST",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "input" : {
-                    "type" : "number",
-                    "description" : "input parameter"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Return current time as an Instant",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Instant"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/GeneratorTestClass/countUser" : {
-      "post" : {
-        "tags" : [ "GeneratorTestClass" ],
-        "description" : "Get number of users",
-        "operationId" : "GeneratorTestClass_countUser_POST",
-        "responses" : {
-          "200" : {
-            "description" : "Return number of user",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "number"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/GeneratorTestClass/getAllUserRolesMap" : {
-      "post" : {
-        "tags" : [ "GeneratorTestClass" ],
-        "description" : "Get the map of user and roles",
-        "operationId" : "GeneratorTestClass_getAllUserRolesMap_POST",
-        "responses" : {
-          "200" : {
-            "description" : "Return map of user and roles",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "additionalProperties" : {
-                    "$ref" : "#/components/schemas/User"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/GeneratorTestClass/updateUser" : {
-      "post" : {
-        "tags" : [ "GeneratorTestClass" ],
-        "description" : "Update a user",
-        "operationId" : "GeneratorTestClass_updateUser_POST",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "user" : {
-                    "$ref" : "#/components/schemas/User"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses" : {
-          "200" : {
-            "description" : ""
-          }
-        }
-      }
-    },
     "/GeneratorTestClass/getBooleanValue" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
@@ -281,6 +183,104 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/GeneratorTestClass/getTwoParameters" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Two parameters input method",
+        "operationId" : "GeneratorTestClass_getTwoParameters_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "type" : "string",
+                    "description" : "first input description"
+                  },
+                  "secondInput" : {
+                    "type" : "number",
+                    "description" : "second input description"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return boolean value",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GeneratorTestClass/getUserById" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Get user by id",
+        "operationId" : "GeneratorTestClass_getUserById_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "id" : {
+                    "type" : "number",
+                    "description" : "id of user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return user with given id",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GeneratorTestClass/updateUser" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "description" : "Update a user",
+        "operationId" : "GeneratorTestClass_updateUser_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "user" : {
+                    "$ref" : "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : ""
           }
         }
       }
