@@ -21,6 +21,10 @@ const clientId = 'vaadin-connect-client';
 /** @private */
 const clientSecret = 'c13nts3cr3t';
 
+/* global AbortController */
+/** @private */
+const abortController = new AbortController();
+
 /** @private */
 class Token {
   /* global atob */
@@ -176,6 +180,19 @@ export class ConnectClient {
   }
 
   /**
+   * Remove current accessToken and refreshToken, and cancel any authentication request
+   * that might be in progress.
+   * After calling `logout()`, any new service call will ask for user credentials.
+   */
+  async logout() {
+    abortController.abort();
+    const token = tokens.get(this);
+    delete token.refreshToken;
+    delete token.accessToken;
+    token.save();
+  }
+
+  /**
    * The access token returned by the authorization server.
    *
    * @type {AccessToken}
@@ -276,6 +293,7 @@ export class ConnectClient {
       if (body.has('grant_type')) {
         const tokenResponse = await fetch(this.tokenEndpoint, {
           method: 'POST',
+          signal: abortController.signal,
           headers: {
             'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`,
             'Content-Type': 'application/x-www-form-urlencoded'

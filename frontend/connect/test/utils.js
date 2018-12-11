@@ -10,6 +10,10 @@ if (intern.environment === 'node') {
     global.URLSearchParams = require('url').URLSearchParams;
   }
 
+  if (!global.AbortController) {
+    global.AbortController = require('abort-controller').AbortController;
+  }
+
   if (!global.btoa) {
     /* global Buffer */
     global.btoa = str => Buffer.from(str).toString('base64');
