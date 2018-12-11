@@ -17,9 +17,7 @@
       "post" : {
         "tags": [ "GeneratorTestClass" ],
         "responses" : {
-          "200" : {
-            "description": ""
-          }
+          "200" : { }
         }
       }
     }

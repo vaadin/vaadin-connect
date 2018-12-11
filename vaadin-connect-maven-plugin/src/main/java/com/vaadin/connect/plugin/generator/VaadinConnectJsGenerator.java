@@ -39,6 +39,7 @@ import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
 import io.swagger.codegen.v3.config.CodegenConfigurator;
 import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
+import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Content;
@@ -46,6 +47,8 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.tags.Tag;
+import io.swagger.v3.parser.core.models.ParseOptions;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,8 +179,48 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     configurator.setLang(VaadinConnectJsGenerator.class.getName());
     configurator.setInputSpecURL(openApiJsonFile.toString());
     configurator.setOutputDir(generatedFrontendDirectory.toString());
-    new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
-        .generate();
+    generate(configurator);
+  }
+
+  private static void generate(CodegenConfigurator configurator) {
+    SwaggerParseResult parseResult = getParseResult(configurator);
+    if (parseResult == null) {
+      throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(), "");
+    }
+    if (parseResult.getMessages().isEmpty()) {
+      new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
+          .generate();
+    } else {
+      throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(),
+          StringUtils.join(parseResult.getMessages().toArray()));
+    }
+  }
+
+  private static IllegalStateException getUnexpectedOpenAPIException(
+      String inputFile, String errorMessage) {
+    return new IllegalStateException(
+        "Unexpected error happens while generating vaadin-connect JavaScript service wrappers."
+            + " The input file " + inputFile
+            + " might be corrupted, please try running the generating tasks again. "
+            + errorMessage);
+  }
+
+  private static SwaggerParseResult getParseResult(
+      CodegenConfigurator configurator) {
+    try {
+      String inputSpec = configurator.loadSpecContent(
+          configurator.getInputSpecURL(), Collections.emptyList());
+      ParseOptions options = new ParseOptions();
+      options.setResolve(true);
+      options.setFlatten(true);
+      return new OpenAPIParser().readContents(inputSpec,
+          Collections.emptyList(), options);
+    } catch (Exception e) {
+      throw new IllegalStateException(
+          "Unexpected error happens while generating vaadin-connect JavaScript service wrappers. "
+              + "Can't read file " + configurator.getInputSpecURL(),
+          e);
+    }
   }
 
   private static Logger getLogger() {
