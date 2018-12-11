@@ -277,7 +277,7 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
-  public void should_AllowAnyAuthenticatedAccess_When_DenyAllAndAnonymousAllowed()
+  public void should_DisallowAnyAuthenticatedAccess_When_DenyAllAndAnonymousAllowed()
       throws Exception {
     class DenyAllAndAnonymousAllowed {
       @DenyAll
@@ -291,7 +291,7 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
-  public void should_AllowAnonymousAccess_When_DenyAllAndAnonymousAllowed()
+  public void should_DisallowAnonymousAccess_When_DenyAllAndAnonymousAllowed()
       throws Exception {
     class DenyAllAndAnonymousAllowed {
       @DenyAll

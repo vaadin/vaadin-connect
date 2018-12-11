@@ -15,6 +15,10 @@
  */
 package com.vaadin.connect.plugin.generator;
 
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +42,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
@@ -60,11 +65,14 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
 /**
  * Java parser class which scans for all {@link VaadinService} classes and
@@ -82,6 +90,7 @@ class OpenApiParser {
   private static final List<String> COLLECTION_TYPES = Arrays.asList(
       "collection", "list", "arraylist", "linkedlist", "set", "hashset",
       "sortedset", "treeset");
+  private static final String VAADIN_CONNECT_JWT_SECURITY_SCHEME = "vaadin-connect-jwt";
 
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
@@ -174,7 +183,14 @@ class OpenApiParser {
     server.setUrl(configuration.getServerUrl());
     server.setDescription(configuration.getServerDescription());
     openAPI.setServers(Collections.singletonList(server));
-    openAPI.components(new Components());
+    Components components = new Components();
+    SecurityScheme vaadinConnectJwtScheme = new SecurityScheme();
+    vaadinConnectJwtScheme.type(SecurityScheme.Type.HTTP);
+    vaadinConnectJwtScheme.scheme("bearer");
+    vaadinConnectJwtScheme.bearerFormat("JWT");
+    components.addSecuritySchemes(VAADIN_CONNECT_JWT_SECURITY_SCHEME,
+        vaadinConnectJwtScheme);
+    openAPI.components(components);
     return openAPI;
   }
 
@@ -246,7 +262,9 @@ class OpenApiParser {
       }
       String methodName = methodDeclaration.getNameAsString();
 
-      Operation post = createPostOperation(methodDeclaration);
+      Operation post = createPostOperation(methodDeclaration,
+          requiresAuthentication(typeDeclaration, methodDeclaration));
+
       if (methodDeclaration.getParameters().isNonEmpty()) {
         post.setRequestBody(createRequestBody(methodDeclaration));
       }
@@ -260,8 +278,34 @@ class OpenApiParser {
     return pathItems;
   }
 
-  private Operation createPostOperation(MethodDeclaration methodDeclaration) {
+  private boolean requiresAuthentication(
+      ClassOrInterfaceDeclaration typeDeclaration,
+      MethodDeclaration methodDeclaration) {
+    if (hasSecurityAnnotation(methodDeclaration)) {
+      return !methodDeclaration.isAnnotationPresent(AnonymousAllowed.class)
+          || methodDeclaration.isAnnotationPresent(DenyAll.class);
+    } else if (hasSecurityAnnotation(typeDeclaration)) {
+      return !typeDeclaration.isAnnotationPresent(AnonymousAllowed.class);
+    }
+    return true;
+  }
+
+  private boolean hasSecurityAnnotation(NodeWithAnnotations<?> node) {
+    return node.isAnnotationPresent(AnonymousAllowed.class)
+        || node.isAnnotationPresent(PermitAll.class)
+        || node.isAnnotationPresent(DenyAll.class)
+        || node.isAnnotationPresent(RolesAllowed.class);
+  }
+
+  private Operation createPostOperation(MethodDeclaration methodDeclaration,
+      boolean requiresAuthentication) {
     Operation post = new Operation();
+    if (requiresAuthentication) {
+      SecurityRequirement securityItem = new SecurityRequirement();
+      securityItem.addList(VAADIN_CONNECT_JWT_SECURITY_SCHEME);
+      post.addSecurityItem(securityItem);
+    }
+
     methodDeclaration.getJavadoc().ifPresent(
         javadoc -> post.setDescription(javadoc.getDescription().toText()));
     return post;
