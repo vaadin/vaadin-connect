@@ -15,12 +15,17 @@
  */
 package com.vaadin.connect.plugin.generator;
 
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
 /**
  * This class is used for OpenApi generator test
@@ -33,7 +38,7 @@ public class GeneratorTestClass {
    * @return list of users
    */
   public List<User> getAllUsers() {
-    return Collections.EMPTY_LIST;
+    return Collections.emptyList();
   }
 
   /**
@@ -42,7 +47,7 @@ public class GeneratorTestClass {
    * @return map of user and roles
    */
   public Map<String, User> getAllUserRolesMap() {
-    return Collections.EMPTY_MAP;
+    return Collections.emptyMap();
   }
 
   /**
@@ -136,4 +141,27 @@ public class GeneratorTestClass {
   public static class Role {
     private String roleName;
   }
+
+  /**
+   * This nested class is also used in the OpenApi generator test
+   */
+  @VaadinService
+  @AnonymousAllowed
+  public static class GeneratorAnonymousAllowedTestClass {
+    public void anonymousAllowed() {
+    }
+
+    @DenyAll
+    public void restricted() {
+    }
+
+    @RolesAllowed("whatever")
+    public void permissionAltered1() {
+    }
+
+    @PermitAll
+    public void permissionAltered2() {
+    }
+  }
+
 }
