@@ -41,8 +41,48 @@
               }
             }
           }
+        },
+        "security" : [{
+          "vaadin-connect-jwt" : [ ]
+        }]
+      }
+    }
+  },
+  "components" : {
+      "schemas" : {
+        "Role" : {
+          "type" : "object",
+          "properties" : {
+            "roleName" : {
+              "type" : "string"
+            }
+          },
+          "description" : "Role bean"
+        },
+        "User" : {
+          "type" : "object",
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "password" : {
+              "type" : "string"
+            },
+            "roles" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/Role"
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes" : {
+        "vaadin-connect-jwt" : {
+          "type" : "http",
+          "scheme" : "bearer",
+          "bearerFormat" : "JWT"
         }
       }
     }
-  }
 }

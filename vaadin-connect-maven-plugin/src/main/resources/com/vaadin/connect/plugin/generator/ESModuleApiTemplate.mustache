@@ -35,7 +35,7 @@ export class {{classname}} {
    */{{/vendorExtensions.x-vaadin-connect-show-jsdoc}}
   {{vendorExtensions.x-vaadin-connect-method-name}}({{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{name}}{{#if @last}}{{else}}, {{/if}}{{/each}}) {
   {{=<% %>=}}
-    return this._client.call('<%vendorExtensions.x-vaadin-connect-service-name%>', '<%vendorExtensions.x-vaadin-connect-method-name%>'<%#bodyParams%>, {<%#each bodyParam.vendorExtensions.x-vaadin-connect-parameters%><%name%><%#if @last%><%else%>, <%/if%><%/each%>}<%/bodyParams%>);
+    return this._client.call('<%vendorExtensions.x-vaadin-connect-service-name%>', '<%vendorExtensions.x-vaadin-connect-method-name%>', <%^bodyParams%>undefined<%/bodyParams%><%#bodyParams%>{<%#each bodyParam.vendorExtensions.x-vaadin-connect-parameters%><%name%><%#if @last%><%else%>, <%/if%><%/each%>}<%/bodyParams%>, {requireCredentials: <%#authMethods%>true<%/authMethods%><%^authMethods%>false<%/authMethods%>});
   <%={{ }}=%>
   }
   {{/operation}}
