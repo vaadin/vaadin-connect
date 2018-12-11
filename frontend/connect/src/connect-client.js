@@ -15,6 +15,9 @@ const assertResponseIsOk = response => {
 /** @private */
 const tokens = new WeakMap();
 /** @private */
+const controllers = new WeakMap();
+
+/** @private */
 const refreshTokenKey = 'vaadin.connect.refreshToken';
 /** @private */
 const clientId = 'vaadin-connect-client';
@@ -173,6 +176,19 @@ export class ConnectClient {
     this.credentials = options.credentials;
 
     tokens.set(this, new AuthTokens().restore());
+
+    /* global AbortController */
+    controllers.set(this, new AbortController());
+  }
+
+  /**
+   * Remove current accessToken and refreshToken, and cancel any authentication request
+   * that might be in progress.
+   * After calling `logout()`, any new service call will ask for user credentials.
+   */
+  async logout() {
+    controllers.get(this).abort();
+    tokens.set(this, new AuthTokens().save());
   }
 
   /**
@@ -276,6 +292,7 @@ export class ConnectClient {
       if (body.has('grant_type')) {
         const tokenResponse = await fetch(this.tokenEndpoint, {
           method: 'POST',
+          signal: controllers.get(this).signal,
           headers: {
             'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`,
             'Content-Type': 'application/x-www-form-urlencoded'

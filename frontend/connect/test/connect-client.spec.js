@@ -465,29 +465,6 @@ describe('ConnectClient', () => {
           expect(body.get('grant_type')).to.be.equal('password');
         });
 
-        it('should use refreshToken from localStorage when client refreshes', async() => {
-
-          // A request with stayLoggedIn credentials
-          const newClient1 = new ConnectClient();
-          newClient1.credentials = sinon.fake.returns({
-            username: 'user', password: 'abc123',
-            stayLoggedIn: true});
-          await newClient1.call('FooService', 'fooMethod');
-          expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
-
-          // refresh should re-use refreshToken
-          const newClient2 = new ConnectClient();
-          newClient2.credentials = sinon.fake();
-          await newClient2.call('FooService', 'fooMethod');
-
-          expect(newClient2.credentials).not.be.called;
-          expect(fetchMock.calls().length).to.be.equal(4);
-
-          let [, {body}] = fetchMock.calls()[2];
-          body = new URLSearchParams(body);
-          expect(body.get('grant_type')).to.be.equal('refresh_token');
-        });
-
         it('should not fail if stored accessToken is corrupted', async() => {
           localStorage.setItem('vaadin.connect.refreshToken', 'CORRUPTED-TOKEN');
 
@@ -561,6 +538,65 @@ describe('ConnectClient', () => {
           expect(client.credentials).to.not.be.called;
         });
       });
+
+      describe('with stayLoggedIn', () => {
+        beforeEach(() => {
+          const credentials = sinon.fake
+            .returns({username: 'user', password: 'abc123', stayLoggedIn: true});
+          client.credentials = credentials;
+        });
+
+        it('should use refreshToken from localStorage when client refreshes', async() => {
+          fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+
+          await client.call('FooService', 'fooMethod');
+          expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
+
+          // refresh should re-use refreshToken
+          const newClient = new ConnectClient();
+          newClient.credentials = sinon.fake();
+          await newClient.call('FooService', 'fooMethod');
+
+          expect(newClient.credentials).not.be.called;
+          expect(fetchMock.calls().length).to.be.equal(4);
+
+          let [, {body}] = fetchMock.calls()[2];
+          body = new URLSearchParams(body);
+          expect(body.get('grant_type')).to.be.equal('refresh_token');
+        });
+
+        describe('logout', () => {
+          it('should remove tokens on logout', async() => {
+            fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+
+            await client.call('FooService', 'fooMethod');
+            expect(await localStorage.getItem('vaadin.connect.refreshToken')).to.be.ok;
+
+            await client.logout();
+            expect(await localStorage.getItem('vaadin.connect.refreshToken')).not.to.be.ok;
+
+            expect(fetchMock.calls().length).to.be.equal(2);
+
+            await client.call('FooService', 'fooMethod');
+            expect(fetchMock.calls().length).to.be.equal(4);
+          });
+
+          it('should abort pending token request on logout', async() => {
+            // Delay token response
+            fetchMock.post(client.tokenEndpoint, () =>
+              new Promise(resolve => setTimeout(() => resolve(generateOAuthJson()), 500)));
+            // Logout before token request finishes
+            setTimeout(() => client.logout(), 300);
+            try {
+              await client.call('FooService', 'fooMethod');
+              expect.fail('token request not aborted');
+            } catch (error) {
+              expect(error.message).to.equal('URL \'/oauth/token\' aborted.');
+            }
+          });
+        });
+      });
+
     });
   });
 });
