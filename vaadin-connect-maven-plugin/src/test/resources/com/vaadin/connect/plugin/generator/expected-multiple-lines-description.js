@@ -21,7 +21,7 @@ export class GeneratorTestClass {
    * @returns {Promise<array>} Return list of users
    */
   getAllUsers() {
-    return this._client.call('GeneratorTestClass', 'getAllUsers');
+    return this._client.call('GeneratorTestClass', 'getAllUsers', undefined, {requireCredentials: false});
   }
 }
 
