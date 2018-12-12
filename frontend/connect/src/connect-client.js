@@ -197,14 +197,15 @@ export class ConnectClient {
    * @param {boolean=true} options.requireCredentials Require authorization.
    * @returns {} Decoded JSON response data.
    */
-  async call(service, method, params, options = {requireCredentials: true}) {
+  async call(service, method, params, options = {}) {
     if (arguments.length < 2) {
       throw new TypeError(
         `2 arguments required, but got only ${arguments.length}`
       );
     }
 
-    if ('requireCredentials' in options && options.requireCredentials) {
+    options = Object.assign({requireCredentials: true}, options);
+    if (options.requireCredentials) {
       await this.login();
     }
 

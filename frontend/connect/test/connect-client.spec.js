@@ -301,6 +301,22 @@ describe('ConnectClient', () => {
           .to.equal('grant_type=password&username=user&password=abc123');
       });
 
+      it('should require credentials when requireCredentials is not specified but other options are', async() => {
+        fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+
+        await client.call('FooService', 'fooMethod', undefined, {someOtherOption: true});
+
+        const [[url, {method, headers, body}]] = fetchMock.calls();
+
+        // TODO: remove when #58
+        expect(headers).to.have.property('Authorization');
+
+        expect(method).to.equal('POST');
+        expect(url).to.equal('/oauth/token');
+        expect(body.toString())
+          .to.equal('grant_type=password&username=user&password=abc123');
+      });
+
       it('should expose accessToken data', async() => {
         fetchMock.post(client.tokenEndpoint, generateOAuthJson);
 
