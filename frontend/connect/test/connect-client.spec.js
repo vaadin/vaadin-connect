@@ -88,10 +88,10 @@ describe('ConnectClient', () => {
       }
     });
 
-    it('should fetch service and method from default endpoint', () => {
+    it('should fetch service and method from default endpoint', async() => {
       expect(fetchMock.calls()).to.have.lengthOf(0); // no premature requests
 
-      client.call('FooService', 'fooMethod', undefined, {requireCredentials: false});
+      await client.call('FooService', 'fooMethod');
 
       expect(fetchMock.calls()).to.have.lengthOf(1);
       expect(fetchMock.lastUrl()).to.equal('/connect/FooService/fooMethod');
@@ -102,14 +102,14 @@ describe('ConnectClient', () => {
       expect(returnValue).to.be.a('promise');
     });
 
-    it('should use POST request', () => {
-      client.call('FooService', 'fooMethod', undefined, {requireCredentials: false});
+    it('should use POST request', async() => {
+      await client.call('FooService', 'fooMethod');
 
       expect(fetchMock.lastOptions()).to.include({method: 'POST'});
     });
 
-    it('should use JSON request headers', () => {
-      client.call('FooService', 'fooMethod', undefined, {requireCredentials: false});
+    it('should use JSON request headers', async() => {
+      await client.call('FooService', 'fooMethod');
 
       const headers = fetchMock.lastOptions().headers;
       expect(headers).to.include({
@@ -167,7 +167,6 @@ describe('ConnectClient', () => {
   });
 
   describe('login method', () => {
-    const vaadinEndpoint = '/connect/FooService/fooMethod';
     let client;
 
     beforeEach(() => {
@@ -196,6 +195,7 @@ describe('ConnectClient', () => {
     });
 
     it('should request token endpoint only once after login', async() => {
+      const vaadinEndpoint = '/connect/FooService/fooMethod';
       fetchMock.post(vaadinEndpoint, {fooData: 'foo'});
       await client.login();
       await client.call('FooService', 'fooMethod');
