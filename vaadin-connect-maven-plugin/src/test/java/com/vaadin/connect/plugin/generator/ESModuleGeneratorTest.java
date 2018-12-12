@@ -16,11 +16,16 @@
 package com.vaadin.connect.plugin.generator;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -30,6 +35,7 @@ import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -44,18 +50,41 @@ public class ESModuleGeneratorTest {
   }
 
   @Test
-  public void should_GenerateJSClass_When_ThereIsOpenApiInput()
-      throws Exception {
+  public void should_GenerateJSClass_When_ThereIsOpenApiInput() {
     VaadinConnectJsGenerator.launch(
         getResourcePath("expected-openapi-custom-application-properties.json"),
         outputDirectory.getRoot());
-    Path outputFilePath = Paths.get(outputDirectory.getRoot() + "/"
-        + GeneratorTestClass.class.getSimpleName() + ".js");
-    String actualJson = StringUtils.toEncodedString(
-        Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
+
+    List<String> expectedClasses = Arrays.asList(
+        GeneratorTestClass.class.getSimpleName(),
+        GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
+            .getSimpleName());
+    assertEquals(
+        String.format(
+            "Expected to have only %s classes processed in the test: '%s'",
+            expectedClasses.size(), expectedClasses),
+        2L, Stream.of(outputDirectory.getRoot().list())
+            .filter(fileName -> fileName.endsWith(".js")).count());
+
+    expectedClasses.forEach(this::assertClassGeneratedJson);
+  }
+
+  private void assertClassGeneratedJson(String expectedClass) {
+    Path outputFilePath = outputDirectory.getRoot().toPath()
+        .resolve(expectedClass + ".js");
+    String actualJson;
+    try {
+      actualJson = StringUtils.toEncodedString(
+          Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
     String expectedJson = TestUtils.getExpectedJson(this.getClass(),
-        "expected-GeneratorTestClass.js");
-    Assert.assertEquals(expectedJson, actualJson);
+        String.format("expected-%s.js", expectedClass));
+
+    Assert.assertEquals(
+        String.format("Class '%s' has unexpected json produced", expectedClass),
+        expectedJson, actualJson);
   }
 
   @Test
@@ -100,24 +129,25 @@ public class ESModuleGeneratorTest {
         Charset.defaultCharset()).trim();
 
     String expected = TestUtils.getExpectedJson(this.getClass(),
-      "expected-no-jsdoc.js");
+        "expected-no-jsdoc.js");
 
     Assert.assertEquals(expected, actual);
   }
 
   @Test
   public void should_GeneratePartlyJsDoc_When_JsonHasParametersAndReturnType()
-    throws Exception {
-    VaadinConnectJsGenerator.launch(getResourcePath("parameters-and-return-jsdoc.json"),
-      outputDirectory.getRoot());
+      throws Exception {
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("parameters-and-return-jsdoc.json"),
+        outputDirectory.getRoot());
 
     Path outputPath = Paths
-      .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
+        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
     String actual = StringUtils.toEncodedString(Files.readAllBytes(outputPath),
-      Charset.defaultCharset()).trim();
+        Charset.defaultCharset()).trim();
 
     String expected = TestUtils.getExpectedJson(this.getClass(),
-      "expected-partly-jsdoc.js");
+        "expected-partly-jsdoc.js");
 
     Assert.assertEquals(expected, actual);
   }
@@ -163,14 +193,17 @@ public class ESModuleGeneratorTest {
 
   @Test
   public void should_RenderMultipleLinesHTMLCorrectly_When_JavaDocHasMultipleLines()
-    throws Exception {
-    VaadinConnectJsGenerator.launch(getResourcePath("multiplelines-description.json"),
-      outputDirectory.getRoot());
-    Path output = Paths.get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
-    String actualJs = StringUtils.toEncodedString(
-      Files.readAllBytes(output), Charset.defaultCharset()).trim();
+      throws Exception {
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("multiplelines-description.json"),
+        outputDirectory.getRoot());
+    Path output = Paths
+        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
+    String actualJs = StringUtils
+        .toEncodedString(Files.readAllBytes(output), Charset.defaultCharset())
+        .trim();
     String expectedJs = TestUtils.getExpectedJson(this.getClass(),
-      "expected-multiple-lines-description.js");
+        "expected-multiple-lines-description.js");
     Assert.assertEquals(expectedJs, actualJs);
   }
 
