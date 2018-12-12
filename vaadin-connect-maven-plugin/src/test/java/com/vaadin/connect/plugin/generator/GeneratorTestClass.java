@@ -102,9 +102,21 @@ public class GeneratorTestClass {
    *          input map
    * @return boolean value
    */
+  public boolean getBooleanValue(Map<String, User> input) {
+    return false;
+  }
+
+  /**
+   * The method won't be generated because {@link DenyAll} annotation is present
+   * on it.
+   *
+   * @param input
+   *          input map
+   * @return boolean value
+   */
   @AnonymousAllowed
   @DenyAll
-  public boolean getBooleanValue(Map<String, User> input) {
+  public boolean restrictedGetBooleanValue(Map<String, User> input) {
     return false;
   }
 
@@ -124,7 +136,9 @@ public class GeneratorTestClass {
 
   /**
    * Get instant nano
-   * @param input input parameter
+   *
+   * @param input
+   *          input parameter
    * @return current time as an Instant
    */
   public java.time.Instant fullFQNMethod(java.lang.Integer input) {

@@ -257,7 +257,8 @@ class OpenApiParser {
       ClassOrInterfaceDeclaration typeDeclaration) {
     Map<String, PathItem> pathItems = new TreeMap<>();
     for (MethodDeclaration methodDeclaration : typeDeclaration.getMethods()) {
-      if (!methodDeclaration.isPublic()) {
+      if (!methodDeclaration.isPublic()
+          || methodDeclaration.isAnnotationPresent(DenyAll.class)) {
         continue;
       }
       String methodName = methodDeclaration.getNameAsString();
