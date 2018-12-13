@@ -27,7 +27,20 @@ document.getElementById('checkAnonymousAccess').addEventListener('click',
 const numberLabel = document.getElementById('number');
 document.getElementById('addOne').addEventListener('click', async() => {
   numberLabel.textContent = await addOne(numberLabel.textContent);
+  updateLoginStatus(client);
 });
+
+document.getElementById('login').addEventListener('click', async() => {
+  await client.login();
+  updateLoginStatus(client);
+});
+
+function updateLoginStatus(currentClient) {
+  const token = currentClient.token;
+  if (token && token.exp > new Date() / 1000) {
+    document.getElementById('loginMessage').textContent = `Hello, ${token.user_name}!`;
+  }
+}
 
 // Same code without the generated JavaScript, using '@vaadin/connect' npm module
 // API instead:
