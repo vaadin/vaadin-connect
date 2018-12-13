@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -117,6 +118,7 @@ public class VaadinConnectController {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : Jackson2ObjectMapperBuilder.json()
             .visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
+            .featuresToEnable(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS)
             .build();
 
     context.getBeansWithAnnotation(VaadinService.class)
@@ -249,7 +251,8 @@ public class VaadinConnectController {
     Object[] serviceParameters = new Object[javaParameters.length];
     for (int i = 0; i < javaParameters.length; i++) {
       serviceParameters[i] = vaadinServiceMapper
-          .readerFor(javaParameters[i].getType())
+          .readerFor(vaadinServiceMapper.getTypeFactory()
+              .constructType(javaParameters[i].getParameterizedType()))
           .readValue(requestParameters.get(i));
     }
     return serviceParameters;
