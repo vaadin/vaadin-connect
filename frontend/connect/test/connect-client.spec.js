@@ -502,6 +502,33 @@ describe('ConnectClient', () => {
           body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('password');
         });
+
+        it('should not use refreshToken if getting invalid_token response', async() => {
+          localStorage.setItem('vaadin.connect.refreshToken', generateOAuthJson().refresh_token);
+          fetchMock.restore();
+
+          fetchMock
+            .post(client.tokenEndpoint,
+              {body: {error: 'invalid_token', error_description: 'Cannot convert access token to JSON'}, status: 401},
+              {repeat: 1})
+            .post(client.tokenEndpoint, generateOAuthJson,
+              {repeat: 1, overwriteRoutes: false})
+            .post(vaadinEndpoint, {fooData: 'foo'});
+
+          const newClient = new ConnectClient({credentials: client.credentials});
+          await newClient.call('FooService', 'fooMethod');
+
+          expect(newClient.credentials).to.be.calledOnce;
+          expect(fetchMock.calls().length).to.be.equal(3);
+
+          let [, {body}] = fetchMock.calls()[0];
+          body = new URLSearchParams(body);
+          expect(body.get('grant_type')).to.be.equal('refresh_token');
+
+          [, {body}] = fetchMock.calls()[1];
+          body = new URLSearchParams(body);
+          expect(body.get('grant_type')).to.be.equal('password');
+        });
       });
 
       describe('with {requireCredentials: false} option', () => {

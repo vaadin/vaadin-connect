@@ -284,8 +284,12 @@ export class ConnectClient {
         });
 
         if (tokenResponse.status === 400 || tokenResponse.status === 401) {
+          const invalidResponse = await tokenResponse.json();
+          if (invalidResponse.error === 'invalid_token') {
+            current = new AuthTokens();
+          }
           // Wrong credentials response, loop to ask again with the message
-          message = (await tokenResponse.json()).error_description;
+          message = invalidResponse.error_description;
         } else {
           assertResponseIsOk(tokenResponse);
           // Successful token response
