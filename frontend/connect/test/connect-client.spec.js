@@ -88,10 +88,10 @@ describe('ConnectClient', () => {
       }
     });
 
-    it('should fetch service and method from default endpoint', () => {
+    it('should fetch service and method from default endpoint', async() => {
       expect(fetchMock.calls()).to.have.lengthOf(0); // no premature requests
 
-      client.call('FooService', 'fooMethod');
+      await client.call('FooService', 'fooMethod');
 
       expect(fetchMock.calls()).to.have.lengthOf(1);
       expect(fetchMock.lastUrl()).to.equal('/connect/FooService/fooMethod');
@@ -102,14 +102,14 @@ describe('ConnectClient', () => {
       expect(returnValue).to.be.a('promise');
     });
 
-    it('should use POST request', () => {
-      client.call('FooService', 'fooMethod');
+    it('should use POST request', async() => {
+      await client.call('FooService', 'fooMethod');
 
       expect(fetchMock.lastOptions()).to.include({method: 'POST'});
     });
 
-    it('should use JSON request headers', () => {
-      client.call('FooService', 'fooMethod');
+    it('should use JSON request headers', async() => {
+      await client.call('FooService', 'fooMethod');
 
       const headers = fetchMock.lastOptions().headers;
       expect(headers).to.include({
@@ -163,6 +163,59 @@ describe('ConnectClient', () => {
       const requestBody = fetchMock.lastOptions().body;
       expect(requestBody).to.be.a('string');
       expect(JSON.parse(requestBody)).to.deep.equal({fooParam: 'foo'});
+    });
+  });
+
+  describe('login method', () => {
+    let client;
+
+    beforeEach(() => {
+      client = new ConnectClient({credentials: sinon.fake
+        .returns({username: 'user', password: 'abc123'})});
+      fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+    });
+
+    afterEach(() => {
+      fetchMock.restore();
+    });
+
+    it('should request token endpoint with credentials when calling login', async() => {
+
+      await client.login();
+
+      const [[url, {method, headers, body}]] = fetchMock.calls();
+
+      // TODO: remove when #58
+      expect(headers).to.have.property('Authorization');
+
+      expect(method).to.equal('POST');
+      expect(url).to.equal('/oauth/token');
+      expect(body.toString())
+        .to.equal('grant_type=password&username=user&password=abc123');
+    });
+
+    it('should request token endpoint only once after login', async() => {
+      const vaadinEndpoint = '/connect/FooService/fooMethod';
+      fetchMock.post(vaadinEndpoint, {fooData: 'foo'});
+      await client.login();
+      await client.call('FooService', 'fooMethod');
+
+      expect(fetchMock.calls()).to.have.lengthOf(2);
+      expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
+      expect(fetchMock.calls()[1][0]).to.be.equal(vaadinEndpoint);
+    });
+
+    it('should use refreshToken if available', async() => {
+      localStorage.setItem('vaadin.connect.refreshToken', generateOAuthJson().refresh_token);
+      const newClient = new ConnectClient({credentials: client.credentials});
+      await newClient.login();
+
+      expect(fetchMock.calls()).to.have.lengthOf(1);
+      expect(newClient.credentials).not.to.be.called;
+
+      let [, {body}] = fetchMock.calls()[0];
+      body = new URLSearchParams(body);
+      expect(body.get('grant_type')).to.be.equal('refresh_token');
     });
   });
 
@@ -236,6 +289,22 @@ describe('ConnectClient', () => {
         fetchMock.post(client.tokenEndpoint, generateOAuthJson);
 
         await client.call('FooService', 'fooMethod');
+
+        const [[url, {method, headers, body}]] = fetchMock.calls();
+
+        // TODO: remove when #58
+        expect(headers).to.have.property('Authorization');
+
+        expect(method).to.equal('POST');
+        expect(url).to.equal('/oauth/token');
+        expect(body.toString())
+          .to.equal('grant_type=password&username=user&password=abc123');
+      });
+
+      it('should require credentials when requireCredentials is not specified but other options are', async() => {
+        fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+
+        await client.call('FooService', 'fooMethod', undefined, {someOtherOption: true});
 
         const [[url, {method, headers, body}]] = fetchMock.calls();
 

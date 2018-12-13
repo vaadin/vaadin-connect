@@ -197,24 +197,56 @@ export class ConnectClient {
    * @param {boolean=true} options.requireCredentials Require authorization.
    * @returns {} Decoded JSON response data.
    */
-  async call(service, method, params, options = {requireCredentials: true}) {
+  async call(service, method, params, options = {}) {
     if (arguments.length < 2) {
       throw new TypeError(
         `2 arguments required, but got only ${arguments.length}`
       );
     }
 
+    options = Object.assign({requireCredentials: true}, options);
+    if (options.requireCredentials) {
+      await this.login();
+    }
+
+    const current = tokens.get(this);
+    const headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    };
+    if (current.accessToken) {
+      headers['Authorization'] = `Bearer ${current.accessToken.token}`;
+    }
+
+    /* global fetch */
+    const response = await fetch(
+      `${this.endpoint}/${service}/${method}`,
+      {
+        method: 'POST',
+        headers,
+        body: params !== undefined ? JSON.stringify(params) : undefined
+      }
+    );
+
+    assertResponseIsOk(response);
+
+    return response.json();
+  }
+
+  /**
+   * Makes a HTTP request to the {@link ConnectClient#tokenEndpoint} URL
+   * to login and get the accessToken if the current {@link ConnectClient#token}
+   * is not available or invalid. The {@link ConnectClient#credentials}
+   * will be called if the `refreshToken` is invalid.
+   */
+  async login() {
     let message;
     let current = tokens.get(this);
     while (!(current.accessToken && current.accessToken.isValid())) {
-      if ('requireCredentials' in options && !options.requireCredentials) {
-        // The authorization is omitted
-        break;
-      }
 
       let stayLoggedIn = current.stayLoggedIn;
 
-      // delete current credentials because we are goint to take new ones
+      // delete current credentials because we are going to take new ones
       tokens.set(this, new AuthTokens().save());
 
       /* global URLSearchParams btoa */
@@ -264,31 +296,7 @@ export class ConnectClient {
           }
           break;
         }
-      } else {
-        current = tokens.get(this);
       }
     }
-
-    const headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    };
-    if (current.accessToken) {
-      headers['Authorization'] = `Bearer ${current.accessToken.token}`;
-    }
-
-    /* global fetch */
-    const response = await fetch(
-      `${this.endpoint}/${service}/${method}`,
-      {
-        method: 'POST',
-        headers,
-        body: params !== undefined ? JSON.stringify(params) : undefined
-      }
-    );
-
-    assertResponseIsOk(response);
-
-    return response.json();
   }
 }
