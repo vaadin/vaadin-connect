@@ -8,7 +8,7 @@
  *   $ node scripts/start/backend.js -- echo "The backend is running..."
  */
 
-const {spawnSync} = require('child_process');
+const {spawn} = require('child_process');
 const fs = require('fs');
 
 const hasFilesWithExtension = (directory, extension) => {
@@ -21,26 +21,31 @@ const [chainedExecutable, ...chainedArgs] = endOfOptionsIndex > -1
   ? process.argv.slice(endOfOptionsIndex + 1)
   : [];
 
+const tryStartWatcher = () => {
+  spawn('mvn -e', ['fizzed-watcher:run'], {stdio: 'inherit', shell: true})
+    .on('exit', code => {
+      if (code !== 0) {
+        console.error('Failed to start the Java file watcher');
+        process.exit(code);
+      }
+    });
+};
+
+tryStartWatcher();
 if (chainedExecutable) {
-  process.exit(
-    spawnSync(
-      'mvn -e',
-      [
-        hasFilesWithExtension('./target', '.jar') ? 'generate-resources' : 'package -DskipTests',
-        'spring-boot:start',
-        'exec:exec',
-        `-Dexec.executable="${chainedExecutable}"`,
-        `-Dexec.args="${chainedArgs.join(' ')}"`
-      ],
-      {stdio: 'inherit', shell: true}
-    ).status
-  );
+  spawn(
+    'mvn -e',
+    [
+      hasFilesWithExtension('./target', '.jar') ? 'generate-resources' : 'package -DskipTests',
+      'spring-boot:start',
+      '-Dspring-boot.run.fork',
+      'exec:exec',
+      `-Dexec.executable="${chainedExecutable}"`,
+      `-Dexec.args="${chainedArgs.join(' ')}"`
+    ],
+    {stdio: 'inherit', shell: true}
+  ).on('exit', code => process.exit(code));
 } else {
-  process.exit(
-    spawnSync(
-      'mvn -e',
-      ['spring-boot:run'],
-      {stdio: 'inherit', shell: true}
-    ).status
-  );
+  spawn('mvn -e', ['spring-boot:run'], {stdio: 'inherit', shell: true})
+    .on('exit', code => process.exit(code));
 }
