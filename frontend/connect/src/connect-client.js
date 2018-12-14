@@ -12,19 +12,95 @@ const assertResponseIsOk = response => {
   }
 };
 
-/** @private */
-const tokens = new WeakMap();
-/** @private */
-const controllers = new WeakMap();
+/**
+ * Authenticate a Vaadin Connect client
+ * @param {ConnectClient} the connect client instance
+ * @private
+ */
+const authenticateClient = async client => {
+  let message;
+  const _private = privates.get(client);
+  let tokens = _private.tokens;
 
-/** @private */
+  while (!(tokens.accessToken && tokens.accessToken.isValid())) {
+
+    let stayLoggedIn = tokens.stayLoggedIn;
+
+    // delete current credentials because we are going to take new ones
+    _private.tokens = new AuthTokens().save();
+
+    /* global URLSearchParams btoa */
+    const body = new URLSearchParams();
+    if (tokens.refreshToken && tokens.refreshToken.isValid()) {
+      body.append('grant_type', 'refresh_token');
+      body.append('client_id', clientId);
+      body.append('refresh_token', tokens.refreshToken.token);
+    } else if (client.credentials) {
+      const creds = message !== undefined
+        ? await client.credentials({message})
+        : await client.credentials();
+      if (!creds) {
+        // No credentials returned, skip the token request
+        break;
+      }
+      if (creds.username && creds.password) {
+        body.append('grant_type', 'password');
+        body.append('username', creds.username);
+        body.append('password', creds.password);
+        stayLoggedIn = creds.stayLoggedIn;
+      }
+    } else {
+      break;
+    }
+
+    if (body.has('grant_type')) {
+
+      // memoize before await fetch to re-use in case of multiple calls
+      _private.login = fetch(client.tokenEndpoint, {
+        method: 'POST',
+        signal: _private.controller.signal,
+        headers: {
+          'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body.toString()
+      });
+
+      const tokenResponse = await _private.login;
+      delete _private.login;
+
+      if (tokenResponse.status === 400 || tokenResponse.status === 401) {
+        const invalidResponse = await tokenResponse.json();
+        if (invalidResponse.error === 'invalid_token') {
+          tokens = new AuthTokens();
+        }
+        // Wrong credentials response, loop to ask again with the message
+        message = invalidResponse.error_description;
+      } else {
+        assertResponseIsOk(tokenResponse);
+        // Successful token response
+        tokens = new AuthTokens(await tokenResponse.json());
+        _private.tokens = tokens;
+        if (stayLoggedIn) {
+          tokens.save();
+        }
+        break;
+      }
+    }
+  }
+};
+
+/** @_private */
+const privates = new WeakMap();
+
+/** @_private */
 const refreshTokenKey = 'vaadin.connect.refreshToken';
-/** @private */
+/** @_private */
 const clientId = 'vaadin-connect-client';
-/** @private */
+/** @_private */
 const clientSecret = 'c13nts3cr3t';
 
-/** @private */
+/** @_private */
 class Token {
   /* global atob */
   constructor(token) {
@@ -36,7 +112,7 @@ class Token {
   }
 }
 
-/** @private */
+/** @_private */
 class AuthTokens {
   /* global localStorage */
   constructor(authJson) {
@@ -175,20 +251,22 @@ export class ConnectClient {
      */
     this.credentials = options.credentials;
 
-    tokens.set(this, new AuthTokens().restore());
-
     /* global AbortController */
-    controllers.set(this, new AbortController());
+    privates.set(this, {
+      tokens: new AuthTokens().restore(),
+      controller: new AbortController()
+    });
   }
 
   /**
-   * Remove current accessToken and refreshToken, and cancel any authentication request
+   * Remove tokens accessToken and refreshToken, and cancel any authentication request
    * that might be in progress.
    * After calling `logout()`, any new service call will ask for user credentials.
    */
   async logout() {
-    controllers.get(this).abort();
-    tokens.set(this, new AuthTokens().save());
+    const _private = privates.get(this);
+    _private.controller.abort();
+    _private.tokens = new AuthTokens().save();
   }
 
   /**
@@ -197,7 +275,7 @@ export class ConnectClient {
    * @type {AccessToken}
    */
   get token() {
-    const token = tokens.get(this).accessToken;
+    const token = privates.get(this).tokens.accessToken;
     return token && Object.assign({}, token.json);
   }
 
@@ -225,13 +303,13 @@ export class ConnectClient {
       await this.login();
     }
 
-    const current = tokens.get(this);
+    const accessToken = privates.get(this).tokens.accessToken;
     const headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     };
-    if (current.accessToken) {
-      headers['Authorization'] = `Bearer ${current.accessToken.token}`;
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken.token}`;
     }
 
     /* global fetch */
@@ -251,73 +329,14 @@ export class ConnectClient {
 
   /**
    * Makes a HTTP request to the {@link ConnectClient#tokenEndpoint} URL
-   * to login and get the accessToken if the current {@link ConnectClient#token}
+   * to login and get the accessToken if the tokens {@link ConnectClient#token}
    * is not available or invalid. The {@link ConnectClient#credentials}
    * will be called if the `refreshToken` is invalid.
    */
   async login() {
-    let message;
-    let current = tokens.get(this);
-    while (!(current.accessToken && current.accessToken.isValid())) {
-
-      let stayLoggedIn = current.stayLoggedIn;
-
-      // delete current credentials because we are going to take new ones
-      tokens.set(this, new AuthTokens().save());
-
-      /* global URLSearchParams btoa */
-      const body = new URLSearchParams();
-      if (current.refreshToken && current.refreshToken.isValid()) {
-        body.append('grant_type', 'refresh_token');
-        body.append('client_id', clientId);
-        body.append('refresh_token', current.refreshToken.token);
-      } else if (this.credentials) {
-        const creds = message !== undefined
-          ? await this.credentials({message})
-          : await this.credentials();
-        if (!creds) {
-          // No credentials returned, skip the token request
-          break;
-        }
-        if (creds.username && creds.password) {
-          body.append('grant_type', 'password');
-          body.append('username', creds.username);
-          body.append('password', creds.password);
-          stayLoggedIn = creds.stayLoggedIn;
-        }
-      } else {
-        break;
-      }
-
-      if (body.has('grant_type')) {
-        const tokenResponse = await fetch(this.tokenEndpoint, {
-          method: 'POST',
-          signal: controllers.get(this).signal,
-          headers: {
-            'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: body.toString()
-        });
-
-        if (tokenResponse.status === 400 || tokenResponse.status === 401) {
-          const invalidResponse = await tokenResponse.json();
-          if (invalidResponse.error === 'invalid_token') {
-            current = new AuthTokens();
-          }
-          // Wrong credentials response, loop to ask again with the message
-          message = invalidResponse.error_description;
-        } else {
-          assertResponseIsOk(tokenResponse);
-          // Successful token response
-          current = new AuthTokens(await tokenResponse.json());
-          tokens.set(this, current);
-          if (stayLoggedIn) {
-            current.save();
-          }
-          break;
-        }
-      }
-    }
+    const _private = privates.get(this);
+    _private.login = _private.login || authenticateClient(this);
+    await _private.login;
+    delete _private.login;
   }
 }
