@@ -7,9 +7,10 @@
   "private": true,
   "scripts": {
     "build:frontend": "webpack",
-    "start": "node scripts/start/backend.js -- node scripts/start/frontend.js",
+    "start": "node scripts/start/backend.js -- node scripts/start/apibrowser.js -- node scripts/start/frontend.js",
     "start:backend": "node scripts/start/backend.js",
     "start:frontend": "node scripts/start/frontend.js",
+    "start:apibrowser": "node scripts/start/apibrowser.js",
     "test:e2e": "intern",
     "test": "yarn lint && yarn build:frontend && yarn bundlesize && node scripts/start/backend.js -- node scripts/start/frontend.js -- yarn test:e2e",
     "lint": "eslint frontend/ scripts/ e2e/"
@@ -39,7 +40,8 @@
     "webpack-babel-multi-target-plugin": "^2.0.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-middleware": "^3.4.0",
-    "webpack-dev-server": "^3.1.10"
+    "webpack-dev-server": "^3.1.10",
+    "swagger-ui-dist": "^3.20.2"
   },
   "bundlesize": [
     {
