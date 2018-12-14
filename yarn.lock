@@ -6774,6 +6774,11 @@ sw-toolbox@^3.4.0:
     path-to-regexp "^1.0.1"
     serviceworker-cache-polyfill "^4.0.0"
 
+swagger-ui-dist@^3.20.2:
+  version "3.20.2"
+  resolved "https://registry.yarnpkg.com/swagger-ui-dist/-/swagger-ui-dist-3.20.2.tgz#8f53bb3bdc8ac14e3aa2ddd8ca5aad5442f58382"
+  integrity sha512-gIDjD7b9mnxZDGAgkAIYWxuMx+3fNerXHmD2544MBEKeeIQIHPcrkdIAoz4E2FLlv5tLqdgZPRqfybbTODSotA==
+
 table-layout@^0.4.3:
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/table-layout/-/table-layout-0.4.4.tgz#bc5398b2a05e58b67b05dd9238354b89ef27be0f"
