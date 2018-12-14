@@ -406,6 +406,40 @@ describe('ConnectClient', () => {
           fetchMock.post(client.tokenEndpoint, generateOAuthJson);
         });
 
+        it('should re-use login promise', async() => {
+          await Promise.all([
+            client.login(),
+            client.login(),
+            client.login(),
+            client.login()]);
+          expect(client.credentials).to.be.calledOnce;
+        });
+
+        it('should re-use login in multiple calls', async() => {
+          await Promise.all([
+            client.call('FooService', 'fooMethod'),
+            client.call('FooService', 'fooMethod')]);
+          expect(client.credentials).to.be.calledOnce;
+        });
+
+        it('should not call credentials if another auth request is pending', async() => {
+          // do a First request to get an accessToken and a refreshToken
+          await client.call('FooService', 'fooMethod');
+
+          // Wait until accessToken expires but not the refreshToken
+          // generated response has a expiration of 400ms for token and 800 for refresh
+          await sleep(600);
+          const call1 = client.call('FooService', 'fooMethod');
+          const call2 = client.call('FooService', 'fooMethod');
+
+          const [data1, data2] = await Promise.all([call1, call2]);
+
+          expect(data1).to.deep.equal({fooData: 'foo'});
+          expect(data2).to.deep.equal({fooData: 'foo'});
+          expect(client.credentials).to.be.calledOnce;
+          expect(fetchMock.calls().length).to.be.equal(5);
+        });
+
         it('should use refreshToken when accessToken is expired', async() => {
           // do a First request to get an accessToken and a refreshToken
           await client.call('FooService', 'fooMethod');
