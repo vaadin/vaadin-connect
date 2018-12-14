@@ -13,9 +13,7 @@ const assertResponseIsOk = response => {
 };
 
 /** @private */
-const tokens = new WeakMap();
-/** @private */
-const controllers = new WeakMap();
+const map = new WeakMap();
 
 /** @private */
 const refreshTokenKey = 'vaadin.connect.refreshToken';
@@ -175,10 +173,11 @@ export class ConnectClient {
      */
     this.credentials = options.credentials;
 
-    tokens.set(this, new AuthTokens().restore());
-
     /* global AbortController */
-    controllers.set(this, new AbortController());
+    map.set(this, {
+      tokens: new AuthTokens().restore(),
+      controller: new AbortController()
+    });
   }
 
   /**
@@ -187,8 +186,8 @@ export class ConnectClient {
    * After calling `logout()`, any new service call will ask for user credentials.
    */
   async logout() {
-    controllers.get(this).abort();
-    tokens.set(this, new AuthTokens().save());
+    map.get(this).controller.abort();
+    map.get(this).tokens = new AuthTokens().save();
   }
 
   /**
@@ -197,7 +196,7 @@ export class ConnectClient {
    * @type {AccessToken}
    */
   get token() {
-    const token = tokens.get(this).accessToken;
+    const token = map.get(this).tokens.accessToken;
     return token && Object.assign({}, token.json);
   }
 
@@ -222,16 +221,19 @@ export class ConnectClient {
 
     options = Object.assign({requireCredentials: true}, options);
     if (options.requireCredentials) {
-      await this.login();
+      const current = map.get(this);
+      current.login = current.login || this.login();
+      await current.login;
+      delete current.login;
     }
 
-    const current = tokens.get(this);
+    const accessToken = map.get(this).tokens.accessToken;
     const headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     };
-    if (current.accessToken) {
-      headers['Authorization'] = `Bearer ${current.accessToken.token}`;
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken.token}`;
     }
 
     /* global fetch */
@@ -257,13 +259,13 @@ export class ConnectClient {
    */
   async login() {
     let message;
-    let current = tokens.get(this);
+    let current = map.get(this).tokens;
     while (!(current.accessToken && current.accessToken.isValid())) {
 
       let stayLoggedIn = current.stayLoggedIn;
 
       // delete current credentials because we are going to take new ones
-      tokens.set(this, new AuthTokens().save());
+      map.get(this).tokens = new AuthTokens().save();
 
       /* global URLSearchParams btoa */
       const body = new URLSearchParams();
@@ -292,7 +294,7 @@ export class ConnectClient {
       if (body.has('grant_type')) {
         const tokenResponse = await fetch(this.tokenEndpoint, {
           method: 'POST',
-          signal: controllers.get(this).signal,
+          signal: map.get(this).controller.signal,
           headers: {
             'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`,
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -311,7 +313,7 @@ export class ConnectClient {
           assertResponseIsOk(tokenResponse);
           // Successful token response
           current = new AuthTokens(await tokenResponse.json());
-          tokens.set(this, current);
+          map.get(this).tokens = current;
           if (stayLoggedIn) {
             current.save();
           }
