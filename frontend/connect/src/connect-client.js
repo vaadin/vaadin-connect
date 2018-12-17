@@ -261,6 +261,8 @@ export class ConnectClient {
   async logout() {
     const _private = privates.get(this);
     _private.controller.abort();
+    // controller signed as aborted cannot be reused
+    _private.controller = new AbortController();
     _private.tokens = new AuthTokens().save();
   }
 
