@@ -628,6 +628,21 @@ describe('ConnectClient', () => {
               expect(error.message).to.equal('URL \'/oauth/token\' aborted.');
             }
           });
+
+          it('should not abort new request after logout', async() => {
+            // TODO(manolo): Remove this when https://github.com/wheresrhys/fetch-mock/issues/401 is fixed.
+            fetchMock.mock((url, options) => {
+              if (options.signal && options.signal.aborted) {
+                throw new Error('Aborted');
+              }
+            }, 200);
+
+            fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+            client.logout();
+            await client.call('FooService', 'fooMethod');
+            const data = await client.call('FooService', 'fooMethod');
+            expect(data).to.deep.equal({fooData: 'foo'});
+          });
         });
       });
 
