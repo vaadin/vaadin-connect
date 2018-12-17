@@ -35,11 +35,15 @@ document.getElementById('login').addEventListener('click', async() => {
   updateLoginStatus(client);
 });
 
+document.getElementById('logout').addEventListener('click', async() => {
+  client.logout();
+  updateLoginStatus(client);
+});
+
 function updateLoginStatus(currentClient) {
   const token = currentClient.token;
-  if (token && token.exp > new Date() / 1000) {
-    document.getElementById('loginMessage').textContent = `Hello, ${token.user_name}!`;
-  }
+  const valid = (token && token.exp > new Date() / 1000);
+  document.getElementById('loginMessage').textContent = `Hello, ${valid ? token.user_name : 'no user'}!`;
 }
 
 // Same code without the generated JavaScript, using '@vaadin/connect' npm module
