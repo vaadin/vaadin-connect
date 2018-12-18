@@ -72,7 +72,12 @@ import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 @Import({ VaadinConnectControllerConfiguration.class,
     VaadinConnectProperties.class })
 public class VaadinConnectController {
-  private static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
+  /**
+   * A qualifier to override the request and response default json mapper.
+   *
+   * @see #VaadinConnectController(ObjectMapper, ApplicationContext)
+   */
+  public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
   private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
