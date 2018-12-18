@@ -35,8 +35,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class BaseTypeConversion {
-  private ApplicationContext contextMock;
-  private VaadinConnectOAuthAclChecker oAuthAclCheckerMock;
   private VaadinConnectController vaadinConnectController;
   private ObjectMapper objectMapper = new ObjectMapper()
       .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
@@ -45,8 +43,9 @@ public class BaseTypeConversion {
   public void setUp() {
     String beanName = VaadinConnectTypeConversionServices.class.getName();
 
-    contextMock = mock(ApplicationContext.class);
-    oAuthAclCheckerMock = mock(VaadinConnectOAuthAclChecker.class);
+    ApplicationContext contextMock = mock(ApplicationContext.class);
+    VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
+        VaadinConnectOAuthAclChecker.class);
     when(contextMock.getBeansWithAnnotation(VaadinService.class))
         .thenReturn(Collections.singletonMap(beanName,
             new VaadinConnectTypeConversionServices()));
@@ -54,7 +53,8 @@ public class BaseTypeConversion {
         .thenReturn((Class) VaadinConnectTypeConversionServices.class);
 
     when(oAuthAclCheckerMock.check(notNull())).thenReturn(null);
-    vaadinConnectController = new VaadinConnectController(null, oAuthAclCheckerMock, contextMock);
+    vaadinConnectController = new VaadinConnectController(null,
+        oAuthAclCheckerMock, contextMock);
   }
 
   protected void assertResponseCode(int expectedResponseCode,

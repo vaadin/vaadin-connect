@@ -30,6 +30,15 @@ public class CollectionConversionTest extends BaseTypeConversion {
   }
 
   @Test
+  public void should_ConvertToIntegerSet_WhenReceiveNumberArray()
+    throws Exception {
+    String inputArray = "[1,3,2,3]";
+    String expectedArray = "[1,3,2,3]";
+    assertCallMethodWithExpectedValue("getIntegerCollection", inputArray,
+      expectedArray);
+  }
+
+  @Test
   public void should_ConvertToIntegerCollection_WhenReceiveMixedDecimalNumberArray()
       throws Exception {
     String inputArray = "[1,2.1]";
