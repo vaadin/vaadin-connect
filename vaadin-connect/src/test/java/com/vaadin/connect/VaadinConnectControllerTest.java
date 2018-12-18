@@ -26,6 +26,6 @@ public class VaadinConnectControllerTest {
 
     exception.expect(IllegalStateException.class);
     exception.expectMessage(beanName);
-    new VaadinConnectController(null, contextMock);
+    new VaadinConnectController(null, null, contextMock);
   }
 }
