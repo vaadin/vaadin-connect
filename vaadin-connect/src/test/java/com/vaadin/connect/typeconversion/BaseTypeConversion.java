@@ -54,7 +54,7 @@ public class BaseTypeConversion {
         .thenReturn((Class) VaadinConnectTypeConversionServices.class);
 
     when(oAuthAclCheckerMock.check(notNull())).thenReturn(null);
-    vaadinConnectController = new VaadinConnectController(null, contextMock);
+    vaadinConnectController = new VaadinConnectController(null, oAuthAclCheckerMock, contextMock);
   }
 
   protected void assertResponseCode(int expectedResponseCode,
@@ -71,8 +71,7 @@ public class BaseTypeConversion {
       String parameterValue) throws Exception {
     ObjectNode parameters = readJson("{\"value\": " + parameterValue + "}");
     return vaadinConnectController.serveVaadinService(
-        "VaadinConnectTypeConversionServices", methodName, parameters,
-        oAuthAclCheckerMock);
+        "VaadinConnectTypeConversionServices", methodName, parameters);
   }
 
   protected void assertCallMethodWithExpectedValue(String methodName,

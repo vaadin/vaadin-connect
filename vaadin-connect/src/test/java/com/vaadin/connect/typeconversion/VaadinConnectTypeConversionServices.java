@@ -91,6 +91,10 @@ public class VaadinConnectTypeConversionServices {
     return value == null ? null : value + 1;
   }
 
+  public Character getCharBoxed(Character value) {
+    return value;
+  }
+
   public String addFooString(String value) {
     return value + "foo";
   }
