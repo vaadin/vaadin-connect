@@ -40,8 +40,7 @@ describe('demo application', () => {
 
     describe('anonymous access', () => {
       beforeEach(async() => {
-        // TODO: use `client.logout()` here instead
-        await page.execute('localStorage.clear()');
+        await page.findById('logout').click().end();
       });
 
       it('should allow anonymous access with missing credentials', async() => {
