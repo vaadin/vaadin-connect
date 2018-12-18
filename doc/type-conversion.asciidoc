@@ -1,6 +1,6 @@
 ---
 title: Vaadin Connect Type Conversion
-order: 802
+order: 803
 layout: page
 ---
 
