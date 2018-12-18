@@ -40,7 +40,7 @@ describe('demo application', () => {
 
     describe('anonymous access', () => {
       beforeEach(async() => {
-        await client.logout();
+        await page.findById('logout').click().end();
       });
 
       it('should allow anonymous access with missing credentials', async() => {
