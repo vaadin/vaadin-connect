@@ -8,7 +8,7 @@ const credentials = (options = {}) => {
 
 switch (new URLSearchParams(location.search).get('credentials')) {
   case 'none':
-    // TODO: use `client.logout();` here
+    client.logout();
     break;
   case 'wrong':
     client.credentials = (options = {}) => {
