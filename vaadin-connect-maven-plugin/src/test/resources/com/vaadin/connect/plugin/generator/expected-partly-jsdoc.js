@@ -25,4 +25,11 @@ export class GeneratorTestClass {
 
 const service = new GeneratorTestClass(defaultClient);
 
-export const complexEntitiesTest = service.complexEntitiesTest.bind(service);
+
+/**
+ * @param {ComplexRequest} request
+ * @returns {Promise<ComplexResponse>}
+ */
+export function complexEntitiesTest(request) {
+  return service.complexEntitiesTest.apply(service, arguments);
+}

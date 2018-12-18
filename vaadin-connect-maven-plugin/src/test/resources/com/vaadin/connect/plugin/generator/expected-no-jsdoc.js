@@ -21,4 +21,7 @@ export class GeneratorTestClass {
 
 const service = new GeneratorTestClass(defaultClient);
 
-export const getAllUsers = service.getAllUsers.bind(service);
+
+export function getAllUsers() {
+  return service.getAllUsers.apply(service, arguments);
+}

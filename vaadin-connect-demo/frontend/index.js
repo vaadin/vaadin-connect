@@ -26,7 +26,7 @@ document.getElementById('checkAnonymousAccess').addEventListener('click',
 
 const numberLabel = document.getElementById('number');
 document.getElementById('addOne').addEventListener('click', async() => {
-  numberLabel.textContent = await addOne(numberLabel.textContent);
+  numberLabel.textContent = await addOne(numberLabel.textContent, 'pepe', 'kaka');
   updateLoginStatus(client);
 });
 
