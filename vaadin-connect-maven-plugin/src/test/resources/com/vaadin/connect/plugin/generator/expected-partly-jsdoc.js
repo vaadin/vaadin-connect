@@ -1,28 +1,16 @@
-// Generated from GeneratorTestClass.java
-import defaultClient from './connect-client.default';
-
 /**
  * This class is used for OpenApi generator test
+ *
+ * This module has been generated from GeneratorTestClass.java
+ * @module GeneratorTestClass
  */
-export class GeneratorTestClass {
 
-  /**
-   * Create a GeneratorTestClass instance.
-   * @param {ConnectClient=} client - an instance of ConnectClient
-   */
-  constructor(client = defaultClient) {
-    this._client = client;
-  }
+import client from './connect-client.default';
 
-  /**
-   * @param {ComplexRequest} request
-   * @returns {Promise<ComplexResponse>}
-   */
-  complexEntitiesTest(request) {
-    return this._client.call('GeneratorTestClass', 'complexEntitiesTest', {request}, {requireCredentials: true});
-  }
+/**
+ * @param {ComplexRequest} request
+ * @returns {Promise<ComplexResponse>}
+ */
+export function complexEntitiesTest(request) {
+  return client.call('GeneratorTestClass', 'complexEntitiesTest', {request}, {requireCredentials: true});
 }
-
-const service = new GeneratorTestClass(defaultClient);
-
-export const complexEntitiesTest = service.complexEntitiesTest.bind(service);
