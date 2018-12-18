@@ -29,6 +29,15 @@ export class GeneratorAnonymousAllowedTestClass {
 
 const service = new GeneratorAnonymousAllowedTestClass(defaultClient);
 
-export const anonymousAllowed = service.anonymousAllowed.bind(service);
-export const permissionAltered1 = service.permissionAltered1.bind(service);
-export const permissionAltered2 = service.permissionAltered2.bind(service);
+
+export function anonymousAllowed() {
+  return service.anonymousAllowed.apply(service, arguments);
+}
+
+export function permissionAltered1() {
+  return service.permissionAltered1.apply(service, arguments);
+}
+
+export function permissionAltered2() {
+  return service.permissionAltered2.apply(service, arguments);
+}

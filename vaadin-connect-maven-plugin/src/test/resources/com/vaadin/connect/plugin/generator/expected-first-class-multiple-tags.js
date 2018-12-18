@@ -22,4 +22,12 @@ export class MyFirstJsClass {
 
 const service = new MyFirstJsClass(defaultClient);
 
-export const getAllUsers = service.getAllUsers.bind(service);
+
+/**
+ * Get all users
+ *
+ * @returns {Promise<array>} Return list of users
+ */
+export function getAllUsers() {
+  return service.getAllUsers.apply(service, arguments);
+}

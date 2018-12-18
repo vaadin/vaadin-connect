@@ -22,4 +22,12 @@ export class MySecondJsClass {
 
 const service = new MySecondJsClass(defaultClient);
 
-export const getAllUsers = service.getAllUsers.bind(service);
+
+/**
+ * Get all users
+ *
+ * @returns {Promise<array>} Return list of users
+ */
+export function getAllUsers() {
+  return service.getAllUsers.apply(service, arguments);
+}

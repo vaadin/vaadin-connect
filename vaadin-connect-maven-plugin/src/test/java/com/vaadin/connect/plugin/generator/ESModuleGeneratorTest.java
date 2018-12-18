@@ -66,25 +66,25 @@ public class ESModuleGeneratorTest {
         2L, Stream.of(outputDirectory.getRoot().list())
             .filter(fileName -> fileName.endsWith(".js")).count());
 
-    expectedClasses.forEach(this::assertClassGeneratedJson);
+    expectedClasses.forEach(this::assertClassGeneratedJs);
   }
 
-  private void assertClassGeneratedJson(String expectedClass) {
+  private void assertClassGeneratedJs(String expectedClass) {
     Path outputFilePath = outputDirectory.getRoot().toPath()
         .resolve(expectedClass + ".js");
-    String actualJson;
+    String actualJs;
     try {
-      actualJson = StringUtils.toEncodedString(
+      actualJs = StringUtils.toEncodedString(
           Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    String expectedJson = TestUtils.getExpectedJson(this.getClass(),
+    String expectedJs = TestUtils.getExpectedJson(this.getClass(),
         String.format("expected-%s.js", expectedClass));
 
     Assert.assertEquals(
         String.format("Class '%s' has unexpected json produced", expectedClass),
-        expectedJson, actualJson);
+        expectedJs, actualJs);
   }
 
   @Test
@@ -130,7 +130,6 @@ public class ESModuleGeneratorTest {
 
     String expected = TestUtils.getExpectedJson(this.getClass(),
         "expected-no-jsdoc.js");
-
     Assert.assertEquals(expected, actual);
   }
 
@@ -162,11 +161,11 @@ public class ESModuleGeneratorTest {
         .get(outputDirectory.getRoot() + "/MyFirstJsClass.js");
     Path secondOutputFilePath = Paths
         .get(outputDirectory.getRoot() + "/MySecondJsClass.js");
-    String firstActualJson = StringUtils
+    String firstActualJs = StringUtils
         .toEncodedString(Files.readAllBytes(firstOutputFilePath),
             Charset.defaultCharset())
         .trim();
-    String secondActualJson = StringUtils
+    String secondActualJs = StringUtils
         .toEncodedString(Files.readAllBytes(secondOutputFilePath),
             Charset.defaultCharset())
         .trim();
@@ -174,8 +173,8 @@ public class ESModuleGeneratorTest {
         "expected-first-class-multiple-tags.js");
     String expectedSecondClass = TestUtils.getExpectedJson(this.getClass(),
         "expected-second-class-multiple-tags.js");
-    Assert.assertEquals(expectedFirstClass, firstActualJson);
-    Assert.assertEquals(expectedSecondClass, secondActualJson);
+    Assert.assertEquals(expectedFirstClass, firstActualJs);
+    Assert.assertEquals(expectedSecondClass, secondActualJs);
   }
 
   @Test

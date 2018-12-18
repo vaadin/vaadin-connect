@@ -105,12 +105,91 @@ export class GeneratorTestClass {
 
 const service = new GeneratorTestClass(defaultClient);
 
-export const countUser = service.countUser.bind(service);
-export const fullFQNMethod = service.fullFQNMethod.bind(service);
-export const getAllUserRolesMap = service.getAllUserRolesMap.bind(service);
-export const getAllUsers = service.getAllUsers.bind(service);
-export const getArrayInt = service.getArrayInt.bind(service);
-export const getBooleanValue = service.getBooleanValue.bind(service);
-export const getTwoParameters = service.getTwoParameters.bind(service);
-export const getUserById = service.getUserById.bind(service);
-export const updateUser = service.updateUser.bind(service);
+
+/**
+ * Get number of users
+ *
+ * @returns {Promise<number>} Return number of user
+ */
+export function countUser() {
+  return service.countUser.apply(service, arguments);
+}
+
+/**
+ * Get instant nano
+ *
+ * @param {number} input - input parameter
+ * @returns {Promise<Instant>} Return current time as an Instant
+ */
+export function fullFQNMethod(input) {
+  return service.fullFQNMethod.apply(service, arguments);
+}
+
+/**
+ * Get the map of user and roles
+ *
+ * @returns {Promise<object>} Return map of user and roles
+ */
+export function getAllUserRolesMap() {
+  return service.getAllUserRolesMap.apply(service, arguments);
+}
+
+/**
+ * Get all users
+ *
+ * @returns {Promise<array>} Return list of users
+ */
+export function getAllUsers() {
+  return service.getAllUsers.apply(service, arguments);
+}
+
+/**
+ * Get array int
+ *
+ * @param {array} input - input string array
+ * @returns {Promise<array>} Return array of int
+ */
+export function getArrayInt(input) {
+  return service.getArrayInt.apply(service, arguments);
+}
+
+/**
+ * Get boolean value
+ *
+ * @param {object} input - input map
+ * @returns {Promise<boolean>} Return boolean value
+ */
+export function getBooleanValue(input) {
+  return service.getBooleanValue.apply(service, arguments);
+}
+
+/**
+ * Two parameters input method
+ *
+ * @param {string} input - first input description
+ * @param {number} secondInput - second input description
+ * @returns {Promise<boolean>} Return boolean value
+ */
+export function getTwoParameters(input, secondInput) {
+  return service.getTwoParameters.apply(service, arguments);
+}
+
+/**
+ * Get user by id
+ *
+ * @param {number} id - id of user
+ * @returns {Promise<User>} Return user with given id
+ */
+export function getUserById(id) {
+  return service.getUserById.apply(service, arguments);
+}
+
+/**
+ * Update a user
+ *
+ * @param {User} user
+ *
+ */
+export function updateUser(user) {
+  return service.updateUser.apply(service, arguments);
+}
