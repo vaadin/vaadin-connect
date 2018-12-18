@@ -42,6 +42,27 @@ public class CharacterConversion extends BaseTypeConversion {
   }
 
   @Test
+  public void should_FailToConvertToChar_WhenReceiveOverflowUnderflowNumber()
+      throws Exception {
+    int overflowCharNumber = 0xFFFF + 1;
+    int underflowCharNumber = -1;
+    ResponseEntity<String> responseEntity = callMethod("getChar",
+        String.valueOf(overflowCharNumber));
+    assertResponseCode(400, responseEntity);
+
+    responseEntity = callMethod("getChar",
+        String.valueOf(underflowCharNumber));
+    assertResponseCode(400, responseEntity);
+
+    responseEntity = callMethod("getCharBoxed",
+        String.valueOf(overflowCharNumber));
+    assertResponseCode(400, responseEntity);
+    responseEntity = callMethod("getCharBoxed",
+      String.valueOf(underflowCharNumber));
+    assertResponseCode(400, responseEntity);
+  }
+
+  @Test
   public void should_FailToConvertToChar_WhenReceiveInvalidNumber()
       throws Exception {
     ResponseEntity<String> stringResponseEntity = callMethod("getChar", "1.1");

@@ -33,10 +33,41 @@ public class BooleanConversion extends BaseTypeConversion {
   public void should_ConvertToBoolean_WhenReceiveTrueOrFalseAsString()
       throws Exception {
     assertCallMethodWithExpectedValue("revertBoolean", "\"true\"", "false");
+    assertCallMethodWithExpectedValue("revertBoolean", "\"True\"", "false");
     assertCallMethodWithExpectedValue("revertBoolean", "\"false\"", "true");
+    assertCallMethodWithExpectedValue("revertBoolean", "\"False\"", "true");
 
-    assertCallMethodWithExpectedValue("revertBooleanBoxed", "\"true\"", "false");
-    assertCallMethodWithExpectedValue("revertBooleanBoxed", "\"false\"", "true");
+    assertCallMethodWithExpectedValue("revertBooleanBoxed", "\"true\"",
+        "false");
+    assertCallMethodWithExpectedValue("revertBooleanBoxed", "\"True\"",
+        "false");
+    assertCallMethodWithExpectedValue("revertBooleanBoxed", "\"false\"",
+        "true");
+    assertCallMethodWithExpectedValue("revertBooleanBoxed", "\"False\"",
+        "true");
+  }
+
+  @Test
+  public void should_FailToConvertToBoolean_WhenReceiveUppercaseString()
+      throws Exception {
+    ResponseEntity<String> responseEntity = callMethod("revertBoolean",
+        "\"TRUE\"");
+    assertResponseCode(400, responseEntity);
+    responseEntity = callMethod("revertBoolean", "\"TRue\"");
+    assertResponseCode(400, responseEntity);
+    responseEntity = callMethod("revertBoolean", "\"FAlse\"");
+    assertResponseCode(400, responseEntity);
+    responseEntity = callMethod("revertBoolean", "\"FALSE\"");
+    assertResponseCode(400, responseEntity);
+
+    responseEntity = callMethod("revertBooleanBoxed", "\"TRUE\"");
+    assertResponseCode(400, responseEntity);
+    responseEntity = callMethod("revertBooleanBoxed", "\"TRue\"");
+    assertResponseCode(400, responseEntity);
+    responseEntity = callMethod("revertBooleanBoxed", "\"FALSE\"");
+    assertResponseCode(400, responseEntity);
+    responseEntity = callMethod("revertBooleanBoxed", "\"FAlse\"");
+    assertResponseCode(400, responseEntity);
   }
 
   @Test
@@ -53,7 +84,8 @@ public class BooleanConversion extends BaseTypeConversion {
   @Test
   public void should_FailToConvertToBoolean_WhenReceiveARandomString()
       throws Exception {
-    ResponseEntity<String> responseEntity = callMethod("revertBoolean", "\"foo\"");
+    ResponseEntity<String> responseEntity = callMethod("revertBoolean",
+        "\"foo\"");
     assertResponseCode(400, responseEntity);
 
     responseEntity = callMethod("revertBooleanBoxed", "\"foo\"");
