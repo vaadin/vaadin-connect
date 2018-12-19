@@ -15,6 +15,7 @@
  */
 package com.vaadin.connect.typeconversion;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -99,8 +100,12 @@ public class VaadinConnectTypeConversionServices {
     return value + "foo";
   }
 
-  public Date getDate(Date value) {
-    return value;
+  public Date addOneDayToDate(Date value) {
+    if (value == null) {
+      return null;
+    }
+    Instant plusOneDay = value.toInstant().plus(1, ChronoUnit.DAYS);
+    return Date.from(plusOneDay);
   }
 
   public LocalDate addOneDayLocalDate(LocalDate value) {

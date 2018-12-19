@@ -15,69 +15,83 @@
  */
 package com.vaadin.connect.typeconversion;
 
-import java.io.IOException;
-import java.util.Collections;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.vaadin.connect.VaadinConnectController;
-import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@RunWith(SpringRunner.class)
+@WebMvcTest
+@Import(VaadinConnectTypeConversionServices.class)
 public class BaseTypeConversion {
-  private VaadinConnectController vaadinConnectController;
-  private ObjectMapper objectMapper = new ObjectMapper()
-      .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
+
+  private MockMvc mockMvc;
+
+  @Autowired
+  private ApplicationContext applicationContext;
 
   @Before
   public void setUp() {
-    String beanName = VaadinConnectTypeConversionServices.class.getName();
-
-    ApplicationContext contextMock = mock(ApplicationContext.class);
     VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
         VaadinConnectOAuthAclChecker.class);
-    when(contextMock.getBeansWithAnnotation(VaadinService.class))
-        .thenReturn(Collections.singletonMap(beanName,
-            new VaadinConnectTypeConversionServices()));
-    when(contextMock.getType(beanName))
-        .thenReturn((Class) VaadinConnectTypeConversionServices.class);
-
     when(oAuthAclCheckerMock.check(notNull())).thenReturn(null);
-    vaadinConnectController = new VaadinConnectController(null,
-        oAuthAclCheckerMock, contextMock);
+    mockMvc = MockMvcBuilders.standaloneSetup(new VaadinConnectController(null,
+        oAuthAclCheckerMock, applicationContext)).build();
   }
 
-  protected void assertResponseCode(int expectedResponseCode,
-      ResponseEntity<String> stringResponseEntity) {
-    Assert.assertEquals(expectedResponseCode,
-        stringResponseEntity.getStatusCodeValue());
+  @Test
+  public void should_HaveApplicationContext_When_StartingTest() {
+    Assert.assertNotEquals(null, applicationContext);
   }
 
-  protected ObjectNode readJson(String s) throws IOException {
-    return objectMapper.readValue(s, ObjectNode.class);
+  protected void assertEqualExpectedValueWhenCallingMethod(String methodName,
+      String requestValue, String expectedValue) {
+    try {
+      MockHttpServletResponse response = callMethod(methodName, requestValue);
+      Assert.assertEquals(expectedValue, response.getContentAsString());
+      Assert.assertEquals(200, response.getStatus());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  protected ResponseEntity<String> callMethod(String methodName,
-      String parameterValue) throws Exception {
-    ObjectNode parameters = readJson("{\"value\": " + parameterValue + "}");
-    return vaadinConnectController.serveVaadinService(
-        "VaadinConnectTypeConversionServices", methodName, parameters);
+  protected void assert400ResponseWhenCallingMethod(String methodName,
+      String requestValue) {
+    try {
+      MockHttpServletResponse response = callMethod(methodName, requestValue);
+      Assert.assertEquals(400, response.getStatus());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  protected void assertCallMethodWithExpectedValue(String methodName,
-      String parameterValue, String expectedValue) throws Exception {
-    ResponseEntity<String> responseEntity = callMethod(methodName,
-        parameterValue);
-    Assert.assertEquals(expectedValue, responseEntity.getBody());
+  protected MockHttpServletResponse callMethod(String methodName,
+      String requestValue) throws Exception {
+    String serviceName = VaadinConnectTypeConversionServices.class
+        .getSimpleName();
+    String requestUrl = String.format("/%s/%s", serviceName, methodName);
+    String body = String.format("{\"value\": %s}", requestValue);
+    RequestBuilder requestBuilder = MockMvcRequestBuilders.post(requestUrl)
+        .accept(MediaType.APPLICATION_JSON_UTF8_VALUE).content(body)
+        .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+    return mockMvc.perform(requestBuilder).andReturn().getResponse();
   }
 }

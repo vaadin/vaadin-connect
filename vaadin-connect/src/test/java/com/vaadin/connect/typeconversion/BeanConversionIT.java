@@ -17,10 +17,10 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class BeanConversionTest extends BaseTypeConversion {
+public class BeanConversionIT extends BaseTypeConversion {
 
   @Test
-  public void should_ConvertToBean_WhenReceiveBeanObject() throws Exception {
+  public void should_ConvertToBean_When_ReceiveBeanObject() {
     String inputValue = "{\"name\":\"mybean\",\"address\":\"myaddress\","
         + "\"age\":10,\"isAdmin\":true,\"testEnum\":\"FIRST\","
         + "\"roles\":[\"Admin\"], \"customProperty\": \"customValue\"}";
@@ -28,6 +28,6 @@ public class BeanConversionTest extends BaseTypeConversion {
         + "\"address\":\"myaddress-foo\"," + "\"age\":11,\"isAdmin\":false,"
         + "\"testEnum\":\"SECOND\","
         + "\"roles\":[\"Admin\",\"User\"],\"customProperty\":\"customValue-foo\"}";
-    assertCallMethodWithExpectedValue("getBean", inputValue, expectedValue);
+    assertEqualExpectedValueWhenCallingMethod("getBean", inputValue, expectedValue);
   }
 }
