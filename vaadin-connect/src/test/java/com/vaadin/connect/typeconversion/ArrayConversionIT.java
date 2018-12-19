@@ -16,51 +16,44 @@
 package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
-import org.springframework.http.ResponseEntity;
 
-public class ArrayConversionTest extends BaseTypeConversion {
+public class ArrayConversionIT extends BaseTypeConversion {
 
   @Test
-  public void should_ConvertToArrayInt_WhenReceiveArrayInt() throws Exception {
+  public void should_ConvertToArrayInt_When_ReceiveArrayInt() {
     String inputArray = "[1,2,3]";
     String expectedArray = "[2,3,4]";
-    assertCallMethodWithExpectedValue("getAddOneArray", inputArray,
+    assertEqualExpectedValueWhenCallingMethod("getAddOneArray", inputArray,
         expectedArray);
   }
 
   @Test
-  public void should_FailToConvertToArrayInt_WhenReceiveMixedIntStringArray()
-      throws Exception {
+  public void should_FailToConvertToArrayInt_When_ReceiveMixedIntStringArray() {
     String inputArray = "[1,\"string-value\",2,3]";
-    ResponseEntity<String> responseEntity = callMethod("getAddOneArray",
-        inputArray);
-    assertResponseCode(400, responseEntity);
+    assert400ResponseWhenCallingMethod("getAddOneArray", inputArray);
   }
 
   @Test
-  public void should_ConvertToArrayInt_WhenReceiveMixedNumberArray()
-      throws Exception {
-    String inputArray = "[1,2.0,-3.75,NaN]";
-    String expectedArray = "[2,3,-2,1]";
-    assertCallMethodWithExpectedValue("getAddOneArray", inputArray,
+  public void should_ConvertToArrayInt_When_ReceiveMixedNumberArray() {
+    String inputArray = "[1,2.0,-3.75]";
+    String expectedArray = "[2,3,-2]";
+    assertEqualExpectedValueWhenCallingMethod("getAddOneArray", inputArray,
         expectedArray);
   }
 
   @Test
-  public void should_ConvertToArrayObject_WhenReceiveMixedArray()
-      throws Exception {
+  public void should_ConvertToArrayObject_When_ReceiveMixedArray() {
     String inputArray = "[1,2.0,-3.75,\"MyString\",[1,2,3]]";
     String expectedArray = "[1,2.0,-3.75,\"MyString\",[1,2,3]]";
-    assertCallMethodWithExpectedValue("getObjectArray", inputArray,
+    assertEqualExpectedValueWhenCallingMethod("getObjectArray", inputArray,
         expectedArray);
   }
 
   @Test
-  public void should_ConvertToArrayString_WhenReceiveMixedStringNumberArray()
-      throws Exception {
+  public void should_ConvertToArrayString_When_ReceiveMixedStringNumberArray() {
     String inputArray = "[1,\"string-value\",2.0,3]";
     String expectedArray = "[\"1-foo\",\"string-value-foo\",\"2.0-foo\",\"3-foo\"]";
-    assertCallMethodWithExpectedValue("getFooStringArray", inputArray,
+    assertEqualExpectedValueWhenCallingMethod("getFooStringArray", inputArray,
         expectedArray);
   }
 }

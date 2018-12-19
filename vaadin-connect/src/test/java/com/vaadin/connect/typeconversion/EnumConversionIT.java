@@ -16,27 +16,22 @@
 package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
-import org.springframework.http.ResponseEntity;
 
-public class EnumConversionTest extends BaseTypeConversion {
+public class EnumConversionIT extends BaseTypeConversion {
 
   @Test
-  public void should_ConvertToEnum_WhenReceiveStringWithSameName()
-    throws Exception {
+  public void should_ConvertToEnum_When_ReceiveStringWithSameName() {
     String inputArray = "\"FIRST\"";
     String expectedArray = "\"FIRST\"";
-    assertCallMethodWithExpectedValue("getEnum", inputArray, expectedArray);
+    assertEqualExpectedValueWhenCallingMethod("getEnum", inputArray, expectedArray);
   }
 
   @Test
-  public void should_FailToConvertToEnum_WhenReceiveStringWithWrongName()
-    throws Exception {
+  public void should_FailToConvertToEnum_When_ReceiveStringWithWrongName() {
     String inputArray = "\"WRONG_ENUM\"";
-    ResponseEntity<String> responseEntity = callMethod("getEnum", inputArray);
-    assertResponseCode(400, responseEntity);
+    assert400ResponseWhenCallingMethod("getEnum", inputArray);
 
     String someNumberInput = "111";
-    responseEntity = callMethod("getEnum", someNumberInput);
-    assertResponseCode(400, responseEntity);
+    assert400ResponseWhenCallingMethod("getEnum", someNumberInput);
   }
 }

@@ -17,11 +17,11 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletResponse;
 
-public class DoubleConversion extends BaseTypeConversion {
+public class DoubleConversionIT extends BaseTypeConversion {
   @Test
-  public void should_ConvertToDouble_WhenReceiveANumber() throws Exception {
+  public void should_ConvertToDouble_When_ReceiveANumber() {
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "1", "2.0");
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "-1", "0.0");
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "0", "1.0");
@@ -32,8 +32,7 @@ public class DoubleConversion extends BaseTypeConversion {
   }
 
   @Test
-  public void should_ConvertToDouble_WhenReceiveANumberAsString()
-      throws Exception {
+  public void should_ConvertToDouble_When_ReceiveANumberAsString() {
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "\"1\"", "2.0");
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "\"-1\"", "0.0");
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "\"0\"", "1.0");
@@ -47,8 +46,7 @@ public class DoubleConversion extends BaseTypeConversion {
   }
 
   @Test
-  public void should_ConvertToDouble_WhenReceiveDecimalAsNumber()
-      throws Exception {
+  public void should_ConvertToDouble_When_ReceiveDecimalAsNumber() {
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "1.1", "2.1");
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "-1.9", "-0.9");
 
@@ -58,8 +56,7 @@ public class DoubleConversion extends BaseTypeConversion {
   }
 
   @Test
-  public void should_ConvertToDouble_WhenReceiveDecimalAsNumberAsString()
-      throws Exception {
+  public void should_ConvertToDouble_When_ReceiveDecimalAsNumberAsString() {
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "\"1.1\"", "2.1");
     assertCallMethodWithExpectedDoubleValue("addOneDouble", "\"-1.9\"", "-0.9");
 
@@ -70,44 +67,46 @@ public class DoubleConversion extends BaseTypeConversion {
   }
 
   @Test
-  public void should_HandleOverflowDouble_WhenReceiveANumberOverflowOrUnderflow()
-      throws Exception {
+  public void should_HandleOverflowDouble_When_ReceiveANumberOverflowOrUnderflow() {
     String overflowDouble = "2.7976931348623158E308";
     String underflowDouble = "-2.7976931348623157E308";
-    assertCallMethodWithExpectedValue("addOneDouble", overflowDouble,
+    assertEqualExpectedValueWhenCallingMethod("addOneDouble", overflowDouble,
         "\"" + String.valueOf(Float.POSITIVE_INFINITY + "\""));
-    assertCallMethodWithExpectedValue("addOneDouble", underflowDouble,
+    assertEqualExpectedValueWhenCallingMethod("addOneDouble", underflowDouble,
         "\"" + String.valueOf(Double.NEGATIVE_INFINITY) + "\"");
 
-    assertCallMethodWithExpectedValue("addOneDoubleBoxed", overflowDouble,
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", overflowDouble,
         "\"" + String.valueOf(Float.POSITIVE_INFINITY + "\""));
-    assertCallMethodWithExpectedValue("addOneDoubleBoxed", underflowDouble,
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", underflowDouble,
         "\"" + String.valueOf(Double.NEGATIVE_INFINITY) + "\"");
   }
 
   @Test
-  public void should_ShouldHandleSpecialInputForDouble_WhenReceiveSpecialInput()
-      throws Exception {
-    assertCallMethodWithExpectedValue("addOneDouble", "null", "1.0");
-    assertCallMethodWithExpectedValue("addOneDouble", "NaN", "\"NaN\"");
-    assertCallMethodWithExpectedValue("addOneDouble", "Infinity",
-        "\"Infinity\"");
-    assertCallMethodWithExpectedValue("addOneDouble", "-Infinity",
-        "\"-Infinity\"");
+  public void should_ShouldHandleSpecialInputForDouble_When_ReceiveNull() {
+    assertEqualExpectedValueWhenCallingMethod("addOneDouble", "null", "1.0");
 
-    assertCallMethodWithExpectedValue("addOneDoubleBoxed", "null", "null");
-    assertCallMethodWithExpectedValue("addOneDoubleBoxed", "NaN", "\"NaN\"");
-    assertCallMethodWithExpectedValue("addOneDoubleBoxed", "Infinity",
-        "\"Infinity\"");
-    assertCallMethodWithExpectedValue("addOneDoubleBoxed", "-Infinity",
-        "\"-Infinity\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", "null", "null");
+  }
+
+  @Test
+  public void should_Return400_When_ReceiveSpecialInput() {
+    assert400ResponseWhenCallingMethod("addOneDouble", "NaN");
+    assert400ResponseWhenCallingMethod("addOneDouble", "Infinity");
+    assert400ResponseWhenCallingMethod("addOneDouble", "-Infinity");
+
+    assert400ResponseWhenCallingMethod("addOneDoubleBoxed", "NaN");
+    assert400ResponseWhenCallingMethod("addOneDoubleBoxed", "Infinity");
+    assert400ResponseWhenCallingMethod("addOneDoubleBoxed", "-Infinity");
   }
 
   private void assertCallMethodWithExpectedDoubleValue(String methodName,
-      String parameterValue, String expectedValue) throws Exception {
-    ResponseEntity<String> responseEntity = callMethod(methodName,
-        parameterValue);
-    Assert.assertEquals(Double.valueOf(expectedValue),
-        Double.valueOf(responseEntity.getBody()), 0.1);
+      String parameterValue, String expectedValue) {
+    try {
+      MockHttpServletResponse response = callMethod(methodName, parameterValue);
+      Assert.assertEquals(Double.valueOf(expectedValue),
+          Double.valueOf(response.getContentAsString()), 0.1);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 }

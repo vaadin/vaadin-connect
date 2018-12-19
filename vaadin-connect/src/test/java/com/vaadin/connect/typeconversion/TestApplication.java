@@ -15,16 +15,9 @@
  */
 package com.vaadin.connect.typeconversion;
 
-import org.junit.Test;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-public class StringConversion extends BaseTypeConversion {
-
-  @Test
-  public void should_ConvertToString_WhenReceiveAString() throws Exception {
-    assertCallMethodWithExpectedValue("addFooString", "\"some-string\"",
-        "\"some-stringfoo\"");
-    assertCallMethodWithExpectedValue("addFooString", "\"null\"", "\"nullfoo\"");
-    assertCallMethodWithExpectedValue("addFooString", "null", "\"nullfoo\"");
-  }
-
+@SpringBootApplication
+public class TestApplication {
+  // Test application to provide test context for the integration tests
 }
