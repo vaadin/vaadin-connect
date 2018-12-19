@@ -6,7 +6,7 @@ layout: page
 
 = Vaadin Connect Type Conversion
 
-When calling a Java service from JavaScript code, the `ConnectClient` will send parameters in JSON format to Java backend side, the parameter will be converted to Java types using the default https://github.com/FasterXML/jackson[ObjectMapper from Jackson Project]. You can also use your own ObjectMapper by providing an ObjectMapper bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER`.
+When calling a Java service from JavaScript code, the `ConnectClient` will send parameters in JSON format to Java backend side, the parameter will be converted to Java types using the default https://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-auto-configuration.html#using-boot-auto-configuration[ObjectMapper from Spring Boot Auto-configuration]. You can also use your own ObjectMapper by providing an ObjectMapper bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER` or customize the default ObjectMapper by following https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[the Spring documentation].
 The default ObjectMapper conversion rules are summarized as follows:
 
 === Primitive types
@@ -17,7 +17,7 @@ The compliant values will be converted to the corresponding value, otherwise the
 * Compliant values:
 ** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
 ** A integer string: `"100"` => `100`
-** `null` and `NaN` => `0`
+** `null` => `0`
 
 * Noncompliant values:
 ** A non-integer string: `"foo"`, `"100.9"`
@@ -107,13 +107,12 @@ The compliant values will be converted to the corresponding value, otherwise the
 ** An integer or decimal number: `100` and `100.0` => `100.0`, `100.9` => `100.9`
 ** A number string: `"100"` => `100.0`, `"100.9"` => `100.9`
 ** `null` => `0.0`
-** `NaN` => `NaN`
-** `Infinity` => `Infinity`, `-Infinity` => `-Infinity`
+
 
 * Noncompliant values:
 ** A non-number string: `"foo"`
 ** Any other types: boolean, object or array
-** `undefined`
+** `undefined`, `NaN`, `Infinity` and `-Infinity`
 
 * Overflow and underflow numbers will be converted to `Infinity` and `-Infinity` respectively.
 
@@ -210,6 +209,7 @@ public enum TestEnum {
 *** `Collection<Integer>`: `[1, 2, 3]` => `[1,2,3]`, `["1","2","3"]` => `[1,2,3]`
 *** `Collection<String>`: `["foo","bar"]` => `["foo","bar"]`
 *** `Collection<Object>`: `["foo",1,null,"bar"]` => `["foo",1,null,"bar"]`
+*** `Set<Integer>`: `[1, 2, 2, 3, 3, 3]` => `[1, 2, 3]`
 
 * Noncompliant values:
 ** A non-array input: `"foo"`, `"[1,2,3]"`, `1`

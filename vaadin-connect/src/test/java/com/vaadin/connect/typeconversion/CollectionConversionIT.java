@@ -22,73 +22,73 @@ public class CollectionConversionIT extends BaseTypeConversion {
   @Test
   public void should_ConvertToIntegerCollection_When_ReceiveNumberArray() {
     String inputArray = "[1,3,2,3]";
-    String expectedArray = "[1,3,2,3]";
-    assertEqualExpectedValueWhenCallingMethod("getIntegerCollection", inputArray,
-        expectedArray);
+    String expectedArray = "[2,4,3,4]";
+    assertEqualExpectedValueWhenCallingMethod("addOneIntegerCollection",
+        inputArray, expectedArray);
   }
 
   @Test
   public void should_ConvertToIntegerSet_When_ReceiveNumberArray() {
     String inputArray = "[1,3,2,3]";
-    String expectedArray = "[1,3,2,3]";
-    assertEqualExpectedValueWhenCallingMethod("getIntegerCollection", inputArray,
-        expectedArray);
+    String expectedArray = "[2,4,3,4]";
+    assertEqualExpectedValueWhenCallingMethod("addOneIntegerCollection",
+        inputArray, expectedArray);
   }
 
   @Test
   public void should_ConvertToIntegerCollection_When_ReceiveMixedDecimalNumberArray() {
     String inputArray = "[1,2.1]";
-    assertEqualExpectedValueWhenCallingMethod("getIntegerCollection", inputArray,
-        "[1,2]");
+    assertEqualExpectedValueWhenCallingMethod("addOneIntegerCollection",
+        inputArray, "[2,3]");
   }
 
   @Test
   public void should_FailToConvertToIntegerCollection_When_ReceiveMixedDecimalStringNumberArray() {
     String inputArray = "[1,\"3.0\",2,3]";
-    assert400ResponseWhenCallingMethod("getIntegerCollection", inputArray);
+    assert400ResponseWhenCallingMethod("addOneIntegerCollection", inputArray);
   }
 
   @Test
   public void should_FailToConvertToIntegerCollection_When_ReceiveAString() {
     String inputArray = "\"[1]\"";
-    assert400ResponseWhenCallingMethod("getIntegerCollection", inputArray);
+    assert400ResponseWhenCallingMethod("addOneIntegerCollection", inputArray);
   }
 
   @Test
   public void should_ConvertToStringCollection_When_ReceiveStringArray() {
     String inputArray = "[\"first\",\"2.0\",\"-3\",\"4\"]";
-    String expectedArray = "[\"first\",\"2.0\",\"-3\",\"4\"]";
-    assertEqualExpectedValueWhenCallingMethod("getStringCollection", inputArray,
+    String expectedArray = "[\"firstfoo\",\"2.0foo\",\"-3foo\",\"4foo\"]";
+    assertEqualExpectedValueWhenCallingMethod("addFooStringCollection", inputArray,
         expectedArray);
   }
 
   @Test
   public void should_ConvertToStringCollection_When_ReceiveNumberArray() {
     String inputArray = "[1,2,3,4]";
-    assertEqualExpectedValueWhenCallingMethod("getStringCollection", inputArray,
-        "[\"1\",\"2\",\"3\",\"4\"]");
+    assertEqualExpectedValueWhenCallingMethod("addFooStringCollection", inputArray,
+        "[\"1foo\",\"2foo\",\"3foo\",\"4foo\"]");
   }
 
   @Test
   public void should_ConvertToDoubleCollection_When_ReceiveNumberArray() {
     String inputArray = "[1.9,3.2,-2.0,0.3]";
-    String expectedArray = "[1.9,3.2,-2.0,0.3]";
-    assertEqualExpectedValueWhenCallingMethod("getDoubleCollection", inputArray,
+    String expectedArray = "[2.9,4.2,-1.0,1.3]";
+    assertEqualExpectedValueWhenCallingMethod("getPlusOneDouble", inputArray,
         expectedArray);
   }
 
   @Test
   public void should_FailToConvertToDoubleCollection_When_ReceiveArrayContainInteger() {
     String inputArray = "[1]";
-    assertEqualExpectedValueWhenCallingMethod("getDoubleCollection", inputArray,
-        "[1.0]");
+    assertEqualExpectedValueWhenCallingMethod("getPlusOneDouble", inputArray,
+        "[2.0]");
   }
 
   @Test
   public void should_ConvertToDoubleCollection_When_ReceiveArrayContainString() {
     String inputArray = "[\"1.0\"]";
-    assertEqualExpectedValueWhenCallingMethod("getDoubleCollection", inputArray,
-        "[1.0]");
+    assertEqualExpectedValueWhenCallingMethod("getPlusOneDouble", inputArray,
+        "[2.0]");
   }
 
   @Test
