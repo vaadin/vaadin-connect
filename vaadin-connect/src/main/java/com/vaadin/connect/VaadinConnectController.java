@@ -28,9 +28,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,7 +41,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -80,8 +76,8 @@ public class VaadinConnectController {
    *      ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
-
-  private final ObjectMapper vaadinServiceMapper;
+  private static final String AUTO_CONFIGURED_JACKSON_OBJECT_MAPPER = "jacksonObjectMapper";
+  private ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
   final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
 
@@ -126,10 +122,7 @@ public class VaadinConnectController {
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       VaadinConnectOAuthAclChecker oauthChecker, ApplicationContext context) {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
-        : Jackson2ObjectMapperBuilder.json()
-            .visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
-            .featuresToEnable(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS)
-            .build();
+        : getDefaultObjectMapper(context);
     this.oauthChecker = oauthChecker;
 
     context.getBeansWithAnnotation(VaadinService.class)
@@ -159,6 +152,18 @@ public class VaadinConnectController {
           vaadinServices.put(serviceName.toLowerCase(Locale.ENGLISH),
               new VaadinServiceData(serviceBean, beanType.getMethods()));
         });
+  }
+
+  private ObjectMapper getDefaultObjectMapper(ApplicationContext context) {
+    try {
+      return context.getBean(AUTO_CONFIGURED_JACKSON_OBJECT_MAPPER, ObjectMapper.class);
+    } catch (Exception e) {
+      throw new IllegalStateException(String.format(
+          "Auto configured jackson object mapper is not found."
+              + "Please define your own object mapper with '@Qualifier(%s)' or"
+              + "make sure that the auto configured jackson object mapper is available.",
+          VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER), e);
+    }
   }
 
   /**
