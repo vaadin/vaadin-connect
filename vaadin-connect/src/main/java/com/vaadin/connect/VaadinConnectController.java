@@ -82,11 +82,11 @@ public class VaadinConnectController {
 
   private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
-  private final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
+  final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
 
-  private static class VaadinServiceData {
+  static class VaadinServiceData {
     private final Object vaadinServiceObject;
-    private final Map<String, Method> methods = new HashMap<>();
+    final Map<String, Method> methods = new HashMap<>();
 
     private VaadinServiceData(Object vaadinServiceObject,
         Method... serviceMethods) {
@@ -191,21 +191,23 @@ public class VaadinConnectController {
     VaadinServiceData vaadinServiceData = vaadinServices
         .get(serviceName.toLowerCase(Locale.ENGLISH));
     if (vaadinServiceData == null) {
-      getLogger().debug("Service {} not found", serviceName);
+      getLogger().debug("Service '{}' not found", serviceName);
       return ResponseEntity.notFound().build();
     }
 
     Method methodToInvoke = vaadinServiceData
         .getMethod(methodName.toLowerCase(Locale.ENGLISH)).orElse(null);
     if (methodToInvoke == null) {
-      getLogger().debug("Method {} not found in service {}", methodName,
+      getLogger().debug("Method '{}' not found in service '{}'", methodName,
           serviceName);
       return ResponseEntity.notFound().build();
     }
 
     String checkError = oauthChecker.check(methodToInvoke);
     if (checkError != null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(checkError);
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(String.format(
+          "Service '%s' method '%s' request cannot be accessed, reason: '%s'",
+          serviceName, methodName, checkError));
     }
 
     List<JsonNode> requestParameters = getRequestParameters(body);
