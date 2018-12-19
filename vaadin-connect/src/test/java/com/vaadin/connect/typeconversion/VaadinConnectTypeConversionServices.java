@@ -27,6 +27,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.vaadin.connect.VaadinService;
 
@@ -133,23 +135,29 @@ public class VaadinConnectTypeConversionServices {
     return value;
   }
 
-  // For collections, we need to that type are parsed into correct type
-  // parameter, otherwise, they will just be parsed to Collection<Object>
-  public Collection<Integer> getIntegerCollection(Collection<Integer> value) {
-    value.forEach(number -> number++);
-    return value;
+  public Collection<Integer> addOneIntegerCollection(
+      Collection<Integer> value) {
+    List<Integer> arrayList = new LinkedList<>();
+    value.forEach(v -> arrayList.add(v + 1));
+    return arrayList;
   }
 
-  public Collection<Double> getDoubleCollection(Collection<Double> value) {
-    value.forEach(number -> number++);
-    return value;
+  public Collection<Double> getPlusOneDouble(Collection<Double> value) {
+    LinkedList<Double> arrayList = new LinkedList<>();
+    value.forEach(v -> arrayList.add(v + 1));
+    return arrayList;
   }
 
-  public Collection<String> getStringCollection(Collection<String> value) {
-    value.forEach(number -> {
-      String temp = number + "temp";
-    });
-    return value;
+  public Set<Integer> plusOneSetInteger(Set<Integer> value) {
+    Set<Integer> arrayList = new TreeSet<>();
+    value.forEach(v -> arrayList.add(v + 1));
+    return arrayList;
+  }
+
+  public Collection<String> addFooStringCollection(Collection<String> value) {
+    List<String> list = new LinkedList<>();
+    value.forEach(v -> list.add(v + "foo"));
+    return list;
   }
 
   public Collection<Object> getObjectCollection(Collection<Object> value) {
