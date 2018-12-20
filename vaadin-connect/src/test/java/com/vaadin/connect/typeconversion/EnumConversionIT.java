@@ -22,16 +22,16 @@ public class EnumConversionIT extends BaseTypeConversion {
   @Test
   public void should_ConvertToEnum_When_ReceiveStringWithSameName() {
     String inputArray = "\"FIRST\"";
-    String expectedArray = "\"FIRST\"";
-    assertEqualExpectedValueWhenCallingMethod("getEnum", inputArray, expectedArray);
+    String expectedArray = "\"SECOND\"";
+    assertEqualExpectedValueWhenCallingMethod("getNextEnum", inputArray, expectedArray);
   }
 
   @Test
   public void should_FailToConvertToEnum_When_ReceiveStringWithWrongName() {
     String inputArray = "\"WRONG_ENUM\"";
-    assert400ResponseWhenCallingMethod("getEnum", inputArray);
+    assert400ResponseWhenCallingMethod("getNextEnum", inputArray);
 
     String someNumberInput = "111";
-    assert400ResponseWhenCallingMethod("getEnum", someNumberInput);
+    assert400ResponseWhenCallingMethod("getNextEnum", someNumberInput);
   }
 }

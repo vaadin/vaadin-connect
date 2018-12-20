@@ -73,21 +73,21 @@ public class CollectionConversionIT extends BaseTypeConversion {
   public void should_ConvertToDoubleCollection_When_ReceiveNumberArray() {
     String inputArray = "[1.9,3.2,-2.0,0.3]";
     String expectedArray = "[2.9,4.2,-1.0,1.3]";
-    assertEqualExpectedValueWhenCallingMethod("getPlusOneDouble", inputArray,
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleCollection", inputArray,
         expectedArray);
   }
 
   @Test
   public void should_FailToConvertToDoubleCollection_When_ReceiveArrayContainInteger() {
     String inputArray = "[1]";
-    assertEqualExpectedValueWhenCallingMethod("getPlusOneDouble", inputArray,
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleCollection", inputArray,
         "[2.0]");
   }
 
   @Test
   public void should_ConvertToDoubleCollection_When_ReceiveArrayContainString() {
     String inputArray = "[\"1.0\"]";
-    assertEqualExpectedValueWhenCallingMethod("getPlusOneDouble", inputArray,
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleCollection", inputArray,
         "[2.0]");
   }
 
@@ -97,5 +97,21 @@ public class CollectionConversionIT extends BaseTypeConversion {
     String expectedArray = "[\"1.0\",1,0.0,-99,{\"property\":\"value\"}]";
     assertEqualExpectedValueWhenCallingMethod("getObjectCollection", inputArray,
         expectedArray);
+  }
+
+  @Test
+  public void should_ConvertToEnumMap_When_ReceiveEnumMap() {
+    String inputValue ="{\"FIRST\": \"first_value\", \"SECOND\": \"second_value\"}";
+    String expectedValue = "{\"FIRST\":\"first_valuefoo\",\"SECOND\":\"second_valuefoo\"}";
+    assertEqualExpectedValueWhenCallingMethod("getFooEnumMap", inputValue,
+      expectedValue);
+  }
+
+  @Test
+  public void should_ConvertToEnumSet_When_ReceiveEnumArray() {
+    String inputValue ="[\"FIRST\", \"FIRST\", \"SECOND\", \"SECOND\"]";
+    String expectedValue = "[\"SECOND\",\"THIRD\"]";
+    assertEqualExpectedValueWhenCallingMethod("getNextValueEnumSet", inputValue,
+      expectedValue);
   }
 }
