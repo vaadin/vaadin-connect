@@ -19,15 +19,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtClaimsSetVerifier;
@@ -89,8 +93,7 @@ import com.vaadin.connect.VaadinConnectProperties;
  * </pre>
  */
 @Configuration
-@Import({ VaadinConnectOAuthConfigurer.class,
-    VaadinConnectResourceServerConfigurer.class })
+@Import(VaadinConnectOAuthConfigurer.class)
 public class VaadinConnectOAuthConfiguration
     extends AuthorizationServerConfigurerAdapter {
   private static final List<String> REQUIRED_CLAIMS = Arrays.asList("jti",
@@ -160,5 +163,28 @@ public class VaadinConnectOAuthConfiguration
     public PasswordEncoder passwordEncoder() {
       return new BCryptPasswordEncoder();
     }
+  }
+
+  /**
+   * Provide the {@link ResourceServerConfigurerAdapter} Bean allowing to
+   * serve any end-point without authentication.
+   *
+   * It overrides {@link OAuth2ResourceServerConfiguration} which by default
+   * requires authenticated requests for everything.
+   *
+   * User still can provide a customised
+   * {@link ResourceServerConfigurerAdapter} Bean.
+   *
+   * @return ResourceServerConfigurerAdapter
+   */
+  @Bean
+  @ConditionalOnMissingBean(ResourceServerConfigurer.class)
+  public ResourceServerConfigurer resourceServer() {
+    return new ResourceServerConfigurerAdapter() {
+      @Override
+      public void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests().anyRequest().permitAll();
+      }
+    };
   }
 }

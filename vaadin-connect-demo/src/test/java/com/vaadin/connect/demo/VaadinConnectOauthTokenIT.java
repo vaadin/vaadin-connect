@@ -123,8 +123,8 @@ public class VaadinConnectOauthTokenIT {
   }
 
   @Test
-  public void should_NotAccessHelloService_When_NoTokenSent() throws Exception {
-    mockMvc.perform(get("/hello")).andExpect(status().is(401));
+  public void should_AccessNonVaadinServices_Without_Authentication() throws Exception {
+    mockMvc.perform(get("/hello")).andExpect(status().is(200));
   }
 
   @Test
