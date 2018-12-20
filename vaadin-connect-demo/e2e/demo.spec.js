@@ -48,12 +48,14 @@ describe('demo application', () => {
         page = page.get('?credentials=none');
 
         await page
+          .findById('access').getVisibleText().then(text =>
+            expect(text).to.equal('')
+          ).end()
           .findById('checkAnonymousAccess').click().end()
           .sleep(5000)
-          .getAlertText().then(text =>
+          .findById('access').getVisibleText().then(text =>
             expect(text).to.equal('anonymous success')
-          )
-          .dismissAlert();
+          );
       });
 
       it('should allow anonymous access with wrong credentials', async() => {
@@ -61,12 +63,14 @@ describe('demo application', () => {
         page = page.get('?credentials=wrong');
 
         await page
+          .findById('access').getVisibleText().then(text =>
+            expect(text).to.equal('')
+          ).end()
           .findById('checkAnonymousAccess').click().end()
           .sleep(5000)
-          .getAlertText().then(text =>
+          .findById('access').getVisibleText().then(text =>
             expect(text).to.equal('anonymous success')
-          )
-          .dismissAlert();
+          );
       });
     });
   });
