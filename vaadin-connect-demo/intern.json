@@ -19,13 +19,13 @@
           "platform": "Windows 10",
           "browserName": "MicrosoftEdge",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": false
+          "fixSessionCapabilities": "no-detect"
         },
         {
           "platform": "Windows 10",
           "browserName": "internet explorer",
           "version": "11",
-          "fixSessionCapabilities": false
+          "fixSessionCapabilities": "no-detect"
         }
       ]
     },
@@ -36,31 +36,31 @@
           "platform": "Windows 10",
           "browserName": "chrome",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": false
+          "fixSessionCapabilities": "no-detect"
         },
         {
           "platform": "Windows 10",
           "browserName": "firefox",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": false
+          "fixSessionCapabilities": "no-detect"
         },
         {
           "platform": "OS X 10.13",
           "browserName": "safari",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": false
+          "fixSessionCapabilities": "no-detect"
         },
         {
           "platform": "OS X 10.13",
           "browserName": "iphone",
           "version": ["11.3", "12.0"],
-          "fixSessionCapabilities": false
+          "fixSessionCapabilities": "no-detect"
         },
         {
           "platform": "Linux",
           "browserName": "android",
           "version": "6.0",
-          "fixSessionCapabilities": false
+          "fixSessionCapabilities": "no-detect"
         }
       ]
     },

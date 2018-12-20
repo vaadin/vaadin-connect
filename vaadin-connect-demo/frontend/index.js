@@ -21,7 +21,8 @@ switch (new URLSearchParams(location.search).get('credentials')) {
 
 document.getElementById('checkAnonymousAccess').addEventListener('click',
   async() => {
-    alert(await demoService.hasAnonymousAccess());
+    const accessLabel = document.getElementById('access');
+    accessLabel.textContent = await demoService.hasAnonymousAccess();
   });
 
 const numberLabel = document.getElementById('number');
