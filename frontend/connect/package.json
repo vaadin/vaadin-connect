@@ -1,6 +1,6 @@
 {
   "name": "@vaadin/connect",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A Vaadin Labs experiment with a secure stateless communication framework",
   "main": "index.js",
   "directories": {
@@ -31,6 +31,7 @@
     "@babel/core": "^7.1.5",
     "@babel/preset-env": "^7.1.5",
     "@babel/register": "^7.0.0",
+    "abort-controller": "^2.0.0",
     "btoa": "^1.2.1",
     "bundlesize": "^0.17.0",
     "chokidar-cli": "^1.2.1",
@@ -47,8 +48,7 @@
     "sinon": "^7.1.1",
     "sinon-chai": "^3.2.0",
     "uglify-js": "^3.4.9",
-    "url-search-params": "^1.1.0",
-    "abort-controller": "^2.0.0"
+    "url-search-params": "^1.1.0"
   },
   "dependencies": {},
   "babel": {
