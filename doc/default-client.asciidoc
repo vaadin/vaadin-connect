@@ -78,8 +78,8 @@ When all the Vaadin Connect plugin generation goals are used, the service method
 [source, javascript]
 [[generated-module]]
 ----
-import {customMethod} from './src/generated/SingleService';
-await customMethod(4);
+import {* as singleService} from './src/generated/SingleService';
+await singleService.customMethod(4);
 ----
 
 === Generated default client
