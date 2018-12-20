@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class ArrayConversionIT extends BaseTypeConversion {
+public class ArrayConversionIT extends BaseTypeConversionIT {
 
   @Test
   public void should_ConvertToArrayInt_When_ReceiveArrayInt() {

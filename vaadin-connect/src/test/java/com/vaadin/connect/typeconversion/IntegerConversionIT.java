@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class IntegerConversionIT extends BaseTypeConversion {
+public class IntegerConversionIT extends BaseTypeConversionIT {
 
   @Test
   public void should_ConvertNumberToInt_When_ReceiveNumberAsNumber() {

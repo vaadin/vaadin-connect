@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class FloatConversionIT extends BaseTypeConversion {
+public class FloatConversionIT extends BaseTypeConversionIT {
   @Test
   public void should_ConvertToFloat_When_ReceiveANumber() {
     assertEqualExpectedValueWhenCallingMethod("addOneFloat", "1", "2.0");

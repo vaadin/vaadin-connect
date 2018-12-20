@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class ShortConversionIT extends BaseTypeConversion {
+public class ShortConversionIT extends BaseTypeConversionIT {
   @Test
   public void should_ConvertToShort_When_ReceiveANumber() {
     assertEqualExpectedValueWhenCallingMethod("addOneShort", "1", "2");

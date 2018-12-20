@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class StringConversionIT extends BaseTypeConversion {
+public class StringConversionIT extends BaseTypeConversionIT {
 
   @Test
   public void should_ConvertToString_When_ReceiveAString() {

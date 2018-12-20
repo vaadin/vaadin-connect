@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-public class CharacterConversionIT extends BaseTypeConversion {
+public class CharacterConversionIT extends BaseTypeConversionIT {
   @Test
   public void should_ConvertToChar_When_ReceiveASingleCharOrNumber()
       throws Exception {

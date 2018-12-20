@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class BooleanConversionIT extends BaseTypeConversion {
+public class BooleanConversionIT extends BaseTypeConversionIT {
   @Test
   public void should_ConvertToBoolean_When_ReceiveTrueOrFalse() {
     assertEqualExpectedValueWhenCallingMethod("revertBoolean", "true", "false");

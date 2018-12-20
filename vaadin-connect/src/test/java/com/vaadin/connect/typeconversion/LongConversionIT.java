@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class LongConversionIT extends BaseTypeConversion {
+public class LongConversionIT extends BaseTypeConversionIT {
 
   @Test
   public void should_ConvertToLong_When_ReceiveANumber() {

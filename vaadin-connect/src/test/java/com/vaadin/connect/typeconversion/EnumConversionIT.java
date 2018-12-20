@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class EnumConversionIT extends BaseTypeConversion {
+public class EnumConversionIT extends BaseTypeConversionIT {
 
   @Test
   public void should_ConvertToEnum_When_ReceiveStringWithSameName() {
