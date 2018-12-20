@@ -19,49 +19,35 @@ A simple generated JavaScript files will look like the following snippet:
 [[UserService.js]]
 [source,javascript]
 ----
-// Generated from UserService.java
-import defaultClient from './connect-client.default';
+/**
+ * User service.
+ *
+ * This module has been generated from UserService.java
+ * @module UserService
+ */
+import client from './connect-client.default';
 
 /**
- * User service class.
+ * Check if a user is admin or not.
+ *
+ * @param {number} id - User id to be checked
+ * @returns {Promise<boolean>} Return true if the given user is an admin, otherwise false.
  */
-export class UserService {
-
-  /**
-   * Create a UserService instance.
-   * @param {ConnectClient=} client - an instance of ConnectClient
-   */
-  constructor(client = defaultClient) {
-    this._client = client;
-  }
-
-  /**
-   * Check if a user is admin or not.
-   *
-   * @param {number} id - User id to be checked
-   * @returns {Promise<boolean>} Return true if the given user is an admin, otherwise false.
-   */
-  isAdmin(id) {
-    return this._client.call('UserService', 'isAdmin', {id});
-  }
+export function isAdmin(id) {
+  return client.call('UserService', 'isAdmin', {id});
 }
 
-const service = new UserService(defaultClient);
-
-export const isAdmin = service.isAdmin.bind(service);
 ----
 
+=== Modules
+The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding JavaScript file. The tag name is used for JavaScript module name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
+
 === Static code
-The `_import_`, `_constructor_`, and `_export_` statements are static parts of any generated file.
-`_connect-client.default.js_` is another generated file which includes default configurations for the `_ConnectClient_` and exports its instance as `_defaultClient_`.
-
-=== Classes
-
-The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding JavaScript file. The tag name is used for JavaScript class name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
-
+The `_import_` is a static part of any generated file.
+`_connect-client.default.js_` is another generated file which includes default configurations for the `_ConnectClient_` and exports its instance as `_client_`.
 
 === Methods
-Each method in a generated class is corresponding to a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[POST operation] of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathItemObject[path item] in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathsObject[paths object].
+Each exported method in a module is corresponding to a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[POST operation] of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathItemObject[path item] in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathsObject[paths object].
 
 [NOTE]
 ====
