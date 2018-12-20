@@ -65,7 +65,7 @@ public class VaadinConnectControllerTest {
 
     exception.expect(IllegalStateException.class);
     exception.expectMessage(beanName);
-    new VaadinConnectController(null, null, contextMock);
+    new VaadinConnectController(mock(ObjectMapper.class), null, contextMock);
   }
 
   @Test
@@ -113,7 +113,7 @@ public class VaadinConnectControllerTest {
     when(restrictingCheckerMock.check(TEST_METHOD))
         .thenReturn(accessErrorMessage);
 
-    ResponseEntity<String> response = createVaadinController(TEST_SERVICE, null,
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE, new ObjectMapper(),
         restrictingCheckerMock).serveVaadinService(TEST_SERVICE_NAME,
             TEST_METHOD.getName(), null);
 
