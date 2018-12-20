@@ -1,34 +1,20 @@
-// Generated from GeneratorAnonymousAllowedTestClass.java
-import defaultClient from './connect-client.default';
-
 /**
  * This nested class is also used in the OpenApi generator test
+ *
+ * This module has been generated from GeneratorAnonymousAllowedTestClass.java
+ * @module GeneratorAnonymousAllowedTestClass
  */
-export class GeneratorAnonymousAllowedTestClass {
 
-  /**
-   * Create a GeneratorAnonymousAllowedTestClass instance.
-   * @param {ConnectClient=} client - an instance of ConnectClient
-   */
-  constructor(client = defaultClient) {
-    this._client = client;
-  }
+import client from './connect-client.default';
 
-  anonymousAllowed() {
-    return this._client.call('GeneratorAnonymousAllowedTestClass', 'anonymousAllowed', undefined, {requireCredentials: false});
-  }
-
-  permissionAltered1() {
-    return this._client.call('GeneratorAnonymousAllowedTestClass', 'permissionAltered1', undefined, {requireCredentials: true});
-  }
-
-  permissionAltered2() {
-    return this._client.call('GeneratorAnonymousAllowedTestClass', 'permissionAltered2', undefined, {requireCredentials: true});
-  }
+export function anonymousAllowed() {
+  return client.call('GeneratorAnonymousAllowedTestClass', 'anonymousAllowed', undefined, {requireCredentials: false});
 }
 
-const service = new GeneratorAnonymousAllowedTestClass(defaultClient);
+export function permissionAltered1() {
+  return client.call('GeneratorAnonymousAllowedTestClass', 'permissionAltered1', undefined, {requireCredentials: true});
+}
 
-export const anonymousAllowed = service.anonymousAllowed.bind(service);
-export const permissionAltered1 = service.permissionAltered1.bind(service);
-export const permissionAltered2 = service.permissionAltered2.bind(service);
+export function permissionAltered2() {
+  return client.call('GeneratorAnonymousAllowedTestClass', 'permissionAltered2', undefined, {requireCredentials: true});
+}

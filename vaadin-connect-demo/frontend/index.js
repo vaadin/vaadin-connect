@@ -1,6 +1,6 @@
 // The code that uses the generated Vaadin Connect modules:
 import client from './src/generated/connect-client.default.js';
-import {addOne, hasAnonymousAccess} from './src/generated/DemoVaadinService.js';
+import * as demoService from './src/generated/DemoVaadinService.js';
 
 const credentials = (options = {}) => {
   return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
@@ -21,12 +21,12 @@ switch (new URLSearchParams(location.search).get('credentials')) {
 
 document.getElementById('checkAnonymousAccess').addEventListener('click',
   async() => {
-    alert(await hasAnonymousAccess());
+    alert(await demoService.hasAnonymousAccess());
   });
 
 const numberLabel = document.getElementById('number');
 document.getElementById('addOne').addEventListener('click', async() => {
-  numberLabel.textContent = await addOne(numberLabel.textContent);
+  numberLabel.textContent = await demoService.addOne(numberLabel.textContent);
   updateLoginStatus(client);
 });
 
