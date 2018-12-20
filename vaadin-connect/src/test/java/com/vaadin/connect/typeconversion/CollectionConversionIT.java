@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class CollectionConversionIT extends BaseTypeConversion {
+public class CollectionConversionIT extends BaseTypeConversionIT {
 
   @Test
   public void should_ConvertToIntegerCollection_When_ReceiveNumberArray() {

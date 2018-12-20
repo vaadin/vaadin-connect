@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class DateTimeConversionIT extends BaseTypeConversion {
+public class DateTimeConversionIT extends BaseTypeConversionIT {
 
   // region date tests
   @Test

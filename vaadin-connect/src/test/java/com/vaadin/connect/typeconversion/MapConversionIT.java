@@ -17,7 +17,7 @@ package com.vaadin.connect.typeconversion;
 
 import org.junit.Test;
 
-public class MapConversionIT extends BaseTypeConversion {
+public class MapConversionIT extends BaseTypeConversionIT {
 
   @Test
   public void should_ConvertToMapOfString_When_ReceiveMapOfString()

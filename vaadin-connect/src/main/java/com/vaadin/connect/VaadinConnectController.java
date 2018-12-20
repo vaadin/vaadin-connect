@@ -76,8 +76,8 @@ public class VaadinConnectController {
    *      ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
-  private static final String AUTO_CONFIGURED_JACKSON_OBJECT_MAPPER = "jacksonObjectMapper";
-  private ObjectMapper vaadinServiceMapper;
+
+  private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
   final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
 
@@ -156,7 +156,7 @@ public class VaadinConnectController {
 
   private ObjectMapper getDefaultObjectMapper(ApplicationContext context) {
     try {
-      return context.getBean(AUTO_CONFIGURED_JACKSON_OBJECT_MAPPER, ObjectMapper.class);
+      return context.getBean(ObjectMapper.class);
     } catch (Exception e) {
       throw new IllegalStateException(String.format(
           "Auto configured jackson object mapper is not found."

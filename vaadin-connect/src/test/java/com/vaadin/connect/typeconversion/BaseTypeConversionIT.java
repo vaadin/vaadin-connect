@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @WebMvcTest
 @Import(VaadinConnectTypeConversionServices.class)
-public class BaseTypeConversion {
+public class BaseTypeConversionIT {
 
   private MockMvc mockMvc;
 
