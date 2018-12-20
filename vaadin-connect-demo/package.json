@@ -6,22 +6,45 @@
   "license": "Apache-2.0",
   "private": true,
   "scripts": {
+    "build:frontend": "webpack",
     "start": "node scripts/start/backend.js -- node scripts/start/frontend.js",
     "start:backend": "node scripts/start/backend.js",
     "start:frontend": "node scripts/start/frontend.js",
     "test:e2e": "intern",
-    "test": "yarn lint && node scripts/start/backend.js -- node scripts/start/frontend.js -- yarn test:e2e",
+    "test": "yarn lint && yarn build:frontend && yarn bundlesize && node scripts/start/backend.js -- node scripts/start/frontend.js -- yarn test:e2e",
     "lint": "eslint frontend/ scripts/ e2e/"
   },
   "dependencies": {
-    "@vaadin/connect": "*"
+    "@ungap/url-search-params": "^0.1.2",
+    "@vaadin/connect": "*",
+    "@webcomponents/webcomponentsjs": "^2.2.1",
+    "abortcontroller-polyfill": "^1.2.1",
+    "unfetch": "^4.0.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "babel-loader": "^8.0.4",
+    "bundlesize": "^0.17.0",
+    "clean-webpack-plugin": "^1.0.0",
+    "copy-webpack-plugin": "^4.6.0",
     "eslint": "^5.9.0",
     "eslint-config-vaadin": "^0.2.7",
     "express": "^4.16.4",
+    "html-webpack-plugin": "^3.2.0",
     "http-proxy-middleware": "^0.19.0",
     "intern": "^4.3.3",
-    "polyserve": "^0.27.13"
-  }
+    "regenerator-runtime": "^0.13.1",
+    "webpack": "^4.28.0",
+    "webpack-babel-multi-target-plugin": "^2.0.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-middleware": "^3.4.0",
+    "webpack-dev-server": "^3.1.10"
+  },
+  "bundlesize": [
+    {
+      "path": "./build/index.js",
+      "maxSize": "2.4 kB"
+    }
+  ]
 }
