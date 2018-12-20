@@ -9,6 +9,8 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.type.SimpleType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -262,8 +264,13 @@ public class VaadinConnectControllerTest {
   public void should_Return500_When_MapperFailsToSerializeResponse()
       throws Exception {
     ObjectMapper mapperMock = mock(ObjectMapper.class);
-    when(mapperMock.readerFor(int.class))
-        .thenReturn(new ObjectMapper().readerFor(int.class));
+    TypeFactory typeFactory = mock(TypeFactory.class);
+    when(mapperMock.getTypeFactory()).thenReturn(typeFactory);
+    when(typeFactory.constructType(int.class))
+        .thenReturn(SimpleType.constructUnsafe(int.class));
+    when(mapperMock.readerFor(SimpleType.constructUnsafe(int.class)))
+        .thenReturn(new ObjectMapper()
+            .readerFor(SimpleType.constructUnsafe(int.class)));
     when(mapperMock.writeValueAsString(notNull()))
         .thenThrow(new JsonMappingException(null, "sss"));
 
@@ -278,7 +285,8 @@ public class VaadinConnectControllerTest {
         responseBody.contains(
             VaadinConnectController.VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER));
 
-    verify(mapperMock, times(1)).readerFor(int.class);
+    verify(mapperMock, times(1))
+        .readerFor(SimpleType.constructUnsafe(int.class));
     verify(mapperMock, times(1)).writeValueAsString(notNull());
   }
 
@@ -319,7 +327,8 @@ public class VaadinConnectControllerTest {
         VaadinConnectOAuthAclChecker.class);
     when(oAuthAclCheckerMock.check(TEST_METHOD)).thenReturn(null);
 
-    return createVaadinController(service, null, oAuthAclCheckerMock);
+    return createVaadinController(service, new ObjectMapper(),
+        oAuthAclCheckerMock);
   }
 
   private <T> VaadinConnectController createVaadinController(T service,
