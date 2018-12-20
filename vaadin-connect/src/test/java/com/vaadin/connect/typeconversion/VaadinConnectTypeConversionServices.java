@@ -22,13 +22,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.vaadin.connect.VaadinService;
 
@@ -119,39 +121,31 @@ public class VaadinConnectTypeConversionServices {
   }
 
   public int[] getAddOneArray(int[] value) {
-    List<Integer> intList = new LinkedList<>();
-    Arrays.stream(value).forEach(value1 -> intList.add(value1 + 1));
-    return intList.stream().mapToInt(i -> i).toArray();
+    return Arrays.stream(value).map(i -> i + 1).toArray();
   }
 
   public String[] getFooStringArray(String[] value) {
-    List<String> intList = new LinkedList<>();
-    Arrays.stream(value).forEach(value1 -> intList.add(value1 + "-foo"));
-    return intList.toArray(new String[intList.size()]);
+    return Arrays.stream(value).map(s -> s + "-foo").toArray(String[]::new);
   }
 
   public Object[] getObjectArray(Object[] value) {
-    Arrays.stream(value).forEach(System.out::println);
     return value;
   }
 
   public Collection<Integer> addOneIntegerCollection(
       Collection<Integer> value) {
-    List<Integer> arrayList = new LinkedList<>();
-    value.forEach(v -> arrayList.add(v + 1));
-    return arrayList;
+    return value.stream().map(i -> i + 1)
+        .collect(Collectors.toCollection(LinkedList::new));
   }
 
-  public Collection<Double> getPlusOneDouble(Collection<Double> value) {
-    LinkedList<Double> arrayList = new LinkedList<>();
-    value.forEach(v -> arrayList.add(v + 1));
-    return arrayList;
+  public Collection<Double> addOneDoubleCollection(Collection<Double> value) {
+    return value.stream().map(i -> i + 1)
+        .collect(Collectors.toCollection(LinkedList::new));
   }
 
-  public Set<Integer> plusOneSetInteger(Set<Integer> value) {
-    Set<Integer> arrayList = new TreeSet<>();
-    value.forEach(v -> arrayList.add(v + 1));
-    return arrayList;
+  public Set<Integer> addoneIntegerSet(Set<Integer> value) {
+    return value.stream().map(i -> i + 1)
+        .collect(Collectors.toCollection(TreeSet::new));
   }
 
   public Collection<String> addFooStringCollection(Collection<String> value) {
@@ -161,14 +155,11 @@ public class VaadinConnectTypeConversionServices {
   }
 
   public Collection<Object> getObjectCollection(Collection<Object> value) {
-    value.forEach(System.out::println);
     return value;
   }
 
-  public TestEnum getEnum(TestEnum value) {
-    // Make sure that the key is parsed as an enum
-    value.getValue();
-    return value;
+  public TestEnum getNextEnum(TestEnum value) {
+    return TestEnum.getTestEnum(value.getValue() + 1);
   }
 
   public Map<String, String> getFooMapStringString(Map<String, String> value) {
@@ -210,7 +201,7 @@ public class VaadinConnectTypeConversionServices {
 
   public Map<TestEnum, Integer> getAddOneMapEnumInteger(
       Map<TestEnum, Integer> value) {
-    Map<TestEnum, Integer> newMap = new HashMap<>();
+    Map<TestEnum, Integer> newMap = new LinkedHashMap<>();
     for (Map.Entry<TestEnum, Integer> testEnumStringEntry : value.entrySet()) {
       newMap.put(testEnumStringEntry.getKey(),
           testEnumStringEntry.getValue() + 1);
@@ -218,7 +209,23 @@ public class VaadinConnectTypeConversionServices {
     return newMap;
   }
 
-  public VaadinConnectTestBean getBean(VaadinConnectTestBean value) {
+  public EnumMap<TestEnum, String> getFooEnumMap(
+      EnumMap<TestEnum, String> value) {
+    EnumMap<TestEnum, String> enumStringEnumMap = new EnumMap<>(TestEnum.class);
+    for (Map.Entry<TestEnum, String> entry : value.entrySet()) {
+      enumStringEnumMap.put(entry.getKey(), entry.getValue() + "foo");
+    }
+    return enumStringEnumMap;
+  }
+
+  public EnumSet<TestEnum> getNextValueEnumSet(EnumSet<TestEnum> value) {
+    EnumSet<TestEnum> enumSet = EnumSet.noneOf(TestEnum.class);
+    value.forEach(
+        testEnum -> enumSet.add(TestEnum.getTestEnum(testEnum.getValue() + 1)));
+    return enumSet;
+  }
+
+  public VaadinConnectTestBean getFooBean(VaadinConnectTestBean value) {
     VaadinConnectTestBean newBean = new VaadinConnectTestBean();
     newBean.name = value.name + "-foo";
     newBean.address = value.address + "-foo";

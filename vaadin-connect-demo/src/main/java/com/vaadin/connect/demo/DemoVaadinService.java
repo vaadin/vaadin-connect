@@ -4,7 +4,6 @@ import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,11 +61,6 @@ public class DemoVaadinService {
   @RolesAllowed("ROLE_USER")
   public int addOne(int number) {
     return number + 1;
-  }
-
-  @RolesAllowed("ROLE_USER")
-  public LocalDate getLocalDate() {
-    return LocalDate.now();
   }
 
   @PermitAll

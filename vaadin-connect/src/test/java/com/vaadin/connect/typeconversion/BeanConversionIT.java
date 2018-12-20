@@ -28,6 +28,6 @@ public class BeanConversionIT extends BaseTypeConversion {
         + "\"address\":\"myaddress-foo\"," + "\"age\":11,\"isAdmin\":false,"
         + "\"testEnum\":\"SECOND\","
         + "\"roles\":[\"Admin\",\"User\"],\"customProperty\":\"customValue-foo\"}";
-    assertEqualExpectedValueWhenCallingMethod("getBean", inputValue, expectedValue);
+    assertEqualExpectedValueWhenCallingMethod("getFooBean", inputValue, expectedValue);
   }
 }
