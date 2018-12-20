@@ -180,8 +180,8 @@
                                 <excludes>
                                     <!--exclude mojo classes from coverage reports, since we don't test them with unit tests-->
                                     <exclude>com/vaadin/connect/plugin/*</exclude>
-                                    <!--TODO write unit tests and remove this-->
-                                    <exclude>com/vaadin/connect/VaadinConnectController*</exclude>
+                                    <!--no point to unit test Spring bean configurations-->
+                                    <exclude>com/vaadin/connect/VaadinConnectControllerConfiguration*</exclude>
                                 </excludes>
                             </configuration>
                         </execution>
