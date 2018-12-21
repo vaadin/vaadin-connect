@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @WebMvcTest
 @Import(VaadinConnectTypeConversionServices.class)
-public class BaseTypeConversionIT {
+public abstract class BaseTypeConversionIT {
 
   private MockMvc mockMvc;
 
@@ -55,10 +55,6 @@ public class BaseTypeConversionIT {
     when(oAuthAclCheckerMock.check(notNull())).thenReturn(null);
     mockMvc = MockMvcBuilders.standaloneSetup(new VaadinConnectController(null,
         oAuthAclCheckerMock, applicationContext)).build();
-  }
-
-  @Test
-  public void should_HaveApplicationContext_When_StartingTest() {
     Assert.assertNotEquals(null, applicationContext);
   }
 

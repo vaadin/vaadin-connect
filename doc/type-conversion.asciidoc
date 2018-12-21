@@ -8,12 +8,12 @@ layout: page
 
 When calling a Java service from JavaScript code, the `ConnectClient` will send parameters in JSON format to Java backend side, the parameter will be converted to Java types using the default https://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-auto-configuration.html#using-boot-auto-configuration[ObjectMapper from Spring Boot Auto-configuration].
 
-However, to make it easier for the serialization/deserialization of custom Objects, the default ObjectMapper has configured the `visibility` to any level for all types of Processor. It means all the fields, getters, setters or constructors will be discoverable even if they ared declared with `private` modifier. You can override this behavior by providing `spring.jackson.visibility` (in https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html[Common application properties]). You can also use your own ObjectMapper by providing an ObjectMapper bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER` or customize the default ObjectMapper by following https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[the Spring documentation].
+However, to make it easier for the serialization/deserialization of custom Objects, the default ObjectMapper has configured the `visibility` to any level for all types of Processor. It means all the fields, getters, setters or constructors will be discoverable even if they are declared with `private` modifier. You can override this behavior by providing `spring.jackson.visibility` (in https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html[Common application properties]). You can also use your own ObjectMapper by providing an ObjectMapper bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER` or customize the default ObjectMapper by following https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[the Spring documentation].
 
 The default ObjectMapper conversion rules are summarized as follows:
 
 === Primitive types
-The compliant values will be converted to the corresponding value, otherwise the backend will return an error message complains about the parameter types.
+The compliant values will be converted to the corresponding value, otherwise the backend will return an error message.
 
 ==== Type `int`:
 

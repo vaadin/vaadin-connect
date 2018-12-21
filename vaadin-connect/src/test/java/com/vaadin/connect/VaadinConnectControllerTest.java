@@ -380,14 +380,17 @@ public class VaadinConnectControllerTest {
     verify(contextMock, times(1)).getBean(JacksonProperties.class);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void should_ThrowError_When_DefaultObjectMapperIsNotFound() {
     ApplicationContext contextMock = mock(ApplicationContext.class);
     when(contextMock.getBean(ObjectMapper.class))
         .thenThrow(new NoSuchBeanDefinitionException("Bean not found"));
+
+    exception.expect(IllegalStateException.class);
+    exception.expectMessage("object mapper");
+
     new VaadinConnectController(null, mock(VaadinConnectOAuthAclChecker.class),
-        contextMock);
-    verify(contextMock, times(1)).getBean(ObjectMapper.class);
+      contextMock);
   }
 
   private void assertServiceInfoPresent(String responseBody) {
