@@ -1,0 +1,270 @@
+---
+title: Vaadin Connect Type Conversion
+order: 803
+layout: page
+---
+
+= Vaadin Connect Type Conversion
+
+When calling a Java service from JavaScript code, the `ConnectClient` will send parameters in JSON format to Java backend side, the parameter will be converted to Java types using the default https://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-auto-configuration.html#using-boot-auto-configuration[ObjectMapper from Spring Boot Auto-configuration].
+
+However, to make it easier for the serialization/deserialization of custom Objects, the default ObjectMapper has configured the `visibility` to any level for all types of Processor. It means all the fields, getters, setters or constructors will be discoverable even if they are declared with `private` modifier. You can override this behavior by providing `spring.jackson.visibility` (in https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html[Common application properties]). You can also use your own ObjectMapper by providing an ObjectMapper bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER` or customize the default ObjectMapper by following https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[the Spring documentation].
+
+The default ObjectMapper conversion rules are summarized as follows:
+
+=== Primitive types
+The compliant values will be converted to the corresponding value, otherwise the backend will return an error message.
+
+==== Type `int`:
+
+* Compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+** A integer string: `"100"` => `100`
+** `null` => `0`
+
+* Noncompliant values:
+** A non-integer string: `"foo"`, `"100.9"`
+** Any other types: boolean, object, array
+** `undefined`
+
+* Overflow number: if JavaScript sends a value which is greater than Java's `Integer.MAX_VALUE` (2^31^ - 1), the bits will get rolled over. For example, sending a value `2^31^` (`Integer.MAX_VALUE + 1`), Java side will receive `-2^31^` (`Integer.MIN_VALUE`).
+
+* Underflow number: it is vice versa with overflow number. Sending `-2^31^ - 1` (`Integer.MIN_VALUE - 1`), Java side will get `2^31^ - 1` (`Integer.MAX_VALUE`).
+
+==== Type `boolean`:
+
+* Compliant values:
+** A boolean value: `true` => `true` and `false` => `false`
+** A boolean string (case sensitive): `"true"` => `true`, `"True"` => `true`, `"false"` => `false` and `"False"` => `false`
+** Any integer number different from zero will be true: `1` => `true`, `-1` => `true` but `0` => `false`
+** `null` => `false`
+
+* Noncompliant values:
+** A boolean string with more than one first upper case letter: `"TRUE"`, `"TRue"`, `"FALSE"`, `"FAlse"` and other similar cases.
+** A decimal number: `100.0`
+** A non-boolean string: `"foo"`, `"100.9"`
+** Any other types: object or array
+** `undefined`, `NaN`
+
+==== Type `byte`:
+
+* Compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+** A integer string: `"100"` => `100`
+** `null` => `0`
+
+* Noncompliant values:
+** A non-integer string: `"foo"`, `"100.9"`
+** Any other types: boolean, object or array
+** `undefined`, `NaN`
+
+* Overflow number: if JavaScript sends a value which is greater than Java's `Byte.MAX_VALUE` (2^8^ - 1), the bits will get rolled over. For example, sends a value `128` (`Byte.MAX_VALUE + 1`), Java side will receive `-128` (`Byte.MIN_VALUE`).
+
+* Underflow number: if Java side expects a `byte` value but JavaScript sends an underflow number, e.g. `-129` (`Byte.MIN_VALUE - 1`), the backend will return an error.
+
+==== Type `char`:
+
+* Compliant values:
+** A single character string: `"a"` => `'a'`
+** An integer from `0` to `2^16^ - 1`: `128` => unicode character `'\u0080'`
+** `null` => `0`
+
+* Noncompliant values:
+** A non single character string: `"fo"`, `"10"`
+** An integer number which is less than `0` or greater than `2^16^ - 1`
+** A decimal number
+** Any other types: boolean, object or array
+** `undefined`, `NaN`
+
+==== Type `short`:
+
+* Compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+** A integer string: `"100"` => `100`
+** `null` => `0`
+
+* Noncompliant values:
+** A non-integer string: `"foo"`, `"100.9"`
+** Any other types: boolean, object or array
+** `undefined`, `NaN`
+
+* Overflow and underflow numbers are not acceptable for `short`
+
+==== Type `long`:
+
+* Compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+** A integer string: `"100"` => `100`
+** `null` => `0`
+
+* Noncompliant values:
+** A non-integer string: `"foo"`, `"100.9"`
+** Any other types: boolean, object or array
+** `undefined`, `NaN`
+
+* Overflow and underflow numbers: bits get rolled over when receiving overflow/underflow number i.e. `2^63^` => `-2^63^`, `-2^63^ - 1` => `2^63^ - 1`
+
+==== Type `float` and `double`:
+
+* Compliant values:
+** An integer or decimal number: `100` and `100.0` => `100.0`, `100.9` => `100.9`
+** A number string: `"100"` => `100.0`, `"100.9"` => `100.9`
+** `null` => `0.0`
+
+
+* Noncompliant values:
+** A non-number string: `"foo"`
+** Any other types: boolean, object or array
+** `undefined`, `NaN`, `Infinity` and `-Infinity`
+
+* Overflow and underflow numbers will be converted to `Infinity` and `-Infinity` respectively.
+
+=== Boxed primitive types
+
+The conversion works the same as primitive type except that `null` will be converted to `null` instead of default value.
+
+=== String
+
+Any `String` value will be kept the same when sent from JavaScript to Java backend.
+
+=== Date time types
+==== java.util.Date
+
+* Compliant values:
+** An integer number or string that represents an epoch timestamp: `1546300800` or `"1546300800"` will be converted to a `java.util.Date` instance which contains value of the date `01-01-2019`.
+
+* Noncompliant values:
+** A non-number string: `"foo"`
+** Any other types: boolean, object or array
+** `undefined`
+
+==== java.util.LocalDate
+
+* Compliant values:
+** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE` format `yyyy-MM-dd`: `"2018-12-16"`, `"2019-01-01"`.
+
+* Noncompliant values:
+** An incorrect format string: `"foo"`
+** Any other types: boolean, object or array
+** `undefined`
+
+==== java.util.LocalDateTime
+
+* Compliant values:
+** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME` format:
+*** With full time: `"2019-01-01T12:34:56"`
+*** Without seconds:  `"2019-01-01T12:34"`
+*** With full time and milliseconds: `"2019-01-01T12:34:56.78"`
+
+* Noncompliant values:
+** An incorrect format string: `"foo"`
+** Any other types: boolean, object or array
+** `undefined`
+
+=== Enum
+
+* Compliant value:
+** A string with the same name as an enum: assume that we have an <<enum-declaration>>, then sending `"FIRST"` from JavaScript would result an instance of `FIRST` with `value=1` in Java.
+
+.Enum declaration
+[source, java]
+[[enum-declaration]]
+----
+public enum TestEnum {
+
+  FIRST(1), SECOND(2), THIRD(3);
+
+  private final int value;
+
+  TestEnum(int value) {
+    this.value = value;
+  }
+
+  public int getValue() {
+    return this.value;
+  }
+}
+----
+
+* Noncompliant values:
+** A non-matched string with name of the expected Enum type.
+** Any other types: boolean, object or array.
+** `undefined`
+
+=== Array
+
+* Compliant values:
+** An array of items with expected type in Java, for example:
+*** Expected in Java `int[]`: `[1, 2, 3]` => `[1,2,3]`, `[1.9, 2, 3]` => `[1,2,3]`, `["1", 2, 3]` => `[1,2,3]`
+*** Expected in Java `String[]`: `["foo","bar"]` => `["foo","bar"]`, `["numberWorksForStringArray", 1, 2.0]` => `["numberWorksForStringArray", "1", "2.0"]`
+*** Expected in Java `Object[]`: `["foo", 1, null, "bar"]` => `["foo", 1, null, "bar"]`
+
+* Noncompliant values:
+** Mixed types array might not work: if you expected `int[]` in Java,  `["1.9", 2, 3]` won't work.
+** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
+** Any other types: boolean, object
+** `undefined`
+
+=== Collection
+
+* Compliant values:
+** An array of items with expected type in Java (or types which can be converted to expected types), for example, if you expected in Java:
+*** `Collection<Integer>`: `[1, 2, 3]` => `[1,2,3]`, `["1","2","3"]` => `[1,2,3]`
+*** `Collection<String>`: `["foo","bar"]` => `["foo","bar"]`
+*** `Collection<Object>`: `["foo",1,null,"bar"]` => `["foo",1,null,"bar"]`
+*** `Set<Integer>`: `[1, 2, 2, 3, 3, 3]` => `[1, 2, 3]`
+
+* Noncompliant values:
+** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
+** Any other types: boolean, object
+** `undefined`
+
+=== Map
+
+* Compliant value:
+** An object with string keys and values with the expected type in Java:
+*** `Map<String, String>`: `{"key1": "1", "key2": "2"}` => `{"key1": "1", "key2": "2"}`, `{"integerValue": 1, "alsoValidForStringMap": 2}` => `{"integerValue": "1", "alsoValidForStringMap": "2"}`
+*** `Map<String, TestEnum>`: `{"key1": "FIRST", "key2": "SECOND"}` => `{"key1": "FIRST", "key2": "SECOND"}`
+*** Enum could be used as keys of a map `Map<TestEnum, Integer>`: `{"FIRST": 1, "SECOND": 2}` => `{"FIRST": 1, "SECOND": 2}`
+
+* Noncompliant values:
+** Any non-object types: number, string, boolean or array.
+** `undefined`
+
+=== Bean
+
+A bean will be parsed from the input JSON object which will map the keys with the property name of the Bean object. You can also use Jackson's annotation to customize your bean object. For more information about the annotations, please have a look at https://github.com/FasterXML/jackson-annotations[Jackson Annotations].
+
+* Example: assume that we have <<bean-example>>, a valid input for the bean would look like
+```
+{
+  "name": "MyBean",
+  "address": "MyAddress",
+  "age": 10,
+  "isAdmin": true,
+  "customProperty": "customValue"
+}
+```
+
+.Bean example
+[source, java]
+[[bean-example]]
+----
+public class MyBean {
+  public String name;
+  public String address;
+  public int age;
+  public boolean isAdmin;
+  private String customProperty;
+
+  @JsonGetter("customProperty")
+  public String getCustomProperty() {
+    return customProperty;
+  }
+
+  @JsonSetter("customProperty")
+  public void setCustomProperty(String customProperty) {
+    this.customProperty = customProperty;
+  }
+}
+----

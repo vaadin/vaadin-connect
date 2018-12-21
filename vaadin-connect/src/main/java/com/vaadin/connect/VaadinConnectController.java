@@ -38,12 +38,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -125,9 +125,7 @@ public class VaadinConnectController {
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
       VaadinConnectOAuthAclChecker oauthChecker, ApplicationContext context) {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
-        : Jackson2ObjectMapperBuilder.json()
-            .visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
-            .build();
+        : getDefaultObjectMapper(context);
     this.oauthChecker = oauthChecker;
 
     context.getBeansWithAnnotation(VaadinService.class)
@@ -157,6 +155,25 @@ public class VaadinConnectController {
           vaadinServices.put(serviceName.toLowerCase(Locale.ENGLISH),
               new VaadinServiceData(serviceBean, beanType.getMethods()));
         });
+  }
+
+  private ObjectMapper getDefaultObjectMapper(ApplicationContext context) {
+    try {
+      ObjectMapper objectMapper = context.getBean(ObjectMapper.class);
+      JacksonProperties jacksonProperties = context
+          .getBean(JacksonProperties.class);
+      if (jacksonProperties.getVisibility().isEmpty()) {
+        objectMapper.setVisibility(PropertyAccessor.ALL,
+            JsonAutoDetect.Visibility.ANY);
+      }
+      return objectMapper;
+    } catch (Exception e) {
+      throw new IllegalStateException(String.format(
+          "Auto configured jackson object mapper is not found."
+              + "Please define your own object mapper with '@Qualifier(%s)' or "
+              + "make sure that the auto configured jackson object mapper is available.",
+          VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER), e);
+    }
   }
 
   /**
@@ -279,7 +296,8 @@ public class VaadinConnectController {
     Object[] serviceParameters = new Object[javaParameters.length];
     for (int i = 0; i < javaParameters.length; i++) {
       serviceParameters[i] = vaadinServiceMapper
-          .readerFor(javaParameters[i].getType())
+          .readerFor(vaadinServiceMapper.getTypeFactory()
+              .constructType(javaParameters[i].getParameterizedType()))
           .readValue(requestParameters.get(i));
     }
     return serviceParameters;

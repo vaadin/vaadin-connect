@@ -6,12 +6,18 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.type.SimpleType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +55,13 @@ public class VaadinConnectControllerTest {
     }
   }
 
+  @VaadinService("CustomService")
+  public static class TestClassWithCustomServiceName {
+    public String testMethod(int parameter) {
+      return parameter + "-test";
+    }
+  }
+
   @Rule
   public final ExpectedException exception = ExpectedException.none();
 
@@ -63,7 +76,7 @@ public class VaadinConnectControllerTest {
 
     exception.expect(IllegalStateException.class);
     exception.expectMessage(beanName);
-    new VaadinConnectController(null, null, contextMock);
+    new VaadinConnectController(mock(ObjectMapper.class), null, contextMock);
   }
 
   @Test
@@ -111,9 +124,9 @@ public class VaadinConnectControllerTest {
     when(restrictingCheckerMock.check(TEST_METHOD))
         .thenReturn(accessErrorMessage);
 
-    ResponseEntity<String> response = createVaadinController(TEST_SERVICE, null,
-        restrictingCheckerMock).serveVaadinService(TEST_SERVICE_NAME,
-            TEST_METHOD.getName(), null);
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE,
+        new ObjectMapper(), restrictingCheckerMock)
+            .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(), null);
 
     assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     String responseBody = response.getBody();
@@ -262,8 +275,13 @@ public class VaadinConnectControllerTest {
   public void should_Return500_When_MapperFailsToSerializeResponse()
       throws Exception {
     ObjectMapper mapperMock = mock(ObjectMapper.class);
-    when(mapperMock.readerFor(int.class))
-        .thenReturn(new ObjectMapper().readerFor(int.class));
+    TypeFactory typeFactory = mock(TypeFactory.class);
+    when(mapperMock.getTypeFactory()).thenReturn(typeFactory);
+    when(typeFactory.constructType(int.class))
+        .thenReturn(SimpleType.constructUnsafe(int.class));
+    when(mapperMock.readerFor(SimpleType.constructUnsafe(int.class)))
+        .thenReturn(new ObjectMapper()
+            .readerFor(SimpleType.constructUnsafe(int.class)));
     when(mapperMock.writeValueAsString(notNull()))
         .thenThrow(new JsonMappingException(null, "sss"));
 
@@ -278,7 +296,8 @@ public class VaadinConnectControllerTest {
         responseBody.contains(
             VaadinConnectController.VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER));
 
-    verify(mapperMock, times(1)).readerFor(int.class);
+    verify(mapperMock, times(1))
+        .readerFor(SimpleType.constructUnsafe(int.class));
     verify(mapperMock, times(1)).writeValueAsString(notNull());
   }
 
@@ -294,6 +313,84 @@ public class VaadinConnectControllerTest {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(String.format("\"%s\"", expectedOutput), response.getBody());
+  }
+
+  @Test
+  public void should_UseCustomServiceName_When_ItIsDefined() {
+    int input = 111;
+    String expectedOutput = new TestClassWithCustomServiceName()
+        .testMethod(input);
+    String beanName = TestClassWithCustomServiceName.class.getSimpleName();
+
+    ApplicationContext contextMock = mock(ApplicationContext.class);
+    when(contextMock.getType(beanName))
+        .thenReturn((Class) TestClassWithCustomServiceName.class);
+    when(contextMock.getBeansWithAnnotation(VaadinService.class))
+        .thenReturn(Collections.singletonMap(beanName,
+            new TestClassWithCustomServiceName()));
+
+    VaadinConnectController vaadinConnectController = new VaadinConnectController(
+        new ObjectMapper(), mock(VaadinConnectOAuthAclChecker.class),
+        contextMock);
+    ResponseEntity<String> response = vaadinConnectController
+        .serveVaadinService("CustomService", "testMethod",
+            createRequestParameters(String.format("{\"value\": %s}", input)));
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(String.format("\"%s\"", expectedOutput), response.getBody());
+  }
+
+  @Test
+  public void should_UseDefaultObjectMapper_When_NoneIsProvided() {
+    ApplicationContext contextMock = mock(ApplicationContext.class);
+    ObjectMapper mockDefaultObjectMapper = mock(ObjectMapper.class);
+    JacksonProperties mockJacksonProperties = mock(JacksonProperties.class);
+    when(contextMock.getBean(ObjectMapper.class))
+        .thenReturn(mockDefaultObjectMapper);
+    when(contextMock.getBean(JacksonProperties.class))
+        .thenReturn(mockJacksonProperties);
+    when(mockJacksonProperties.getVisibility())
+        .thenReturn(Collections.emptyMap());
+    new VaadinConnectController(null, mock(VaadinConnectOAuthAclChecker.class),
+        contextMock);
+
+    verify(contextMock, times(1)).getBean(ObjectMapper.class);
+    verify(mockDefaultObjectMapper, times(1))
+        .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+    verify(contextMock, times(1)).getBean(JacksonProperties.class);
+  }
+
+  @Test
+  public void should_NotOverrideVisibility_When_JacksonPropertiesProvideVisibility() {
+    ApplicationContext contextMock = mock(ApplicationContext.class);
+    ObjectMapper mockDefaultObjectMapper = mock(ObjectMapper.class);
+    JacksonProperties mockJacksonProperties = mock(JacksonProperties.class);
+    when(contextMock.getBean(ObjectMapper.class))
+        .thenReturn(mockDefaultObjectMapper);
+    when(contextMock.getBean(JacksonProperties.class))
+        .thenReturn(mockJacksonProperties);
+    when(mockJacksonProperties.getVisibility())
+        .thenReturn(Collections.singletonMap(PropertyAccessor.ALL,
+            JsonAutoDetect.Visibility.PUBLIC_ONLY));
+    new VaadinConnectController(null, mock(VaadinConnectOAuthAclChecker.class),
+        contextMock);
+
+    verify(contextMock, times(1)).getBean(ObjectMapper.class);
+    verify(mockDefaultObjectMapper, times(0))
+        .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+    verify(contextMock, times(1)).getBean(JacksonProperties.class);
+  }
+
+  @Test
+  public void should_ThrowError_When_DefaultObjectMapperIsNotFound() {
+    ApplicationContext contextMock = mock(ApplicationContext.class);
+    when(contextMock.getBean(ObjectMapper.class))
+        .thenThrow(new NoSuchBeanDefinitionException("Bean not found"));
+
+    exception.expect(IllegalStateException.class);
+    exception.expectMessage("object mapper");
+
+    new VaadinConnectController(null, mock(VaadinConnectOAuthAclChecker.class),
+      contextMock);
   }
 
   private void assertServiceInfoPresent(String responseBody) {
@@ -319,7 +416,8 @@ public class VaadinConnectControllerTest {
         VaadinConnectOAuthAclChecker.class);
     when(oAuthAclCheckerMock.check(TEST_METHOD)).thenReturn(null);
 
-    return createVaadinController(service, null, oAuthAclCheckerMock);
+    return createVaadinController(service, new ObjectMapper(),
+        oAuthAclCheckerMock);
   }
 
   private <T> VaadinConnectController createVaadinController(T service,
