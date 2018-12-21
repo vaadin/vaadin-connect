@@ -123,7 +123,7 @@ public class VaadinConnectController {
    */
   public VaadinConnectController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
-      VaadinConnectOAuthAclChecker oauthChecker, ApplicationContext context) {
+      VaadinConnectOAuthAclChecker oauthChecker, ApplicationContext context) throws NullPointerException {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : Jackson2ObjectMapperBuilder.json()
             .visibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
