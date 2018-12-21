@@ -17,7 +17,13 @@ const [chainedExecutable, ...chainedArgs] = endOfOptionsIndex > -1
   : [];
 
 const express = require('express');
-const polyserve = require('polyserve');
+const webpackConfig = Object.assign(
+  {},
+  require('../../webpack.config.js'),
+  {mode: 'development'}
+);
+const webpackCompiler = require('webpack')(webpackConfig);
+const webpackDevMiddleware = require('webpack-dev-middleware');
 const httpProxy = require('http-proxy-middleware');
 
 function makeProxyApp(target) {
@@ -31,51 +37,32 @@ const backendEndpoints = [
   '/connect/'
 ];
 
-const CONNECT_HOSTNAME = process.env.CONNECT_HOSTNAME;
+const CONNECT_HOSTNAME = process.env.CONNECT_HOSTNAME || 'localhost';
 const CONNECT_PORT = process.env.CONNECT_PORT || 8081;
 
-polyserve
-  .startServers(
-    {
-      root: 'frontend',
-      componentDir: '../../node_modules',
-      componentUrl: 'node_modules',
-      moduleResolution: 'node',
-      npm: true,
-      hostname: CONNECT_HOSTNAME,
-      port: CONNECT_PORT
-    },
-    async(polyserveApp, options) => {
-      const app = express();
-      backendEndpoints.forEach(path => app.use(path, backend));
-      app.use('/__intern/', makeProxyApp('http://localhost:9000'));
-      app.use(express.static('static'));
-      app.use(polyserveApp);
-      return app;
-    }
-  )
-  .then(({server, options}) => {
-    const scheme = /^(h2$|https)/.test(options.protocol) ? 'https:' : 'http:';
-    const {address, port} = server.address();
-    const hostname = options.hostname || address;
-    const url = new URL(`${scheme}//${hostname}:${port}`);
-    console.log(`Started Vaadin Connect frontend server at: ${url}`);
-    if (chainedExecutable) {
-      const chainedProcess = spawn(
-        chainedExecutable,
-        chainedArgs,
-        {stdio: 'inherit', shell: true}
-      );
-      chainedProcess.on('close', code => {
-        server.close();
-        process.exit(code);
-      });
-    } else {
-      // Make exit on Ctrl+C / SIGINT
-      process.on('SIGINT', () => process.exit(0));
-    }
-  })
-  .catch(reason => {
-    console.error(reason);
-    process.exit(1);
-  });
+const app = express();
+backendEndpoints.forEach(path => app.use(path, backend));
+app.use('/__intern/', makeProxyApp('http://localhost:9002'));
+app.use(webpackDevMiddleware(webpackCompiler));
+
+const server = require('http').createServer(app);
+server.listen(CONNECT_PORT, CONNECT_HOSTNAME, () => {
+  const {address, port} = server.address();
+  const hostname = CONNECT_HOSTNAME || address;
+  const url = new URL(`http://${hostname}:${port}`);
+  console.log(`Started Vaadin Connect frontend server at: ${url}`);
+  if (chainedExecutable) {
+    const chainedProcess = spawn(
+      chainedExecutable,
+      chainedArgs,
+      {stdio: 'inherit', shell: true}
+    );
+    chainedProcess.on('close', code => {
+      server.close();
+      process.exit(code);
+    });
+  }
+});
+
+// Make exit on Ctrl+C / SIGINT
+process.on('SIGINT', () => process.exit(0));

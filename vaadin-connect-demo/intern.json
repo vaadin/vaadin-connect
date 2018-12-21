@@ -12,23 +12,6 @@
     ]
   },
   "configs": {
-    "sauce-disabled": {
-      "tunnel": "saucelabs",
-      "environments": [
-        {
-          "platform": "Windows 10",
-          "browserName": "MicrosoftEdge",
-          "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": "no-detect"
-        },
-        {
-          "platform": "Windows 10",
-          "browserName": "internet explorer",
-          "version": "11",
-          "fixSessionCapabilities": "no-detect"
-        }
-      ]
-    },
     "sauce": {
       "tunnel": "saucelabs",
       "environments": [
@@ -42,6 +25,18 @@
           "platform": "Windows 10",
           "browserName": "firefox",
           "version": ["latest-1", "latest"],
+          "fixSessionCapabilities": "no-detect"
+        },
+        {
+          "platform": "Windows 10",
+          "browserName": "MicrosoftEdge",
+          "version": ["latest-1", "latest"],
+          "fixSessionCapabilities": "no-detect"
+        },
+        {
+          "platform": "Windows 10",
+          "browserName": "internet explorer",
+          "version": "11",
           "fixSessionCapabilities": "no-detect"
         },
         {

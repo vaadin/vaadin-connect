@@ -1,6 +1,6 @@
 ### Frontend ###
 node_modules
-dist
+build
 coverage
 vaadin-connect-demo/frontend/src/generated/
 
