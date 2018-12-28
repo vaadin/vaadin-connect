@@ -8,39 +8,64 @@
  *   $ node scripts/start/backend.js -- echo "The backend is running..."
  */
 
-const {spawnSync} = require('child_process');
+const {spawn, execFileSync} = require('child_process');
 const fs = require('fs');
 
-const hasFilesWithExtension = (directory, extension) => {
-  return fs.existsSync(directory)
-    && fs.readdirSync(directory).find(path => path.endsWith(extension));
+const exec = (cmd, args, options = {}) => {
+  console.log(cmd, args, options);
+  options = Object.assign({stdio: 'inherit'}, options);
+  if (options.async) {
+    return new Promise((resolve, reject) => {
+      const childProcess = spawn(cmd, args, options);
+      // Ensure the child process is killed on shutdown
+      const killer = () => childProcess.kill();
+      process.addListener('exit', killer);
+      childProcess.on('exit', code => {
+        process.removeListener('exit', killer);
+        if (code === 0) {
+          resolve(code);
+        } else {
+          reject(code);
+        }
+      });
+    });
+  } else {
+    return execFileSync(cmd, args, options);
+  }
 };
+
+const execMaven = (args, options) => exec('mvn', ['-q', '-e', ...args], options);
 
 const endOfOptionsIndex = process.argv.indexOf('--');
 const [chainedExecutable, ...chainedArgs] = endOfOptionsIndex > -1
   ? process.argv.slice(endOfOptionsIndex + 1)
   : [];
 
-if (chainedExecutable) {
-  process.exit(
-    spawnSync(
-      'mvn -e',
-      [
-        hasFilesWithExtension('./target', '.jar') ? 'generate-resources' : 'package -DskipTests',
-        'spring-boot:start',
-        'exec:exec',
-        `-Dexec.executable="${chainedExecutable}"`,
-        `-Dexec.args="${chainedArgs.join(' ')}"`
-      ],
-      {stdio: 'inherit', shell: true}
-    ).status
-  );
+// Generator
+const hasFilesWithExtension = (directory, extension) => {
+  return fs.existsSync(directory)
+    && fs.readdirSync(directory).find(pathname => pathname.endsWith(extension));
+};
+if (hasFilesWithExtension('./target', '.jar')) {
+  execMaven(['generate-resources']);
 } else {
-  process.exit(
-    spawnSync(
-      'mvn -e',
-      ['spring-boot:run'],
-      {stdio: 'inherit', shell: true}
-    ).status
-  );
+  execMaven(['package', '-DskipTests']);
 }
+
+// Java watcher
+execMaven(['fizzed-watcher:run'], {async: true})
+  .catch(process.exit);
+
+// Server
+execMaven(['spring-boot:start', '-Dspring-boot.run.fork'], {async: true})
+  .then(() => {
+    process.on('exit', () => {
+      execMaven(['spring-boot:stop', '-Dspring-boot.stop.fork']);
+    });
+
+    if (chainedExecutable) {
+      return exec(chainedExecutable, chainedArgs, {async: true})
+        .then(process.exit);
+    }
+  })
+  .catch(process.exit);

@@ -6921,6 +6921,11 @@ supports-color@^5.1.0, supports-color@^5.3.0, supports-color@^5.5.0:
   dependencies:
     has-flag "^3.0.0"
 
+swagger-ui-dist@^3.20.2:
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/swagger-ui-dist/-/swagger-ui-dist-3.20.3.tgz#e099a02572c360abe1c8892beb85ff685f1c8e6b"
+  integrity sha512-2O+uWBROdj7WLIIWabJe8TlQJiGgr96rmayPzp+pek/iIcUYoqKG+0icJL09Z9bZAAk3nWOTjTwU53XmjtCN7w==
+
 table@^5.0.2:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/table/-/table-5.1.1.tgz#92030192f1b7b51b6eeab23ed416862e47b70837"
