@@ -37,7 +37,8 @@ public class ShortConversionIT extends BaseTypeConversionIT {
 
     assertEqualExpectedValueWhenCallingMethod("addOneShortBoxed", "\"1\"", "2");
     assertEqualExpectedValueWhenCallingMethod("addOneShortBoxed", "\"0\"", "1");
-    assertEqualExpectedValueWhenCallingMethod("addOneShortBoxed", "\"-1\"", "0");
+    assertEqualExpectedValueWhenCallingMethod("addOneShortBoxed", "\"-1\"",
+        "0");
   }
 
   @Test
@@ -62,6 +63,18 @@ public class ShortConversionIT extends BaseTypeConversionIT {
   public void should_FailToConvertToShort_When_ReceiveANumberOverflowOrUnderflow() {
     String overflowShort = "32768";
     String underflowShort = "-32769";
+
+    assert400ResponseWhenCallingMethod("addOneShort", overflowShort);
+    assert400ResponseWhenCallingMethod("addOneShort", underflowShort);
+
+    assert400ResponseWhenCallingMethod("addOneShortBoxed", overflowShort);
+    assert400ResponseWhenCallingMethod("addOneShortBoxed", underflowShort);
+  }
+
+  @Test
+  public void should_FailToConvertToShort_When_ReceiveANumberOverflowOrUnderflowAsString() {
+    String overflowShort = "\"32768\"";
+    String underflowShort = "\"-32769\"";
 
     assert400ResponseWhenCallingMethod("addOneShort", overflowShort);
     assert400ResponseWhenCallingMethod("addOneShort", underflowShort);

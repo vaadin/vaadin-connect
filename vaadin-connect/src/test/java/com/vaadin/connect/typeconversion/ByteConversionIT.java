@@ -61,18 +61,28 @@ public class ByteConversionIT extends BaseTypeConversionIT {
   @Test
   public void should_HandleOverflowByte_When_ReceiveOverflowNumber() {
     String overflowInputByte = "128";
+    String overflowInputByteString = "\"128\"";
     assertEqualExpectedValueWhenCallingMethod("addOneByte", overflowInputByte,
         String.valueOf(Byte.MIN_VALUE + 1));
     assertEqualExpectedValueWhenCallingMethod("addOneByteBoxed",
         overflowInputByte, String.valueOf(Byte.MIN_VALUE + 1));
+
+    assertEqualExpectedValueWhenCallingMethod("addOneByte",
+        overflowInputByteString, String.valueOf(Byte.MIN_VALUE + 1));
+    assertEqualExpectedValueWhenCallingMethod("addOneByteBoxed",
+        overflowInputByteString, String.valueOf(Byte.MIN_VALUE + 1));
   }
 
   @Test
   public void should_FailToHandleUnderflowByte_When_ReceiveUnderflowNumber() {
     String underflowInputByte = "-129";
+    String underflowInputByteString = "\"-129\"";
     assert400ResponseWhenCallingMethod("addOneByte", underflowInputByte);
+    assert400ResponseWhenCallingMethod("addOneByte", underflowInputByteString);
 
     assert400ResponseWhenCallingMethod("addOneByteBoxed", underflowInputByte);
+    assert400ResponseWhenCallingMethod("addOneByteBoxed",
+        underflowInputByteString);
   }
 
   @Test

@@ -26,6 +26,7 @@ The compliant values will be converted to the corresponding value, otherwise the
 ** A non-integer string: `"foo"`, `"100.9"`
 ** Any other types: boolean, object, array
 ** `undefined`
+** An overflow or underflow integer as a String: `"2147483648"`, `"-2147483649"`
 
 * Overflow number: if JavaScript sends a value which is greater than Java's `Integer.MAX_VALUE` (2^31^ - 1), the bits will get rolled over. For example, sending a value `2^31^` (`Integer.MAX_VALUE + 1`), Java side will receive `-2^31^` (`Integer.MIN_VALUE`).
 
@@ -101,6 +102,7 @@ The compliant values will be converted to the corresponding value, otherwise the
 ** A non-integer string: `"foo"`, `"100.9"`
 ** Any other types: boolean, object or array
 ** `undefined`, `NaN`
+** An overflow or underflow long as a String: `"9223372036854775808"`, `"-9223372036854775809"`
 
 * Overflow and underflow numbers: bits get rolled over when receiving overflow/underflow number i.e. `2^63^` => `-2^63^`, `-2^63^ - 1` => `2^63^ - 1`
 

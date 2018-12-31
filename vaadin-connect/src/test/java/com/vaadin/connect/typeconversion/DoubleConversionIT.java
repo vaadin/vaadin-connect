@@ -69,23 +69,36 @@ public class DoubleConversionIT extends BaseTypeConversionIT {
   @Test
   public void should_HandleOverflowDouble_When_ReceiveANumberOverflowOrUnderflow() {
     String overflowDouble = "2.7976931348623158E308";
+    String overflowDoubleString = "\"2.7976931348623158E308\"";
     String underflowDouble = "-2.7976931348623157E308";
+    String underflowDoubleString = "\"-2.7976931348623157E308\"";
     assertEqualExpectedValueWhenCallingMethod("addOneDouble", overflowDouble,
-        "\"" + String.valueOf(Float.POSITIVE_INFINITY + "\""));
+        "\"" + Float.POSITIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneDouble", overflowDoubleString,
+        "\"" + Float.POSITIVE_INFINITY + "\"");
+
     assertEqualExpectedValueWhenCallingMethod("addOneDouble", underflowDouble,
-        "\"" + String.valueOf(Double.NEGATIVE_INFINITY) + "\"");
+        "\"" + Double.NEGATIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneDouble", underflowDoubleString,
+        "\"" + Double.NEGATIVE_INFINITY + "\"");
 
     assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", overflowDouble,
-        "\"" + String.valueOf(Float.POSITIVE_INFINITY + "\""));
+      "\"" + Float.POSITIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", overflowDoubleString,
+      "\"" + Float.POSITIVE_INFINITY + "\"");
+
     assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", underflowDouble,
-        "\"" + String.valueOf(Double.NEGATIVE_INFINITY) + "\"");
+      "\"" + Double.NEGATIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", underflowDoubleString,
+      "\"" + Double.NEGATIVE_INFINITY + "\"");
   }
 
   @Test
   public void should_ShouldHandleSpecialInputForDouble_When_ReceiveNull() {
     assertEqualExpectedValueWhenCallingMethod("addOneDouble", "null", "1.0");
 
-    assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", "null", "null");
+    assertEqualExpectedValueWhenCallingMethod("addOneDoubleBoxed", "null",
+        "null");
   }
 
   @Test

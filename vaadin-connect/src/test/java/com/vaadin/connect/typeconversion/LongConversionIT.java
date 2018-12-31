@@ -43,6 +43,17 @@ public class LongConversionIT extends BaseTypeConversionIT {
   }
 
   @Test
+  public void should_FailToConvertToLong_When_ReceiveOverflowLongAsString() {
+    String overflowLong = "\"9223372036854775808\"";
+    assert400ResponseWhenCallingMethod("addOneLong", overflowLong);
+    assert400ResponseWhenCallingMethod("addOneLongBoxed", overflowLong);
+
+    String underflowLong = "\"-9223372036854775809\"";
+    assert400ResponseWhenCallingMethod("addOneLong", underflowLong);
+    assert400ResponseWhenCallingMethod("addOneLongBoxed", underflowLong);
+  }
+
+  @Test
   public void should_ConvertToLong_When_ReceiveDecimalAsNumber() {
     assertEqualExpectedValueWhenCallingMethod("addOneLong", "1.9", "2");
     assertEqualExpectedValueWhenCallingMethod("addOneLong", "-1.0", "0");
