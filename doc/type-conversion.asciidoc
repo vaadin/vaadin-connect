@@ -73,11 +73,13 @@ The compliant values will be converted to the corresponding value, otherwise the
 ** `null` => `0`
 
 * Noncompliant values:
-** A non single character string: `"fo"`, `"10"`
+** A multi-character string: `"fo"`, `"10"`
 ** An integer number which is less than `0` or greater than `2^16^ - 1`
 ** A decimal number
 ** Any other types: boolean, object or array
 ** `undefined`, `NaN`
+
+* UTF-16 and Unicode: Both Java and JavaScript internally use UTF-16 for string encoding. This makes string conversion between backend and frontend trivial. However, using UTF-16 has its limitations and corner cases. Most notably, a string like `"🥑"` might seem like a single-character which can be passed to Java as a `char`. However, both in JavaScript and Java it is actually a two-character string (because the `U+1F951` symbol takes 2 characters in UTF-16: `\uD83E\uDD51`). Thus, it is not a valid value for the Java `char` type.
 
 ==== Type `short`:
 
