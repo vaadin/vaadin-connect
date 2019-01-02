@@ -23,7 +23,7 @@ describe('demo application', () => {
     it('should say hello after logging in', async() => {
       await page
         .findById('login').click().end()
-        .sleep(5000)
+        .sleep(2000)
         .findById('loginMessage').getVisibleText().then(text =>
           expect(text).to.equal('Hello, test_login!')
         );
@@ -32,7 +32,7 @@ describe('demo application', () => {
     it('should increment number on button click', async() => {
       await page
         .findById('addOne').click().end()
-        .sleep(5000)
+        .sleep(2000)
         .findById('number').getVisibleText().then(text =>
           expect(text).to.equal('2')
         );
@@ -52,7 +52,7 @@ describe('demo application', () => {
             expect(text).to.equal('')
           ).end()
           .findById('checkAnonymousAccess').click().end()
-          .sleep(5000)
+          .sleep(2000)
           .findById('access').getVisibleText().then(text =>
             expect(text).to.equal('anonymous success')
           );
@@ -67,7 +67,7 @@ describe('demo application', () => {
             expect(text).to.equal('')
           ).end()
           .findById('checkAnonymousAccess').click().end()
-          .sleep(5000)
+          .sleep(2000)
           .findById('access').getVisibleText().then(text =>
             expect(text).to.equal('anonymous success')
           );
