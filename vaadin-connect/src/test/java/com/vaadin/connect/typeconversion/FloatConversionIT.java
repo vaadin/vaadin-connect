@@ -65,16 +65,28 @@ public class FloatConversionIT extends BaseTypeConversionIT {
   @Test
   public void should_HandleOverflowFloat_When_ReceiveANumberOverflowOrUnderflow() {
     String overflowFloat = "3.4028236E38";
+    String overflowFloatString = "\"3.4028236E38\"";
     String underflowFloat = "-3.4028235E39";
+    String underflowFloatString = "\"-3.4028235E39\"";
     assertEqualExpectedValueWhenCallingMethod("addOneFloat", overflowFloat,
-        "\"" + String.valueOf(Float.POSITIVE_INFINITY + "\""));
+        "\"" + Float.POSITIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneFloat", overflowFloatString,
+        "\"" + Float.POSITIVE_INFINITY + "\"");
+
     assertEqualExpectedValueWhenCallingMethod("addOneFloat", underflowFloat,
-        "\"" + String.valueOf(Float.NEGATIVE_INFINITY + "\""));
+        "\"" + Float.NEGATIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneFloat", underflowFloatString,
+        "\"" + Float.NEGATIVE_INFINITY + "\"");
 
     assertEqualExpectedValueWhenCallingMethod("addOneFloatBoxed", overflowFloat,
-        "\"" + String.valueOf(Float.POSITIVE_INFINITY + "\""));
+        "\"" + Float.POSITIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneFloatBoxed", overflowFloatString,
+        "\"" + Float.POSITIVE_INFINITY + "\"");
+
     assertEqualExpectedValueWhenCallingMethod("addOneFloatBoxed", underflowFloat,
-        "\"" + String.valueOf(Float.NEGATIVE_INFINITY + "\""));
+        "\"" + Float.NEGATIVE_INFINITY + "\"");
+    assertEqualExpectedValueWhenCallingMethod("addOneFloatBoxed", underflowFloatString,
+        "\"" + Float.NEGATIVE_INFINITY + "\"");
   }
 
   @Test

@@ -46,15 +46,28 @@ public class IntegerConversionIT extends BaseTypeConversionIT {
     String overflowInputInteger = "2147483648";
     assertEqualExpectedValueWhenCallingMethod("addOneInt", overflowInputInteger,
         String.valueOf(Integer.MIN_VALUE + 1));
-    assertEqualExpectedValueWhenCallingMethod("addOneIntBoxed", overflowInputInteger,
-        String.valueOf(Integer.MIN_VALUE + 1));
+    assertEqualExpectedValueWhenCallingMethod("addOneIntBoxed",
+        overflowInputInteger, String.valueOf(Integer.MIN_VALUE + 1));
 
     String underflowInputInteger = "-2147483649";
     // underflow will become MAX, then +1 in the method => MIN
-    assertEqualExpectedValueWhenCallingMethod("addOneInt", underflowInputInteger,
-        String.valueOf(Integer.MIN_VALUE));
-    assertEqualExpectedValueWhenCallingMethod("addOneIntBoxed", underflowInputInteger,
-        String.valueOf(Integer.MIN_VALUE));
+    assertEqualExpectedValueWhenCallingMethod("addOneInt",
+        underflowInputInteger, String.valueOf(Integer.MIN_VALUE));
+    assertEqualExpectedValueWhenCallingMethod("addOneIntBoxed",
+        underflowInputInteger, String.valueOf(Integer.MIN_VALUE));
+  }
+
+  @Test
+  public void should_FailToConvertOverflowInteger_When_ReceiveOverflowNumberAsAString() {
+    String overflowInputIntegerAsString = "\"2147483648\"";
+    assert400ResponseWhenCallingMethod("addOneInt",
+        overflowInputIntegerAsString);
+    assert400ResponseWhenCallingMethod("addOneIntBoxed",
+        overflowInputIntegerAsString);
+
+    String underflowInputInteger = "\"-2147483649\"";
+    assert400ResponseWhenCallingMethod("addOneInt", underflowInputInteger);
+    assert400ResponseWhenCallingMethod("addOneIntBoxed", underflowInputInteger);
   }
 
   @Test
