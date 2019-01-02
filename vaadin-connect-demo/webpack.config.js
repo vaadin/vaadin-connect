@@ -1,10 +1,12 @@
 /* global require, module, __dirname */
 const path = require('path');
 const webpack = require('webpack');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const {BabelMultiTargetPlugin} = require('webpack-babel-multi-target-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+ // This folder is served as static in a spring-boot installation
+ const outputFolder = 'target/classes/META-INF/resources';
 
 module.exports = {
   // Default build mode (the frontend development server forces 'development')
@@ -44,7 +46,7 @@ module.exports = {
 
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, 'build')
+    path: path.resolve(__dirname, outputFolder)
   },
 
   performance: {
@@ -53,9 +55,6 @@ module.exports = {
   },
 
   plugins: [
-    // Remove the output directory
-    new CleanWebpackPlugin(['build']),
-
     // Copy static assets
     new CopyWebpackPlugin(['**/*'], {context: path.resolve(__dirname, 'static')}),
 
