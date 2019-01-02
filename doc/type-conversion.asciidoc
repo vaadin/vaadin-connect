@@ -140,7 +140,7 @@ Any `String` values are kept the same when sent from JavaScript to Java backend.
 ** A non-number string: `"foo"`
 ** Any other types: boolean, object or array
 
-==== java.util.LocalDate
+==== java.time.LocalDate
 
 * JavaScript compliant values:
 ** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE` format `yyyy-MM-dd`: `"2018-12-16"`, `"2019-01-01"`.
@@ -149,7 +149,7 @@ Any `String` values are kept the same when sent from JavaScript to Java backend.
 ** An incorrect format string: `"foo"`
 ** Any other types: boolean, object or array
 
-==== java.util.LocalDateTime
+==== java.time.LocalDateTime
 
 * JavaScript compliant values:
 ** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME` format:
