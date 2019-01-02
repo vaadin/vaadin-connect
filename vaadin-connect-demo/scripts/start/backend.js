@@ -41,6 +41,12 @@ const [chainedExecutable, ...chainedArgs] = endOfOptionsIndex > -1
   ? process.argv.slice(endOfOptionsIndex + 1)
   : [];
 
+// Graceful shutdown
+process.on('SIGINT', () => process.exit(0));
+process.on('SIGBREAK', () => process.exit(0));
+process.on('SIGHUP', () => process.exit(129));
+process.on('SIGTERM', () => process.exit(137));
+
 // Generator
 const hasFilesWithExtension = (directory, extension) => {
   return fs.existsSync(directory)
