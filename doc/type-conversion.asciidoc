@@ -14,7 +14,7 @@ The default Vaadin Connect JSON `ObjectMapper` closely follows the https://docs.
 
 The visibility level of the default `ObjectMapper` can be configured by setting the `spring.jackson.visibility` property (in https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html[common application properties]). Other properties of the default `ObjectMapper` can be customized by following the https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[Spring Boot documentation] on the subject. Alternatively, the entire `ObjectMapper` can be replaced with a custom one by providing an `ObjectMapper` bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER`.
 
-The default `ObjectMapper` always converts JavaScript values to JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification which only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies `undefined`, `NaN` and `Infinity` are not able to send to Java.
+The default `ObjectMapper` always converts JavaScript values to JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification which only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies that `undefined`, `NaN` and `Infinity` are non-compliant. If sent, the server will return an error response (`400 Bad Request`).
 
 The default conversion rules are summarized as follows (the JavaScript compliant values are converted to the corresponding values, otherwise the backend returns an error message):
 
@@ -126,7 +126,7 @@ The default conversion rules are summarized as follows (the JavaScript compliant
 
 The conversion works the same as primitive type except that `null` is converted to `null` instead of default value.
 
-=== To receive `String` in Java
+=== To receive a `String` in Java
 
 Any `String` values are kept the same when sent from JavaScript to Java backend.
 
@@ -161,7 +161,7 @@ Any `String` values are kept the same when sent from JavaScript to Java backend.
 ** An incorrect format string: `"foo"`
 ** Any other types: boolean, object or array
 
-=== To receive `Enum` in Java
+=== To receive an `Enum` in Java
 
 * JavaScript compliant value:
 ** A string with the same name as an enum: assume that we have an <<enum-declaration>>, then sending `"FIRST"` from JavaScript would result an instance of `FIRST` with `value=1` in Java.
@@ -190,7 +190,7 @@ public enum TestEnum {
 ** A non-matched string with name of the expected Enum type.
 ** Any other types: boolean, object or array.
 
-=== To receive array in Java
+=== To receive an array in Java
 
 * JavaScript compliant values:
 ** An array of items with expected type in Java, for example:
@@ -203,7 +203,7 @@ public enum TestEnum {
 ** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
 ** Any other types: boolean, object
 
-=== To receive collection in Java
+=== To receive a collection in Java
 
 * JavaScript compliant values:
 ** An array of items with expected type in Java (or types which can be converted to expected types), for example, if you expected in Java:
@@ -216,7 +216,7 @@ public enum TestEnum {
 ** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
 ** Any other types: boolean, object
 
-=== To receive map in Java
+=== To receive a map in Java
 
 * JavaScript compliant value:
 ** An object with string keys and values with the expected type in Java:
@@ -227,7 +227,7 @@ public enum TestEnum {
 * Noncompliant values:
 ** Any non-object types: number, string, boolean or array.
 
-=== To receive bean in Java
+=== To receive a bean in Java
 
 A bean is parsed from the input JSON object which maps the keys of JSON object to the property name of the bean object. You can also use Jackson's annotation to customize your bean object. For more information about the annotations, please have a look at https://github.com/FasterXML/jackson-annotations[Jackson Annotations].
 
@@ -273,7 +273,9 @@ The same object mapper used when converting from <<from-js-to-java>> deserialize
 
 All the Java types which extend `java.lang.Number` are deserialized to `number` in JavaScript. There are a few exceptional cases with extremely large or small numbers. The safe integer range is from `-(2^53^ - 1)` to `2^53^ - 1`. It means only numbers in this range can be represented exactly and correctly compared them (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integer]).
 
-Practically, not all `long` number in Java can be converted correctly in JavaScript since its range is `-2^63^` to `2^63^ - 1`. The values which are out of safe range
+Practically, not all `long` number in Java can be converted correctly in JavaScript since its range is `-2^63^` to `2^63^ - 1`. The unsafe numbers are rounded using the rules defined in https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules[IEEE-754 standard].
+
+The special values such as `NaN`, `POSITIVE_INFINITY` and `NEGATIVE_INFINITY` are converted into `string` when sent to JavaScript.
 
 === Type `string`
 
