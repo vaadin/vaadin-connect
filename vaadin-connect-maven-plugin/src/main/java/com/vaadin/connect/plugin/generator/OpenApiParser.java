@@ -139,6 +139,7 @@ class OpenApiParser {
     nonServiceSchemas = new HashMap<>();
     usedSchemas = new HashSet<>();
     servicesJavadoc = new HashMap<>();
+
     ParserConfiguration parserConfiguration = new ParserConfiguration()
         .setSymbolResolver(new JavaSymbolSolver(
             new CombinedTypeSolver(new ReflectionTypeSolver(false))));
@@ -214,11 +215,14 @@ class OpenApiParser {
 
   private Collection<ClassOrInterfaceDeclaration> appendNestedClasses(
       ClassOrInterfaceDeclaration topLevelClass) {
-    return topLevelClass.getMembers().addLast(topLevelClass).stream()
+    TreeSet<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass
+        .getMembers().stream()
         .filter(BodyDeclaration::isClassOrInterfaceDeclaration)
         .map(BodyDeclaration::asClassOrInterfaceDeclaration)
         .collect(Collectors.toCollection(() -> new TreeSet<>(
             Comparator.comparing(NodeWithSimpleName::getNameAsString))));
+    nestedClasses.add(topLevelClass);
+    return nestedClasses;
   }
 
   private void parseClass(ClassOrInterfaceDeclaration classDeclaration) {
