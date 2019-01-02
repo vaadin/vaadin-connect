@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2018 Vaadin Ltd.
+ * Copyright 2000-2019 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,6 +14,10 @@
  * the License.
  */
 package com.vaadin.connect.demo;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,10 +34,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Map;
 
 import static com.vaadin.connect.demo.DemoVaadinOAuthConfiguration.TEST_LOGIN;
 import static com.vaadin.connect.demo.DemoVaadinOAuthConfiguration.TEST_PASSWORD;

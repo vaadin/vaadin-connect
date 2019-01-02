@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2018 Vaadin Ltd.
+ * Copyright 2000-2019 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -50,6 +50,20 @@ public class VaadinConnectOAuthConfigurer
   private final AuthenticationManager authenticationManager;
   private final UserDetailsService userDetails;
 
+  /**
+   * Creates VaadinConnectOAuthConfigurer bean.
+   *
+   * @param encoder password encoder bean
+   * @param vaadinConnectProperties Vaadin Connect properties bean
+   * @param tokenStore token store bean
+   * @param accessTokenConverter access token converter bean
+   * @param authenticationConfiguration authentication configuration bean
+   * @param userDetails custom user details service, optional
+   * @param authenticationManager custom authentication manager, optional
+   * @throws Exception
+   *           if bean configuration fails due to
+   *           {@link AuthenticationConfiguration#getAuthenticationManager()}
+   */
   public VaadinConnectOAuthConfigurer(PasswordEncoder encoder,
       VaadinConnectProperties vaadinConnectProperties, TokenStore tokenStore,
       JwtAccessTokenConverter accessTokenConverter,
@@ -71,10 +85,8 @@ public class VaadinConnectOAuthConfigurer
   public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
     // This is required for 'password' and 'refresh_token' grants, which is
     // specified below
-    endpoints
-        .userDetailsService(userDetails)
-        .authenticationManager(authenticationManager)
-        .tokenStore(tokenStore)
+    endpoints.userDetailsService(userDetails)
+        .authenticationManager(authenticationManager).tokenStore(tokenStore)
         .accessTokenConverter(accessTokenConverter);
   }
 
