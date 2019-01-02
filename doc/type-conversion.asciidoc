@@ -274,3 +274,43 @@ public class MyBean {
   }
 }
 ----
+
+== Java to JavaScript
+
+The same object mapper used when converting from <<from-js-to-java>> deserializes the return values in Java to the corresponding json objects before sending them to client-side.
+
+=== Type `number`
+
+All the Java types which extend `java.lang.Number` are deserialized to `number` in JavaScript. There are a few exceptional cases with extremely large or small numbers. The safe integer range is from `-(2^53^ - 1)` to `2^53^ - 1`. It means only numbers in this range can be represented exactly and correctly compared them (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integer]).
+
+Practically, not all `long` number in Java can be converted correctly in JavaScript since its range is `-2^63^` to `2^63^ - 1`. The values which are out of safe range
+
+=== Type `string`
+
+The primitive type `char`, its boxed type `Character` and `String` in Java are converted to `string` type in JavaScript.
+
+=== Type `boolean`
+
+`boolean` and `Boolean` in Java are converted to `boolean` type when received in JavaScript.
+
+=== Array of items
+
+All the types which extend `java.lang.Iterable` becomes `array` when they are sent to JavaScript.
+
+=== Object and map
+
+Any kinds of objects and maps in Java are converted to `object` in JavaScript. The objects hold property-value pairs which can be accessed by either ways `object.property` or `object["property"]`.
+
+=== Datetime
+
+By default, the `ObjectMapper` converts Java's date time to a string in JavaScript with the following formats:
+
+* `java.util.Date` of `00:00:00 January 1st, 2019` => `"2019-01-01T00:00:00.000+0000"`
+
+* `java.time.LocalDate` of `00:00:00 January 1st, 2019` => `"2019-01-01"`
+
+* `java.time.LocalDateTime` of `00:00:00 January 1st, 2019` => `"2019-01-01T00:00:00"`
+
+=== `null`
+
+If the backend returns `null`, it is also `null` in JavaScript.
