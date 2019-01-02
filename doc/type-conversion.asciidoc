@@ -6,40 +6,26 @@ layout: page
 
 = Vaadin Connect Type Conversion
 
+== JavaScript to Java [[from-js-to-java]]
+
 When calling a Java service method from JavaScript, `ConnectClient` serializes JavaScript call parameters to JSON and sends them to Java backend where they are deserialized into Java types using the https://github.com/FasterXML/jackson[Jackson] JSON processing library. The return value of the Java service method is sent back to JavaScript through the same pipeline in the opposite direction.
 
 The default Vaadin Connect JSON `ObjectMapper` closely follows the https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-json.html#boot-features-json-jackson[Spring Boot auto-configuration] defaults. One notable difference is that in Vaadin Connect the default object mapper is configured to discover `private` properties. I.e. all the fields, getters, setters or constructors are discoverable even if they are declared as `private`. This is done in order to make serialization / deserialization of custom objects easier.
 
 The visibility level of the default `ObjectMapper` can be configured by setting the `spring.jackson.visibility` property (in https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html[common application properties]). Other properties of the default `ObjectMapper` can be customized by following the https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[Spring Boot documentation] on the subject. Alternatively, the entire `ObjectMapper` can be replaced with a custom one by providing an `ObjectMapper` bean with the qualifier defined in `com.vaadin.connect.VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER`.
 
-The default `ObjectMapper` conversion rules are summarized as follows:
+The default `ObjectMapper` always converts JavaScript values to JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification which only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies that `undefined`, `NaN` and `Infinity` are non-compliant. If sent, the server will return an error response (`400 Bad Request`).
 
-=== Primitive types
-The compliant values will be converted to the corresponding value, otherwise the backend will return an error message.
+The default conversion rules are summarized as follows (the JavaScript compliant values are converted to the corresponding values, otherwise the backend returns an error message):
 
-==== Type `int`:
-
-* Compliant values:
-** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
-** A integer string: `"100"` => `100`
-** `null` => `0`
-
-* Noncompliant values:
-** A non-integer string: `"foo"`, `"100.9"`
-** Any other types: boolean, object, array
-** `undefined`
-** An overflow or underflow integer as a String: `"2147483648"`, `"-2147483649"`
-
-* Overflow number: if JavaScript sends a value which is greater than Java's `Integer.MAX_VALUE` (2^31^ - 1), the bits will get rolled over. For example, sending a value `2^31^` (`Integer.MAX_VALUE + 1`), Java side will receive `-2^31^` (`Integer.MIN_VALUE`).
-
-* Underflow number: it is vice versa with overflow number. Sending `-2^31^ - 1` (`Integer.MIN_VALUE - 1`), Java side will get `2^31^ - 1` (`Integer.MAX_VALUE`).
+=== To receive primitive types in Java
 
 ==== Type `boolean`:
 
-* Compliant values:
+* JavaScript compliant values:
 ** A boolean value: `true` => `true` and `false` => `false`
 ** A boolean string (case sensitive): `"true"` => `true`, `"True"` => `true`, `"false"` => `false` and `"False"` => `false`
-** Any integer number different from zero will be true: `1` => `true`, `-1` => `true` but `0` => `false`
+** Any integer number different from zero are true: `1` => `true`, `-1` => `true` but `0` => `false`
 ** `null` => `false`
 
 * Noncompliant values:
@@ -47,29 +33,42 @@ The compliant values will be converted to the corresponding value, otherwise the
 ** A decimal number: `100.0`
 ** A non-boolean string: `"foo"`, `"100.9"`
 ** Any other types: object or array
-** `undefined`, `NaN`
+
+==== Type `char`:
+
+* JavaScript compliant values:
+** A single character string: `"a"` => `'a'`
+** An integer from `0` to `2^16^ - 1`: `128` => unicode character `'\u0080'`
+** `null` => `0`
+
+* Noncompliant values:
+** A non single character string: `"fo"`, `"10"`
+** An integer number which is less than `0` or greater than `2^16^ - 1`
+** A decimal number
+** Any other types: boolean, object or array
+
+* UTF-16 and Unicode: Both Java and JavaScript internally use UTF-16 for string encoding. This makes string conversion between backend and frontend trivial. However, using UTF-16 has its limitations and corner cases. Most notably, a string like `"🥑"` might seem like a single-character which can be passed to Java as a `char`. However, both in JavaScript and Java it is actually a two-character string (because the `U+1F951` symbol takes 2 characters in UTF-16: `\uD83E\uDD51`). Thus, it is not a valid value for the Java `char` type.
 
 ==== Type `byte`:
 
-* Compliant values:
+* JavaScript compliant values:
 ** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
-** A integer string: `"100"` => `100`
+** An integer string: `"100"` => `100`
 ** `null` => `0`
 
 * Noncompliant values:
 ** A non-integer string: `"foo"`, `"100.9"`
 ** Any other types: boolean, object or array
-** `undefined`, `NaN`
 
-* Overflow number: if JavaScript sends a value which is greater than Java's `Byte.MAX_VALUE` (2^8^ - 1), the bits will get rolled over. For example, sends a value `128` (`Byte.MAX_VALUE + 1`), Java side will receive `-128` (`Byte.MIN_VALUE`).
+* Overflow number: if JavaScript sends a value which is greater than Java's `Byte.MAX_VALUE` (2^8^ - 1), the bits gets rolled over. For example, sends a value `128` (`Byte.MAX_VALUE + 1`), Java side receives `-128` (`Byte.MIN_VALUE`).
 
-* Underflow number: if Java side expects a `byte` value but JavaScript sends an underflow number, e.g. `-129` (`Byte.MIN_VALUE - 1`), the backend will return an error.
+* Underflow number: if Java side expects a `byte` value but JavaScript sends an underflow number, e.g. `-129` (`Byte.MIN_VALUE - 1`), the backend returns an error.
 
-==== Type `char`:
+==== Type `short`:
 
-* Compliant values:
-** A single character string: `"a"` => `'a'`
-** An integer from `0` to `2^16^ - 1`: `128` => unicode character `'\u0080'`
+* JavaScript compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+** An integer string: `"100"` => `100`
 ** `null` => `0`
 
 * Noncompliant values:
@@ -77,99 +76,94 @@ The compliant values will be converted to the corresponding value, otherwise the
 ** An integer number which is less than `0` or greater than `2^16^ - 1`
 ** A decimal number
 ** Any other types: boolean, object or array
-** `undefined`, `NaN`
-
-* UTF-16 and Unicode: Both Java and JavaScript internally use UTF-16 for string encoding. This makes string conversion between backend and frontend trivial. However, using UTF-16 has its limitations and corner cases. Most notably, a string like `"🥑"` might seem like a single-character which can be passed to Java as a `char`. However, both in JavaScript and Java it is actually a two-character string (because the `U+1F951` symbol takes 2 characters in UTF-16: `\uD83E\uDD51`). Thus, it is not a valid value for the Java `char` type.
-
-==== Type `short`:
-
-* Compliant values:
-** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
-** A integer string: `"100"` => `100`
-** `null` => `0`
-
-* Noncompliant values:
-** A non-integer string: `"foo"`, `"100.9"`
-** Any other types: boolean, object or array
-** `undefined`, `NaN`
 
 * Overflow and underflow numbers are not acceptable for `short`
 
+==== Type `int`:
+
+* JavaScript compliant values:
+** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
+** An integer string: `"100"` => `100`
+** `null` => `0`
+
+* Noncompliant values:
+** A non-integer string: `"foo"`, `"100.9"`
+** Any other types: boolean, object, array
+** An overflow or underflow integer as a String: `"2147483648"`, `"-2147483649"`
+
+* Overflow number: if JavaScript sends a value which is greater than Java's `Integer.MAX_VALUE` (2^31^ - 1), the bits gets rolled over. For example, sending a value `2^31^` (`Integer.MAX_VALUE + 1`), Java side receives `-2^31^` (`Integer.MIN_VALUE`).
+
+* Underflow number: it is vice versa with overflow number. Sending `-2^31^ - 1` (`Integer.MIN_VALUE - 1`), Java side gets `2^31^ - 1` (`Integer.MAX_VALUE`).
+
 ==== Type `long`:
 
-* Compliant values:
+* JavaScript compliant values:
 ** An integer or decimal number: `100`, `100.0` and `100.9` => `100`
-** A integer string: `"100"` => `100`
+** An integer string: `"100"` => `100`
 ** `null` => `0`
 
 * Noncompliant values:
 ** A non-integer string: `"foo"`, `"100.9"`
 ** Any other types: boolean, object or array
-** `undefined`, `NaN`
 ** An overflow or underflow long as a String: `"9223372036854775808"`, `"-9223372036854775809"`
 
 * Overflow and underflow numbers: bits get rolled over when receiving overflow/underflow number i.e. `2^63^` => `-2^63^`, `-2^63^ - 1` => `2^63^ - 1`
 
 ==== Type `float` and `double`:
 
-* Compliant values:
+* JavaScript compliant values:
 ** An integer or decimal number: `100` and `100.0` => `100.0`, `100.9` => `100.9`
 ** A number string: `"100"` => `100.0`, `"100.9"` => `100.9`
 ** `null` => `0.0`
 
-
 * Noncompliant values:
 ** A non-number string: `"foo"`
 ** Any other types: boolean, object or array
-** `undefined`, `NaN`, `Infinity` and `-Infinity`
 
-* Overflow and underflow numbers will be converted to `Infinity` and `-Infinity` respectively.
+* Overflow and underflow numbers are converted to `Infinity` and `-Infinity` respectively.
 
-=== Boxed primitive types
+=== To receive boxed primitive types in Java
 
-The conversion works the same as primitive type except that `null` will be converted to `null` instead of default value.
+The conversion works the same as primitive type except that `null` is converted to `null` instead of default value.
 
-=== String
+=== To receive a `String` in Java
 
-Any `String` value will be kept the same when sent from JavaScript to Java backend.
+Any `String` values are kept the same when sent from JavaScript to Java backend.
 
-=== Date time types
+=== To receive date time types in Java
 ==== java.util.Date
 
-* Compliant values:
-** An integer number or string that represents an epoch timestamp: `1546300800` or `"1546300800"` will be converted to a `java.util.Date` instance which contains value of the date `01-01-2019`.
+* JavaScript compliant values:
+** An integer number or string that represents an epoch timestamp: `1546300800` or `"1546300800"` are converted to a `java.util.Date` instance which contains value of the date `01-01-2019`.
 
 * Noncompliant values:
 ** A non-number string: `"foo"`
 ** Any other types: boolean, object or array
-** `undefined`
 
 ==== java.util.LocalDate
 
-* Compliant values:
+* JavaScript compliant values:
 ** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE` format `yyyy-MM-dd`: `"2018-12-16"`, `"2019-01-01"`.
 
 * Noncompliant values:
 ** An incorrect format string: `"foo"`
 ** Any other types: boolean, object or array
-** `undefined`
 
 ==== java.util.LocalDateTime
 
-* Compliant values:
+* JavaScript compliant values:
 ** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME` format:
 *** With full time: `"2019-01-01T12:34:56"`
-*** Without seconds:  `"2019-01-01T12:34"`
+*** Without seconds: `"2019-01-01T12:34"`
 *** With full time and milliseconds: `"2019-01-01T12:34:56.78"`
 
 * Noncompliant values:
 ** An incorrect format string: `"foo"`
 ** Any other types: boolean, object or array
-** `undefined`
 
-=== Enum
+=== To receive an `Enum` in Java
 
-* Compliant value:
+* JavaScript compliant value:
 ** A string with the same name as an enum: assume that we have an <<enum-declaration>>, then sending `"FIRST"` from JavaScript would result an instance of `FIRST` with `value=1` in Java.
 
 .Enum declaration
@@ -195,11 +189,10 @@ public enum TestEnum {
 * Noncompliant values:
 ** A non-matched string with name of the expected Enum type.
 ** Any other types: boolean, object or array.
-** `undefined`
 
-=== Array
+=== To receive an array in Java
 
-* Compliant values:
+* JavaScript compliant values:
 ** An array of items with expected type in Java, for example:
 *** Expected in Java `int[]`: `[1, 2, 3]` => `[1,2,3]`, `[1.9, 2, 3]` => `[1,2,3]`, `["1", 2, 3]` => `[1,2,3]`
 *** Expected in Java `String[]`: `["foo","bar"]` => `["foo","bar"]`, `["numberWorksForStringArray", 1, 2.0]` => `["numberWorksForStringArray", "1", "2.0"]`
@@ -209,11 +202,10 @@ public enum TestEnum {
 ** Mixed types array might not work: if you expected `int[]` in Java,  `["1.9", 2, 3]` won't work.
 ** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
 ** Any other types: boolean, object
-** `undefined`
 
-=== Collection
+=== To receive a collection in Java
 
-* Compliant values:
+* JavaScript compliant values:
 ** An array of items with expected type in Java (or types which can be converted to expected types), for example, if you expected in Java:
 *** `Collection<Integer>`: `[1, 2, 3]` => `[1,2,3]`, `["1","2","3"]` => `[1,2,3]`
 *** `Collection<String>`: `["foo","bar"]` => `["foo","bar"]`
@@ -223,11 +215,10 @@ public enum TestEnum {
 * Noncompliant values:
 ** A non-array input: `"foo"`, `"[1,2,3]"`, `1`
 ** Any other types: boolean, object
-** `undefined`
 
-=== Map
+=== To receive a map in Java
 
-* Compliant value:
+* JavaScript compliant value:
 ** An object with string keys and values with the expected type in Java:
 *** `Map<String, String>`: `{"key1": "1", "key2": "2"}` => `{"key1": "1", "key2": "2"}`, `{"integerValue": 1, "alsoValidForStringMap": 2}` => `{"integerValue": "1", "alsoValidForStringMap": "2"}`
 *** `Map<String, TestEnum>`: `{"key1": "FIRST", "key2": "SECOND"}` => `{"key1": "FIRST", "key2": "SECOND"}`
@@ -235,13 +226,12 @@ public enum TestEnum {
 
 * Noncompliant values:
 ** Any non-object types: number, string, boolean or array.
-** `undefined`
 
-=== Bean
+=== To receive a bean in Java
 
-A bean will be parsed from the input JSON object which will map the keys with the property name of the Bean object. You can also use Jackson's annotation to customize your bean object. For more information about the annotations, please have a look at https://github.com/FasterXML/jackson-annotations[Jackson Annotations].
+A bean is parsed from the input JSON object which maps the keys of JSON object to the property name of the bean object. You can also use Jackson's annotation to customize your bean object. For more information about the annotations, please have a look at https://github.com/FasterXML/jackson-annotations[Jackson Annotations].
 
-* Example: assume that we have <<bean-example>>, a valid input for the bean would look like
+* Example: assume that we have <<bean-example>>, a valid input for the bean looks like
 ```
 {
   "name": "MyBean",
@@ -274,3 +264,45 @@ public class MyBean {
   }
 }
 ----
+
+== Java to JavaScript
+
+The same object mapper used when converting from <<from-js-to-java>> deserializes the return values in Java to the corresponding JSON object before sending them to client-side.
+
+=== Type `number`
+
+All the Java types which extend `java.lang.Number` are deserialized to `number` in JavaScript. There are a few exceptional cases with extremely large or small numbers. The safe integer range is from `-(2^53^ - 1)` to `2^53^ - 1`. It means only numbers in this range can be represented exactly and correctly compared them (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integer]).
+
+Practically, not all `long` number in Java can be converted correctly in JavaScript since its range is `-2^63^` to `2^63^ - 1`. The unsafe numbers are rounded using the rules defined in https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules[IEEE-754 standard].
+
+The special values such as `NaN`, `POSITIVE_INFINITY` and `NEGATIVE_INFINITY` are converted into `string` when sent to JavaScript.
+
+=== Type `string`
+
+The primitive type `char`, its boxed type `Character` and `String` in Java are converted to `string` type in JavaScript.
+
+=== Type `boolean`
+
+`boolean` and `Boolean` in Java are converted to `boolean` type when received in JavaScript.
+
+=== Array of items
+
+All the types which extend `java.lang.Iterable` becomes `array` when they are sent to JavaScript.
+
+=== Object and map
+
+Any kinds of objects and maps in Java are converted to `object` in JavaScript. The objects hold property-value pairs which can be accessed by either ways `object.property` or `object["property"]`.
+
+=== Datetime
+
+By default, the `ObjectMapper` converts Java's date time to a string in JavaScript with the following formats:
+
+* `java.util.Date` of `00:00:00 January 1st, 2019` => `"2019-01-01T00:00:00.000+0000"`
+
+* `java.time.LocalDate` of `00:00:00 January 1st, 2019` => `"2019-01-01"`
+
+* `java.time.LocalDateTime` of `00:00:00 January 1st, 2019` => `"2019-01-01T00:00:00"`
+
+=== `null`
+
+If the backend returns `null`, it is also `null` in JavaScript.
