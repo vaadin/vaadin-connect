@@ -16,6 +16,27 @@
     "description" : "This class is used for OpenApi generator test"
   } ],
   "paths" : {
+    "/customName/getNumber" : {
+      "post" : {
+        "tags" : [ "CustomNameService" ],
+        "operationId" : "customName_getNumber_POST",
+        "responses" : {
+          "200" : {
+            "description" : "",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "number"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
     "/GeneratorAnonymousAllowedTestClass/anonymousAllowed" : {
       "post" : {
         "tags" : [ "GeneratorAnonymousAllowedTestClass" ],

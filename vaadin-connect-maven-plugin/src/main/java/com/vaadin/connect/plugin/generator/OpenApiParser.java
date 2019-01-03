@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -42,6 +43,10 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.LiteralStringValueExpr;
+import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
@@ -77,6 +82,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
@@ -219,24 +225,33 @@ class OpenApiParser {
   }
 
   private void parseClass(ClassOrInterfaceDeclaration classDeclaration) {
-    String className = classDeclaration.getNameAsString();
-    if (!classDeclaration.isAnnotationPresent(VaadinService.class)) {
-      nonServiceSchemas.put(className, parseClassAsSchema(classDeclaration));
-      return;
-    }
-    classDeclaration.getJavadoc().ifPresent(javadoc -> servicesJavadoc
-        .put(className, javadoc.getDescription().toText()));
+    Optional<AnnotationExpr> serviceAnnotation = classDeclaration
+        .getAnnotationByClass(VaadinService.class);
+    if (!serviceAnnotation.isPresent()) {
+      nonServiceSchemas.put(classDeclaration.getNameAsString(),
+          parseClassAsSchema(classDeclaration));
+    } else {
+      String serviceName = serviceAnnotation
+          .filter(Expression::isSingleMemberAnnotationExpr)
+          .map(Expression::asSingleMemberAnnotationExpr)
+          .map(SingleMemberAnnotationExpr::getMemberValue)
+          .map(Expression::asStringLiteralExpr)
+          .map(LiteralStringValueExpr::getValue).filter(StringUtils::isNotBlank)
+          .orElse(classDeclaration.getNameAsString());
+      classDeclaration.getJavadoc().ifPresent(javadoc -> servicesJavadoc
+          .put(serviceName, javadoc.getDescription().toText()));
 
-    Map<String, PathItem> pathItems = createPathItems(classDeclaration);
+      Map<String, PathItem> pathItems = createPathItems(classDeclaration);
 
-    for (Map.Entry<String, PathItem> entry : pathItems.entrySet()) {
-      String methodName = entry.getKey();
-      PathItem pathItem = entry.getValue();
-      String pathName = "/" + className + "/" + methodName;
-      pathItem.readOperationsMap()
-          .forEach((httpMethod, operation) -> operation.setOperationId(
-              String.join("_", className, methodName, httpMethod.name())));
-      openApiModel.getPaths().addPathItem(pathName, pathItem);
+      for (Map.Entry<String, PathItem> entry : pathItems.entrySet()) {
+        String methodName = entry.getKey();
+        PathItem pathItem = entry.getValue();
+        String pathName = "/" + serviceName + "/" + methodName;
+        pathItem.readOperationsMap()
+            .forEach((httpMethod, operation) -> operation.setOperationId(
+                String.join("_", serviceName, methodName, httpMethod.name())));
+        openApiModel.getPaths().addPathItem(pathName, pathItem);
+      }
     }
   }
 
@@ -388,8 +403,10 @@ class OpenApiParser {
     Schema requestSchema = new ObjectSchema();
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
-      Schema paramSchema = parseResolvedTypeToSchema(parameter.getType().resolve());
-      paramSchema.description(paramsDescription.get(parameter.getNameAsString()));
+      Schema paramSchema = parseResolvedTypeToSchema(
+          parameter.getType().resolve());
+      paramSchema
+          .description(paramsDescription.get(parameter.getNameAsString()));
 
       String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
           .concat(parameter.getNameAsString());

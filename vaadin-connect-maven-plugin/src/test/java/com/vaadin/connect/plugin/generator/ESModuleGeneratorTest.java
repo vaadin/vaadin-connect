@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
+import com.vaadin.connect.plugin.generator.service.CustomNameService;
 import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
 
 import static org.junit.Assert.assertEquals;
@@ -60,12 +61,13 @@ public class ESModuleGeneratorTest {
     List<String> expectedClasses = Arrays.asList(
         GeneratorTestClass.class.getSimpleName(),
         GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
-            .getSimpleName());
+            .getSimpleName(),
+        CustomNameService.class.getSimpleName());
     assertEquals(
         String.format(
             "Expected to have only %s classes processed in the test: '%s'",
             expectedClasses.size(), expectedClasses),
-        2L, Stream.of(outputDirectory.getRoot().list())
+        expectedClasses.size(), Stream.of(outputDirectory.getRoot().list())
             .filter(fileName -> fileName.endsWith(".js")).count());
 
     expectedClasses.forEach(this::assertClassGeneratedJs);
