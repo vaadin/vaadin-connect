@@ -12,7 +12,7 @@
     "start:apibrowser": "node scripts/start/apibrowser.js",
     "start": "node scripts/start/backend.js -- node scripts/start/apibrowser.js -- node scripts/start/frontend.js",
     "test:e2e": "intern",
-    "test": "yarn lint && yarn build:frontend && yarn bundlesize && npm run start -- -- intern",
+    "test": "yarn lint && yarn build:frontend && yarn bundlesize && yarn start -- -- intern",
     "lint": "eslint frontend/ scripts/ e2e/"
   },
   "dependencies": {
