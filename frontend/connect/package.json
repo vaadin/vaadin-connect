@@ -36,7 +36,7 @@
     "eslint-config-vaadin": "^0.2.7",
     "eslint-plugin-chai-expect": "^2.0.1",
     "eslint-plugin-chai-friendly": "^0.4.1",
-    "fetch-mock": "^7.2.5",
+    "fetch-mock": "^7.3.0",
     "intern": "^4.3.3",
     "node-fetch": "^2.3.0",
     "sinon": "^7.1.1",
