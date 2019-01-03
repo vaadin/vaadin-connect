@@ -46,7 +46,9 @@ public class OpenApiSpecGeneratorTest {
   @Test
   public void should_GenerateOpenApi_When_NoApplicationPropertiesInput() {
     new OpenApiSpecGenerator(new Properties()).generateOpenApiSpec(
-        Collections.singletonList(Paths.get("src/test/java")), outputPath);
+        Collections.singletonList(Paths
+            .get("src/test/java/com/vaadin/connect/plugin/generator/service")),
+        outputPath);
 
     Assert.assertTrue(outputPath.toFile().exists());
   }
@@ -56,8 +58,8 @@ public class OpenApiSpecGeneratorTest {
       throws Exception {
     new OpenApiSpecGenerator(TestUtils.readProperties(
         "src/test/resources/com/vaadin/connect/plugin/generator/application.properties.for.testing"))
-            .generateOpenApiSpec(
-                Collections.singletonList(Paths.get("src/test/java")),
+            .generateOpenApiSpec(Collections.singletonList(Paths.get(
+                "src/test/java/com/vaadin/connect/plugin/generator/service")),
                 outputPath);
 
     Assert.assertTrue(outputPath.toFile().exists());
@@ -66,8 +68,8 @@ public class OpenApiSpecGeneratorTest {
         Files.readAllBytes(outputPath), Charset.defaultCharset());
     String expectedJson = TestUtils.getExpectedJson(this.getClass(),
         "expected-openapi-custom-application-properties.json");
-    Assert.assertEquals(expectedJson, actualJson);
 
+    Assert.assertEquals(expectedJson, actualJson);
   }
 
 }
