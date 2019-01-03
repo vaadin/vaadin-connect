@@ -15,10 +15,6 @@
  */
 package com.vaadin.connect.plugin.generator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -38,7 +34,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
+import com.vaadin.connect.plugin.generator.service.CustomNameService;
 import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ESModuleGeneratorTest {
   @Rule
@@ -59,12 +60,13 @@ public class ESModuleGeneratorTest {
     List<String> expectedClasses = Arrays.asList(
         GeneratorTestClass.class.getSimpleName(),
         GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
-            .getSimpleName());
+            .getSimpleName(),
+        CustomNameService.class.getSimpleName());
     assertEquals(
         String.format(
             "Expected to have only %s classes processed in the test: '%s'",
             expectedClasses.size(), expectedClasses),
-        2L, Stream.of(outputDirectory.getRoot().list())
+        expectedClasses.size(), Stream.of(outputDirectory.getRoot().list())
             .filter(fileName -> fileName.endsWith(".js")).count());
 
     expectedClasses.forEach(this::assertClassGeneratedJs);
@@ -75,8 +77,8 @@ public class ESModuleGeneratorTest {
         .resolve(expectedClass + ".js");
     String actualJs;
     try {
-      actualJs = StringUtils.toEncodedString(
-          Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
+      actualJs = StringUtils.toEncodedString(Files.readAllBytes(outputFilePath),
+          Charset.defaultCharset()).trim();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
