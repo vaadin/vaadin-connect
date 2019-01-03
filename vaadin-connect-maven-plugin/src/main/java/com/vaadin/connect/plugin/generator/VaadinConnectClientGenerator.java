@@ -20,9 +20,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.slf4j.LoggerFactory;
 
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.DEFAULT_ENDPOINT;
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
@@ -57,9 +61,25 @@ public class VaadinConnectClientGenerator {
    *      specification</a>
    */
   public void generateVaadinConnectClientFile(Path outputFilePath) {
+    cleanGeneratedFolder(outputFilePath);
     String generatedDefaultClientJs = getDefaultClientJsTemplate()
         .replace("{{ENDPOINT}}", endpoint);
     GeneratorUtils.writeToFile(outputFilePath, generatedDefaultClientJs);
+  }
+
+  private void cleanGeneratedFolder(Path outputFilePath) {
+    Path parentPath = outputFilePath.getParent();
+    if (parentPath == null || !parentPath.toFile().exists()) {
+      return;
+    }
+    try (Stream<Path> filePaths = Files.list(parentPath)) {
+      for (Path path : filePaths.collect(Collectors.toList())) {
+        Files.delete(path);
+      }
+    } catch (IOException e) {
+      LoggerFactory.getLogger(VaadinConnectClientGenerator.class)
+          .error("Error happens while cleaning the generated folder", e);
+    }
   }
 
   private String getDefaultClientJsTemplate() {
