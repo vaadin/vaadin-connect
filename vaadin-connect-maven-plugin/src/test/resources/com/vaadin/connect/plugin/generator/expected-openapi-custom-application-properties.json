@@ -316,6 +316,34 @@
         }
       }
     },
+    "/GeneratorTestClass/reservedWordInParameter" : {
+      "post" : {
+        "tags" : [ "GeneratorTestClass" ],
+        "operationId" : "GeneratorTestClass_reservedWordInParameter_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "_delete" : {
+                    "type" : "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
     "/GeneratorTestClass/updateUser" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],

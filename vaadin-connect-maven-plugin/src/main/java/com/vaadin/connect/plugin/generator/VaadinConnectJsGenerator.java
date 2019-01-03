@@ -74,6 +74,18 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
+
+  static final Set<String> JS_RESERVED_WORDS = new HashSet<>(Arrays.asList("abstract", "arguments",
+      "await", BOOLEAN_TYPE, "break", "byte", "case", "catch", "char",
+      "class", "const", "continue", "debugger", "default", "delete", "do",
+      "double", "else", "enum", "eval", "export", "extends", "false", "final",
+      "finally", "float", "for", "function", "goto", "if", "implements",
+      "import", "in", "instanceof", "int", "interface", "let", "long",
+      "native", "new", "null", "package", "private", "protected", "public",
+      "return", "short", "static", "super", "switch", "synchronized", "this",
+      "throw", "throws", "transient", "true", "try", "typeof", "var", "void",
+      "volatile", "while", "with", "yield"));
+
   private List<Tag> tags;
 
   private static class VaadinConnectJSOnlyGenerator extends DefaultGenerator {
@@ -114,16 +126,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     /*
      * Reserved words copied from https://www.w3schools.com/js/js_reserved.asp
      */
-    reservedWords = new HashSet<>(Arrays.asList("abstract", "arguments",
-        "await", BOOLEAN_TYPE, "break", "byte", "case", "catch", "char",
-        "class", "const", "continue", "debugger", "default", "delete", "do",
-        "double", "else", "enum", "eval", "export", "extends", "false", "final",
-        "finally", "float", "for", "function", "goto", "if", "implements",
-        "import", "in", "instanceof", "int", "interface", "let", "long",
-        "native", "new", "null", "package", "private", "protected", "public",
-        "return", "short", "static", "super", "switch", "synchronized", "this",
-        "throw", "throws", "transient", "true", "try", "typeof", "var", "void",
-        "volatile", "while", "with", "yield"));
+    reservedWords = JS_RESERVED_WORDS;
 
     /*
      * Language Specific Primitives. These types will not trigger imports by the
@@ -434,6 +437,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     List<ParameterInformation> paramsList = new ArrayList<>();
     for (Map.Entry<String, Schema> entry : properties.entrySet()) {
       String name = entry.getKey();
+      name = isReservedWord(name) ? escapeReservedWord(name) : name;
       String type = getTypeFromSchema(entry.getValue());
       ParameterInformation parameterInformation = new ParameterInformation(name,
           type, entry.getValue().getDescription());

@@ -86,6 +86,14 @@ export function getUserById(id) {
 }
 
 /**
+ * @param {boolean} _delete
+ *
+ */
+export function reservedWordInParameter(_delete) {
+  return client.call('GeneratorTestClass', 'reservedWordInParameter', {_delete}, {requireCredentials: true});
+}
+
+/**
  * Update a user
  *
  * @param {User} user

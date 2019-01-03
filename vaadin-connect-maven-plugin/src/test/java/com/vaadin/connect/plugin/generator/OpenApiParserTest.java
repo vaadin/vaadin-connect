@@ -18,37 +18,56 @@ package com.vaadin.connect.plugin.generator;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import io.swagger.v3.core.util.Json;
-import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.vaadin.connect.plugin.TestUtils;
 
+import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
+
 public class OpenApiParserTest {
 
-  private OpenApiParser generator;
-
-  @Before
-  public void setUp() {
-    generator = new OpenApiParser();
-    OpenApiConfiguration configuration = new OpenApiConfiguration("Test title",
-        "0.0.1", "https://server.test", "Test description");
-    Path javaSourcePath = Paths
-        .get("src/test/java/com/vaadin/connect/plugin/generator")
-        .toAbsolutePath();
-    generator.addSourcePath(javaSourcePath);
-    generator.setOpenApiConfiguration(configuration);
-  }
+  @Rule
+  public ExpectedException expected = ExpectedException.none();
 
   @Test
   public void Should_GenerateCorrectOpenApiModel_When_AProperPathAndConfigurationAreSet() {
+    OpenApiParser generator = getGenerator("service");
+
     OpenAPI openAPI = generator.getOpenApi();
     String expectedJson = TestUtils.getExpectedJson(this.getClass(),
         "expected-openapi.json");
     Assert.assertEquals(Json.pretty(openAPI),
         Json.pretty(generator.generateOpenApi()));
     Assert.assertEquals(expectedJson, Json.pretty(openAPI));
+  }
+
+  @Test
+  public void Should_Fail_When_UsingReservedWordInMethod() {
+    expected.expect(IllegalStateException.class);
+    getGenerator("reservedwordmethod").generateOpenApi();
+  }
+
+  @Test
+  public void Should_Fail_When_UsingReservedWordInClass() {
+    expected.expect(IllegalStateException.class);
+    getGenerator("reservedwordclass").generateOpenApi();
+  }
+
+  private OpenApiParser getGenerator(String path) {
+    OpenApiParser generator = new OpenApiParser();
+
+    Path javaSourcePath = Paths
+        .get("src/test/java/com/vaadin/connect/plugin/generator/" + path)
+        .toAbsolutePath();
+    generator.addSourcePath(javaSourcePath);
+
+    generator.setOpenApiConfiguration(new OpenApiConfiguration("Test title",
+        "0.0.1", "https://server.test", "Test description"));
+
+    return generator;
   }
 }
