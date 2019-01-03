@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator;
+package com.vaadin.connect.plugin.generator.service;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -146,6 +146,10 @@ public class GeneratorTestClass {
   }
 
   protected void hiddenMethod() {
+    // No implementation
+  }
+
+  public void reservedWordInParameter(boolean delete) {
     // No implementation
   }
 
