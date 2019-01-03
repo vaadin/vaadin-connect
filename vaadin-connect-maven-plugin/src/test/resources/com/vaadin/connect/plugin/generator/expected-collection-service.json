@@ -1,0 +1,100 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Test title",
+    "version" : "0.0.1"
+  },
+  "servers" : [ {
+    "url" : "https://server.test",
+    "description" : "Test description"
+  } ],
+  "paths" : {
+    "/CollectionTestService/getCollectionByAuthor" : {
+      "post" : {
+        "tags" : [ "CollectionTestService" ],
+        "description" : "Get a collection by author name. The generator should not mix this type\nwith the Java's Collection type.",
+        "operationId" : "CollectionTestService_getCollectionByAuthor_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "name" : {
+                    "type" : "string",
+                    "description" : "author name"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Return a collection",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Collection"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
+    "/CollectionTestService/getListOfUserName" : {
+      "post" : {
+        "tags" : [ "CollectionTestService" ],
+        "description" : "Get a list of user name.",
+        "operationId" : "CollectionTestService_getListOfUserName_POST",
+        "responses" : {
+          "200" : {
+            "description" : "Return list of user name",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Collection" : {
+        "type" : "object",
+        "properties" : {
+          "collectionName" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "author" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "vaadin-connect-jwt" : {
+        "type" : "http",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}
