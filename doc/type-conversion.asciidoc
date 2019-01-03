@@ -287,7 +287,7 @@ The primitive type `char`, its boxed type `Character` and `String` in Java are c
 
 === Array of items
 
-All the types which extend `java.lang.Iterable` becomes `array` when they are sent to JavaScript.
+All the types which implement or extend `java.lang.Collection` becomes `array` when they are sent to JavaScript.
 
 === Object and map
 
