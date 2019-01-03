@@ -112,7 +112,6 @@
                 </configuration>
             </plugin>
 
-
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -139,11 +138,10 @@
                         </goals>
                     </execution>
                     <!-- We need this since our parent is not `spring-boot-starter-parent`
-                         otherwise artifact is not deployable -->
+                         otherwise artifact is not executable -->
                     <execution>
                         <id>repackage</id>
-                        <!-- should be package, but it makes IT fail -->
-                        <phase>post-integration-test</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
@@ -154,6 +152,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
                 <executions>
                     <execution>
                         <id>install-frontend-deps</id>
@@ -202,6 +201,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <!--failsafe, spring boot and repackage goal do not get along well: https://issues.apache.org/jira/browse/SUREFIRE-1198-->
+                <configuration>
+                    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>
