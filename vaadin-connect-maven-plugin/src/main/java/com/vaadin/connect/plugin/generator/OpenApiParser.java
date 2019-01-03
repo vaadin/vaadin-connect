@@ -28,7 +28,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -36,6 +35,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.github.javaparser.ParseResult;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -46,6 +46,14 @@ import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
+import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration;
+import com.github.javaparser.resolution.types.ResolvedPrimitiveType;
+import com.github.javaparser.resolution.types.ResolvedReferenceType;
+import com.github.javaparser.resolution.types.ResolvedType;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
+import com.github.javaparser.utils.Pair;
 import com.github.javaparser.utils.SourceRoot;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -79,17 +87,6 @@ import com.vaadin.connect.oauth.AnonymousAllowed;
  * produces OpenApi json.
  */
 class OpenApiParser {
-  private static final List<String> NUMBER_TYPES = Arrays.asList("int",
-      "integer", "short", "long", "double", "float");
-  private static final List<String> STRING_TYPES = Arrays.asList("string",
-      "char");
-  private static final List<String> BOOLEAN_TYPES = Collections
-      .singletonList("boolean");
-  private static final List<String> MAP_TYPES = Arrays.asList("map", "hashmap",
-      "hashtable", "treemap", "sortedmap");
-  private static final List<String> COLLECTION_TYPES = Arrays.asList(
-      "collection", "list", "arraylist", "linkedlist", "set", "hashset",
-      "sortedset", "treeset");
   private static final String VAADIN_CONNECT_JWT_SECURITY_SCHEME = "vaadin-connect-jwt";
 
   private List<Path> javaSourcePaths = new ArrayList<>();
@@ -136,7 +133,11 @@ class OpenApiParser {
     usedSchemas = new HashSet<>();
     servicesJavadoc = new HashMap<>();
 
-    javaSourcePaths.stream().map(SourceRoot::new)
+    ParserConfiguration parserConfiguration = new ParserConfiguration()
+        .setSymbolResolver(new JavaSymbolSolver(
+            new CombinedTypeSolver(new ReflectionTypeSolver(false))));
+    javaSourcePaths.stream()
+        .map(path -> new SourceRoot(path, parserConfiguration))
         .forEach(this::parseSourceRoot);
 
     for (String s : usedSchemas) {
@@ -207,11 +208,14 @@ class OpenApiParser {
 
   private Collection<ClassOrInterfaceDeclaration> appendNestedClasses(
       ClassOrInterfaceDeclaration topLevelClass) {
-    return topLevelClass.getMembers().addLast(topLevelClass).stream()
+    TreeSet<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass
+        .getMembers().stream()
         .filter(BodyDeclaration::isClassOrInterfaceDeclaration)
         .map(BodyDeclaration::asClassOrInterfaceDeclaration)
         .collect(Collectors.toCollection(() -> new TreeSet<>(
             Comparator.comparing(NodeWithSimpleName::getNameAsString))));
+    nestedClasses.add(topLevelClass);
+    return nestedClasses;
   }
 
   private void parseClass(ClassOrInterfaceDeclaration classDeclaration) {
@@ -245,10 +249,9 @@ class OpenApiParser {
       if (field.isTransient()) {
         continue;
       }
-      field.getVariables()
-          .forEach(variableDeclarator -> schema.addProperties(
-              variableDeclarator.getNameAsString(),
-              parseTypeToSchema(variableDeclarator.getType())));
+      field.getVariables().forEach(variableDeclarator -> schema.addProperties(
+          variableDeclarator.getNameAsString(),
+          parseResolvedTypeToSchema(variableDeclarator.getType().resolve())));
     }
     return schema;
   }
@@ -362,7 +365,7 @@ class OpenApiParser {
   private MediaType createReturnMediaType(MethodDeclaration methodDeclaration) {
     MediaType mediaItem = new MediaType();
     Type methodReturnType = methodDeclaration.getType();
-    mediaItem.schema(parseTypeToSchema(methodReturnType));
+    mediaItem.schema(parseResolvedTypeToSchema(methodReturnType.resolve()));
     return mediaItem;
   }
 
@@ -385,7 +388,7 @@ class OpenApiParser {
     Schema requestSchema = new ObjectSchema();
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
-      Schema paramSchema = parseTypeToSchema(parameter.getType());
+      Schema paramSchema = parseResolvedTypeToSchema(parameter.getType().resolve());
       paramSchema.description(paramsDescription.get(parameter.getNameAsString()));
 
       String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
@@ -395,59 +398,104 @@ class OpenApiParser {
     return requestBody;
   }
 
-  private Schema parseTypeToSchema(Type javaType) {
-    if (javaType.isArrayType()) {
-      return createArraySchema(javaType);
+  private Schema parseResolvedTypeToSchema(ResolvedType resolvedType) {
+    if (resolvedType.isArray()) {
+      return createArraySchema(resolvedType);
     }
-    String typeName = getTypeName(javaType).toLowerCase(Locale.ENGLISH);
-    if (NUMBER_TYPES.contains(typeName)) {
+    if (isNumberType(resolvedType)) {
       return new NumberSchema();
-    } else if (STRING_TYPES.contains(typeName)) {
+    } else if (isStringType(resolvedType)) {
       return new StringSchema();
-    } else if (COLLECTION_TYPES.contains(typeName)) {
-      return createArraySchema(javaType);
-    } else if (BOOLEAN_TYPES.contains(typeName)) {
+    } else if (isCollectionType(resolvedType)) {
+      return createCollectionSchema(resolvedType.asReferenceType());
+    } else if (isBooleanType(resolvedType)) {
       return new BooleanSchema();
-    } else if (MAP_TYPES.contains(typeName)) {
-      return createMapSchema(javaType);
+    } else if (isMapType(resolvedType)) {
+      return createMapSchema(resolvedType);
     }
-    return createUserBeanSchema(javaType);
+    return createUserBeanSchema(resolvedType);
   }
 
-  private Schema createUserBeanSchema(Type javaType) {
-    String userType = getTypeName(javaType);
-    usedSchemas.add(userType);
-    return new ObjectSchema().$ref(userType);
-  }
-
-  private String getTypeName(Type javaType) {
-    String typeName;
-    if (javaType.isClassOrInterfaceType()) {
-      typeName = javaType.asClassOrInterfaceType().getNameAsString();
+  private boolean isNumberType(ResolvedType type) {
+    if (type.isPrimitive()) {
+      ResolvedPrimitiveType resolvedPrimitiveType = type.asPrimitive();
+      return resolvedPrimitiveType != ResolvedPrimitiveType.BOOLEAN
+          && resolvedPrimitiveType != ResolvedPrimitiveType.CHAR;
     } else {
-      typeName = javaType.asString();
+      return isTypeOf(type.asReferenceType(), Number.class);
     }
-    return typeName;
   }
 
-  private Schema createMapSchema(Type javaType) {
+  private boolean isCollectionType(ResolvedType type) {
+    return !type.isPrimitive()
+        && isTypeOf(type.asReferenceType(), Collection.class);
+  }
+
+  private boolean isMapType(ResolvedType type) {
+    return !type.isPrimitive() && isTypeOf(type.asReferenceType(), Map.class);
+  }
+
+  private boolean isBooleanType(ResolvedType type) {
+    if (type.isPrimitive()) {
+      return type == ResolvedPrimitiveType.BOOLEAN;
+    } else {
+      return isTypeOf(type.asReferenceType(), Boolean.class);
+    }
+  }
+
+  private boolean isStringType(ResolvedType type) {
+    if (type.isPrimitive()) {
+      return type.asPrimitive() == ResolvedPrimitiveType.CHAR;
+    } else {
+      return isTypeOf(type.asReferenceType(), String.class, Character.class);
+    }
+  }
+
+  private boolean isTypeOf(ResolvedReferenceType type, Class... clazz) {
+    List<String> classes = Arrays.stream(clazz).map(Class::getName)
+        .collect(Collectors.toList());
+    return classes.contains(type.getQualifiedName()) || type.getAllAncestors()
+        .stream().map(ResolvedReferenceType::getQualifiedName)
+        .anyMatch(classes::contains);
+  }
+
+  private Schema createUserBeanSchema(ResolvedType resolvedType) {
+    if (resolvedType.isReferenceType()) {
+      String name = resolvedType.asReferenceType().getTypeDeclaration()
+          .getName();
+      usedSchemas.add(name);
+      return new ObjectSchema().$ref(name);
+    }
+    return new ObjectSchema();
+  }
+
+  private Schema createMapSchema(ResolvedType type) {
     Schema mapSchema = new MapSchema();
-    Type mapValueType = (Type) javaType.getChildNodes().get(2);
-    mapSchema.additionalProperties(parseTypeToSchema(mapValueType));
+    List<Pair<ResolvedTypeParameterDeclaration, ResolvedType>> typeParametersMap = type
+        .asReferenceType().getTypeParametersMap();
+    if (typeParametersMap.size() == 2) {
+      // Assumed that Map always has the first type parameter as `String` and
+      // the second is for its value type
+      ResolvedType mapValueType = typeParametersMap.get(1).b;
+      mapSchema.additionalProperties(parseResolvedTypeToSchema(mapValueType));
+    }
     return mapSchema;
   }
 
-  private Schema createArraySchema(Type type) {
+  private Schema createArraySchema(ResolvedType type) {
     ArraySchema array = new ArraySchema();
-    if (type.isArrayType()) {
-      // The first child of type "int[]" is its actual type
-      Type arrayType = (Type) type.getChildNodes().get(0);
-      array.items(parseTypeToSchema(arrayType));
-    } else {
-      // Child nodes of List<String> are: List and String
-      // So we need the second one
-      Type arrayType = (Type) type.getChildNodes().get(1);
-      array.items(parseTypeToSchema(arrayType));
+    array.items(
+        parseResolvedTypeToSchema(type.asArrayType().getComponentType()));
+    return array;
+  }
+
+  private Schema createCollectionSchema(ResolvedReferenceType type) {
+    ArraySchema array = new ArraySchema();
+    List<Pair<ResolvedTypeParameterDeclaration, ResolvedType>> typeParametersMap = type
+        .getTypeParametersMap();
+    if (!typeParametersMap.isEmpty()) {
+      ResolvedType collectionParameterType = typeParametersMap.get(0).b;
+      array.items(parseResolvedTypeToSchema(collectionParameterType));
     }
     return array;
   }

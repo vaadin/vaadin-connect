@@ -57,6 +57,14 @@ public class OpenApiParserTest {
     getGenerator("reservedwordclass").generateOpenApi();
   }
 
+  @Test
+  public void should_DistinguishBetweenUserAndBuiltinTypes_When_TheyHaveSameName() {
+    OpenAPI openAPI = getGenerator("collectionservice").generateOpenApi();
+    String expectedJson = TestUtils.getExpectedJson(this.getClass(),
+      "expected-collection-service.json");
+    Assert.assertEquals(expectedJson, Json.pretty(openAPI));
+  }
+
   private OpenApiParser getGenerator(String path) {
     OpenApiParser generator = new OpenApiParser();
 
