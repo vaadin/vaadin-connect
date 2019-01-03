@@ -15,10 +15,6 @@
  */
 package com.vaadin.connect.plugin.generator;
 
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +31,12 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+
+import org.slf4j.LoggerFactory;
+
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
@@ -47,6 +49,9 @@ import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import com.github.javaparser.utils.SourceRoot;
+import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -69,10 +74,6 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
-import org.slf4j.LoggerFactory;
-
-import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.oauth.AnonymousAllowed;
 
 /**
  * Java parser class which scans for all {@link VaadinService} classes and
@@ -253,6 +254,10 @@ class OpenApiParser {
     return schema;
   }
 
+  protected boolean isReservedWord(String word) {
+    return VaadinConnectJsGenerator.JS_RESERVED_WORDS.contains(word);
+  }
+
   private Map<String, PathItem> createPathItems(
       ClassOrInterfaceDeclaration typeDeclaration) {
     Map<String, PathItem> pathItems = new TreeMap<>();
@@ -262,6 +267,10 @@ class OpenApiParser {
         continue;
       }
       String methodName = methodDeclaration.getNameAsString();
+
+      if (isReservedWord(methodName)) {
+        throw new JsReservedWordException(typeDeclaration.getNameAsString(), methodName);
+      }
 
       Operation post = createPostOperation(methodDeclaration,
           requiresAuthentication(typeDeclaration, methodDeclaration));
@@ -368,9 +377,11 @@ class OpenApiParser {
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
       Schema paramSchema = parseTypeToSchema(parameter.getType());
-      paramSchema
-          .description(paramsDescription.get(parameter.getNameAsString()));
-      requestSchema.addProperties(parameter.getNameAsString(), paramSchema);
+      paramSchema.description(paramsDescription.get(parameter.getNameAsString()));
+
+      String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
+          .concat(parameter.getNameAsString());
+      requestSchema.addProperties(name, paramSchema);
     });
     return requestBody;
   }
