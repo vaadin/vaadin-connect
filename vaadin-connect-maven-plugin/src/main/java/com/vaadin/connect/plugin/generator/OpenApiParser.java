@@ -253,15 +253,33 @@ class OpenApiParser {
     return schema;
   }
 
+  private boolean isReservedWord(String word) {
+    return word != null && VaadinConnectJsGenerator.JS_RESERVED_WORDS
+        .contains(word.toLowerCase());
+  }
+
   private Map<String, PathItem> createPathItems(
       ClassOrInterfaceDeclaration typeDeclaration) {
     Map<String, PathItem> pathItems = new TreeMap<>();
+
+    if (isReservedWord(typeDeclaration.getNameAsString())) {
+      throw new IllegalStateException(
+          "The service class name '" + typeDeclaration.getNameAsString()
+              + "' is a JavaScript reserved word");
+    }
+
     for (MethodDeclaration methodDeclaration : typeDeclaration.getMethods()) {
       if (!methodDeclaration.isPublic()
           || methodDeclaration.isAnnotationPresent(DenyAll.class)) {
         continue;
       }
       String methodName = methodDeclaration.getNameAsString();
+
+      if (isReservedWord(methodName)) {
+        throw new IllegalStateException("The method name '" + methodName
+            + "' in the service class '" + typeDeclaration.getNameAsString()
+            + "' is a JavaScript reserved word");
+      }
 
       Operation post = createPostOperation(methodDeclaration,
           requiresAuthentication(typeDeclaration, methodDeclaration));
@@ -368,9 +386,11 @@ class OpenApiParser {
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
       Schema paramSchema = parseTypeToSchema(parameter.getType());
-      paramSchema
-          .description(paramsDescription.get(parameter.getNameAsString()));
-      requestSchema.addProperties(parameter.getNameAsString(), paramSchema);
+      paramSchema.description(paramsDescription.get(parameter.getNameAsString()));
+
+      String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
+          .concat(parameter.getNameAsString());
+      requestSchema.addProperties(name, paramSchema);
     });
     return requestBody;
   }

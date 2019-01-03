@@ -15,6 +15,10 @@
  */
 package com.vaadin.connect.plugin.generator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -34,10 +38,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
 
 public class ESModuleGeneratorTest {
   @Rule
@@ -204,6 +205,22 @@ public class ESModuleGeneratorTest {
     String expectedJs = TestUtils.getExpectedJson(this.getClass(),
         "expected-multiple-lines-description.js");
     Assert.assertEquals(expectedJs, actualJs);
+  }
+
+  @Test
+  public void should_escapeParameter_When_ParameterNameUsesReservedWord()
+      throws Exception {
+    VaadinConnectJsGenerator.launch(getResourcePath("reserved-words.json"),
+        outputDirectory.getRoot());
+
+    Path outputPath = Paths
+        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
+    String actual = StringUtils.toEncodedString(Files.readAllBytes(outputPath),
+        Charset.defaultCharset()).trim();
+
+    String expected = TestUtils.getExpectedJson(this.getClass(),
+        "expected-reserved-words.js");
+    Assert.assertEquals(expected, actual);
   }
 
   @Test(expected = IllegalStateException.class)
