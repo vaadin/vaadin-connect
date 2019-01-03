@@ -7,12 +7,12 @@
   "private": true,
   "scripts": {
     "build:frontend": "webpack",
-    "start": "node scripts/start/backend.js -- node scripts/start/apibrowser.js -- node scripts/start/frontend.js",
     "start:backend": "node scripts/start/backend.js",
     "start:frontend": "node scripts/start/frontend.js",
     "start:apibrowser": "node scripts/start/apibrowser.js",
+    "start": "node scripts/start/backend.js -- node scripts/start/apibrowser.js -- node scripts/start/frontend.js",
     "test:e2e": "intern",
-    "test": "yarn lint && yarn build:frontend && yarn bundlesize && node scripts/start/backend.js -- node scripts/start/frontend.js -- yarn test:e2e",
+    "test": "yarn lint && yarn build:frontend && yarn bundlesize && npm run start -- -- intern",
     "lint": "eslint frontend/ scripts/ e2e/"
   },
   "dependencies": {
@@ -27,7 +27,6 @@
     "@babel/preset-env": "^7.2.3",
     "babel-loader": "^8.0.4",
     "bundlesize": "^0.17.0",
-    "clean-webpack-plugin": "^1.0.0",
     "copy-webpack-plugin": "^4.6.0",
     "eslint": "^5.9.0",
     "eslint-config-vaadin": "^0.2.7",
@@ -45,7 +44,7 @@
   },
   "bundlesize": [
     {
-      "path": "./build/index.js",
+      "path": "./target/classes/META-INF/resources/index.js",
       "maxSize": "2.4 kB"
     }
   ]
