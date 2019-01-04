@@ -21,8 +21,7 @@ import com.vaadin.connect.VaadinService;
  * This class is used for OpenApi generator test
  */
 @VaadinService
-public class Boolean {
-  
+public class await {
   public void foo() {
   }
 

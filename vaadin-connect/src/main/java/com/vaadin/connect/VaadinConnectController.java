@@ -76,7 +76,7 @@ public class VaadinConnectController {
    * A qualifier to override the request and response default json mapper.
    *
    * @see #VaadinConnectController(ObjectMapper, VaadinConnectOAuthAclChecker,
-   *      ApplicationContext)
+   *      VaadinServiceNameChecker, ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
@@ -117,13 +117,17 @@ public class VaadinConnectController {
    *          qualifier to override the mapper.
    * @param oauthChecker
    *          the ACL checker to verify the service method access permissions
+   * @param serviceNameChecker
+   *          the service name checker to verify custom Vaadin Connect service
+   *          names
    * @param context
    *          Spring context to extract beans annotated with
    *          {@link VaadinService} from
    */
   public VaadinConnectController(
       @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
-      VaadinConnectOAuthAclChecker oauthChecker, ApplicationContext context) {
+      VaadinConnectOAuthAclChecker oauthChecker,
+      VaadinServiceNameChecker serviceNameChecker, ApplicationContext context) {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : getDefaultObjectMapper(context);
     this.oauthChecker = oauthChecker;
@@ -150,6 +154,12 @@ public class VaadinConnectController {
                 + String.format(
                     "Either modify the bean declaration so that it is not an anonymous class or specify a service name in the '%s' annotation",
                     VaadinService.class));
+          }
+          String validationError = serviceNameChecker.check(serviceName);
+          if (validationError != null) {
+            throw new IllegalStateException(
+                String.format("Service name '%s' is invalid, reason: '%s'",
+                    serviceName, validationError));
           }
 
           vaadinServices.put(serviceName.toLowerCase(Locale.ENGLISH),
