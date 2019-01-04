@@ -92,9 +92,6 @@ public class VaadinConnectControllerIT {
       HttpHeaders headers = request.getHeaders();
       headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
       headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-      headers.setBasicAuth(
-          vaadinConnectProperties.getVaadinConnectClientAppname(),
-          vaadinConnectProperties.getVaadinConnectClientSecret());
       return execution.execute(request, body);
     };
 
