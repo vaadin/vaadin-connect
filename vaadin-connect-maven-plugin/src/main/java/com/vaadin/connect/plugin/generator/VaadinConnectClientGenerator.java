@@ -19,14 +19,13 @@ package com.vaadin.connect.plugin.generator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.slf4j.LoggerFactory;
+import org.apache.commons.io.FileUtils;
 
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.DEFAULT_ENDPOINT;
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
@@ -72,13 +71,11 @@ public class VaadinConnectClientGenerator {
     if (parentPath == null || !parentPath.toFile().exists()) {
       return;
     }
-    try (Stream<Path> filePaths = Files.list(parentPath)) {
-      for (Path path : filePaths.collect(Collectors.toList())) {
-        Files.delete(path);
-      }
+    try {
+      FileUtils.deleteDirectory(parentPath.toFile());
     } catch (IOException e) {
-      LoggerFactory.getLogger(VaadinConnectClientGenerator.class)
-          .error("Error happens while cleaning the generated folder", e);
+      throw new UncheckedIOException(
+          String.format("Failed to remove directory '%s'", parentPath), e);
     }
   }
 
