@@ -92,7 +92,8 @@ public class VaadinConnectController {
         Method... serviceMethods) {
       this.vaadinServiceObject = vaadinServiceObject;
       Stream.of(serviceMethods)
-          .filter(method -> method.getDeclaringClass() != Object.class)
+          .filter(method -> method.getDeclaringClass() != Object.class
+              && !method.isBridge())
           .forEach(method -> methods
               .put(method.getName().toLowerCase(Locale.ENGLISH), method));
     }
