@@ -40,7 +40,6 @@ const authenticateClient = async client => {
     // delete current credentials because we are going to take new ones
     _private.tokens = new AuthTokens().save();
 
-    /* global URLSearchParams btoa */
     const body = new URLSearchParams();
     if (tokens.refreshToken && tokens.refreshToken.isValid()) {
       body.append('grant_type', 'refresh_token');
@@ -69,7 +68,6 @@ const authenticateClient = async client => {
         method: 'POST',
         signal: _private.controller.signal,
         headers: {
-          'Authorization': `Basic ${btoa(clientId + ':' + clientSecret)}`,
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: body.toString()
@@ -101,10 +99,6 @@ const privates = new WeakMap();
 
 /** @private */
 const refreshTokenKey = 'vaadin.connect.refreshToken';
-/** @private */
-const clientId = 'vaadin-connect-client';
-/** @private */
-const clientSecret = 'c13nts3cr3t';
 
 /** @private */
 class Token {
