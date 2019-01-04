@@ -15,10 +15,6 @@
  */
 package com.vaadin.connect.plugin.generator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -29,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +36,10 @@ import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ESModuleGeneratorTest {
   @Rule
@@ -70,13 +71,42 @@ public class ESModuleGeneratorTest {
     expectedClasses.forEach(this::assertClassGeneratedJs);
   }
 
+  @Test
+  public void should_GenerateJSClass_When_ThereIsOapenApiInput() {
+    Path defaultConnectClient = Paths.get(
+        outputDirectory.getRoot().getAbsolutePath(),
+        "connect-client.default.js");
+    VaadinConnectClientGenerator vaadinConnectClientGenerator = new VaadinConnectClientGenerator(
+        new Properties());
+    // First generating round
+    vaadinConnectClientGenerator
+        .generateVaadinConnectClientFile(defaultConnectClient);
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("esmodule-generator-TwoServicesThreeMethods.json"),
+        outputDirectory.getRoot());
+    assertEquals(
+        "Expect to have 2 generated JS files and a connect-client.default.js",
+        3, outputDirectory.getRoot().list().length);
+    // Second generating round
+    vaadinConnectClientGenerator
+        .generateVaadinConnectClientFile(defaultConnectClient);
+    VaadinConnectJsGenerator.launch(
+        getResourcePath("esmodule-generator-OneServiceOneMethod.json"),
+        outputDirectory.getRoot());
+    assertEquals(
+        "Expected to have 1 generated JS files and a connect-client.default.js",
+        2, outputDirectory.getRoot().list().length);
+
+    this.assertClassGeneratedJs("FooBarService");
+  }
+
   private void assertClassGeneratedJs(String expectedClass) {
     Path outputFilePath = outputDirectory.getRoot().toPath()
         .resolve(expectedClass + ".js");
     String actualJs;
     try {
-      actualJs = StringUtils.toEncodedString(
-          Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
+      actualJs = StringUtils.toEncodedString(Files.readAllBytes(outputFilePath),
+          Charset.defaultCharset()).trim();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
