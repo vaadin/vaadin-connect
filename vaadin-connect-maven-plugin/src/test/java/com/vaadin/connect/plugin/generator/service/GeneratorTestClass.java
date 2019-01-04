@@ -170,7 +170,7 @@ public class GeneratorTestClass {
   /**
    * This nested class is also used in the OpenApi generator test
    */
-  @VaadinService
+  @VaadinService("customName")
   @AnonymousAllowed
   public static class GeneratorAnonymousAllowedTestClass {
     public void anonymousAllowed() {

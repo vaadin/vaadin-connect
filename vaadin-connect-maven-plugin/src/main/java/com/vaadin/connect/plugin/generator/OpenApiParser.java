@@ -235,16 +235,16 @@ class OpenApiParser {
       nonServiceSchemas.put(classDeclaration.getNameAsString(),
           parseClassAsSchema(classDeclaration));
     } else {
-      String serviceName = serviceAnnotation
-          .filter(Expression::isSingleMemberAnnotationExpr)
-          .map(Expression::asSingleMemberAnnotationExpr)
-          .map(SingleMemberAnnotationExpr::getMemberValue)
-          .map(Expression::asStringLiteralExpr)
-          .map(LiteralStringValueExpr::getValue).filter(StringUtils::isNotBlank)
-          .orElse(classDeclaration.getNameAsString());
       classDeclaration.getJavadoc().ifPresent(javadoc -> servicesJavadoc
-          .put(serviceName, javadoc.getDescription().toText()));
+          .put(classDeclaration.getNameAsString(), javadoc.getDescription().toText()));
 
+      String serviceName = serviceAnnotation
+              .filter(Expression::isSingleMemberAnnotationExpr)
+              .map(Expression::asSingleMemberAnnotationExpr)
+              .map(SingleMemberAnnotationExpr::getMemberValue)
+              .map(Expression::asStringLiteralExpr)
+              .map(LiteralStringValueExpr::getValue).filter(StringUtils::isNotBlank)
+              .orElse(classDeclaration.getNameAsString());
       pathItems.putAll(createPathItems(serviceName, classDeclaration));
     }
   }

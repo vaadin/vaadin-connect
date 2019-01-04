@@ -26,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +36,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
-import com.vaadin.connect.plugin.generator.service.CustomNameService;
 import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
 
 import static org.junit.Assert.assertEquals;
@@ -61,14 +61,13 @@ public class ESModuleGeneratorTest {
     List<String> expectedClasses = Arrays.asList(
         GeneratorTestClass.class.getSimpleName(),
         GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
-            .getSimpleName(),
-        CustomNameService.class.getSimpleName());
-    assertEquals(
-        String.format(
-            "Expected to have only %s classes processed in the test: '%s'",
-            expectedClasses.size(), expectedClasses),
-        expectedClasses.size(), Stream.of(outputDirectory.getRoot().list())
-            .filter(fileName -> fileName.endsWith(".js")).count());
+            .getSimpleName());
+    List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
+        .filter(fileName -> fileName.endsWith(".js")).collect(Collectors.toList());
+    assertEquals(String.format(
+        "Expected to have only %s classes processed in the test: '%s', but found the following files: '%s'",
+        expectedClasses.size(), expectedClasses, foundFiles),
+        expectedClasses.size(), foundFiles.size());
 
     expectedClasses.forEach(this::assertClassGeneratedJs);
   }
