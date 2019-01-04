@@ -26,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.common.util.JacksonJsonParser;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -210,8 +209,8 @@ public class VaadinConnectOAuthConfigurerTest {
         .apply(springSecurity())
         .build()
         .perform(post("/oauth/token")
-            .header(HttpHeaders.AUTHORIZATION, "Basic " +
-                Base64Utils.encodeToString(client.getBytes()))
+//            .header(HttpHeaders.AUTHORIZATION, "Basic " +
+//                Base64Utils.encodeToString(client.getBytes()))
             .header(HttpHeaders.ACCEPT, "application/json")
             .params(map)
             .param("grant_type", granttype));
