@@ -53,6 +53,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.connect.VaadinServiceNameChecker;
+
 /**
  * Vaadin connect JavaScript generator implementation for swagger-codegen. Some
  * parts of the implementation are copied from
@@ -74,17 +76,6 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
-
-  static final Set<String> JS_RESERVED_WORDS = new HashSet<>(Arrays.asList("abstract", "arguments",
-      "await", BOOLEAN_TYPE, "break", "byte", "case", "catch", "char",
-      "class", "const", "continue", "debugger", "default", "delete", "do",
-      "double", "else", "enum", "eval", "export", "extends", "false", "final",
-      "finally", "float", "for", "function", "goto", "if", "implements",
-      "import", "in", "instanceof", "int", "interface", "let", "long",
-      "native", "new", "null", "package", "private", "protected", "public",
-      "return", "short", "static", "super", "switch", "synchronized", "this",
-      "throw", "throws", "transient", "true", "try", "typeof", "var", "void",
-      "volatile", "while", "with", "yield"));
 
   private List<Tag> tags;
 
@@ -126,7 +117,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     /*
      * Reserved words copied from https://www.w3schools.com/js/js_reserved.asp
      */
-    reservedWords = JS_RESERVED_WORDS;
+    reservedWords = VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS;
 
     /*
      * Language Specific Primitives. These types will not trigger imports by the

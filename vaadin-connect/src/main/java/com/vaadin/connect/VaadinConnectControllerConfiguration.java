@@ -80,4 +80,15 @@ public class VaadinConnectControllerConfiguration {
       }
     };
   }
+
+  /**
+   * Registers a service name checker responsible for validating the service
+   * names.
+   *
+   * @return the service name checker
+   */
+  @Bean
+  public VaadinServiceNameChecker serviceNameChecker() {
+    return new VaadinServiceNameChecker();
+  }
 }

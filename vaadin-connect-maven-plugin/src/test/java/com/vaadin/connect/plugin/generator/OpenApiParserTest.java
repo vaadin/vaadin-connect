@@ -18,15 +18,14 @@ package com.vaadin.connect.plugin.generator;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.vaadin.connect.plugin.TestUtils;
-
-import io.swagger.v3.core.util.Json;
-import io.swagger.v3.oas.models.OpenAPI;
 
 public class OpenApiParserTest {
 
@@ -48,12 +47,14 @@ public class OpenApiParserTest {
   @Test
   public void Should_Fail_When_UsingReservedWordInMethod() {
     expected.expect(IllegalStateException.class);
+    expected.expectMessage("reserved");
     getGenerator("reservedwordmethod").generateOpenApi();
   }
 
   @Test
   public void Should_Fail_When_UsingReservedWordInClass() {
     expected.expect(IllegalStateException.class);
+    expected.expectMessage("reserved");
     getGenerator("reservedwordclass").generateOpenApi();
   }
 

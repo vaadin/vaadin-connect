@@ -86,6 +86,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.VaadinServiceNameChecker;
 import com.vaadin.connect.oauth.AnonymousAllowed;
 
 /**
@@ -102,6 +103,7 @@ class OpenApiParser {
   private Map<String, Schema> nonServiceSchemas;
   private Map<String, PathItem> pathItems;
   private OpenAPI openApiModel;
+  private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
 
   void addSourcePath(Path sourcePath) {
     if (sourcePath == null) {
@@ -218,9 +220,8 @@ class OpenApiParser {
 
   private Collection<ClassOrInterfaceDeclaration> appendNestedClasses(
       ClassOrInterfaceDeclaration topLevelClass) {
-    Set<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass
-        .getMembers().stream()
-        .filter(BodyDeclaration::isClassOrInterfaceDeclaration)
+    Set<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass.getMembers()
+        .stream().filter(BodyDeclaration::isClassOrInterfaceDeclaration)
         .map(BodyDeclaration::asClassOrInterfaceDeclaration)
         .collect(Collectors.toCollection(() -> new TreeSet<>(
             Comparator.comparing(NodeWithSimpleName::getNameAsString))));
@@ -235,18 +236,33 @@ class OpenApiParser {
       nonServiceSchemas.put(classDeclaration.getNameAsString(),
           parseClassAsSchema(classDeclaration));
     } else {
-      classDeclaration.getJavadoc().ifPresent(javadoc -> servicesJavadoc
-          .put(classDeclaration.getNameAsString(), javadoc.getDescription().toText()));
+      classDeclaration.getJavadoc().ifPresent(
+          javadoc -> servicesJavadoc.put(classDeclaration.getNameAsString(),
+              javadoc.getDescription().toText()));
 
-      String serviceName = serviceAnnotation
-              .filter(Expression::isSingleMemberAnnotationExpr)
-              .map(Expression::asSingleMemberAnnotationExpr)
-              .map(SingleMemberAnnotationExpr::getMemberValue)
-              .map(Expression::asStringLiteralExpr)
-              .map(LiteralStringValueExpr::getValue).filter(StringUtils::isNotBlank)
-              .orElse(classDeclaration.getNameAsString());
-      pathItems.putAll(createPathItems(serviceName, classDeclaration));
+      pathItems.putAll(createPathItems(
+          getServiceName(classDeclaration, serviceAnnotation.get()),
+          classDeclaration));
     }
+  }
+
+  private String getServiceName(ClassOrInterfaceDeclaration classDeclaration,
+      AnnotationExpr serviceAnnotation) {
+    String serviceName = Optional.ofNullable(serviceAnnotation)
+        .filter(Expression::isSingleMemberAnnotationExpr)
+        .map(Expression::asSingleMemberAnnotationExpr)
+        .map(SingleMemberAnnotationExpr::getMemberValue)
+        .map(Expression::asStringLiteralExpr)
+        .map(LiteralStringValueExpr::getValue).filter(StringUtils::isNotBlank)
+        .orElse(classDeclaration.getNameAsString());
+
+    String validationError = serviceNameChecker.check(serviceName);
+    if (validationError != null) {
+      throw new IllegalStateException(
+          String.format("Service name '%s' is invalid, reason: '%s'",
+              serviceName, validationError));
+    }
+    return serviceName;
   }
 
   private Schema parseClassAsSchema(
@@ -266,20 +282,13 @@ class OpenApiParser {
   }
 
   private boolean isReservedWord(String word) {
-    return word != null && VaadinConnectJsGenerator.JS_RESERVED_WORDS
+    return word != null && VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS
         .contains(word.toLowerCase());
   }
 
   private Map<String, PathItem> createPathItems(String serviceName,
       ClassOrInterfaceDeclaration typeDeclaration) {
     Map<String, PathItem> newPathItems = new HashMap<>();
-
-    if (isReservedWord(typeDeclaration.getNameAsString())) {
-      throw new IllegalStateException(
-          "The service class name '" + typeDeclaration.getNameAsString()
-              + "' is a JavaScript reserved word");
-    }
-
     for (MethodDeclaration methodDeclaration : typeDeclaration.getMethods()) {
       if (!methodDeclaration.isPublic()
           || methodDeclaration.isAnnotationPresent(DenyAll.class)) {
