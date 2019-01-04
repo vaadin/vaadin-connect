@@ -100,6 +100,7 @@ class OpenApiParser {
   private Set<String> usedSchemas;
   private Map<String, String> servicesJavadoc;
   private Map<String, Schema> nonServiceSchemas;
+  private Map<String, PathItem> pathItems;
   private OpenAPI openApiModel;
 
   void addSourcePath(Path sourcePath) {
@@ -136,6 +137,7 @@ class OpenApiParser {
     }
     openApiModel = createBasicModel();
     nonServiceSchemas = new HashMap<>();
+    pathItems = new TreeMap<>();
     usedSchemas = new HashSet<>();
     servicesJavadoc = new HashMap<>();
 
@@ -209,12 +211,14 @@ class OpenApiParser {
         .map(BodyDeclaration::asClassOrInterfaceDeclaration)
         .map(this::appendNestedClasses).orElse(Collections.emptyList())
         .forEach(this::parseClass));
+    pathItems.forEach((pathName, pathItem) -> openApiModel.getPaths()
+        .addPathItem(pathName, pathItem));
     return SourceRoot.Callback.Result.DONT_SAVE;
   }
 
   private Collection<ClassOrInterfaceDeclaration> appendNestedClasses(
       ClassOrInterfaceDeclaration topLevelClass) {
-    TreeSet<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass
+    Set<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass
         .getMembers().stream()
         .filter(BodyDeclaration::isClassOrInterfaceDeclaration)
         .map(BodyDeclaration::asClassOrInterfaceDeclaration)
@@ -241,17 +245,7 @@ class OpenApiParser {
       classDeclaration.getJavadoc().ifPresent(javadoc -> servicesJavadoc
           .put(serviceName, javadoc.getDescription().toText()));
 
-      Map<String, PathItem> pathItems = createPathItems(classDeclaration);
-
-      for (Map.Entry<String, PathItem> entry : pathItems.entrySet()) {
-        String methodName = entry.getKey();
-        PathItem pathItem = entry.getValue();
-        String pathName = "/" + serviceName + "/" + methodName;
-        pathItem.readOperationsMap()
-            .forEach((httpMethod, operation) -> operation.setOperationId(
-                String.join("_", serviceName, methodName, httpMethod.name())));
-        openApiModel.getPaths().addPathItem(pathName, pathItem);
-      }
+      pathItems.putAll(createPathItems(serviceName, classDeclaration));
     }
   }
 
@@ -276,9 +270,9 @@ class OpenApiParser {
         .contains(word.toLowerCase());
   }
 
-  private Map<String, PathItem> createPathItems(
+  private Map<String, PathItem> createPathItems(String serviceName,
       ClassOrInterfaceDeclaration typeDeclaration) {
-    Map<String, PathItem> pathItems = new TreeMap<>();
+    Map<String, PathItem> newPathItems = new HashMap<>();
 
     if (isReservedWord(typeDeclaration.getNameAsString())) {
       throw new IllegalStateException(
@@ -310,9 +304,14 @@ class OpenApiParser {
       post.setResponses(responses);
       post.tags(Collections.singletonList(typeDeclaration.getNameAsString()));
       PathItem pathItem = new PathItem().post(post);
-      pathItems.put(methodName, pathItem);
+
+      String pathName = "/" + serviceName + "/" + methodName;
+      pathItem.readOperationsMap()
+          .forEach((httpMethod, operation) -> operation.setOperationId(
+              String.join("_", serviceName, methodName, httpMethod.name())));
+      newPathItems.put(pathName, pathItem);
     }
-    return pathItems;
+    return newPathItems;
   }
 
   private boolean requiresAuthentication(
