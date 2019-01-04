@@ -67,7 +67,6 @@ public class VaadinConnectOauthTokenIT {
       throws Exception {
 
     return mockMvc.perform(post("/oauth/token")
-        .with(httpBasic("vaadin-connect-client", "c13nts3cr3t"))
         .accept("application/json").param("username", username)
         .param("password", password).param("grant_type", "password"));
   }
@@ -76,8 +75,7 @@ public class VaadinConnectOauthTokenIT {
       throws Exception {
 
     return mockMvc.perform(post("/oauth/token")
-        .with(httpBasic("vaadin-connect-client", "c13nts3cr3t"))
-        .accept("application/json").param("client_id", "vaadin-connect-client")
+        .accept("application/json")
         .param("refresh_token", refreshToken)
         .param("grant_type", "refresh_token"));
   }

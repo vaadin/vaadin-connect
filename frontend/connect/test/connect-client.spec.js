@@ -202,11 +202,7 @@ describe('ConnectClient', () => {
     it('should request token endpoint with credentials when calling login', async() => {
 
       await client.login();
-
-      const [[url, {method, headers, body}]] = fetchMock.calls();
-
-      // TODO: remove when #58
-      expect(headers).to.have.property('Authorization');
+      const [[url, {method, body}]] = fetchMock.calls();
 
       expect(method).to.equal('POST');
       expect(url).to.equal('/oauth/token');
@@ -310,10 +306,7 @@ describe('ConnectClient', () => {
 
         await client.call('FooService', 'fooMethod');
 
-        const [[url, {method, headers, body}]] = fetchMock.calls();
-
-        // TODO: remove when #58
-        expect(headers).to.have.property('Authorization');
+        const [[url, {method, body}]] = fetchMock.calls();
 
         expect(method).to.equal('POST');
         expect(url).to.equal('/oauth/token');
@@ -326,10 +319,7 @@ describe('ConnectClient', () => {
 
         await client.call('FooService', 'fooMethod', undefined, {someOtherOption: true});
 
-        const [[url, {method, headers, body}]] = fetchMock.calls();
-
-        // TODO: remove when #58
-        expect(headers).to.have.property('Authorization');
+        const [[url, {method, body}]] = fetchMock.calls();
 
         expect(method).to.equal('POST');
         expect(url).to.equal('/oauth/token');
@@ -477,7 +467,6 @@ describe('ConnectClient', () => {
           let [, {body}] = fetchMock.calls()[2];
           body = new URLSearchParams(body);
           expect(body.get('grant_type')).to.be.equal('refresh_token');
-          expect(body.get('client_id')).to.be.equal('vaadin-connect-client');
           expect(body.get('refresh_token')).to.be.ok;
           expect(body.get('username')).to.be.null;
         });
