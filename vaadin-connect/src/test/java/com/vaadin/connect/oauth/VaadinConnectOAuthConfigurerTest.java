@@ -24,9 +24,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.common.util.JacksonJsonParser;
+import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -51,6 +51,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 /**
  * This test is inspired in the pattern used in
  * `AuthorizationServerConfigurationTests.java` in the spring oauth2 project
@@ -89,9 +90,6 @@ public class VaadinConnectOAuthConfigurerTest {
         { "Should not produce a valid token if grant type is invalid",
           null,
           Arrays.asList(EnableVaadinOauth.class, ConfigureUserDetailsService.class, InvalidGrantTest.class) },
-        { "Should not produce a valid token if client secret is incorrect",
-          null,
-          Arrays.asList(EnableVaadinOauth.class, ConfigureUserDetailsService.class, InvalidSecretTest.class) },
         { "Should produce a valid token when providing custom UserDetailsService and PasswordEncoder",
           null,
           Arrays.asList(EnableVaadinOauth.class, ConfigureUserDetailsService.class, CustomUserDetailsPasswordTest.class) },
@@ -159,12 +157,8 @@ public class VaadinConnectOAuthConfigurerTest {
 
       return username -> {
         if (username.equals("foo")) {
-          return User.builder()
-              .username("foo")
-              .password(crypted)
-              .roles("baz")
-              .accountLocked(++usageCount > 2)
-              .build();
+          return User.builder().username("foo").password(crypted).roles("baz")
+              .accountLocked(++usageCount > 2).build();
         } else {
           return null;
         }
@@ -181,20 +175,15 @@ public class VaadinConnectOAuthConfigurerTest {
   /**
    * Send a request to get an oauth2 access token.
    *
-   * The oauth2 process to take a valid token, needs to pass an HTTP basic
-   * access user and a password pair that are named in oauth as application-name
-   * and application-secret.
+   * The request must send a form with the real username, password and grant
+   * type parameters.
    *
-   * In addition the request must send a form with the real username, password
-   * and grant type parameters.
-   *
-   * In spring oauth2, the web endpoint is hardcoded to `/oauth/token`
+   * In spring oauth2, the web endpoint is hardcoded to `/oauth/token` in
+   * {@link TokenEndpoint}
    */
   private static ResultActions getToken(
-      AnnotationConfigWebApplicationContext webContext,
-      String client, String userOrClient, String passwordOrRefresh,
-      String granttype)
-      throws Exception {
+      AnnotationConfigWebApplicationContext webContext, String userOrClient,
+      String passwordOrRefresh, String granttype) throws Exception {
 
     MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
     if ("refresh_token".equals(granttype)) {
@@ -205,16 +194,10 @@ public class VaadinConnectOAuthConfigurerTest {
       map.add("password", passwordOrRefresh);
     }
 
-    return MockMvcBuilders
-        .webAppContextSetup(webContext)
-        .apply(springSecurity())
-        .build()
-        .perform(post("/oauth/token")
-            .header(HttpHeaders.AUTHORIZATION, "Basic " +
-                Base64Utils.encodeToString(client.getBytes()))
-            .header(HttpHeaders.ACCEPT, "application/json")
-            .params(map)
-            .param("grant_type", granttype));
+    return MockMvcBuilders.webAppContextSetup(webContext)
+        .apply(springSecurity()).build().perform(
+            post("/oauth/token").header(HttpHeaders.ACCEPT, "application/json")
+                .params(map).param("grant_type", granttype));
   }
 
   @Configuration
@@ -222,9 +205,7 @@ public class VaadinConnectOAuthConfigurerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "foo", "bar", "password")
-              .andExpect(status().is(400));
+      getToken(context, "foo", "bar", "password").andExpect(status().is(400));
     }
   }
 
@@ -236,27 +217,22 @@ public class VaadinConnectOAuthConfigurerTest {
 
       // Validate via User/Password
       String refreshToken = assertValidTokenResponse(
-          getToken(context,
-              "vaadin-connect-client:c13nts3cr3t", "foo", "bar", "password"));
+          getToken(context, "foo", "bar", "password"));
 
       // Re-validate via refreshToken
-      refreshToken = assertValidTokenResponse(
-          getToken(context,
-              "vaadin-connect-client:c13nts3cr3t", "vaadin-connect-client",
-              refreshToken, "refresh_token"));
+      refreshToken = assertValidTokenResponse(getToken(context,
+          "vaadin-connect-client", refreshToken, "refresh_token"));
 
       // This re-validate should fail because user is locked after the second
       // validation
-      getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "vaadin-connect-client",
-          refreshToken, "refresh_token").andExpect(status().is(401));
+      getToken(context, "vaadin-connect-client", refreshToken, "refresh_token")
+          .andExpect(status().is(401));
     }
   }
 
   private static String assertValidTokenResponse(ResultActions results)
       throws Exception {
-    String resultString = results
-        .andExpect(status().isOk())
+    String resultString = results.andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
         .andReturn().getResponse().getContentAsString();
 
@@ -305,9 +281,8 @@ public class VaadinConnectOAuthConfigurerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "NO-USER", "bar", "password")
-              .andExpect(status().is(401));
+      getToken(context, "NO-USER", "bar", "password")
+          .andExpect(status().is(401));
     }
   }
 
@@ -316,9 +291,8 @@ public class VaadinConnectOAuthConfigurerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "foo", "NO-PASS", "password")
-              .andExpect(status().is(400));
+      getToken(context, "foo", "NO-PASS", "password")
+          .andExpect(status().is(400));
     }
   }
 
@@ -327,20 +301,7 @@ public class VaadinConnectOAuthConfigurerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "foo", "bar", "NO-GRANT")
-              .andExpect(status().is(400));
-    }
-  }
-
-  @Configuration
-  protected static class InvalidSecretTest implements TestRunner {
-    @Override
-    public void run(AnnotationConfigWebApplicationContext context)
-        throws Exception {
-      getToken(context,
-          "vaadin-connect-client:NO-SECRET", "foo", "bar", "password")
-              .andExpect(status().is(401));
+      getToken(context, "foo", "bar", "NO-GRANT").andExpect(status().is(400));
     }
   }
 
@@ -371,11 +332,9 @@ public class VaadinConnectOAuthConfigurerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "foo", "bar", "password")
-              .andExpect(status().isOk())
-              .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-              .andExpect(jsonPath("$.access_token", notNullValue()));
+      getToken(context, "foo", "bar", "password").andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+          .andExpect(jsonPath("$.access_token", notNullValue()));
     }
   }
 
@@ -383,18 +342,17 @@ public class VaadinConnectOAuthConfigurerTest {
   protected static class CustomAuthenticationManagerTest implements TestRunner {
     @Bean
     AuthenticationManager authenticationManager() {
-      return auth -> new UsernamePasswordAuthenticationToken(
-          auth.getName(), auth.getCredentials(), new ArrayList<>());
+      return auth -> new UsernamePasswordAuthenticationToken(auth.getName(),
+          auth.getCredentials(), new ArrayList<>());
     }
 
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      getToken(context,
-          "vaadin-connect-client:c13nts3cr3t", "ANY-USER", "ANY-PASS", "password")
-              .andExpect(status().isOk())
-              .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-              .andExpect(jsonPath("$.access_token", notNullValue()));
+      getToken(context, "ANY-USER", "ANY-PASS", "password")
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+          .andExpect(jsonPath("$.access_token", notNullValue()));
     }
   }
 }
