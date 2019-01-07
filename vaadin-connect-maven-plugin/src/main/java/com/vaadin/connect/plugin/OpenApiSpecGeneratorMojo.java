@@ -55,7 +55,9 @@ public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
       new OpenApiSpecGenerator(readApplicationProperties()).generateOpenApiSpec(
           sourcesPaths, jarPaths, openApiJsonFile.toPath());
     } catch (DependencyResolutionRequiredException e) {
-      throw new IllegalStateException(e);
+      throw new IllegalStateException(
+          "All dependencies need to be resolved before running the OpenAPI spec generator. Please resolve the dependencies and try again.",
+          e);
     }
   }
 }

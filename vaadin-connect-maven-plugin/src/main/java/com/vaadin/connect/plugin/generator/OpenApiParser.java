@@ -121,8 +121,8 @@ class OpenApiParser {
   }
 
   /**
-   * Add jar paths to help the symbol resolver resolves types in jar
-   * dependencies.
+   * Adds a jar path information to use when resolving the type used in a
+   * project from that jar
    * 
    * @param jarPath
    *          path of the jar
@@ -181,7 +181,9 @@ class OpenApiParser {
         combinedTypeSolver.add(new JarTypeSolver(jarPath));
       }
     } catch (IOException e) {
-      throw new UncheckedIOException(e);
+      throw new UncheckedIOException(
+          "I/O error happens when reading jar files. Please make sure that dependencies' jar files are accessible.",
+          e);
     }
     return new ParserConfiguration()
         .setSymbolResolver(new JavaSymbolSolver(combinedTypeSolver));
@@ -456,7 +458,7 @@ class OpenApiParser {
       return parseResolvedTypeToSchema(javaType.resolve());
     } catch (Exception e) {
       LoggerFactory.getLogger(OpenApiParser.class).info(String.format(
-          "Can't resolve type %s for creating custom OpenAPI Schema. Use the default ObjectSchema instead.",
+          "Can't resolve type '%s' for creating custom OpenAPI Schema. Using the default ObjectSchema instead.",
           javaType.asString()), e);
     }
     return new ObjectSchema();

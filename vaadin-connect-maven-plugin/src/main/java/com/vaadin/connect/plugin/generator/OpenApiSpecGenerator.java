@@ -64,7 +64,7 @@ public class OpenApiSpecGenerator {
   }
 
   /**
-   * Generates the open api spec file based on the sources provided.
+   * Generates the OpenAPI spec file based on the sources provided.
    *
    * @param sourcesPaths
    *          the source root to be analyzed
@@ -82,13 +82,13 @@ public class OpenApiSpecGenerator {
   }
 
   /**
-   * Generates the open api spec file based on the sources provided.
+   * Generates the OpenAPI spec file based on the sources provided.
    *
    * @param sourcesPaths
    *          the source root to be analyzed
    * @param jarPaths
-   *          the jar paths which help the parser resolves the types in those
-   *          jar dependencies
+   *          jar paths information to use when resolving the types used in a
+   *          project from those jars
    * @param specOutputFile
    *          the target file to write the generation output to
    */
