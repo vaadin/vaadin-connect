@@ -16,12 +16,16 @@
 
 package com.vaadin.connect.plugin;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
@@ -35,7 +39,7 @@ import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
  * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
  *      specification</a>
  */
-@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -43,9 +47,15 @@ public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override
   public void execute() {
-    new OpenApiSpecGenerator(readApplicationProperties()).generateOpenApiSpec(
-        project.getCompileSourceRoots().stream().map(Paths::get)
-            .collect(Collectors.toList()),
-        openApiJsonFile.toPath());
+    try {
+      List<String> jarPaths = project.getCompileClasspathElements().stream()
+          .filter(s -> s.endsWith(".jar")).collect(Collectors.toList());
+      List<Path> sourcesPaths = project.getCompileSourceRoots().stream()
+          .map(Paths::get).collect(Collectors.toList());
+      new OpenApiSpecGenerator(readApplicationProperties()).generateOpenApiSpec(
+          sourcesPaths, jarPaths, openApiJsonFile.toPath());
+    } catch (DependencyResolutionRequiredException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }
