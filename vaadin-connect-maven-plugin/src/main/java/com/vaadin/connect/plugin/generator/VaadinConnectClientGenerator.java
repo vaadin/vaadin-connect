@@ -19,10 +19,13 @@ package com.vaadin.connect.plugin.generator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.stream.Collectors;
+
+import org.apache.commons.io.FileUtils;
 
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.DEFAULT_ENDPOINT;
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
@@ -57,9 +60,23 @@ public class VaadinConnectClientGenerator {
    *      specification</a>
    */
   public void generateVaadinConnectClientFile(Path outputFilePath) {
+    cleanGeneratedFolder(outputFilePath);
     String generatedDefaultClientJs = getDefaultClientJsTemplate()
         .replace("{{ENDPOINT}}", endpoint);
     GeneratorUtils.writeToFile(outputFilePath, generatedDefaultClientJs);
+  }
+
+  private void cleanGeneratedFolder(Path outputFilePath) {
+    Path parentPath = outputFilePath.getParent();
+    if (parentPath == null || !parentPath.toFile().exists()) {
+      return;
+    }
+    try {
+      FileUtils.deleteDirectory(parentPath.toFile());
+    } catch (IOException e) {
+      throw new UncheckedIOException(
+          String.format("Failed to remove directory '%s'", parentPath), e);
+    }
   }
 
   private String getDefaultClientJsTemplate() {
