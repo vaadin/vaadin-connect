@@ -19,8 +19,6 @@ import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,8 +56,8 @@ import com.github.javaparser.resolution.types.ResolvedPrimitiveType;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.utils.Pair;
 import com.github.javaparser.utils.SourceRoot;
@@ -100,7 +98,6 @@ class OpenApiParser {
   private static final String VAADIN_CONNECT_JWT_SECURITY_SCHEME = "vaadin-connect-jwt";
 
   private List<Path> javaSourcePaths = new ArrayList<>();
-  private List<String> jarPaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
   private Map<String, String> servicesJavadoc;
@@ -108,6 +105,7 @@ class OpenApiParser {
   private Map<String, PathItem> pathItems;
   private OpenAPI openApiModel;
   private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
+  private ClassLoader typeResolverClassLoader;
 
   void addSourcePath(Path sourcePath) {
     if (sourcePath == null) {
@@ -121,14 +119,14 @@ class OpenApiParser {
   }
 
   /**
-   * Adds a jar path information to use when resolving the type used in a
-   * project from that jar
-   * 
-   * @param jarPath
-   *          path of the jar
+   * Set project's class loader which is used for resolving types from that
+   * project.
+   *
+   * @param typeResolverClassLoader
+   *          the project's class loader for type resolving
    */
-  void addJarPath(String jarPath) {
-    this.jarPaths.add(jarPath);
+  void setTypeResolverClassLoader(ClassLoader typeResolverClassLoader) {
+    this.typeResolverClassLoader = typeResolverClassLoader;
   }
 
   void setOpenApiConfiguration(OpenApiConfiguration configuration) {
@@ -176,14 +174,9 @@ class OpenApiParser {
   private ParserConfiguration createParserConfiguration() {
     CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver(
         new ReflectionTypeSolver(false));
-    try {
-      for (String jarPath : jarPaths) {
-        combinedTypeSolver.add(new JarTypeSolver(jarPath));
-      }
-    } catch (IOException e) {
-      throw new UncheckedIOException(
-          "I/O error happens when reading jar files. Please make sure that dependencies' jar files are accessible.",
-          e);
+    if (typeResolverClassLoader != null) {
+      combinedTypeSolver
+          .add(new ClassLoaderTypeSolver(typeResolverClassLoader));
     }
     return new ParserConfiguration()
         .setSymbolResolver(new JavaSymbolSolver(combinedTypeSolver));

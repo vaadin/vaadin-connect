@@ -86,15 +86,14 @@ public class OpenApiSpecGenerator {
    *
    * @param sourcesPaths
    *          the source root to be analyzed
-   * @param jarPaths
-   *          jar paths information to use when resolving the types used in a
-   *          project from those jars
+   * @param classLoader
+   *          the ClassLoader which is able to load the classes in sourcesPaths
    * @param specOutputFile
    *          the target file to write the generation output to
    */
   public void generateOpenApiSpec(Collection<Path> sourcesPaths,
-      Collection<String> jarPaths, Path specOutputFile) {
-    jarPaths.forEach(generator::addJarPath);
+      ClassLoader classLoader, Path specOutputFile) {
+    generator.setTypeResolverClassLoader(classLoader);
     generateOpenApiSpec(sourcesPaths, specOutputFile);
   }
 
