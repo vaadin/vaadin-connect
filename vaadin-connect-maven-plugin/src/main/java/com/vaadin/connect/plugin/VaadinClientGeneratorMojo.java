@@ -16,6 +16,8 @@
 
 package com.vaadin.connect.plugin;
 
+import java.nio.file.Path;
+
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
@@ -37,8 +39,17 @@ public class VaadinClientGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override
   public void execute() {
-    new VaadinConnectClientGenerator(readApplicationProperties())
-        .generateVaadinConnectClientFile(generatedFrontendDirectory.toPath()
-            .resolve(DEFAULT_GENERATED_CONNECT_CLIENT_NAME));
+    if (shouldGenerateDefaultClient()) {
+      VaadinConnectClientGenerator vaadinConnectClientGenerator = new VaadinConnectClientGenerator(
+          readApplicationProperties());
+      Path outputFile = generatedFrontendDirectory.toPath()
+          .resolve(DEFAULT_GENERATED_CONNECT_CLIENT_NAME);
+      vaadinConnectClientGenerator.generateVaadinConnectClientFile(outputFile);
+    }
+  }
+
+  private boolean shouldGenerateDefaultClient() {
+    return getDefaultClientPath().equals(
+        VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_PATH);
   }
 }
