@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
+import com.vaadin.connect.testservice.BridgeMethodTestService;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -343,6 +344,45 @@ public class VaadinConnectControllerTest {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(String.format("\"%s\"", expectedOutput), response.getBody());
+  }
+
+  @Test
+  public void should_NotUseBridgeMethod_When_ServiceHasBridgeMethodFromInterface() {
+    String inputId = "2222";
+    String expectedResult = String.format("{\"id\":\"%s\"}", inputId);
+    BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
+    String testMethodName = "testMethodFromInterface";
+    ResponseEntity<String> response = createVaadinController(testService)
+        .serveVaadinService(testService.getClass().getSimpleName(),
+            testMethodName, createRequestParameters(
+                String.format("{\"value\": {\"id\": \"%s\"}}", inputId)));
+    assertEquals(expectedResult, response.getBody());
+  }
+
+  @Test
+  public void should_NotUseBridgeMethod_When_ServiceHasBridgeMethodFromParentClass() {
+    String inputId = "2222";
+    BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
+    String testMethodName = "testMethodFromClass";
+
+    ResponseEntity<String> response = createVaadinController(testService)
+        .serveVaadinService(testService.getClass().getSimpleName(),
+            testMethodName,
+            createRequestParameters(String.format("{\"value\": %s}", inputId)));
+    assertEquals(inputId, response.getBody());
+  }
+
+  @Test
+  public void should_ReturnCorrectResponse_When_CallingNormalOverriddenMethod() {
+    String inputId = "2222";
+    BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
+    String testMethodName = "testNormalMethod";
+
+    ResponseEntity<String> response = createVaadinController(testService)
+        .serveVaadinService(testService.getClass().getSimpleName(),
+            testMethodName,
+            createRequestParameters(String.format("{\"value\": %s}", inputId)));
+    assertEquals(inputId, response.getBody());
   }
 
   @Test
