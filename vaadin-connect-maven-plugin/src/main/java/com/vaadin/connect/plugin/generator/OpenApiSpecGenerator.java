@@ -81,6 +81,23 @@ public class OpenApiSpecGenerator {
     GeneratorUtils.writeToFile(specOutputFile, Json.pretty(openAPI));
   }
 
+  /**
+   * Generates the open api spec file based on the sources provided.
+   *
+   * @param sourcesPaths
+   *          the source root to be analyzed
+   * @param jarPaths
+   *          the jar paths which help the parser resolves the types in those
+   *          jar dependencies
+   * @param specOutputFile
+   *          the target file to write the generation output to
+   */
+  public void generateOpenApiSpec(Collection<Path> sourcesPaths,
+      Collection<String> jarPaths, Path specOutputFile) {
+    jarPaths.forEach(generator::addJarPath);
+    generateOpenApiSpec(sourcesPaths, specOutputFile);
+  }
+
   private OpenApiConfiguration extractOpenApiConfiguration(
       Properties applicationProperties) {
     String endpoint = applicationProperties.getProperty(ENDPOINT,
