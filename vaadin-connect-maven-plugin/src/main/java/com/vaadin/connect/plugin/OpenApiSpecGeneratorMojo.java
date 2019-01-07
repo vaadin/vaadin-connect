@@ -16,8 +16,15 @@
 
 package com.vaadin.connect.plugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,15 +55,36 @@ public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
   @Override
   public void execute() {
     try {
-      List<String> jarPaths = project.getCompileClasspathElements().stream()
-          .filter(s -> s.endsWith(".jar")).collect(Collectors.toList());
       List<Path> sourcesPaths = project.getCompileSourceRoots().stream()
           .map(Paths::get).collect(Collectors.toList());
-      new OpenApiSpecGenerator(readApplicationProperties()).generateOpenApiSpec(
-          sourcesPaths, jarPaths, openApiJsonFile.toPath());
+      URL[] urlsForClassLoader = getUrls();
+      try (
+          URLClassLoader classLoader = new URLClassLoader(urlsForClassLoader)) {
+        new OpenApiSpecGenerator(readApplicationProperties())
+            .generateOpenApiSpec(sourcesPaths, classLoader,
+                openApiJsonFile.toPath());
+      }
     } catch (DependencyResolutionRequiredException e) {
       throw new IllegalStateException(
           "All dependencies need to be resolved before running the OpenAPI spec generator. Please resolve the dependencies and try again.",
+          e);
+    } catch (IOException e) {
+      throw new UncheckedIOException(
+          "I/O error happens when closing project's URLClassLoader after generating OpenAPI spec.",
+          e);
+    }
+  }
+
+  private URL[] getUrls() throws DependencyResolutionRequiredException {
+    List<URL> pathUrls = new ArrayList<>();
+    try {
+      for (String mavenCompilePath : project.getCompileClasspathElements()) {
+        pathUrls.add(new File(mavenCompilePath).toURI().toURL());
+      }
+      return pathUrls.toArray(new URL[pathUrls.size()]);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(
+          "Can't create URLs from project class paths for generating OpenAPI spec.",
           e);
     }
   }
