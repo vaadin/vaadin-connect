@@ -17,6 +17,7 @@
 package com.vaadin.connect;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -31,17 +32,17 @@ public class VaadinServiceNameChecker {
    * @see <a href=
    *      "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords">Specification</a>
    */
-  public static final Set<String> ECMA_SCRIPT_RESERVED_WORDS = new HashSet<>(
-      Arrays.asList("abstract", "arguments", "await", "boolean", "break",
-          "byte", "case", "catch", "char", "class", "const", "continue",
-          "debugger", "default", "delete", "do", "double", "else", "enum",
-          "eval", "export", "extends", "false", "final", "finally", "float",
-          "for", "function", "goto", "if", "implements", "import", "in",
-          "instanceof", "int", "interface", "let", "long", "native", "new",
-          "null", "package", "private", "protected", "public", "return",
-          "short", "static", "super", "switch", "synchronized", "this", "throw",
-          "throws", "transient", "true", "try", "typeof", "var", "void",
-          "volatile", "while", "with", "yield"));
+  public static final Set<String> ECMA_SCRIPT_RESERVED_WORDS = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("abstract", "arguments",
+          "await", "boolean", "break", "byte", "case", "catch", "char", "class",
+          "const", "continue", "debugger", "default", "delete", "do", "double",
+          "else", "enum", "eval", "export", "extends", "false", "final",
+          "finally", "float", "for", "function", "goto", "if", "implements",
+          "import", "in", "instanceof", "int", "interface", "let", "long",
+          "native", "new", "null", "package", "private", "protected", "public",
+          "return", "short", "static", "super", "switch", "synchronized",
+          "this", "throw", "throws", "transient", "true", "try", "typeof",
+          "var", "void", "volatile", "while", "with", "yield")));
 
   private static final Pattern CONTAINS_WHITESPACE_PATTERN = Pattern
       .compile(".*[\\s+].*");
