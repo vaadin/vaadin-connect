@@ -37,6 +37,6 @@ public class EsModuleGeneratorMojo extends VaadinConnectMojoBase {
   @Override
   public void execute() {
     VaadinConnectJsGenerator.launch(openApiJsonFile,
-        generatedFrontendDirectory);
+        generatedFrontendDirectory, getDefaultClientPath());
   }
 }

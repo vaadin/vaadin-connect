@@ -17,6 +17,7 @@
 package com.vaadin.connect.plugin.generator;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
@@ -35,6 +36,11 @@ import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
  * properties, if provided.
  */
 public class VaadinConnectClientGenerator {
+
+  public static final String DEFAULT_CONNECT_CLIENT_PATH_PROPERTY = "vaadin.connect.connect-client.path";
+  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_PATH = "./connect-client.default";
+  public static final String DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH = "frontend/connect-client.js";
+
   private final String endpoint;
 
   /**
@@ -60,22 +66,27 @@ public class VaadinConnectClientGenerator {
    *      specification</a>
    */
   public void generateVaadinConnectClientFile(Path outputFilePath) {
-    cleanGeneratedFolder(outputFilePath);
+    cleanGeneratedFolder(outputFilePath.getParent().toFile());
     String generatedDefaultClientJs = getDefaultClientJsTemplate()
         .replace("{{ENDPOINT}}", endpoint);
     GeneratorUtils.writeToFile(outputFilePath, generatedDefaultClientJs);
   }
 
-  private void cleanGeneratedFolder(Path outputFilePath) {
-    Path parentPath = outputFilePath.getParent();
-    if (parentPath == null || !parentPath.toFile().exists()) {
+  /**
+   * Clean the frontend generated folder
+   *
+   * @param frontendGeneratedFolder
+   *          the frontend generated folder
+   */
+  public void cleanGeneratedFolder(File frontendGeneratedFolder) {
+    if (frontendGeneratedFolder == null || !frontendGeneratedFolder.exists()) {
       return;
     }
     try {
-      FileUtils.deleteDirectory(parentPath.toFile());
+      FileUtils.deleteDirectory(frontendGeneratedFolder);
     } catch (IOException e) {
-      throw new UncheckedIOException(
-          String.format("Failed to remove directory '%s'", parentPath), e);
+      throw new UncheckedIOException(String.format(
+          "Failed to remove directory '%s'", frontendGeneratedFolder), e);
     }
   }
 

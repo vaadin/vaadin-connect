@@ -20,12 +20,19 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_CONNECT_CLIENT_PATH_PROPERTY;
+import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH;
+import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
 
 /**
  * A Vaadin Connect mojo base class, defining common Maven properties that are
@@ -43,6 +50,9 @@ abstract class VaadinConnectMojoBase extends AbstractMojo {
 
   @Parameter(defaultValue = "${project.basedir}/frontend/generated/", required = true)
   protected File generatedFrontendDirectory;
+
+  @Parameter(defaultValue = "${project}", readonly = true, required = true)
+  protected MavenProject project;
 
   /**
    * Reads application properties from the
@@ -68,4 +78,27 @@ abstract class VaadinConnectMojoBase extends AbstractMojo {
     }
     return properties;
   }
+
+  protected String getDefaultClientPath() {
+    String clientPathProperty = readApplicationProperties()
+        .getProperty(DEFAULT_CONNECT_CLIENT_PATH_PROPERTY);
+
+    Path projectBasePath = project.getBasedir().toPath();
+    Path generatedFrontendPath = generatedFrontendDirectory.toPath();
+
+    if (StringUtils.isNotBlank(clientPathProperty)) {
+      return generatedFrontendPath
+          .relativize(projectBasePath.resolve(clientPathProperty)).toString();
+    }
+
+    Path defaultConventionalClient = projectBasePath
+        .resolve(DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH);
+    if (defaultConventionalClient.toFile().exists()) {
+      return generatedFrontendPath.relativize(defaultConventionalClient)
+          .toString();
+    } else {
+      return DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
+    }
+  }
+
 }
