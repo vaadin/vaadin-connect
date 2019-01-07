@@ -26,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -61,12 +62,12 @@ public class ESModuleGeneratorTest {
         GeneratorTestClass.class.getSimpleName(),
         GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
             .getSimpleName());
-    assertEquals(
-        String.format(
-            "Expected to have only %s classes processed in the test: '%s'",
-            expectedClasses.size(), expectedClasses),
-        2L, Stream.of(outputDirectory.getRoot().list())
-            .filter(fileName -> fileName.endsWith(".js")).count());
+    List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
+        .filter(fileName -> fileName.endsWith(".js")).collect(Collectors.toList());
+    assertEquals(String.format(
+        "Expected to have only %s classes processed in the test: '%s', but found the following files: '%s'",
+        expectedClasses.size(), expectedClasses, foundFiles),
+        expectedClasses.size(), foundFiles.size());
 
     expectedClasses.forEach(this::assertClassGeneratedJs);
   }

@@ -31,11 +31,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.vaadin.connect.VaadinConnectController;
+import com.vaadin.connect.VaadinServiceNameChecker;
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 
-import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest
@@ -49,11 +48,9 @@ public abstract class BaseTypeConversionIT {
 
   @Before
   public void setUp() {
-    VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
-        VaadinConnectOAuthAclChecker.class);
-    when(oAuthAclCheckerMock.check(notNull())).thenReturn(null);
     mockMvc = MockMvcBuilders.standaloneSetup(new VaadinConnectController(null,
-        oAuthAclCheckerMock, applicationContext)).build();
+        mock(VaadinConnectOAuthAclChecker.class),
+        mock(VaadinServiceNameChecker.class), applicationContext)).build();
     Assert.assertNotEquals(null, applicationContext);
   }
 

@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -42,6 +43,10 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.LiteralStringValueExpr;
+import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
@@ -77,9 +82,11 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.VaadinServiceNameChecker;
 import com.vaadin.connect.oauth.AnonymousAllowed;
 
 /**
@@ -94,7 +101,9 @@ class OpenApiParser {
   private Set<String> usedSchemas;
   private Map<String, String> servicesJavadoc;
   private Map<String, Schema> nonServiceSchemas;
+  private Map<String, PathItem> pathItems;
   private OpenAPI openApiModel;
+  private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
 
   void addSourcePath(Path sourcePath) {
     if (sourcePath == null) {
@@ -130,6 +139,7 @@ class OpenApiParser {
     }
     openApiModel = createBasicModel();
     nonServiceSchemas = new HashMap<>();
+    pathItems = new TreeMap<>();
     usedSchemas = new HashSet<>();
     servicesJavadoc = new HashMap<>();
 
@@ -203,14 +213,15 @@ class OpenApiParser {
         .map(BodyDeclaration::asClassOrInterfaceDeclaration)
         .map(this::appendNestedClasses).orElse(Collections.emptyList())
         .forEach(this::parseClass));
+    pathItems.forEach((pathName, pathItem) -> openApiModel.getPaths()
+        .addPathItem(pathName, pathItem));
     return SourceRoot.Callback.Result.DONT_SAVE;
   }
 
   private Collection<ClassOrInterfaceDeclaration> appendNestedClasses(
       ClassOrInterfaceDeclaration topLevelClass) {
-    TreeSet<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass
-        .getMembers().stream()
-        .filter(BodyDeclaration::isClassOrInterfaceDeclaration)
+    Set<ClassOrInterfaceDeclaration> nestedClasses = topLevelClass.getMembers()
+        .stream().filter(BodyDeclaration::isClassOrInterfaceDeclaration)
         .map(BodyDeclaration::asClassOrInterfaceDeclaration)
         .collect(Collectors.toCollection(() -> new TreeSet<>(
             Comparator.comparing(NodeWithSimpleName::getNameAsString))));
@@ -219,25 +230,39 @@ class OpenApiParser {
   }
 
   private void parseClass(ClassOrInterfaceDeclaration classDeclaration) {
-    String className = classDeclaration.getNameAsString();
-    if (!classDeclaration.isAnnotationPresent(VaadinService.class)) {
-      nonServiceSchemas.put(className, parseClassAsSchema(classDeclaration));
-      return;
-    }
-    classDeclaration.getJavadoc().ifPresent(javadoc -> servicesJavadoc
-        .put(className, javadoc.getDescription().toText()));
+    Optional<AnnotationExpr> serviceAnnotation = classDeclaration
+        .getAnnotationByClass(VaadinService.class);
+    if (!serviceAnnotation.isPresent()) {
+      nonServiceSchemas.put(classDeclaration.getNameAsString(),
+          parseClassAsSchema(classDeclaration));
+    } else {
+      classDeclaration.getJavadoc().ifPresent(
+          javadoc -> servicesJavadoc.put(classDeclaration.getNameAsString(),
+              javadoc.getDescription().toText()));
 
-    Map<String, PathItem> pathItems = createPathItems(classDeclaration);
-
-    for (Map.Entry<String, PathItem> entry : pathItems.entrySet()) {
-      String methodName = entry.getKey();
-      PathItem pathItem = entry.getValue();
-      String pathName = "/" + className + "/" + methodName;
-      pathItem.readOperationsMap()
-          .forEach((httpMethod, operation) -> operation.setOperationId(
-              String.join("_", className, methodName, httpMethod.name())));
-      openApiModel.getPaths().addPathItem(pathName, pathItem);
+      pathItems.putAll(createPathItems(
+          getServiceName(classDeclaration, serviceAnnotation.get()),
+          classDeclaration));
     }
+  }
+
+  private String getServiceName(ClassOrInterfaceDeclaration classDeclaration,
+      AnnotationExpr serviceAnnotation) {
+    String serviceName = Optional.ofNullable(serviceAnnotation)
+        .filter(Expression::isSingleMemberAnnotationExpr)
+        .map(Expression::asSingleMemberAnnotationExpr)
+        .map(SingleMemberAnnotationExpr::getMemberValue)
+        .map(Expression::asStringLiteralExpr)
+        .map(LiteralStringValueExpr::getValue).filter(StringUtils::isNotBlank)
+        .orElse(classDeclaration.getNameAsString());
+
+    String validationError = serviceNameChecker.check(serviceName);
+    if (validationError != null) {
+      throw new IllegalStateException(
+          String.format("Service name '%s' is invalid, reason: '%s'",
+              serviceName, validationError));
+    }
+    return serviceName;
   }
 
   private Schema parseClassAsSchema(
@@ -257,20 +282,13 @@ class OpenApiParser {
   }
 
   private boolean isReservedWord(String word) {
-    return word != null && VaadinConnectJsGenerator.JS_RESERVED_WORDS
+    return word != null && VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS
         .contains(word.toLowerCase());
   }
 
-  private Map<String, PathItem> createPathItems(
+  private Map<String, PathItem> createPathItems(String serviceName,
       ClassOrInterfaceDeclaration typeDeclaration) {
-    Map<String, PathItem> pathItems = new TreeMap<>();
-
-    if (isReservedWord(typeDeclaration.getNameAsString())) {
-      throw new IllegalStateException(
-          "The service class name '" + typeDeclaration.getNameAsString()
-              + "' is a JavaScript reserved word");
-    }
-
+    Map<String, PathItem> newPathItems = new HashMap<>();
     for (MethodDeclaration methodDeclaration : typeDeclaration.getMethods()) {
       if (!methodDeclaration.isPublic()
           || methodDeclaration.isAnnotationPresent(DenyAll.class)) {
@@ -295,9 +313,14 @@ class OpenApiParser {
       post.setResponses(responses);
       post.tags(Collections.singletonList(typeDeclaration.getNameAsString()));
       PathItem pathItem = new PathItem().post(post);
-      pathItems.put(methodName, pathItem);
+
+      String pathName = "/" + serviceName + "/" + methodName;
+      pathItem.readOperationsMap()
+          .forEach((httpMethod, operation) -> operation.setOperationId(
+              String.join("_", serviceName, methodName, httpMethod.name())));
+      newPathItems.put(pathName, pathItem);
     }
-    return pathItems;
+    return newPathItems;
   }
 
   private boolean requiresAuthentication(
@@ -388,8 +411,10 @@ class OpenApiParser {
     Schema requestSchema = new ObjectSchema();
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
-      Schema paramSchema = parseResolvedTypeToSchema(parameter.getType().resolve());
-      paramSchema.description(paramsDescription.get(parameter.getNameAsString()));
+      Schema paramSchema = parseResolvedTypeToSchema(
+          parameter.getType().resolve());
+      paramSchema
+          .description(paramsDescription.get(parameter.getNameAsString()));
 
       String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
           .concat(parameter.getNameAsString());

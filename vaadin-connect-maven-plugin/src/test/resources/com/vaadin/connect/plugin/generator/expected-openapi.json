@@ -16,45 +16,6 @@
     "description" : "This class is used for OpenApi generator test"
   } ],
   "paths" : {
-    "/GeneratorAnonymousAllowedTestClass/anonymousAllowed" : {
-      "post" : {
-        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
-        "operationId" : "GeneratorAnonymousAllowedTestClass_anonymousAllowed_POST",
-        "responses" : {
-          "200" : {
-            "description" : ""
-          }
-        }
-      }
-    },
-    "/GeneratorAnonymousAllowedTestClass/permissionAltered1" : {
-      "post" : {
-        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
-        "operationId" : "GeneratorAnonymousAllowedTestClass_permissionAltered1_POST",
-        "responses" : {
-          "200" : {
-            "description" : ""
-          }
-        },
-        "security" : [ {
-          "vaadin-connect-jwt" : [ ]
-        } ]
-      }
-    },
-    "/GeneratorAnonymousAllowedTestClass/permissionAltered2" : {
-      "post" : {
-        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
-        "operationId" : "GeneratorAnonymousAllowedTestClass_permissionAltered2_POST",
-        "responses" : {
-          "200" : {
-            "description" : ""
-          }
-        },
-        "security" : [ {
-          "vaadin-connect-jwt" : [ ]
-        } ]
-      }
-    },
     "/GeneratorTestClass/countUser" : {
       "post" : {
         "tags" : [ "GeneratorTestClass" ],
@@ -363,6 +324,45 @@
             }
           }
         },
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
+    "/customName/anonymousAllowed" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "operationId" : "customName_anonymousAllowed_POST",
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        }
+      }
+    },
+    "/customName/permissionAltered1" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "operationId" : "customName_permissionAltered1_POST",
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-jwt" : [ ]
+        } ]
+      }
+    },
+    "/customName/permissionAltered2" : {
+      "post" : {
+        "tags" : [ "GeneratorAnonymousAllowedTestClass" ],
+        "operationId" : "customName_permissionAltered2_POST",
         "responses" : {
           "200" : {
             "description" : ""
