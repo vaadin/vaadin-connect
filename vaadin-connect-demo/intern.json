@@ -4,7 +4,10 @@
   "serverPort": 9002,
   "socketPort": 9003,
   "environments": [
-    "chrome"
+    {
+      "browserName": "chrome",
+      "fixSessionCapabilities": false
+    }
   ],
   "tunnelOptions": {
     "version": "3.141.59",

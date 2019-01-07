@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -79,6 +80,7 @@ public class VaadinConnectController {
    *      VaadinServiceNameChecker, ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
+  private static final String SERVICE_INVOCATION_HEADER = "vaadin-connect-service-invocation-exception";
 
   private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
@@ -276,17 +278,56 @@ public class VaadinConnectController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(errorMessage);
     } catch (InvocationTargetException e) {
+      return handleMethodExecutionError(serviceName, methodName, e);
+    }
+    return createResponseWithSerializedEntity(returnValue, ResponseEntity::ok,
+        serviceName, methodName);
+  }
+
+  private ResponseEntity<String> handleMethodExecutionError(String serviceName,
+      String methodName, InvocationTargetException e) {
+    if (VaadinServiceException.class
+        .isAssignableFrom(e.getCause().getClass())) {
+      VaadinServiceException serviceException = ((VaadinServiceException) e
+          .getCause());
+      getLogger()
+          .debug(String.format("Service '%s' method '%s' aborted the execution",
+              serviceName, methodName), serviceException);
+      return createResponseWithSerializedEntity(
+          exceptionToResponseObject(serviceException),
+          serializedEntity -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
+              .header(SERVICE_INVOCATION_HEADER, Boolean.TRUE.toString())
+              .body(serializedEntity),
+          serviceName, methodName);
+    } else {
       String errorMessage = String.format(
           "Service '%s' method '%s' execution failure", serviceName,
           methodName);
       getLogger().error(errorMessage, e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .header(SERVICE_INVOCATION_HEADER, Boolean.TRUE.toString())
           .body(errorMessage);
     }
+  }
 
+  private Map<String, Object> exceptionToResponseObject(
+      VaadinServiceException serviceException) {
+    Map<String, Object> responseBody = new HashMap<>();
+    responseBody.put("type", Optional.ofNullable(serviceException.getCause())
+        .orElse(serviceException).getClass().getName());
+    responseBody.put("message", serviceException.getMessage());
+    responseBody.put("detail", serviceException.getDetail());
+    return responseBody;
+  }
+
+  private ResponseEntity<String> createResponseWithSerializedEntity(
+      Object entityToSerialize,
+      Function<String, ResponseEntity<String>> entityCreator,
+      String serviceName, String methodName) {
+    String serializedEntity;
     try {
-      return ResponseEntity
-          .ok(vaadinServiceMapper.writeValueAsString(returnValue));
+      serializedEntity = vaadinServiceMapper
+          .writeValueAsString(entityToSerialize);
     } catch (JsonProcessingException e) {
       String errorMessage = String.format(
           "Failed to serialize service '%s' method '%s' response. Double check method's return type or specify a custom mapper bean with qualifier '%s'",
@@ -295,6 +336,7 @@ public class VaadinConnectController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(errorMessage);
     }
+    return entityCreator.apply(serializedEntity);
   }
 
   private String listMethodParameterTypes(Parameter[] javaParameters) {
