@@ -41,7 +41,7 @@ abstract class VaadinConnectMojoBase extends AbstractMojo {
   @Parameter(defaultValue = "${project.build.directory}/generated-resources/openapi.json", required = true)
   protected File openApiJsonFile;
 
-  @Parameter(defaultValue = "${project.basedir}/frontend/src/generated/", required = true)
+  @Parameter(defaultValue = "${project.basedir}/frontend/generated/", required = true)
   protected File generatedFrontendDirectory;
 
   /**
