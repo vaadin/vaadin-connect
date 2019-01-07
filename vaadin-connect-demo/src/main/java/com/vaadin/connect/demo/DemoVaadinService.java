@@ -11,8 +11,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.Version;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.demo.account.BeanWithTypeFromDependencies;
 import com.vaadin.connect.oauth.AnonymousAllowed;
 
 @VaadinService
@@ -61,6 +63,20 @@ public class DemoVaadinService {
   @RolesAllowed("ROLE_USER")
   public int addOne(int number) {
     return number + 1;
+  }
+
+  /**
+   * This method is to make sure that the generator won't fail the build when
+   * resolving types from project's dependencies.
+   *
+   * @param version
+   *          a version object from dependencies
+   *
+   * @return {@code null}
+   */
+  @PermitAll
+  public BeanWithTypeFromDependencies testTypeResolverMethod(Version version) {
+    return null;
   }
 
   @PermitAll
