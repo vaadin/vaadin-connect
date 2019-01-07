@@ -15,9 +15,9 @@
  */
 package com.vaadin.connect.plugin.generator.collectionservice;
 
-import com.vaadin.connect.VaadinService;
-
 import java.util.ArrayList;
+
+import com.vaadin.connect.VaadinService;
 
 @VaadinService
 public class CollectionTestService {
