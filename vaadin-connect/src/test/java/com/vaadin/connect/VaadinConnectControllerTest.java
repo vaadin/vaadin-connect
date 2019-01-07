@@ -44,7 +44,10 @@ public class VaadinConnectControllerTest {
   private static final Method TEST_METHOD;
 
   static {
-    TEST_METHOD = getMethod(TEST_SERVICE.getClass(), "testMethod");
+    TEST_METHOD = Stream.of(TEST_SERVICE.getClass().getDeclaredMethods())
+        .filter(method -> "testMethod".equals(method.getName())).findFirst()
+        .orElseThrow(
+            () -> new AssertionError("Failed to find a service method"));
   }
 
   @VaadinService
@@ -347,19 +350,11 @@ public class VaadinConnectControllerTest {
   public void should_NotUseBridgeMethod_When_ServiceHasBridgeMethodFromInterface() {
     String inputId = "2222";
     String expectedResult = String.format("{\"id\":\"%s\"}", inputId);
-    VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
-        VaadinConnectOAuthAclChecker.class);
     BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
-    Method testMethod = getMethod(BridgeMethodTestService.InheritedClass.class,
-        "testMethodFromInterface");
-
-    when(oAuthAclCheckerMock.check(testMethod)).thenReturn(null);
-
-    createVaadinController(testService, new ObjectMapper(),
-        oAuthAclCheckerMock);
+    String testMethodName = "testMethodFromInterface";
     ResponseEntity<String> response = createVaadinController(testService)
         .serveVaadinService(testService.getClass().getSimpleName(),
-            testMethod.getName(), createRequestParameters(
+            testMethodName, createRequestParameters(
                 String.format("{\"value\": {\"id\": \"%s\"}}", inputId)));
     assertEquals(expectedResult, response.getBody());
   }
@@ -367,50 +362,27 @@ public class VaadinConnectControllerTest {
   @Test
   public void should_NotUseBridgeMethod_When_ServiceHasBridgeMethodFromParentClass() {
     String inputId = "2222";
-    String expectedResult = String.format("%s", inputId);
-    VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
-        VaadinConnectOAuthAclChecker.class);
     BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
-    Method testMethod = getMethod(BridgeMethodTestService.InheritedClass.class,
-        "testMethodFromClass");
+    String testMethodName = "testMethodFromClass";
 
-    when(oAuthAclCheckerMock.check(testMethod)).thenReturn(null);
-
-    createVaadinController(testService, new ObjectMapper(),
-        oAuthAclCheckerMock);
     ResponseEntity<String> response = createVaadinController(testService)
         .serveVaadinService(testService.getClass().getSimpleName(),
-            testMethod.getName(),
+            testMethodName,
             createRequestParameters(String.format("{\"value\": %s}", inputId)));
-    assertEquals(expectedResult, response.getBody());
+    assertEquals(inputId, response.getBody());
   }
 
   @Test
   public void should_ReturnCorrectResponse_When_CallingNormalOverriddenMethod() {
     String inputId = "2222";
-    String expectedResult = String.format("%s", inputId);
-    VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
-        VaadinConnectOAuthAclChecker.class);
     BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
-    Method testMethod = getMethod(BridgeMethodTestService.InheritedClass.class,
-        "testNormalMethod");
+    String testMethodName = "testNormalMethod";
 
-    when(oAuthAclCheckerMock.check(testMethod)).thenReturn(null);
-
-    createVaadinController(testService, new ObjectMapper(),
-        oAuthAclCheckerMock);
     ResponseEntity<String> response = createVaadinController(testService)
         .serveVaadinService(testService.getClass().getSimpleName(),
-            testMethod.getName(),
+            testMethodName,
             createRequestParameters(String.format("{\"value\": %s}", inputId)));
-    assertEquals(expectedResult, response.getBody());
-  }
-
-  private static Method getMethod(Class clazz, String methodName) {
-    return Stream.of(clazz.getDeclaredMethods())
-        .filter(method -> methodName.equals(method.getName())).findFirst()
-        .orElseThrow(
-            () -> new AssertionError("Failed to find a service method"));
+    assertEquals(inputId, response.getBody());
   }
 
   @Test
