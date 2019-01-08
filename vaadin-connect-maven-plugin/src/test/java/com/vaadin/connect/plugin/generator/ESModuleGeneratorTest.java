@@ -24,11 +24,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.swagger.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.servers.Server;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -63,13 +73,44 @@ public class ESModuleGeneratorTest {
         GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
             .getSimpleName());
     List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
-        .filter(fileName -> fileName.endsWith(".js")).collect(Collectors.toList());
+        .filter(fileName -> fileName.endsWith(".js"))
+        .collect(Collectors.toList());
     assertEquals(String.format(
         "Expected to have only %s classes processed in the test: '%s', but found the following files: '%s'",
         expectedClasses.size(), expectedClasses, foundFiles),
         expectedClasses.size(), foundFiles.size());
 
     expectedClasses.forEach(this::assertClassGeneratedJs);
+  }
+
+  @Test
+  public void should_UseDefaultConnectClientPath_When_ItIsNotDefined()
+    throws IOException {
+    String expectedImport = String.format("import client from '%s';",
+      VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_PATH);
+
+    VaadinConnectJsGenerator.launch(
+      getResourcePath("expected-openapi-custom-application-properties.json"),
+      outputDirectory.getRoot());
+
+    String trim = readFileInTempDir("GeneratorTestClass.js");
+
+    assertTrue(trim.contains(expectedImport));
+  }
+
+  @Test
+  public void should_UseCustomConnectClientPath_When_ItIsDefined()
+    throws IOException {
+    String customConnectClientPath = "../my-connect-client.js";
+    String expectedImport = String.format("import client from '%s';", customConnectClientPath);
+
+    VaadinConnectJsGenerator.launch(
+      getResourcePath("expected-openapi-custom-application-properties.json"),
+      outputDirectory.getRoot(), customConnectClientPath);
+
+    String trim = readFileInTempDir("GeneratorTestClass.js");
+
+    assertTrue(trim.contains(expectedImport));
   }
 
   @Test
@@ -155,10 +196,7 @@ public class ESModuleGeneratorTest {
     VaadinConnectJsGenerator.launch(getResourcePath("no-jsdoc-operation.json"),
         outputDirectory.getRoot());
 
-    Path outputPath = Paths
-        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
-    String actual = StringUtils.toEncodedString(Files.readAllBytes(outputPath),
-        Charset.defaultCharset()).trim();
+    String actual = readFileInTempDir("GeneratorTestClass.js");
 
     String expected = TestUtils.getExpectedJson(this.getClass(),
         "expected-no-jsdoc.js");
@@ -172,10 +210,7 @@ public class ESModuleGeneratorTest {
         getResourcePath("parameters-and-return-jsdoc.json"),
         outputDirectory.getRoot());
 
-    Path outputPath = Paths
-        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
-    String actual = StringUtils.toEncodedString(Files.readAllBytes(outputPath),
-        Charset.defaultCharset()).trim();
+    String actual = readFileInTempDir("GeneratorTestClass.js");
 
     String expected = TestUtils.getExpectedJson(this.getClass(),
         "expected-partly-jsdoc.js");
@@ -214,9 +249,7 @@ public class ESModuleGeneratorTest {
       throws Exception {
     VaadinConnectJsGenerator.launch(getResourcePath("no-tag-operation.json"),
         outputDirectory.getRoot());
-    Path outputFilePath = Paths.get(outputDirectory.getRoot() + "/Default.js");
-    String actualJs = StringUtils.toEncodedString(
-        Files.readAllBytes(outputFilePath), Charset.defaultCharset()).trim();
+    String actualJs = readFileInTempDir("Default.js");
     String expectedFirstClass = TestUtils.getExpectedJson(this.getClass(),
         "expected-default-class-no-tag.js");
     Assert.assertEquals(expectedFirstClass, actualJs);
@@ -228,11 +261,7 @@ public class ESModuleGeneratorTest {
     VaadinConnectJsGenerator.launch(
         getResourcePath("multiplelines-description.json"),
         outputDirectory.getRoot());
-    Path output = Paths
-        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
-    String actualJs = StringUtils
-        .toEncodedString(Files.readAllBytes(output), Charset.defaultCharset())
-        .trim();
+    String actualJs = readFileInTempDir("GeneratorTestClass.js");
     String expectedJs = TestUtils.getExpectedJson(this.getClass(),
         "expected-multiple-lines-description.js");
     Assert.assertEquals(expectedJs, actualJs);
@@ -244,10 +273,7 @@ public class ESModuleGeneratorTest {
     VaadinConnectJsGenerator.launch(getResourcePath("reserved-words.json"),
         outputDirectory.getRoot());
 
-    Path outputPath = Paths
-        .get(outputDirectory.getRoot() + "/GeneratorTestClass.js");
-    String actual = StringUtils.toEncodedString(Files.readAllBytes(outputPath),
-        Charset.defaultCharset()).trim();
+    String actual = readFileInTempDir("GeneratorTestClass.js");
 
     String expected = TestUtils.getExpectedJson(this.getClass(),
         "expected-reserved-words.js");
@@ -266,6 +292,12 @@ public class ESModuleGeneratorTest {
     VaadinConnectJsGenerator.launch(
         getResourcePath("invalid-schema-type-openapi.json"),
         outputDirectory.getRoot());
+  }
+
+  private String readFileInTempDir(String s) throws IOException {
+    Path outputPath = Paths.get(outputDirectory.getRoot() + "/" + s);
+    return StringUtils.toEncodedString(Files.readAllBytes(outputPath),
+        Charset.defaultCharset()).trim();
   }
 
   private File getResourcePath(String resourceName) {
