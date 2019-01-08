@@ -235,18 +235,21 @@ public class VaadinConnectController {
 
     String checkError = oauthChecker.check(methodToInvoke);
     if (checkError != null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(String.format(
-          "Service '%s' method '%s' request cannot be accessed, reason: '%s'",
-          serviceName, methodName, checkError));
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .contentType(MediaType.TEXT_PLAIN)
+          .body(String.format(
+              "Service '%s' method '%s' request cannot be accessed, reason: '%s'",
+              serviceName, methodName, checkError));
     }
 
     List<JsonNode> requestParameters = getRequestParameters(body);
     Parameter[] javaParameters = methodToInvoke.getParameters();
     if (javaParameters.length != requestParameters.size()) {
-      return ResponseEntity.badRequest().body(String.format(
-          "Incorrect number of parameters for service '%s' method '%s', expected: %s, got: %s",
-          serviceName, methodName, javaParameters.length,
-          requestParameters.size()));
+      return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN)
+          .body(String.format(
+              "Incorrect number of parameters for service '%s' method '%s', expected: %s, got: %s",
+              serviceName, methodName, javaParameters.length,
+              requestParameters.size()));
     }
 
     Object[] vaadinServiceParameters;
@@ -258,7 +261,8 @@ public class VaadinConnectController {
           "Unable to deserialize parameters for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
           serviceName, methodName, listMethodParameterTypes(javaParameters));
       getLogger().debug(errorMessage, e);
-      return ResponseEntity.badRequest().body(errorMessage);
+      return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN)
+          .body(errorMessage);
     }
 
     Object returnValue;
@@ -270,13 +274,14 @@ public class VaadinConnectController {
           "Received incorrect arguments for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
           serviceName, methodName, listMethodParameterTypes(javaParameters));
       getLogger().debug(errorMessage, e);
-      return ResponseEntity.badRequest().body(errorMessage);
+      return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN)
+          .body(errorMessage);
     } catch (IllegalAccessException e) {
       String errorMessage = String.format(
           "Service '%s' method '%s' access failure", serviceName, methodName);
       getLogger().error(errorMessage, e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(errorMessage);
+          .contentType(MediaType.TEXT_PLAIN).body(errorMessage);
     } catch (InvocationTargetException e) {
       return handleMethodExecutionError(serviceName, methodName, e);
     }
@@ -294,8 +299,8 @@ public class VaadinConnectController {
           .debug(String.format("Service '%s' method '%s' aborted the execution",
               serviceName, methodName), serviceException);
       return createResponseWithSerializedEntity(
-          exceptionToResponseObject(serviceException),
-          serializedEntity -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          serviceException.getSerializationData(),
+          serializedEntity -> ResponseEntity.badRequest()
               .header(SERVICE_INVOCATION_HEADER, Boolean.TRUE.toString())
               .body(serializedEntity),
           serviceName, methodName);
@@ -305,19 +310,10 @@ public class VaadinConnectController {
           methodName);
       getLogger().error(errorMessage, e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .contentType(MediaType.TEXT_PLAIN)
           .header(SERVICE_INVOCATION_HEADER, Boolean.TRUE.toString())
           .body(errorMessage);
     }
-  }
-
-  private Map<String, Object> exceptionToResponseObject(
-      VaadinServiceException serviceException) {
-    Map<String, Object> responseBody = new HashMap<>();
-    responseBody.put("type", Optional.ofNullable(serviceException.getCause())
-        .orElse(serviceException).getClass().getName());
-    responseBody.put("message", serviceException.getMessage());
-    responseBody.put("detail", serviceException.getDetail());
-    return responseBody;
   }
 
   private ResponseEntity<String> createResponseWithSerializedEntity(

@@ -16,6 +16,10 @@
 
 package com.vaadin.connect;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 public class VaadinServiceException extends RuntimeException {
   private final Object detail;
 
@@ -52,5 +56,14 @@ public class VaadinServiceException extends RuntimeException {
 
   public Object getDetail() {
     return detail;
+  }
+
+  public Map<String, Object> getSerializationData() {
+    Map<String, Object> serializationData = new HashMap<>();
+    serializationData.put("type",
+        Optional.ofNullable(getCause()).orElse(this).getClass().getName());
+    serializationData.put("message", getMessage());
+    serializationData.put("detail", detail);
+    return serializationData;
   }
 }
