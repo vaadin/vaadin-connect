@@ -2,7 +2,7 @@
 node_modules
 build
 coverage
-vaadin-connect-demo/frontend/src/generated/
+vaadin-connect-demo/frontend/generated/
 
 ### STS ###
 .apt_generated
