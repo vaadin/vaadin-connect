@@ -1,10 +1,13 @@
 /**
  * Throws a TypeError if the response is not 200 OK.
  * @param {Response} response The response to assert.
+ * @param {Object} responseBody The json response body to get the information from.
  * @private
  */
-const assertResponseIsOk = response => {
-  if (!response.ok) {
+const assertResponseIsOk = (response, responseBody) => {
+  if (response.headers.get('vaadin-connect-service-invocation-exception')) {
+    throw new VaadinServiceException(responseBody.type, responseBody.message, responseBody.detail);
+  } else if (!response.ok) {
     throw new TypeError(
       `expected '200 OK' response, but got ${response.status}`
       + ` ${response.statusText}`
@@ -14,7 +17,7 @@ const assertResponseIsOk = response => {
 
 /**
  * Authenticate a Vaadin Connect client
- * @param {ConnectClient} the connect client instance
+ * @param {ConnectClient} client the connect client instance
  * @private
  */
 const authenticateClient = async client => {
@@ -64,17 +67,18 @@ const authenticateClient = async client => {
         body: body.toString()
       });
 
+      const responseBody = await tokenResponse.json();
       if (tokenResponse.status === 400 || tokenResponse.status === 401) {
-        const invalidResponse = await tokenResponse.json();
+        const invalidResponse = responseBody;
         if (invalidResponse.error === 'invalid_token') {
           tokens = new AuthTokens();
         }
         // Wrong credentials response, loop to ask again with the message
         message = invalidResponse.error_description;
       } else {
-        assertResponseIsOk(tokenResponse);
+        assertResponseIsOk(tokenResponse, responseBody);
         // Successful token response
-        tokens = new AuthTokens(await tokenResponse.json());
+        tokens = new AuthTokens(responseBody);
         _private.tokens = tokens;
         if (stayLoggedIn) {
           tokens.save();
@@ -102,6 +106,7 @@ class Token {
     this.token = token;
     this.json = JSON.parse(atob(token.split('.')[1]));
   }
+
   isValid() {
     return this.json.exp > Date.now() / 1000;
   }
@@ -116,6 +121,7 @@ class AuthTokens {
       this.refreshToken = new Token(authJson.refresh_token);
     }
   }
+
   save() {
     if (this.refreshToken) {
       localStorage.setItem(refreshTokenKey, this.refreshToken.token);
@@ -125,6 +131,7 @@ class AuthTokens {
     }
     return this;
   }
+
   restore() {
     const token = localStorage.getItem(refreshTokenKey);
     if (token) {
@@ -137,6 +144,17 @@ class AuthTokens {
       }
     }
     return this;
+  }
+}
+
+/** @private */
+class VaadinServiceException extends Error {
+  constructor(type, message, detail) {
+    super(message);
+    this.name = this.constructor.name;
+    this.type = type;
+    this.message = message;
+    this.detail = detail;
   }
 }
 
@@ -319,9 +337,9 @@ export class ConnectClient {
       }
     );
 
-    assertResponseIsOk(response);
-
-    return response.json();
+    const responseBody = await response.json();
+    assertResponseIsOk(response, responseBody);
+    return responseBody;
   }
 
   /**

@@ -1,6 +1,9 @@
 // The code that uses the generated Vaadin Connect modules:
 import client from './connect-client.js';
 import * as demoService from './generated/DemoVaadinService.js';
+// Same code without the generated JavaScript, using '@vaadin/connect' npm module
+// API instead:
+import {ConnectClient} from '@vaadin/connect';
 
 const credentials = (options = {}) => {
   return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
@@ -47,9 +50,10 @@ function updateLoginStatus(currentClient) {
   document.getElementById('loginMessage').textContent = `Hello, ${valid ? token.user_name : 'no user'}!`;
 }
 
-// Same code without the generated JavaScript, using '@vaadin/connect' npm module
-// API instead:
-import {ConnectClient} from '@vaadin/connect';
+const input = document.getElementById('inputText');
+document.getElementById('submitButton').addEventListener('click', async() => {
+  await demoService.doNotSubmitZeroes(input.valueAsNumber ? input.valueAsNumber : 0)
+});
 
 const customClient = new ConnectClient({endpoint: '/connect', credentials});
 

@@ -5,6 +5,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.Version;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.VaadinServiceException;
 import com.vaadin.connect.demo.account.BeanWithTypeFromDependencies;
 import com.vaadin.connect.oauth.AnonymousAllowed;
 
@@ -116,5 +118,15 @@ public class DemoVaadinService {
   @AnonymousAllowed
   public String hasAnonymousAccess() {
     return "anonymous success";
+  }
+
+  @PermitAll
+  public int doNotSubmitZeroes(int number) {
+    try {
+      return 42 / number;
+    } catch (ArithmeticException e) {
+      throw new VaadinServiceException("You had one job to do!", e,
+          Collections.singletonMap("Test", "bac"));
+    }
   }
 }
