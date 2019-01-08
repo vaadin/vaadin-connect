@@ -20,35 +20,35 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class VaadinServiceException extends RuntimeException {
+public class VaadinConnectException extends RuntimeException {
   private final Object detail;
 
-  public VaadinServiceException(String message) {
+  public VaadinConnectException(String message) {
     super(message);
     this.detail = null;
   }
 
-  public VaadinServiceException(String message, Object detail) {
+  public VaadinConnectException(String message, Object detail) {
     super(message);
     this.detail = detail;
   }
 
-  public VaadinServiceException(Throwable cause) {
+  public VaadinConnectException(Throwable cause) {
     super(cause);
     this.detail = null;
   }
 
-  public VaadinServiceException(Throwable cause, Object detail) {
+  public VaadinConnectException(Throwable cause, Object detail) {
     super(cause);
     this.detail = detail;
   }
 
-  public VaadinServiceException(String message, Throwable cause) {
+  public VaadinConnectException(String message, Throwable cause) {
     super(message, cause);
     this.detail = null;
   }
 
-  public VaadinServiceException(String message, Throwable cause,
+  public VaadinConnectException(String message, Throwable cause,
       Object detail) {
     super(message, cause);
     this.detail = detail;

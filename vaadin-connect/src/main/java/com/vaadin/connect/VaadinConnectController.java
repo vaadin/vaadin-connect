@@ -291,9 +291,9 @@ public class VaadinConnectController {
 
   private ResponseEntity<String> handleMethodExecutionError(String serviceName,
       String methodName, InvocationTargetException e) {
-    if (VaadinServiceException.class
+    if (VaadinConnectException.class
         .isAssignableFrom(e.getCause().getClass())) {
-      VaadinServiceException serviceException = ((VaadinServiceException) e
+      VaadinConnectException serviceException = ((VaadinConnectException) e
           .getCause());
       getLogger()
           .debug(String.format("Service '%s' method '%s' aborted the execution",
