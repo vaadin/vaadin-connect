@@ -54,6 +54,7 @@ const input = document.getElementById('inputText');
 document.getElementById('submitButton').addEventListener('click', async() => {
   await demoService.doNotSubmitZeroes(input.valueAsNumber ? input.valueAsNumber : 0)
 });
+document.getElementById('exceptionButton').addEventListener('click', async() => await demoService.throwsException());
 
 const customClient = new ConnectClient({endpoint: '/connect', credentials});
 

@@ -6,7 +6,11 @@
  */
 const assertResponseIsOk = (response, responseBody) => {
   if (response.headers.get('vaadin-connect-service-invocation-exception')) {
-    throw new VaadinServiceException(responseBody.type, responseBody.message, responseBody.detail);
+    if (typeof responseBody === 'object') {
+      throw new VaadinServiceException(responseBody.message, responseBody.type, responseBody.detail);
+    } else {
+      throw new VaadinServiceException(responseBody, null, null);
+    }
   } else if (!response.ok) {
     throw new TypeError(
       `expected '200 OK' response, but got ${response.status}`
@@ -67,7 +71,7 @@ const authenticateClient = async client => {
         body: body.toString()
       });
 
-      const responseBody = await tokenResponse.json();
+      const responseBody = await extractResponseBody(tokenResponse);
       if (tokenResponse.status === 400 || tokenResponse.status === 401) {
         const invalidResponse = responseBody;
         if (invalidResponse.error === 'invalid_token') {
@@ -149,7 +153,7 @@ class AuthTokens {
 
 /** @private */
 class VaadinServiceException extends Error {
-  constructor(type, message, detail) {
+  constructor(message, type, detail) {
     super(message);
     this.name = this.constructor.name;
     this.type = type;
@@ -337,7 +341,7 @@ export class ConnectClient {
       }
     );
 
-    const responseBody = await response.json();
+    const responseBody = await extractResponseBody(response);
     assertResponseIsOk(response, responseBody);
     return responseBody;
   }
@@ -356,3 +360,11 @@ export class ConnectClient {
     delete _private.login;
   }
 }
+
+/** @private */
+const extractResponseBody = async response => {
+  if (response.headers.get('Content-Type').toLowerCase().indexOf('json') > 0) {
+    return await response.json();
+  }
+  return await response.text();
+};
