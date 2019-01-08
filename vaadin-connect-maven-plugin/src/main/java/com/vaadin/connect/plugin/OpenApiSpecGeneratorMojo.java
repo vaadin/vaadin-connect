@@ -16,12 +16,23 @@
 
 package com.vaadin.connect.plugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
@@ -35,7 +46,7 @@ import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
  * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
  *      specification</a>
  */
-@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -43,9 +54,38 @@ public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override
   public void execute() {
-    new OpenApiSpecGenerator(readApplicationProperties()).generateOpenApiSpec(
-        project.getCompileSourceRoots().stream().map(Paths::get)
-            .collect(Collectors.toList()),
-        openApiJsonFile.toPath());
+    try {
+      List<Path> sourcesPaths = project.getCompileSourceRoots().stream()
+          .map(Paths::get).collect(Collectors.toList());
+      URL[] urlsForClassLoader = getUrls();
+      try (
+          URLClassLoader classLoader = new URLClassLoader(urlsForClassLoader)) {
+        new OpenApiSpecGenerator(readApplicationProperties())
+            .generateOpenApiSpec(sourcesPaths, classLoader,
+                openApiJsonFile.toPath());
+      }
+    } catch (DependencyResolutionRequiredException e) {
+      throw new IllegalStateException(
+          "All dependencies need to be resolved before running the OpenAPI spec generator. Please resolve the dependencies and try again.",
+          e);
+    } catch (IOException e) {
+      throw new UncheckedIOException(
+          "I/O error happens when closing project's URLClassLoader after generating OpenAPI spec.",
+          e);
+    }
+  }
+
+  private URL[] getUrls() throws DependencyResolutionRequiredException {
+    List<URL> pathUrls = new ArrayList<>();
+    try {
+      for (String mavenCompilePath : project.getCompileClasspathElements()) {
+        pathUrls.add(new File(mavenCompilePath).toURI().toURL());
+      }
+      return pathUrls.toArray(new URL[pathUrls.size()]);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(
+          "Can't create URLs from project class paths for generating OpenAPI spec.",
+          e);
+    }
   }
 }

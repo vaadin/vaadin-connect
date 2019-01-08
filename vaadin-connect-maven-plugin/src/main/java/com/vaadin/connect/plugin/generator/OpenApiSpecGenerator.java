@@ -64,7 +64,7 @@ public class OpenApiSpecGenerator {
   }
 
   /**
-   * Generates the open api spec file based on the sources provided.
+   * Generates the OpenAPI spec file based on the sources provided.
    *
    * @param sourcesPaths
    *          the source root to be analyzed
@@ -79,6 +79,22 @@ public class OpenApiSpecGenerator {
 
     log.info("Writing output to {}", specOutputFile);
     GeneratorUtils.writeToFile(specOutputFile, Json.pretty(openAPI));
+  }
+
+  /**
+   * Generates the OpenAPI spec file based on the sources provided.
+   *
+   * @param sourcesPaths
+   *          the source root to be analyzed
+   * @param classLoader
+   *          the ClassLoader which is able to load the classes in sourcesPaths
+   * @param specOutputFile
+   *          the target file to write the generation output to
+   */
+  public void generateOpenApiSpec(Collection<Path> sourcesPaths,
+      ClassLoader classLoader, Path specOutputFile) {
+    generator.setTypeResolverClassLoader(classLoader);
+    generateOpenApiSpec(sourcesPaths, specOutputFile);
   }
 
   private OpenApiConfiguration extractOpenApiConfiguration(

@@ -56,6 +56,7 @@ import com.github.javaparser.resolution.types.ResolvedPrimitiveType;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.utils.Pair;
@@ -104,6 +105,7 @@ class OpenApiParser {
   private Map<String, PathItem> pathItems;
   private OpenAPI openApiModel;
   private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
+  private ClassLoader typeResolverClassLoader;
 
   void addSourcePath(Path sourcePath) {
     if (sourcePath == null) {
@@ -114,6 +116,17 @@ class OpenApiParser {
       throw new IllegalArgumentException("Java source path doesn't exist");
     }
     this.javaSourcePaths.add(sourcePath);
+  }
+
+  /**
+   * Set project's class loader which is used for resolving types from that
+   * project.
+   *
+   * @param typeResolverClassLoader
+   *          the project's class loader for type resolving
+   */
+  void setTypeResolverClassLoader(ClassLoader typeResolverClassLoader) {
+    this.typeResolverClassLoader = typeResolverClassLoader;
   }
 
   void setOpenApiConfiguration(OpenApiConfiguration configuration) {
@@ -143,9 +156,8 @@ class OpenApiParser {
     usedSchemas = new HashSet<>();
     servicesJavadoc = new HashMap<>();
 
-    ParserConfiguration parserConfiguration = new ParserConfiguration()
-        .setSymbolResolver(new JavaSymbolSolver(
-            new CombinedTypeSolver(new ReflectionTypeSolver(false))));
+    ParserConfiguration parserConfiguration = createParserConfiguration();
+
     javaSourcePaths.stream()
         .map(path -> new SourceRoot(path, parserConfiguration))
         .forEach(this::parseSourceRoot);
@@ -157,6 +169,17 @@ class OpenApiParser {
       }
     }
     addTagsInformation();
+  }
+
+  private ParserConfiguration createParserConfiguration() {
+    CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver(
+        new ReflectionTypeSolver(false));
+    if (typeResolverClassLoader != null) {
+      combinedTypeSolver
+          .add(new ClassLoaderTypeSolver(typeResolverClassLoader));
+    }
+    return new ParserConfiguration()
+        .setSymbolResolver(new JavaSymbolSolver(combinedTypeSolver));
   }
 
   private void parseSourceRoot(SourceRoot sourceRoot) {
@@ -274,9 +297,10 @@ class OpenApiParser {
       if (field.isTransient()) {
         continue;
       }
-      field.getVariables().forEach(variableDeclarator -> schema.addProperties(
-          variableDeclarator.getNameAsString(),
-          parseResolvedTypeToSchema(variableDeclarator.getType().resolve())));
+      field.getVariables()
+          .forEach(variableDeclarator -> schema.addProperties(
+              variableDeclarator.getNameAsString(),
+              parseTypeToSchema(variableDeclarator.getType())));
     }
     return schema;
   }
@@ -388,7 +412,7 @@ class OpenApiParser {
   private MediaType createReturnMediaType(MethodDeclaration methodDeclaration) {
     MediaType mediaItem = new MediaType();
     Type methodReturnType = methodDeclaration.getType();
-    mediaItem.schema(parseResolvedTypeToSchema(methodReturnType.resolve()));
+    mediaItem.schema(parseTypeToSchema(methodReturnType));
     return mediaItem;
   }
 
@@ -411,8 +435,7 @@ class OpenApiParser {
     Schema requestSchema = new ObjectSchema();
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
-      Schema paramSchema = parseResolvedTypeToSchema(
-          parameter.getType().resolve());
+      Schema paramSchema = parseTypeToSchema(parameter.getType());
       paramSchema
           .description(paramsDescription.get(parameter.getNameAsString()));
 
@@ -421,6 +444,17 @@ class OpenApiParser {
       requestSchema.addProperties(name, paramSchema);
     });
     return requestBody;
+  }
+
+  private Schema parseTypeToSchema(Type javaType) {
+    try {
+      return parseResolvedTypeToSchema(javaType.resolve());
+    } catch (Exception e) {
+      LoggerFactory.getLogger(OpenApiParser.class).info(String.format(
+          "Can't resolve type '%s' for creating custom OpenAPI Schema. Using the default ObjectSchema instead.",
+          javaType.asString()), e);
+    }
+    return new ObjectSchema();
   }
 
   private Schema parseResolvedTypeToSchema(ResolvedType resolvedType) {
