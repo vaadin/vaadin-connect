@@ -7,9 +7,9 @@
 const assertResponseIsOk = (response, responseBody) => {
   if (response.headers.get('vaadin-connect-service-invocation-exception')) {
     if (typeof responseBody === 'object') {
-      throw new VaadinServiceException(responseBody.message, responseBody.type, responseBody.detail);
+      throw new VaadinConnectException(responseBody.message, responseBody.type, responseBody.detail);
     } else {
-      throw new VaadinServiceException(responseBody, null, null);
+      throw new VaadinConnectException(responseBody, null, null);
     }
   } else if (!response.ok) {
     throw new TypeError(
@@ -152,7 +152,7 @@ class AuthTokens {
 }
 
 /** @private */
-class VaadinServiceException extends Error {
+class VaadinConnectException extends Error {
   constructor(message, type, detail) {
     super(message);
     this.name = this.constructor.name;
