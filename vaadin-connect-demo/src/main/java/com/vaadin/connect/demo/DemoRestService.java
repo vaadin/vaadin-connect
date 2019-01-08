@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Simple hello message service that is not mannaged by the vaadin-connect controller
+ * Simple hello message service that is not managed by the vaadin-connect controller
  */
 @RestController
 @RequestMapping("/hello")

@@ -46,7 +46,8 @@ module.exports = {
 
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, outputFolder)
+    path: path.resolve(__dirname, outputFolder),
+    publicPath: '/'
   },
 
   performance: {
