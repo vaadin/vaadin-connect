@@ -80,7 +80,6 @@ public class VaadinConnectController {
    *      VaadinServiceNameChecker, ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
-  private static final String ERROR_MESSAGE_FIELD = "message";
 
   private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
@@ -334,8 +333,8 @@ public class VaadinConnectController {
 
   private String createResponseErrorObject(String errorMessage)
       throws JsonProcessingException {
-    return vaadinServiceMapper.writeValueAsString(
-        Collections.singletonMap(ERROR_MESSAGE_FIELD, errorMessage));
+    return vaadinServiceMapper.writeValueAsString(Collections.singletonMap(
+        VaadinConnectException.ERROR_MESSAGE_FIELD, errorMessage));
   }
 
   private String listMethodParameterTypes(Parameter[] javaParameters) {
