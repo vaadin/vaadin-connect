@@ -17,15 +17,18 @@ package com.vaadin.connect.plugin.generator;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
@@ -54,6 +57,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinServiceNameChecker;
+
+import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
 
 /**
  * Vaadin connect JavaScript generator implementation for swagger-codegen. Some
@@ -163,7 +168,6 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
    *          the api spec file to analyze
    * @param generatedFrontendDirectory
    *          the directory to generateOpenApiSpec the files into
-   *
    * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
    *      specification</a>
    */
@@ -179,15 +183,39 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
     if (parseResult == null) {
+      cleanGeneratedFolder(configurator.getOutputDir(),
+          Collections.emptyList());
       throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(), "");
     }
     if (parseResult.getMessages().isEmpty()) {
-      new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
-          .generate();
+      List<File> generatedFiles = new VaadinConnectJSOnlyGenerator()
+          .opts(configurator.toClientOptInput()).generate().stream()
+          .filter(Objects::nonNull).collect(Collectors.toList());
+      cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
+      cleanGeneratedFolder(configurator.getOutputDir(),
+          Collections.emptyList());
       throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(),
           StringUtils.join(parseResult.getMessages().toArray()));
     }
+  }
+
+  private static void cleanGeneratedFolder(String outputDir,
+      List<File> generatedFiles) {
+    File[] tobeDeletedFiles = Paths.get(outputDir).toFile()
+        .listFiles(pathname -> shouldDelete(generatedFiles, pathname));
+    if (tobeDeletedFiles != null) {
+      for (File file : tobeDeletedFiles) {
+        getLogger().info("Removing stale generated file '{}'.",
+            file.getAbsolutePath());
+        file.delete();
+      }
+    }
+  }
+
+  private static boolean shouldDelete(List<File> generatedFiles, File o) {
+    return !generatedFiles.contains(o)
+        && !DEFAULT_GENERATED_CONNECT_CLIENT_NAME.equals(o.getName());
   }
 
   private static IllegalStateException getUnexpectedOpenAPIException(
