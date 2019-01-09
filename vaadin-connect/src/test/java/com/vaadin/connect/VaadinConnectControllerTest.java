@@ -305,7 +305,7 @@ public class VaadinConnectControllerTest {
   }
 
   @Test
-  public void should_Return400_When_ServiceMethodThrowsInvocationTargetExceptionBecauseOfVaadinConnectException()
+  public void should_Return400_When_ServiceMethodThrowsVaadinConnectException()
       throws Exception {
     int inputValue = 222;
     String expectedMessage = "OOPS";
@@ -337,6 +337,43 @@ public class VaadinConnectControllerTest {
   }
 
   @Test
+  public void should_Return400_When_ServiceMethodThrowsVaadinConnectExceptionSubclass()
+      throws Exception {
+    int inputValue = 222;
+    String expectedMessage = "OOPS";
+
+    class MyCustomException extends VaadinConnectException {
+      public MyCustomException() {
+        super(expectedMessage);
+      }
+    }
+
+    Method serviceMethodMock = mock(Method.class);
+    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
+        .thenThrow(new InvocationTargetException(new MyCustomException()));
+    when(serviceMethodMock.getParameters())
+        .thenReturn(TEST_METHOD.getParameters());
+
+    VaadinConnectController controller = createVaadinController(TEST_SERVICE);
+    controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
+        .put(TEST_METHOD.getName().toLowerCase(), serviceMethodMock);
+
+    ResponseEntity<String> response = controller.serveVaadinService(
+        TEST_SERVICE_NAME, TEST_METHOD.getName(),
+        createRequestParameters(String.format("{\"value\": %s}", inputValue)));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    String responseBody = response.getBody();
+    assertTrue(String.format("Invalid response body: '%s'", responseBody),
+        responseBody.contains(MyCustomException.class.getName()));
+    assertTrue(String.format("Invalid response body: '%s'", responseBody),
+        responseBody.contains(expectedMessage));
+
+    verify(serviceMethodMock, times(1)).invoke(TEST_SERVICE, inputValue);
+    verify(serviceMethodMock, times(1)).getParameters();
+  }
+
+  @Test
   public void should_Return500_When_MapperFailsToSerializeResponse()
       throws Exception {
     ObjectMapper mapperMock = mock(ObjectMapper.class);
@@ -348,7 +385,8 @@ public class VaadinConnectControllerTest {
         .thenReturn(new ObjectMapper()
             .readerFor(SimpleType.constructUnsafe(int.class)));
 
-    ArgumentCaptor<Object> serializingErrorsCapture = ArgumentCaptor.forClass(Object.class);
+    ArgumentCaptor<Object> serializingErrorsCapture = ArgumentCaptor
+        .forClass(Object.class);
     String expectedError = "expected_error";
     when(mapperMock.writeValueAsString(serializingErrorsCapture.capture()))
         .thenThrow(new JsonMappingException(null, "sss"))
@@ -367,7 +405,7 @@ public class VaadinConnectControllerTest {
     String lastError = passedErrors.get(1).toString();
     assertServiceInfoPresent(lastError);
     assertTrue(String.format("Invalid response body: '%s'", lastError),
-            lastError.contains(
+        lastError.contains(
             VaadinConnectController.VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER));
 
     verify(mapperMock, times(1))
@@ -377,23 +415,23 @@ public class VaadinConnectControllerTest {
 
   @Test
   public void should_ThrowException_When_MapperFailsToSerializeEverything()
-          throws Exception {
+      throws Exception {
     ObjectMapper mapperMock = mock(ObjectMapper.class);
     TypeFactory typeFactory = mock(TypeFactory.class);
     when(mapperMock.getTypeFactory()).thenReturn(typeFactory);
     when(typeFactory.constructType(int.class))
-            .thenReturn(SimpleType.constructUnsafe(int.class));
+        .thenReturn(SimpleType.constructUnsafe(int.class));
     when(mapperMock.readerFor(SimpleType.constructUnsafe(int.class)))
-            .thenReturn(new ObjectMapper()
-                    .readerFor(SimpleType.constructUnsafe(int.class)));
+        .thenReturn(new ObjectMapper()
+            .readerFor(SimpleType.constructUnsafe(int.class)));
     when(mapperMock.writeValueAsString(notNull()))
-            .thenThrow(new JsonMappingException(null, "sss"));
+        .thenThrow(new JsonMappingException(null, "sss"));
 
     exception.expect(IllegalStateException.class);
     exception.expectMessage("Unexpected");
-    createVaadinController(TEST_SERVICE,
-            mapperMock).serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
-            createRequestParameters("{\"value\": 222}"));
+    createVaadinController(TEST_SERVICE, mapperMock).serveVaadinService(
+        TEST_SERVICE_NAME, TEST_METHOD.getName(),
+        createRequestParameters("{\"value\": 222}"));
   }
 
   @Test
