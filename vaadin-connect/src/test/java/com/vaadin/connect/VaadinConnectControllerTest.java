@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.context.ApplicationContext;
@@ -26,7 +27,6 @@ import org.springframework.http.ResponseEntity;
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 import com.vaadin.connect.testservice.BridgeMethodTestService;
 
-import static com.vaadin.connect.VaadinConnectController.ERROR_MESSAGE_FIELD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -157,13 +157,12 @@ public class VaadinConnectControllerTest {
         VaadinServiceNameChecker.class);
     when(nameCheckerMock.check(TEST_SERVICE_NAME)).thenReturn(null);
 
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) createVaadinController(
-        TEST_SERVICE, new ObjectMapper(), restrictingCheckerMock,
-        nameCheckerMock).serveVaadinService(TEST_SERVICE_NAME,
-            TEST_METHOD.getName(), null);
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE,
+        new ObjectMapper(), restrictingCheckerMock, nameCheckerMock)
+            .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(), null);
 
     assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
+    String responseBody = response.getBody();
     assertServiceInfoPresent(responseBody);
     assertTrue(String.format("Invalid response body: '%s'", responseBody),
         responseBody.contains(accessErrorMessage));
@@ -174,12 +173,11 @@ public class VaadinConnectControllerTest {
 
   @Test
   public void should_Return400_When_LessParametersSpecified1() {
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) createVaadinController(
-        TEST_SERVICE).serveVaadinService(TEST_SERVICE_NAME,
-            TEST_METHOD.getName(), null);
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(), null);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
+    String responseBody = response.getBody();
     assertServiceInfoPresent(responseBody);
     assertTrue(String.format("Invalid response body: '%s'", responseBody),
         responseBody.contains("0"));
@@ -190,13 +188,12 @@ public class VaadinConnectControllerTest {
 
   @Test
   public void should_Return400_When_MoreParametersSpecified() {
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) createVaadinController(
-        TEST_SERVICE).serveVaadinService(TEST_SERVICE_NAME,
-            TEST_METHOD.getName(),
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
             createRequestParameters("{\"value1\": 222, \"value2\": 333}"));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
+    String responseBody = response.getBody();
     assertServiceInfoPresent(responseBody);
     assertTrue(String.format("Invalid response body: '%s'", responseBody),
         responseBody.contains("2"));
@@ -207,13 +204,12 @@ public class VaadinConnectControllerTest {
 
   @Test
   public void should_Return400_When_IncorrectParameterTypesAreProvided() {
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) createVaadinController(
-        TEST_SERVICE).serveVaadinService(TEST_SERVICE_NAME,
-            TEST_METHOD.getName(),
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
             createRequestParameters("{\"value\": [222]}"));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
+    String responseBody = response.getBody();
     assertServiceInfoPresent(responseBody);
     assertTrue(String.format("Invalid response body: '%s'", responseBody),
         responseBody
@@ -235,13 +231,12 @@ public class VaadinConnectControllerTest {
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
         .put(TEST_METHOD.getName().toLowerCase(), serviceMethodMock);
 
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) controller
-        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
-            createRequestParameters(
-                String.format("{\"value\": %s}", inputValue)));
+    ResponseEntity<String> response = controller.serveVaadinService(
+        TEST_SERVICE_NAME, TEST_METHOD.getName(),
+        createRequestParameters(String.format("{\"value\": %s}", inputValue)));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
+    String responseBody = response.getBody();
     assertServiceInfoPresent(responseBody);
     assertTrue(String.format("Invalid response body: '%s'", responseBody),
         responseBody
@@ -266,13 +261,12 @@ public class VaadinConnectControllerTest {
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
         .put(TEST_METHOD.getName().toLowerCase(), serviceMethodMock);
 
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) controller
-        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
-            createRequestParameters(
-                String.format("{\"value\": %s}", inputValue)));
+    ResponseEntity<String> response = controller.serveVaadinService(
+        TEST_SERVICE_NAME, TEST_METHOD.getName(),
+        createRequestParameters(String.format("{\"value\": %s}", inputValue)));
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
+    String responseBody = response.getBody();
     assertServiceInfoPresent(responseBody);
     assertTrue(String.format("Invalid response body: '%s'", responseBody),
         responseBody.contains("access failure"));
@@ -296,16 +290,47 @@ public class VaadinConnectControllerTest {
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
         .put(TEST_METHOD.getName().toLowerCase(), serviceMethodMock);
 
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) controller
-        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
-            createRequestParameters(
-                String.format("{\"value\": %s}", inputValue)));
+    ResponseEntity<String> response = controller.serveVaadinService(
+        TEST_SERVICE_NAME, TEST_METHOD.getName(),
+        createRequestParameters(String.format("{\"value\": %s}", inputValue)));
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
+    String responseBody = response.getBody();
     assertServiceInfoPresent(responseBody);
     assertTrue(String.format("Invalid response body: '%s'", responseBody),
         responseBody.contains("execution failure"));
+
+    verify(serviceMethodMock, times(1)).invoke(TEST_SERVICE, inputValue);
+    verify(serviceMethodMock, times(1)).getParameters();
+  }
+
+  @Test
+  public void should_Return400_When_ServiceMethodThrowsInvocationTargetExceptionBecauseOfVaadinConnectException()
+      throws Exception {
+    int inputValue = 222;
+    String expectedMessage = "OOPS";
+
+    Method serviceMethodMock = mock(Method.class);
+    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
+        .thenThrow(new InvocationTargetException(
+            new VaadinConnectException(expectedMessage)));
+    when(serviceMethodMock.getParameters())
+        .thenReturn(TEST_METHOD.getParameters());
+
+    VaadinConnectController controller = createVaadinController(TEST_SERVICE);
+    controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
+        .put(TEST_METHOD.getName().toLowerCase(), serviceMethodMock);
+
+    ResponseEntity<String> response = controller.serveVaadinService(
+        TEST_SERVICE_NAME, TEST_METHOD.getName(),
+        createRequestParameters(String.format("{\"value\": %s}", inputValue)));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    String responseBody = response.getBody();
+    assertTrue(String.format("Invalid response body: '%s'", responseBody),
+        responseBody.contains(VaadinConnectException.class.getName()));
+    assertTrue(String.format("Invalid response body: '%s'", responseBody),
+        responseBody.contains(expectedMessage));
 
     verify(serviceMethodMock, times(1)).invoke(TEST_SERVICE, inputValue);
     verify(serviceMethodMock, times(1)).getParameters();
@@ -322,23 +347,53 @@ public class VaadinConnectControllerTest {
     when(mapperMock.readerFor(SimpleType.constructUnsafe(int.class)))
         .thenReturn(new ObjectMapper()
             .readerFor(SimpleType.constructUnsafe(int.class)));
-    when(mapperMock.writeValueAsString(notNull()))
-        .thenThrow(new JsonMappingException(null, "sss"));
 
-    ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) createVaadinController(
-        TEST_SERVICE, mapperMock).serveVaadinService(TEST_SERVICE_NAME,
-            TEST_METHOD.getName(), createRequestParameters("{\"value\": 222}"));
+    ArgumentCaptor<Object> serializingErrorsCapture = ArgumentCaptor.forClass(Object.class);
+    String expectedError = "expected_error";
+    when(mapperMock.writeValueAsString(serializingErrorsCapture.capture()))
+        .thenThrow(new JsonMappingException(null, "sss"))
+        .thenReturn(expectedError);
+
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE,
+        mapperMock).serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
+            createRequestParameters("{\"value\": 222}"));
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    String responseBody = response.getBody().get(ERROR_MESSAGE_FIELD);
-    assertServiceInfoPresent(responseBody);
-    assertTrue(String.format("Invalid response body: '%s'", responseBody),
-        responseBody.contains(
+    String responseBody = response.getBody();
+    assertEquals(expectedError, responseBody);
+
+    List<Object> passedErrors = serializingErrorsCapture.getAllValues();
+    assertEquals(2, passedErrors.size());
+    String lastError = passedErrors.get(1).toString();
+    assertServiceInfoPresent(lastError);
+    assertTrue(String.format("Invalid response body: '%s'", lastError),
+            lastError.contains(
             VaadinConnectController.VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER));
 
     verify(mapperMock, times(1))
         .readerFor(SimpleType.constructUnsafe(int.class));
-    verify(mapperMock, times(1)).writeValueAsString(notNull());
+    verify(mapperMock, times(2)).writeValueAsString(notNull());
+  }
+
+  @Test
+  public void should_ThrowException_When_MapperFailsToSerializeEverything()
+          throws Exception {
+    ObjectMapper mapperMock = mock(ObjectMapper.class);
+    TypeFactory typeFactory = mock(TypeFactory.class);
+    when(mapperMock.getTypeFactory()).thenReturn(typeFactory);
+    when(typeFactory.constructType(int.class))
+            .thenReturn(SimpleType.constructUnsafe(int.class));
+    when(mapperMock.readerFor(SimpleType.constructUnsafe(int.class)))
+            .thenReturn(new ObjectMapper()
+                    .readerFor(SimpleType.constructUnsafe(int.class)));
+    when(mapperMock.writeValueAsString(notNull()))
+            .thenThrow(new JsonMappingException(null, "sss"));
+
+    exception.expect(IllegalStateException.class);
+    exception.expectMessage("Unexpected");
+    createVaadinController(TEST_SERVICE,
+            mapperMock).serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
+            createRequestParameters("{\"value\": 222}"));
   }
 
   @Test
@@ -346,9 +401,9 @@ public class VaadinConnectControllerTest {
     int inputValue = 222;
     String expectedOutput = TEST_SERVICE.testMethod(inputValue);
 
-    ResponseEntity<String> response = (ResponseEntity<String>) createVaadinController(
-        TEST_SERVICE).serveVaadinService(TEST_SERVICE_NAME,
-            TEST_METHOD.getName(), createRequestParameters(
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
+            createRequestParameters(
                 String.format("{\"value\": %s}", inputValue)));
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -361,8 +416,8 @@ public class VaadinConnectControllerTest {
     String expectedResult = String.format("{\"id\":\"%s\"}", inputId);
     BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
     String testMethodName = "testMethodFromInterface";
-    ResponseEntity<String> response = (ResponseEntity<String>) createVaadinController(
-        testService).serveVaadinService(testService.getClass().getSimpleName(),
+    ResponseEntity<String> response = createVaadinController(testService)
+        .serveVaadinService(testService.getClass().getSimpleName(),
             testMethodName, createRequestParameters(
                 String.format("{\"value\": {\"id\": \"%s\"}}", inputId)));
     assertEquals(expectedResult, response.getBody());
@@ -374,8 +429,8 @@ public class VaadinConnectControllerTest {
     BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
     String testMethodName = "testMethodFromClass";
 
-    ResponseEntity<String> response = (ResponseEntity<String>) createVaadinController(
-        testService).serveVaadinService(testService.getClass().getSimpleName(),
+    ResponseEntity<String> response = createVaadinController(testService)
+        .serveVaadinService(testService.getClass().getSimpleName(),
             testMethodName,
             createRequestParameters(String.format("{\"value\": %s}", inputId)));
     assertEquals(inputId, response.getBody());
@@ -387,8 +442,8 @@ public class VaadinConnectControllerTest {
     BridgeMethodTestService.InheritedClass testService = new BridgeMethodTestService.InheritedClass();
     String testMethodName = "testNormalMethod";
 
-    ResponseEntity<String> response = (ResponseEntity<String>) createVaadinController(
-        testService).serveVaadinService(testService.getClass().getSimpleName(),
+    ResponseEntity<String> response = createVaadinController(testService)
+        .serveVaadinService(testService.getClass().getSimpleName(),
             testMethodName,
             createRequestParameters(String.format("{\"value\": %s}", inputId)));
     assertEquals(inputId, response.getBody());
@@ -411,7 +466,7 @@ public class VaadinConnectControllerTest {
     VaadinConnectController vaadinConnectController = new VaadinConnectController(
         new ObjectMapper(), mock(VaadinConnectOAuthAclChecker.class),
         mock(VaadinServiceNameChecker.class), contextMock);
-    ResponseEntity<String> response = (ResponseEntity<String>) vaadinConnectController
+    ResponseEntity<String> response = vaadinConnectController
         .serveVaadinService("CustomService", "testMethod",
             createRequestParameters(String.format("{\"value\": %s}", input)));
     assertEquals(HttpStatus.OK, response.getStatusCode());
