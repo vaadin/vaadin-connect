@@ -52,6 +52,7 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.tags.Tag;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -208,8 +209,17 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       for (File file : tobeDeletedFiles) {
         getLogger().info("Removing stale generated file '{}'.",
             file.getAbsolutePath());
-        file.delete();
+        deleteFile(file);
       }
+    }
+  }
+
+  private static void deleteFile(File file) {
+    try {
+      FileUtils.forceDelete(file);
+    } catch (IOException e) {
+      getLogger().info(String.format("Failed to remove '%s'",
+          file.getAbsolutePath()), e);
     }
   }
 
