@@ -38,6 +38,7 @@ import org.junit.rules.TemporaryFolder;
 import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
 
+import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -63,7 +64,8 @@ public class ESModuleGeneratorTest {
         GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
             .getSimpleName());
     List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
-        .filter(fileName -> fileName.endsWith(".js")).collect(Collectors.toList());
+        .filter(fileName -> fileName.endsWith(".js"))
+        .collect(Collectors.toList());
     assertEquals(String.format(
         "Expected to have only %s classes processed in the test: '%s', but found the following files: '%s'",
         expectedClasses.size(), expectedClasses, foundFiles),
@@ -73,15 +75,15 @@ public class ESModuleGeneratorTest {
   }
 
   @Test
-  public void should_GenerateJSClass_When_ThereIsOapenApiInput() {
+  public void should_RemoveStaleGeneratedFiles_When_OpenAPIInputChanges() {
     Path defaultConnectClient = Paths.get(
         outputDirectory.getRoot().getAbsolutePath(),
-        "connect-client.default.js");
+        DEFAULT_GENERATED_CONNECT_CLIENT_NAME);
     VaadinConnectClientGenerator vaadinConnectClientGenerator = new VaadinConnectClientGenerator(
         new Properties());
-    // First generating round
     vaadinConnectClientGenerator
         .generateVaadinConnectClientFile(defaultConnectClient);
+    // First generating round
     VaadinConnectJsGenerator.launch(
         getResourcePath("esmodule-generator-TwoServicesThreeMethods.json"),
         outputDirectory.getRoot());
@@ -89,8 +91,6 @@ public class ESModuleGeneratorTest {
         "Expect to have 2 generated JS files and a connect-client.default.js",
         3, outputDirectory.getRoot().list().length);
     // Second generating round
-    vaadinConnectClientGenerator
-        .generateVaadinConnectClientFile(defaultConnectClient);
     VaadinConnectJsGenerator.launch(
         getResourcePath("esmodule-generator-OneServiceOneMethod.json"),
         outputDirectory.getRoot());
