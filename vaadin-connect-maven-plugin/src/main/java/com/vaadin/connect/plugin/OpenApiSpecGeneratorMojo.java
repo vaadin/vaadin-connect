@@ -46,7 +46,7 @@ import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
  * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
  *      specification</a>
  */
-@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.PROCESS_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)

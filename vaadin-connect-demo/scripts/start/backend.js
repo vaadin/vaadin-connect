@@ -53,7 +53,7 @@ const hasFilesWithExtension = (directory, extension) => {
     && fs.readdirSync(directory).find(pathname => pathname.endsWith(extension));
 };
 if (hasFilesWithExtension('./target', '.jar')) {
-  execMaven(['generate-resources']);
+  execMaven(['compile']);
 } else {
   execMaven(['package', '-DskipTests']);
 }
