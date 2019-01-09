@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -80,7 +81,7 @@ public class VaadinConnectController {
    *      VaadinServiceNameChecker, ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
-  private static final String SERVICE_INVOCATION_HEADER = "vaadin-connect-service-invocation-exception";
+  static final String ERROR_MESSAGE_FIELD = "message";
 
   private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
@@ -211,7 +212,7 @@ public class VaadinConnectController {
    * @return execution result as a JSON string or an error message string
    */
   @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
-  public ResponseEntity<String> serveVaadinService(
+  public ResponseEntity<?> serveVaadinService(
       @PathVariable("service") String serviceName,
       @PathVariable("method") String methodName,
       @RequestBody(required = false) ObjectNode body) {
@@ -236,20 +237,19 @@ public class VaadinConnectController {
     String checkError = oauthChecker.check(methodToInvoke);
     if (checkError != null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-          .contentType(MediaType.TEXT_PLAIN)
-          .body(String.format(
+          .body(createResponseErrorObject(String.format(
               "Service '%s' method '%s' request cannot be accessed, reason: '%s'",
-              serviceName, methodName, checkError));
+              serviceName, methodName, checkError)));
     }
 
     List<JsonNode> requestParameters = getRequestParameters(body);
     Parameter[] javaParameters = methodToInvoke.getParameters();
     if (javaParameters.length != requestParameters.size()) {
-      return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN)
-          .body(String.format(
+      return ResponseEntity.badRequest()
+          .body(createResponseErrorObject(String.format(
               "Incorrect number of parameters for service '%s' method '%s', expected: %s, got: %s",
               serviceName, methodName, javaParameters.length,
-              requestParameters.size()));
+              requestParameters.size())));
     }
 
     Object[] vaadinServiceParameters;
@@ -261,8 +261,8 @@ public class VaadinConnectController {
           "Unable to deserialize parameters for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
           serviceName, methodName, listMethodParameterTypes(javaParameters));
       getLogger().debug(errorMessage, e);
-      return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN)
-          .body(errorMessage);
+      return ResponseEntity.badRequest()
+          .body(createResponseErrorObject(errorMessage));
     }
 
     Object returnValue;
@@ -274,14 +274,14 @@ public class VaadinConnectController {
           "Received incorrect arguments for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
           serviceName, methodName, listMethodParameterTypes(javaParameters));
       getLogger().debug(errorMessage, e);
-      return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN)
-          .body(errorMessage);
+      return ResponseEntity.badRequest()
+          .body(createResponseErrorObject(errorMessage));
     } catch (IllegalAccessException e) {
       String errorMessage = String.format(
           "Service '%s' method '%s' access failure", serviceName, methodName);
       getLogger().error(errorMessage, e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .contentType(MediaType.TEXT_PLAIN).body(errorMessage);
+          .body(createResponseErrorObject(errorMessage));
     } catch (InvocationTargetException e) {
       return handleMethodExecutionError(serviceName, methodName, e);
     }
@@ -289,7 +289,7 @@ public class VaadinConnectController {
         serviceName, methodName);
   }
 
-  private ResponseEntity<String> handleMethodExecutionError(String serviceName,
+  private ResponseEntity<?> handleMethodExecutionError(String serviceName,
       String methodName, InvocationTargetException e) {
     if (VaadinConnectException.class
         .isAssignableFrom(e.getCause().getClass())) {
@@ -301,7 +301,6 @@ public class VaadinConnectController {
       return createResponseWithSerializedEntity(
           serviceException.getSerializationData(),
           serializedEntity -> ResponseEntity.badRequest()
-              .header(SERVICE_INVOCATION_HEADER, Boolean.TRUE.toString())
               .body(serializedEntity),
           serviceName, methodName);
     } else {
@@ -310,13 +309,11 @@ public class VaadinConnectController {
           methodName);
       getLogger().error(errorMessage, e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .contentType(MediaType.TEXT_PLAIN)
-          .header(SERVICE_INVOCATION_HEADER, Boolean.TRUE.toString())
-          .body(errorMessage);
+          .body(createResponseErrorObject(errorMessage));
     }
   }
 
-  private ResponseEntity<String> createResponseWithSerializedEntity(
+  private ResponseEntity<?> createResponseWithSerializedEntity(
       Object entityToSerialize,
       Function<String, ResponseEntity<String>> entityCreator,
       String serviceName, String methodName) {
@@ -330,9 +327,13 @@ public class VaadinConnectController {
           serviceName, methodName, VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER);
       getLogger().error(errorMessage, e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(errorMessage);
+          .body(createResponseErrorObject(errorMessage));
     }
     return entityCreator.apply(serializedEntity);
+  }
+
+  private Map<String, String> createResponseErrorObject(String errorMessage) {
+    return Collections.singletonMap(ERROR_MESSAGE_FIELD, errorMessage);
   }
 
   private String listMethodParameterTypes(Parameter[] javaParameters) {
