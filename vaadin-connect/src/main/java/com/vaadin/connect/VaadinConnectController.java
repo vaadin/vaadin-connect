@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -81,7 +80,7 @@ public class VaadinConnectController {
    *      VaadinServiceNameChecker, ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
-  static final String ERROR_MESSAGE_FIELD = "message";
+  private static final String ERROR_MESSAGE_FIELD = "message";
 
   private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectOAuthAclChecker oauthChecker;
@@ -212,7 +211,7 @@ public class VaadinConnectController {
    * @return execution result as a JSON string or an error message string
    */
   @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
-  public ResponseEntity<?> serveVaadinService(
+  public ResponseEntity<String> serveVaadinService(
       @PathVariable("service") String serviceName,
       @PathVariable("method") String methodName,
       @RequestBody(required = false) ObjectNode body) {
@@ -234,6 +233,28 @@ public class VaadinConnectController {
       return ResponseEntity.notFound().build();
     }
 
+    try {
+      return invokeVaadinServiceMethod(serviceName, methodName, methodToInvoke,
+          body, vaadinServiceData);
+    } catch (JsonProcessingException e) {
+      String errorMessage = String.format(
+          "Failed to serialize service '%s' method '%s' response. Double check method's return type or specify a custom mapper bean with qualifier '%s'",
+          serviceName, methodName, VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER);
+      getLogger().error(errorMessage, e);
+      try {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(createResponseErrorObject(errorMessage));
+      } catch (JsonProcessingException unexpected) {
+        throw new IllegalStateException(String.format(
+            "Unexpected: Failed to serialize a plain Java string '%s' into a JSON. Double check the provided mapper's configuration.",
+            errorMessage));
+      }
+    }
+  }
+
+  private ResponseEntity<String> invokeVaadinServiceMethod(String serviceName,
+      String methodName, Method methodToInvoke, ObjectNode body,
+      VaadinServiceData vaadinServiceData) throws JsonProcessingException {
     String checkError = oauthChecker.check(methodToInvoke);
     if (checkError != null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -285,12 +306,13 @@ public class VaadinConnectController {
     } catch (InvocationTargetException e) {
       return handleMethodExecutionError(serviceName, methodName, e);
     }
-    return createResponseWithSerializedEntity(returnValue, ResponseEntity::ok,
-        serviceName, methodName);
+    return ResponseEntity
+        .ok(vaadinServiceMapper.writeValueAsString(returnValue));
   }
 
-  private ResponseEntity<?> handleMethodExecutionError(String serviceName,
-      String methodName, InvocationTargetException e) {
+  private ResponseEntity<String> handleMethodExecutionError(String serviceName,
+      String methodName, InvocationTargetException e)
+      throws JsonProcessingException {
     if (VaadinConnectException.class
         .isAssignableFrom(e.getCause().getClass())) {
       VaadinConnectException serviceException = ((VaadinConnectException) e
@@ -298,11 +320,8 @@ public class VaadinConnectController {
       getLogger()
           .debug(String.format("Service '%s' method '%s' aborted the execution",
               serviceName, methodName), serviceException);
-      return createResponseWithSerializedEntity(
-          serviceException.getSerializationData(),
-          serializedEntity -> ResponseEntity.badRequest()
-              .body(serializedEntity),
-          serviceName, methodName);
+      return ResponseEntity.badRequest().body(vaadinServiceMapper
+          .writeValueAsString(serviceException.getSerializationData()));
     } else {
       String errorMessage = String.format(
           "Service '%s' method '%s' execution failure", serviceName,
@@ -313,27 +332,10 @@ public class VaadinConnectController {
     }
   }
 
-  private ResponseEntity<?> createResponseWithSerializedEntity(
-      Object entityToSerialize,
-      Function<String, ResponseEntity<String>> entityCreator,
-      String serviceName, String methodName) {
-    String serializedEntity;
-    try {
-      serializedEntity = vaadinServiceMapper
-          .writeValueAsString(entityToSerialize);
-    } catch (JsonProcessingException e) {
-      String errorMessage = String.format(
-          "Failed to serialize service '%s' method '%s' response. Double check method's return type or specify a custom mapper bean with qualifier '%s'",
-          serviceName, methodName, VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER);
-      getLogger().error(errorMessage, e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(createResponseErrorObject(errorMessage));
-    }
-    return entityCreator.apply(serializedEntity);
-  }
-
-  private Map<String, String> createResponseErrorObject(String errorMessage) {
-    return Collections.singletonMap(ERROR_MESSAGE_FIELD, errorMessage);
+  private String createResponseErrorObject(String errorMessage)
+      throws JsonProcessingException {
+    return vaadinServiceMapper.writeValueAsString(
+        Collections.singletonMap(ERROR_MESSAGE_FIELD, errorMessage));
   }
 
   private String listMethodParameterTypes(Parameter[] javaParameters) {
