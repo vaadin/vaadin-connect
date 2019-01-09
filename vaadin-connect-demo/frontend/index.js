@@ -1,5 +1,5 @@
 // The code that uses the generated Vaadin Connect modules:
-import client from './generated/connect-client.default.js';
+import client from './connect-client.js';
 import * as demoService from './generated/DemoVaadinService.js';
 
 const credentials = (options = {}) => {
