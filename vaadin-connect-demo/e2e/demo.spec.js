@@ -74,4 +74,31 @@ describe('demo application', () => {
       });
     });
   });
+
+  describe('single page application', () => {
+
+    it('should get index when url has .html extension', async(context) => {
+      const page = context.remote.get('app/anypage.html');
+      await page
+        .findById('number').getVisibleText().then(text =>
+          expect(text).to.equal('1')
+        );
+    });
+
+    it('should get index when url does not have an extension', async(context) => {
+      const page = context.remote.get('app/anyroute');
+      await page
+        .findById('number').getVisibleText().then(text =>
+          expect(text).to.equal('1')
+        );
+    });
+
+    it('should get error when url have an extension', async(context) => {
+      const page = context.remote.get('app/invalidfile.png');
+      await page
+        .findByCssSelector('body').getVisibleText().then(text =>
+          expect(text).to.match(/error/i)
+        );
+    });
+  });
 });

@@ -34,7 +34,8 @@ const backend = makeProxyApp('http://localhost:8080');
 
 const backendEndpoints = [
   '/oauth/',
-  '/connect/'
+  '/connect/',
+  '/app/'
 ];
 
 const CONNECT_HOSTNAME = process.env.CONNECT_HOSTNAME || 'localhost';
