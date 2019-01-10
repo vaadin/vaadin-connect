@@ -183,21 +183,18 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
-    if (parseResult == null) {
-      cleanGeneratedFolder(configurator.getOutputDir(),
-          Collections.emptyList());
-      throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(), "");
-    }
-    if (parseResult.getMessages().isEmpty()) {
+    if (parseResult != null && parseResult.getMessages().isEmpty()) {
       List<File> generatedFiles = new VaadinConnectJSOnlyGenerator()
           .opts(configurator.toClientOptInput()).generate().stream()
           .filter(Objects::nonNull).collect(Collectors.toList());
       cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
+      String error = parseResult == null ? ""
+          : StringUtils.join(parseResult.getMessages().toArray());
       cleanGeneratedFolder(configurator.getOutputDir(),
           Collections.emptyList());
       throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(),
-          StringUtils.join(parseResult.getMessages().toArray()));
+          error);
     }
   }
 
@@ -218,14 +215,15 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     try {
       FileUtils.forceDelete(file);
     } catch (IOException e) {
-      getLogger().info(String.format("Failed to remove '%s'",
+      getLogger().info(String.format(
+          "Failed to remove '%s' while cleaning the generated folder.",
           file.getAbsolutePath()), e);
     }
   }
 
-  private static boolean shouldDelete(List<File> generatedFiles, File o) {
-    return !generatedFiles.contains(o)
-        && !DEFAULT_GENERATED_CONNECT_CLIENT_NAME.equals(o.getName());
+  private static boolean shouldDelete(List<File> generatedFiles, File file) {
+    return !generatedFiles.contains(file)
+        && !DEFAULT_GENERATED_CONNECT_CLIENT_NAME.equals(file.getName());
   }
 
   private static IllegalStateException getUnexpectedOpenAPIException(
