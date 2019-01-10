@@ -1,4 +1,3 @@
-
 ---
 title: Vaadin Connect Maven plugin
 order: 799

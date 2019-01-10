@@ -1,0 +1,13 @@
+---
+title: Table of Contents
+order: 1
+layout: page
+---
+
+= Table of contents
+
+** <<default-client#,Vaadin Connect JavaScript client>>
+** <<security#,Security in Vaadin Connect>>
+** <<javascript-generator#,JavaScript wrappers for `@VaadinService` Java classes>>
+** <<type-conversion#,Type conversion between JavaScript and Java>>
+** <<vaadin-connect-maven-plugin#,Building a Vaadin Connect app with `vaadin-connect-maven-plugin`>>
