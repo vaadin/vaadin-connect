@@ -30,9 +30,9 @@ import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_CONNECT_CLIENT_PATH_PROPERTY;
-import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH;
-import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
+import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_CONNECT_CLIENT_PATH_PROPERTY;
+import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH;
+import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
 
 /**
  * A Vaadin Connect mojo base class, defining common Maven properties that are

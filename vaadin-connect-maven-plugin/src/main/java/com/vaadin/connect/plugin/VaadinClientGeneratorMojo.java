@@ -16,14 +16,15 @@
 
 package com.vaadin.connect.plugin;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
-
-import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
 
 /**
  * The mojo to generate the OpenAPI v3 specification of the Vaadin Client file.
@@ -37,19 +38,35 @@ import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.D
 @Mojo(name = "generate-vaadin-client", defaultPhase = LifecyclePhase.COMPILE)
 public class VaadinClientGeneratorMojo extends VaadinConnectMojoBase {
 
+  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_PATH = "./connect-client.default";
+  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_NAME = "connect-client.default.js";
+  public static final String DEFAULT_CONNECT_CLIENT_PATH_PROPERTY = "vaadin.connect.connect-client.path";
+  public static final String DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH = "frontend/connect-client.js";
+
   @Override
   public void execute() {
+    Path outputFile = generatedFrontendDirectory.toPath()
+        .resolve(DEFAULT_GENERATED_CONNECT_CLIENT_NAME);
     if (shouldGenerateDefaultClient()) {
       VaadinConnectClientGenerator vaadinConnectClientGenerator = new VaadinConnectClientGenerator(
           readApplicationProperties());
-      Path outputFile = generatedFrontendDirectory.toPath()
-          .resolve(DEFAULT_GENERATED_CONNECT_CLIENT_NAME);
       vaadinConnectClientGenerator.generateVaadinConnectClientFile(outputFile);
+    } else {
+      deleteFile(outputFile);
+    }
+  }
+
+  private void deleteFile(Path outputFile) {
+    try {
+      Files.delete(outputFile);
+    } catch (IOException e) {
+      String msg = String.format("Failed to delete default client %s.",
+          outputFile.toString());
+      LoggerFactory.getLogger(VaadinClientGeneratorMojo.class).info(msg, e);
     }
   }
 
   private boolean shouldGenerateDefaultClient() {
-    return getDefaultClientPath().equals(
-        VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_PATH);
+    return getDefaultClientPath().equals(DEFAULT_GENERATED_CONNECT_CLIENT_PATH);
   }
 }
