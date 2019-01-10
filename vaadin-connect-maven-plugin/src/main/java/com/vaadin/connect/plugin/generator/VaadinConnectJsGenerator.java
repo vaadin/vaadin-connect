@@ -23,9 +23,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
@@ -49,11 +51,14 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.tags.Tag;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinServiceNameChecker;
+
+import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
 
 /**
  * Vaadin connect JavaScript generator implementation for swagger-codegen. Some
@@ -163,7 +168,6 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
    *          the api spec file to analyze
    * @param generatedFrontendDirectory
    *          the directory to generateOpenApiSpec the files into
-   *
    * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
    *      specification</a>
    */
@@ -178,16 +182,50 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
-    if (parseResult == null) {
-      throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(), "");
-    }
-    if (parseResult.getMessages().isEmpty()) {
-      new VaadinConnectJSOnlyGenerator().opts(configurator.toClientOptInput())
-          .generate();
+    if (parseResult != null && parseResult.getMessages().isEmpty()) {
+      Set<File> generatedFiles = new VaadinConnectJSOnlyGenerator()
+          .opts(configurator.toClientOptInput()).generate().stream()
+          .filter(Objects::nonNull).collect(Collectors.toSet());
+      cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
+      String error = parseResult == null ? ""
+          : StringUtils.join(parseResult.getMessages().toArray());
+      cleanGeneratedFolder(configurator.getOutputDir(), Collections.emptySet());
       throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(),
-          StringUtils.join(parseResult.getMessages().toArray()));
+          error);
     }
+  }
+
+  private static void cleanGeneratedFolder(String outputDir,
+      Set<File> generatedFiles) {
+    File outputDirFile = new File(outputDir);
+    if (!outputDirFile.exists()) {
+      return;
+    }
+    File[] filesToDelete = outputDirFile
+        .listFiles(pathname -> shouldDelete(generatedFiles, pathname));
+    if (filesToDelete != null) {
+      for (File file : filesToDelete) {
+        getLogger().info("Removing stale generated file '{}'.",
+            file.getAbsolutePath());
+        deleteFile(file);
+      }
+    }
+  }
+
+  private static void deleteFile(File file) {
+    try {
+      FileUtils.forceDelete(file);
+    } catch (IOException e) {
+      getLogger().info(String.format(
+          "Failed to remove '%s' while cleaning the generated folder.",
+          file.getAbsolutePath()), e);
+    }
+  }
+
+  private static boolean shouldDelete(Set<File> generatedFiles, File file) {
+    return !generatedFiles.contains(file)
+        && !DEFAULT_GENERATED_CONNECT_CLIENT_NAME.equals(file.getName());
   }
 
   private static IllegalStateException getUnexpectedOpenAPIException(

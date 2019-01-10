@@ -21,6 +21,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
 
+import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
+
 /**
  * The mojo to generate the OpenAPI v3 specification of the Vaadin Client file.
  * Uses the {@link VaadinConnectMojoBase#applicationProperties} to read the data
@@ -37,6 +39,6 @@ public class VaadinClientGeneratorMojo extends VaadinConnectMojoBase {
   public void execute() {
     new VaadinConnectClientGenerator(readApplicationProperties())
         .generateVaadinConnectClientFile(generatedFrontendDirectory.toPath()
-            .resolve("connect-client.default.js"));
+            .resolve(DEFAULT_GENERATED_CONNECT_CLIENT_NAME));
   }
 }
