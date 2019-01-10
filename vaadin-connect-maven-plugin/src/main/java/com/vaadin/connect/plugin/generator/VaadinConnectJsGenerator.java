@@ -17,7 +17,6 @@ package com.vaadin.connect.plugin.generator;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -183,30 +182,30 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
-    if (parseResult == null) {
-      cleanGeneratedFolder(configurator.getOutputDir(),
-          Collections.emptyList());
-      throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(), "");
-    }
-    if (parseResult.getMessages().isEmpty()) {
-      List<File> generatedFiles = new VaadinConnectJSOnlyGenerator()
+    if (parseResult != null && parseResult.getMessages().isEmpty()) {
+      Set<File> generatedFiles = new VaadinConnectJSOnlyGenerator()
           .opts(configurator.toClientOptInput()).generate().stream()
-          .filter(Objects::nonNull).collect(Collectors.toList());
+          .filter(Objects::nonNull).collect(Collectors.toSet());
       cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
-      cleanGeneratedFolder(configurator.getOutputDir(),
-          Collections.emptyList());
+      String error = parseResult == null ? ""
+          : StringUtils.join(parseResult.getMessages().toArray());
+      cleanGeneratedFolder(configurator.getOutputDir(), Collections.emptySet());
       throw getUnexpectedOpenAPIException(configurator.getInputSpecURL(),
-          StringUtils.join(parseResult.getMessages().toArray()));
+          error);
     }
   }
 
   private static void cleanGeneratedFolder(String outputDir,
-      List<File> generatedFiles) {
-    File[] tobeDeletedFiles = Paths.get(outputDir).toFile()
+      Set<File> generatedFiles) {
+    File outputDirFile = new File(outputDir);
+    if (!outputDirFile.exists()) {
+      return;
+    }
+    File[] filesToDelete = outputDirFile
         .listFiles(pathname -> shouldDelete(generatedFiles, pathname));
-    if (tobeDeletedFiles != null) {
-      for (File file : tobeDeletedFiles) {
+    if (filesToDelete != null) {
+      for (File file : filesToDelete) {
         getLogger().info("Removing stale generated file '{}'.",
             file.getAbsolutePath());
         deleteFile(file);
@@ -218,14 +217,15 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     try {
       FileUtils.forceDelete(file);
     } catch (IOException e) {
-      getLogger().info(String.format("Failed to remove '%s'",
+      getLogger().info(String.format(
+          "Failed to remove '%s' while cleaning the generated folder.",
           file.getAbsolutePath()), e);
     }
   }
 
-  private static boolean shouldDelete(List<File> generatedFiles, File o) {
-    return !generatedFiles.contains(o)
-        && !DEFAULT_GENERATED_CONNECT_CLIENT_NAME.equals(o.getName());
+  private static boolean shouldDelete(Set<File> generatedFiles, File file) {
+    return !generatedFiles.contains(file)
+        && !DEFAULT_GENERATED_CONNECT_CLIENT_NAME.equals(file.getName());
   }
 
   private static IllegalStateException getUnexpectedOpenAPIException(
