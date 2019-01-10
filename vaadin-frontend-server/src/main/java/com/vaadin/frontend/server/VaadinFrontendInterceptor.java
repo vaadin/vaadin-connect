@@ -15,7 +15,6 @@
  */
 package com.vaadin.frontend.server;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -50,22 +49,27 @@ public class VaadinFrontendInterceptor
       HttpServletResponse response, Object handler) throws Exception {
 
     if (handler instanceof ResourceHttpRequestHandler) {
+      HttpServletResponse wrappedResponse = new HttpServletResponseWrapper(
+          response) {
+        {
+          setStatus(HttpServletResponse.SC_OK);
+        }
+
+        @Override
+        public void sendError(int sc) throws IOException {
+          setStatus(sc);
+        }
+      };
+
       // Check whether the static resource can be handled
       ((ResourceHttpRequestHandler) handler).handleRequest(request,
-          // Use a wrapper to catch the not found error
-          new HttpServletResponseWrapper(response) {
-            @Override
-            public void sendError(int sc) throws IOException {
-              if (sc == HttpServletResponse.SC_NOT_FOUND) {
-                // forward to root if not found
-                try {
-                  request.getRequestDispatcher("/").forward(request, response);
-                } catch (ServletException e) {
-                  throw new IOException(e);
-                }
-              }
-            }
-          });
+          wrappedResponse);
+
+      // forward to root if not found
+      if (wrappedResponse.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+        request.getRequestDispatcher("/").forward(request, response);
+        return false;
+      }
     }
 
     return true;
