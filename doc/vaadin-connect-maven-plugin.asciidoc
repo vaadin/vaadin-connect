@@ -114,7 +114,7 @@ the plugin configured.
 
 == Automatic resources generation
 
-Due to the fact that all the plugin generation goals are tied to the Maven lifecycle phases that happen before `compile` phase,
+Due to the fact that all the plugin generation goals are tied to the `compile` phase,
 it's possible to regenerate the files by using the plugin that recompiles the project on Java code change.
 For example, https://github.com/fizzed/maven-plugins#watcher-fizzed-watcher-maven-plugin[fizzed-watcher-maven-plugin] can be used the following way:
 

@@ -30,7 +30,7 @@ import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
  * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
  *      specification</a>
  */
-@Mojo(name = "generate-vaadin-client", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+@Mojo(name = "generate-vaadin-client", defaultPhase = LifecyclePhase.COMPILE)
 public class VaadinClientGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override

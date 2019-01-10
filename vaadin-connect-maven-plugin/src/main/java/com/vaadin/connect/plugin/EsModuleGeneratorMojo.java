@@ -31,7 +31,7 @@ import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
  * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
  *      specification</a>
  */
-@Mojo(name = "generate-connect-modules", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+@Mojo(name = "generate-connect-modules", defaultPhase = LifecyclePhase.COMPILE)
 public class EsModuleGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override
