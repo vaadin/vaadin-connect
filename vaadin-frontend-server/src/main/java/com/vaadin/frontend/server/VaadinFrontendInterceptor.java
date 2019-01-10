@@ -15,10 +15,12 @@
  */
 package com.vaadin.frontend.server;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
-import java.lang.reflect.Method;
+import java.io.IOException;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -43,28 +45,27 @@ public class VaadinFrontendInterceptor
         .excludePathPatterns("/**/{filename:.*\\.(?!html)[a-z]+}");
   }
 
-  // We override `preHandle` instead of `postHandle` because in post the
-  // response comes modified which prevents forwarding
   @Override
   public boolean preHandle(HttpServletRequest request,
-      HttpServletResponse response, Object o) throws Exception {
+      HttpServletResponse response, Object handler) throws Exception {
 
-    if (o instanceof ResourceHttpRequestHandler) {
-
-      // To avoid calling ResourceHttpRequestHandler.handleRequest which
-      // modifies the response, we call the protected method
-      // ResourceHttpRequestHandler.getResource in order to guarantee to do the
-      // same check that handleRequest does.
-      Method getResource = o.getClass().getDeclaredMethod("getResource",
-          HttpServletRequest.class);
-      getResource.setAccessible(true);
-
-      // Check whether the resource exists and forward to root if it doesn't
-      if (getResource.invoke(o, request) == null) {
-        // Do the forwarding
-        request.getRequestDispatcher("/").forward(request, response);
-        return false;
-      }
+    if (handler instanceof ResourceHttpRequestHandler) {
+      // Check whether the static resource can be handled
+      ((ResourceHttpRequestHandler) handler).handleRequest(request,
+          // Use a wrapper to catch the not found error
+          new HttpServletResponseWrapper(response) {
+            @Override
+            public void sendError(int sc) throws IOException {
+              if (sc == HttpServletResponse.SC_NOT_FOUND) {
+                // forward to root if not found
+                try {
+                  request.getRequestDispatcher("/").forward(request, response);
+                } catch (ServletException e) {
+                  throw new IOException(e);
+                }
+              }
+            }
+          });
     }
 
     return true;
