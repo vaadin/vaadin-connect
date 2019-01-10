@@ -17,17 +17,14 @@ package com.vaadin.connect.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Import;
 
 import com.vaadin.connect.oauth.EnableVaadinConnectOAuthServer;
-import com.vaadin.frontend.server.VaadinFrontendServerController;
 
 /**
  * Main class of the Vaadin connect demo module.
  */
 @SpringBootApplication
 @EnableVaadinConnectOAuthServer
-@Import(VaadinFrontendServerController.class)
 public class DemoApplication {
 
   /**
