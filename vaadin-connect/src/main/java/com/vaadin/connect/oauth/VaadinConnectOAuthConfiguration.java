@@ -21,7 +21,6 @@ import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -95,7 +94,6 @@ import com.vaadin.connect.VaadinConnectProperties;
  */
 @Configuration
 @Import(VaadinConnectOAuthConfigurer.class)
-@ComponentScan("com.vaadin.frontend.server")
 public class VaadinConnectOAuthConfiguration
     extends AuthorizationServerConfigurerAdapter {
   private static final List<String> REQUIRED_CLAIMS = Arrays.asList("jti",
