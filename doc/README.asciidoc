@@ -1,0 +1,16 @@
+---
+title: Table of Contents
+order: 1
+layout: page
+---
+
+[NOTE]
+Vaadin Connect is a Vaadin Labs experiment with a secure stateless communication framework. To see a working sample project check out the https://github.com/vaadin/base-starter-connect[base-starter-connect] repo.
+
+= Table of contents
+
+** <<vaadin-connect-maven-plugin#,Building a Vaadin Connect app with `vaadin-connect-maven-plugin`>>
+** <<security#,Security in Vaadin Connect>>
+** <<javascript-generator#,Generating JavaScript wrappers for `@VaadinService` Java classes>>
+** <<default-client#,Vaadin Connect JavaScript client>>
+** <<type-conversion#,Type conversion between JavaScript and Java>>
