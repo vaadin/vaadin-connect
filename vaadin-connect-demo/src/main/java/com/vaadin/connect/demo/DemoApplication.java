@@ -15,6 +15,7 @@
  */
 package com.vaadin.connect.demo;
 
+import com.vaadin.frontend.server.EnableVaadinFrontendServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -25,6 +26,7 @@ import com.vaadin.connect.oauth.EnableVaadinConnectOAuthServer;
  */
 @SpringBootApplication
 @EnableVaadinConnectOAuthServer
+@EnableVaadinFrontendServer
 public class DemoApplication {
 
   /**
