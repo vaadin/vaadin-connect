@@ -3,7 +3,7 @@ const {expect} = intern.getPlugin('chai');
 const {fetchMock} = intern.getPlugin('fetchMock');
 const {sinon} = intern.getPlugin('sinon');
 
-import {ConnectClient} from '../src/connect-client.js';
+import {ConnectClient, VaadinConnectException} from '../src/connect-client.js';
 
 /* global btoa localStorage setTimeout URLSearchParams */
 describe('ConnectClient', () => {
@@ -128,7 +128,7 @@ describe('ConnectClient', () => {
       try {
         await client.call('FooService', 'notFound');
       } catch (err) {
-        expect(err).to.be.instanceOf(TypeError)
+        expect(err).to.be.instanceOf(VaadinConnectException)
           .and.have.property('message').that.has.string('404 Not Found');
       }
     });
@@ -367,17 +367,18 @@ describe('ConnectClient', () => {
       });
 
       it('should throw when token response is bad', async() => {
+        const expectedBody = 'Server Internal Error';
         fetchMock.post(
           client.tokenEndpoint,
-          {body: 'Server Internal Error', status: 500}
+          {body: expectedBody, status: 500}
         );
 
         try {
           await client.call('FooService', 'fooMethod');
         } catch (err) {
-          expect(err).to.be.instanceOf(TypeError)
+          expect(err).to.be.instanceOf(VaadinConnectException)
             .and.have.property('message')
-            .that.has.string('500 Internal Server Error');
+            .that.has.string(expectedBody);
           expect(client.credentials).to.be.calledOnce;
         }
       });
