@@ -43,7 +43,7 @@ import java.util.Optional;
 public class VaadinConnectException extends RuntimeException {
   static final String ERROR_MESSAGE_FIELD = "message";
 
-  private final Object detail;
+  private final transient Object detail;
 
   /**
    * Creates an exception which information is propagated to the client since,

@@ -246,7 +246,7 @@ public class VaadinConnectController {
       } catch (JsonProcessingException unexpected) {
         throw new IllegalStateException(String.format(
             "Unexpected: Failed to serialize a plain Java string '%s' into a JSON. Double check the provided mapper's configuration.",
-            errorMessage));
+            errorMessage), unexpected);
       }
     }
   }
@@ -316,9 +316,8 @@ public class VaadinConnectController {
         .isAssignableFrom(e.getCause().getClass())) {
       VaadinConnectException serviceException = ((VaadinConnectException) e
           .getCause());
-      getLogger()
-          .debug(String.format("Service '%s' method '%s' aborted the execution",
-              serviceName, methodName), serviceException);
+      getLogger().debug("Service '{}' method '{}' aborted the execution",
+          serviceName, methodName, serviceException);
       return ResponseEntity.badRequest().body(vaadinServiceMapper
           .writeValueAsString(serviceException.getSerializationData()));
     } else {
