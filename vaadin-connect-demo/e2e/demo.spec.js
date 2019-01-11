@@ -76,7 +76,7 @@ describe('demo application', () => {
 
     describe('exception handling', () => {
       beforeEach(async() => {
-        await page.findById('login').click().end()
+        await page.findById('login').click().end();
       });
 
       it('should throw when backend server throws a generic exception', async() => {
