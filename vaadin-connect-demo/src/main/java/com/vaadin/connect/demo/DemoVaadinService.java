@@ -126,7 +126,7 @@ public class DemoVaadinService {
       return 42 / number;
     } catch (ArithmeticException e) {
       throw new VaadinConnectException("You had one job to do!", e,
-          Collections.singletonMap("Test", "bac"));
+          Collections.singletonMap("wrong_parameter", number));
     }
   }
 }
