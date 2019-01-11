@@ -130,12 +130,12 @@ public class VaadinConnectException extends RuntimeException {
    * exception thrown is processed by {@link VaadinConnectController}. The
    * following data will be sent to the client:
    * <ul>
-   * <li>exception type</li> Either the original exception type or
-   * {@link VaadinConnectException}, if no original exception is given
-   * <li>message</li> A non-blank message either from the constructor or from
-   * the original exception. If both are blank, none provided.
-   * <li>detail</li> A detail object serialized to json, if provided in the
-   * corresponding constructor
+   * <li>exception type: either the original exception type or
+   * {@link VaadinConnectException}, if no original exception is given</li>
+   * <li>message: non-blank message either from the constructor or from the
+   * original exception. If both are blank, none provided.</li>
+   * <li>detail: detail object serialized to json, if provided in the
+   * corresponding constructor</li>
    * </ul>
    *
    * @return the data to be sent to the client
