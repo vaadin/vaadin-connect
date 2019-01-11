@@ -70,6 +70,8 @@ public class VaadinFrontendInterceptor
       // forward to root if not found
       if (wrappedResponse.getStatus() == SC_NOT_FOUND) {
         request.getRequestDispatcher("/").forward(request, response);
+        // pretend that the response is OK since we forwarded it
+        wrappedResponse.setStatus(SC_OK);
         return false;
       }
     }
