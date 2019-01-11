@@ -31,9 +31,13 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
@@ -45,6 +49,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class ESModuleGeneratorTest {
+
+  @BeforeClass
+  public static void beforeClass() {
+    ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME))
+        .setLevel(Level.WARN);
+  }
+
   @Rule
   public TemporaryFolder outputDirectory = new TemporaryFolder();
 
