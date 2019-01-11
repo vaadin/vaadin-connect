@@ -15,7 +15,6 @@
  */
 package com.vaadin.frontend.server;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -27,6 +26,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
+
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 /**
  * Intercepts calls to ResourceHttpRequestHandler in order to verify when the
@@ -50,22 +52,26 @@ public class VaadinFrontendInterceptor
       HttpServletResponse response, Object handler) throws Exception {
 
     if (handler instanceof ResourceHttpRequestHandler) {
+      HttpServletResponse wrappedResponse = new HttpServletResponseWrapper(
+          response) {
+
+        @Override
+        public void sendError(int sc) throws IOException {
+          setStatus(sc);
+        }
+      };
+
+      wrappedResponse.setStatus(SC_OK);
+
       // Check whether the static resource can be handled
       ((ResourceHttpRequestHandler) handler).handleRequest(request,
-          // Use a wrapper to catch the not found error
-          new HttpServletResponseWrapper(response) {
-            @Override
-            public void sendError(int sc) throws IOException {
-              if (sc == HttpServletResponse.SC_NOT_FOUND) {
-                // forward to root if not found
-                try {
-                  request.getRequestDispatcher("/").forward(request, response);
-                } catch (ServletException e) {
-                  throw new IOException(e);
-                }
-              }
-            }
-          });
+          wrappedResponse);
+
+      // forward to root if not found
+      if (wrappedResponse.getStatus() == SC_NOT_FOUND) {
+        request.getRequestDispatcher("/").forward(request, response);
+        return false;
+      }
     }
 
     return true;
