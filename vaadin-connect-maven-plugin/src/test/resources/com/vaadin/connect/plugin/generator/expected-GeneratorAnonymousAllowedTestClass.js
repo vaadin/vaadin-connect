@@ -5,7 +5,7 @@
  * @module GeneratorAnonymousAllowedTestClass
  */
 
-import client from './connect-client.default';
+import client from './connect-client.default.js';
 
 export function anonymousAllowed() {
   return client.call('customName', 'anonymousAllowed', undefined, {requireCredentials: false});

@@ -52,13 +52,15 @@ import io.swagger.v3.oas.models.tags.Tag;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinServiceNameChecker;
 
-import static com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
+import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
+import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
 
 /**
  * Vaadin connect JavaScript generator implementation for swagger-codegen. Some
@@ -79,6 +81,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
   private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
+  private static final String CLIENT_PATH_TEMPLATE_PROPERTY = "vaadinConnectDefaultClientPath";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
 
@@ -168,16 +171,44 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
    *          the api spec file to analyze
    * @param generatedFrontendDirectory
    *          the directory to generateOpenApiSpec the files into
+   *
    * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
    *      specification</a>
    */
   public static void launch(File openApiJsonFile,
       File generatedFrontendDirectory) {
+    launch(openApiJsonFile, generatedFrontendDirectory, null);
+  }
+
+  /**
+   * Runs the code generation based on the data from the OpenAPI json. Generates
+   * the target files in the directory specified, overwriting the files and
+   * creating the target directory, if necessary.
+   *
+   * @param openApiJsonFile
+   *          the api spec file to analyze
+   * @param generatedFrontendDirectory
+   *          the directory to generateOpenApiSpec the files into
+   * @param defaultClientPath
+   *          the default client path which is imported in the generated files.
+   *          If it is {@code null}, the default generate client path is used.
+   * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
+   *      specification</a>
+   */
+  public static void launch(File openApiJsonFile,
+      File generatedFrontendDirectory, String defaultClientPath) {
     CodegenConfigurator configurator = new CodegenConfigurator();
     configurator.setLang(VaadinConnectJsGenerator.class.getName());
     configurator.setInputSpecURL(openApiJsonFile.toString());
     configurator.setOutputDir(generatedFrontendDirectory.toString());
+    configurator.addAdditionalProperty(CLIENT_PATH_TEMPLATE_PROPERTY,
+        getDefaultClientPath(defaultClientPath));
     generate(configurator);
+  }
+
+  private static String getDefaultClientPath(String path) {
+    return ObjectUtils.defaultIfNull(path,
+        DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
   }
 
   private static void generate(CodegenConfigurator configurator) {
@@ -186,6 +217,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       Set<File> generatedFiles = new VaadinConnectJSOnlyGenerator()
           .opts(configurator.toClientOptInput()).generate().stream()
           .filter(Objects::nonNull).collect(Collectors.toSet());
+
       cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
       String error = parseResult == null ? ""

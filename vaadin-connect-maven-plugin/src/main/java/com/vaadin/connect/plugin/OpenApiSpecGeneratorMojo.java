@@ -31,9 +31,7 @@ import java.util.stream.Collectors;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 
 import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
 
@@ -48,9 +46,6 @@ import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
  */
 @Mojo(name = "generate-openapi-spec", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class OpenApiSpecGeneratorMojo extends VaadinConnectMojoBase {
-
-  @Parameter(defaultValue = "${project}", readonly = true, required = true)
-  private MavenProject project;
 
   @Override
   public void execute() {

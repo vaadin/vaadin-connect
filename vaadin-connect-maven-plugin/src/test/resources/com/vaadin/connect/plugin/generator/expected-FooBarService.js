@@ -5,7 +5,7 @@
  * @module FooBarService
  */
 
-import client from './connect-client.default';
+import client from './connect-client.default.js';
 
 /**
  * @param {boolean} value

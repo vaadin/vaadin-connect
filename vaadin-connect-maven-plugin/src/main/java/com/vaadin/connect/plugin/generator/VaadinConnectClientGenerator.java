@@ -32,7 +32,7 @@ import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
  * properties, if provided.
  */
 public class VaadinConnectClientGenerator {
-  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_NAME = "connect-client.default.js";
+
   private final String endpoint;
 
   /**
@@ -51,11 +51,7 @@ public class VaadinConnectClientGenerator {
    * Generates the client file in the file specified.
    *
    * @param outputFilePath
-   *          the file to generate the OpenAPI v3 specification of the client
-   *          code into
-   *
-   * @see <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI
-   *      specification</a>
+   *          the file to generate the default client into
    */
   public void generateVaadinConnectClientFile(Path outputFilePath) {
     String generatedDefaultClientJs = getDefaultClientJsTemplate()
