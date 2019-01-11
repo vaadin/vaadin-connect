@@ -1,0 +1,13 @@
+@startuml
+skinparam ParticipantPadding 10
+
+participant "Frontend" << JavaScript >>
+participant "/* generated */\nclass HelloService" as jsService << JavaScript >>
+participant "@VaadinService\n class HelloService" as javaService << Java >>
+
+Frontend -> jsService: await greet("User");
+jsService -> javaService: POST JSON Request
+...
+jsService <-- javaService: POST JSON Response
+Frontend <-- jsService: "Hello, User!"
+@enduml
