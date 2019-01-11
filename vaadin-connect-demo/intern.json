@@ -1,6 +1,6 @@
 {
   "functionalSuites": "e2e/**/*.spec.js",
-  "serverUrl": "http://localhost:8081",
+  "serverUrl": "http://localhost:8080",
   "serverPort": 9002,
   "socketPort": 9003,
   "environments": [
