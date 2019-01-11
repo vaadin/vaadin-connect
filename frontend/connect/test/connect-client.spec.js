@@ -133,6 +133,26 @@ describe('ConnectClient', () => {
       }
     });
 
+    it('should reject with extra parameters in the exception if response body has the data', async() => {
+      const expectedObject = {
+        message: 'Something bad happened on the backend side',
+        type: 'java.lang.IllegalStateException',
+        detail: {one: 'two'}
+      };
+      fetchMock.post('/connect/FooService/vaadinException', {
+        body: expectedObject, status: 400
+      });
+
+      try {
+        await client.call('FooService', 'vaadinException');
+      } catch (err) {
+        expect(err).to.be.instanceOf(VaadinConnectException);
+        expect(err).to.have.property('message').that.is.string(expectedObject.message);
+        expect(err).to.have.property('type').that.is.string(expectedObject.type);
+        expect(err).to.have.deep.property('detail', expectedObject.detail);
+      }
+    });
+
     it('should reject if fetch is rejected', async() => {
       fetchMock.post(
         '/connect/FooService/reject',
