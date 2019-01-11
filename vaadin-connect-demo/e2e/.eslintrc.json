@@ -1,5 +1,9 @@
 {
   "globals": {
     "intern": true
+  },
+  "env": {
+    "browser": true,
+    "node": true
   }
 }
