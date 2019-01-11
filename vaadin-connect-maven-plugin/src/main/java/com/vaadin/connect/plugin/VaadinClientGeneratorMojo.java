@@ -38,11 +38,6 @@ import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
 @Mojo(name = "generate-vaadin-client", defaultPhase = LifecyclePhase.COMPILE)
 public class VaadinClientGeneratorMojo extends VaadinConnectMojoBase {
 
-  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_PATH = "./connect-client.default";
-  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_NAME = "connect-client.default.js";
-  public static final String DEFAULT_CONNECT_CLIENT_PATH_PROPERTY = "vaadin.connect.connect-client.path";
-  public static final String DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH = "frontend/connect-client.js";
-
   @Override
   public void execute() {
     Path outputFile = generatedFrontendDirectory.toPath()
@@ -57,16 +52,19 @@ public class VaadinClientGeneratorMojo extends VaadinConnectMojoBase {
   }
 
   private void deleteFile(Path outputFile) {
-    try {
-      Files.delete(outputFile);
-    } catch (IOException e) {
-      String msg = String.format("Failed to delete default client %s.",
-          outputFile.toString());
-      LoggerFactory.getLogger(VaadinClientGeneratorMojo.class).info(msg, e);
+    if (outputFile.toFile().exists()) {
+      try {
+        Files.delete(outputFile);
+      } catch (IOException e) {
+        String msg = String.format("Failed to delete default client %s.",
+            outputFile.toString());
+        LoggerFactory.getLogger(VaadinClientGeneratorMojo.class).info(msg, e);
+      }
     }
   }
 
   private boolean shouldGenerateDefaultClient() {
-    return getDefaultClientPath().equals(DEFAULT_GENERATED_CONNECT_CLIENT_PATH);
+    return getDefaultClientPath()
+        .equals(DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
   }
 }

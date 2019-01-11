@@ -31,8 +31,6 @@ https://swagger.io/tools/swagger-ui/[swagger-ui] and the following, modules' gen
 
 === Default Vaadin Client generation
 
-In this step, the generator always cleans <<generatedFrontendDirector, the generated directory>> to make sure that all the generated files are synced with the backend.
-
 ==== Using default client provided by vaadin-connect
 
 A default client is generated, using the Vaadin Connect properties for initializing the client for the user instead of writing the boilerplate for each project.
@@ -69,7 +67,7 @@ access to the backend api on the client side.
 ====
 The generation creates all the necessary files and directories, if they are absent.
 
-It also rewrites the generated files each time it is performed.
+It also rewrites the generated files and removes all the non-generated files each time it is performed.
 ====
 
 If you feel interested in the modules' generation details, the process in depth is described in the

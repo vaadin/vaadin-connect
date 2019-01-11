@@ -5,7 +5,7 @@
  * @module GeneratorTestClass
  */
 
-import client from './connect-client.default';
+import client from './connect-client.default.js';
 
 export function getAllUsers() {
   return client.call('GeneratorTestClass', 'getAllUsers', undefined, {requireCredentials: false});

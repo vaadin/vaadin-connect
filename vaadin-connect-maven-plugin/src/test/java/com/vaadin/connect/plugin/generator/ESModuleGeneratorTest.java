@@ -38,8 +38,8 @@ import org.junit.rules.TemporaryFolder;
 import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
 
+import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
 import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
-import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -79,7 +79,7 @@ public class ESModuleGeneratorTest {
   public void should_UseDefaultConnectClientPath_When_ItIsNotDefined()
       throws IOException {
     String expectedImport = String.format("import client from '%s';",
-        DEFAULT_GENERATED_CONNECT_CLIENT_PATH);
+        DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
 
     VaadinConnectJsGenerator.launch(
         getResourcePath("expected-openapi-custom-application-properties.json"),
@@ -215,10 +215,10 @@ public class ESModuleGeneratorTest {
     VaadinConnectJsGenerator.launch(
         getResourcePath("multiple-tags-operation.json"),
         outputDirectory.getRoot());
-    Path firstOutputFilePath = Paths
-        .get(outputDirectory.getRoot() + "/MyFirstJsClass.js");
-    Path secondOutputFilePath = Paths
-        .get(outputDirectory.getRoot() + "/MySecondJsClass.js");
+    Path firstOutputFilePath = outputDirectory.getRoot().toPath()
+        .resolve("MyFirstJsClass.js");
+    Path secondOutputFilePath = outputDirectory.getRoot().toPath()
+        .resolve("MySecondJsClass.js");
     String firstActualJs = StringUtils
         .toEncodedString(Files.readAllBytes(firstOutputFilePath),
             Charset.defaultCharset())
@@ -285,8 +285,8 @@ public class ESModuleGeneratorTest {
         outputDirectory.getRoot());
   }
 
-  private String readFileInTempDir(String s) throws IOException {
-    Path outputPath = Paths.get(outputDirectory.getRoot() + "/" + s);
+  private String readFileInTempDir(String fileName) throws IOException {
+    Path outputPath = outputDirectory.getRoot().toPath().resolve(fileName);
     return StringUtils.toEncodedString(Files.readAllBytes(outputPath),
         Charset.defaultCharset()).trim();
   }

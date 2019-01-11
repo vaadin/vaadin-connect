@@ -59,8 +59,8 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinServiceNameChecker;
 
+import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
 import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
-import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
 
 /**
  * Vaadin connect JavaScript generator implementation for swagger-codegen. Some
@@ -208,7 +208,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   private static String getDefaultClientPath(String path) {
     return ObjectUtils.defaultIfNull(path,
-        DEFAULT_GENERATED_CONNECT_CLIENT_PATH);
+        DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
   }
 
   private static void generate(CodegenConfigurator configurator) {

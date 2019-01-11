@@ -30,10 +30,6 @@ import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_CONNECT_CLIENT_PATH_PROPERTY;
-import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH;
-import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
-
 /**
  * A Vaadin Connect mojo base class, defining common Maven properties that are
  * used by all mojo classes.
@@ -41,6 +37,11 @@ import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERA
 abstract class VaadinConnectMojoBase extends AbstractMojo {
   private static final Logger log = LoggerFactory
       .getLogger(VaadinConnectMojoBase.class);
+
+  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH = "./connect-client.default.js";
+  public static final String DEFAULT_GENERATED_CONNECT_CLIENT_NAME = "connect-client.default.js";
+  public static final String DEFAULT_CONNECT_CLIENT_PATH_PROPERTY = "vaadin.connect.connect-client.path";
+  public static final String DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH = "frontend/connect-client.js";
 
   @Parameter(defaultValue = "${project.basedir}/src/main/resources/application.properties")
   private File applicationProperties;
@@ -97,7 +98,7 @@ abstract class VaadinConnectMojoBase extends AbstractMojo {
       return generatedFrontendPath.relativize(defaultConventionalClient)
           .toString();
     } else {
-      return DEFAULT_GENERATED_CONNECT_CLIENT_PATH;
+      return DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
     }
   }
 
