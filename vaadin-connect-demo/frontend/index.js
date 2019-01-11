@@ -1,9 +1,6 @@
 // The code that uses the generated Vaadin Connect modules:
 import client from './connect-client.js';
 import * as demoService from './generated/DemoVaadinService.js';
-// Same code without the generated JavaScript, using '@vaadin/connect' npm module
-// API instead:
-import {ConnectClient} from '@vaadin/connect';
 
 const credentials = (options = {}) => {
   return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
@@ -52,9 +49,31 @@ function updateLoginStatus(currentClient) {
 
 const input = document.getElementById('inputText');
 document.getElementById('submitButton').addEventListener('click', async() => {
-  await demoService.doNotSubmitZeroes(input.valueAsNumber ? input.valueAsNumber : 0)
+  updateExceptionData({});
+  try {
+    await demoService.doNotSubmitZeroes(input.valueAsNumber ? input.valueAsNumber : 0)
+  } catch (e) {
+    updateExceptionData(e);
+  }
 });
-document.getElementById('exceptionButton').addEventListener('click', async() => await demoService.throwsException());
+document.getElementById('exceptionButton').addEventListener('click', async() => {
+  updateExceptionData({});
+  try {
+    await demoService.throwsException();
+  } catch (e) {
+    updateExceptionData(e);
+  }
+});
+
+const updateExceptionData = exception => {
+  document.getElementById('exceptionMessage').textContent = exception.message;
+  document.getElementById('exceptionType').textContent = exception.type;
+  document.getElementById('exceptionDetail').textContent = exception.detail ? JSON.stringify(exception.detail) : null;
+};
+
+// Same code without the generated JavaScript, using '@vaadin/connect' npm module
+// API instead:
+import {ConnectClient} from '@vaadin/connect';
 
 const customClient = new ConnectClient({endpoint: '/connect', credentials});
 
