@@ -9,17 +9,16 @@ const assertResponseIsOk = async(response) => {
     let responseJson;
     try {
       responseJson = JSON.parse(responseText);
-    } catch (e) {
-      responseJson = null;
+    } catch (ignored) {
+      // not a json
     }
 
-    if (responseJson !== null) {
+    if (typeof responseJson !== 'undefined') {
       throw new VaadinConnectException(responseJson.message, responseJson.type, responseJson.detail);
     } else if (responseText !== null && responseText.length > 0) {
       throw new VaadinConnectException(responseText);
     } else {
-      throw new VaadinConnectException(`expected '200 OK' response, but got ${response.status}`
-        + ` ${response.statusText}`);
+      throw new VaadinConnectException(`expected '200 OK' response, but got ${response.status} ${response.statusText}`);
     }
   }
 };
@@ -162,7 +161,6 @@ class AuthTokens {
 export class VaadinConnectException extends Error {
   constructor(message, type, detail) {
     super(message);
-    this.name = this.constructor.name;
     this.type = type;
     this.message = message;
     this.detail = detail;
