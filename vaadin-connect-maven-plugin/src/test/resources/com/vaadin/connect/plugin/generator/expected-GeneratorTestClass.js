@@ -96,7 +96,7 @@ export function reservedWordInParameter(_delete) {
 /**
  * Update a user
  *
- * @param {User} user
+ * @param {User} user - User to be updated
  *
  */
 export function updateUser(user) {

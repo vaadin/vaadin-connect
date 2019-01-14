@@ -319,6 +319,9 @@
                   "user" : {
                     "$ref" : "#/components/schemas/User"
                   }
+                },
+                "x-vaadin-parameters-description" : {
+                  "user" : "User to be updated"
                 }
               }
             }

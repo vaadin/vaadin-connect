@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,8 +96,9 @@ import com.vaadin.connect.oauth.AnonymousAllowed;
  * produces OpenApi json.
  */
 class OpenApiParser {
-  private static final String VAADIN_CONNECT_JWT_SECURITY_SCHEME = "vaadin-connect-jwt";
+  public static final String EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION = "x-vaadin-parameters-description";
 
+  private static final String VAADIN_CONNECT_JWT_SECURITY_SCHEME = "vaadin-connect-jwt";
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -436,13 +438,20 @@ class OpenApiParser {
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
       Schema paramSchema = parseTypeToSchema(parameter.getType());
-      paramSchema
-          .description(paramsDescription.get(parameter.getNameAsString()));
 
       String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
           .concat(parameter.getNameAsString());
+      if (StringUtils.isBlank(paramSchema.get$ref())) {
+        paramSchema
+            .description(paramsDescription.remove(parameter.getNameAsString()));
+      }
       requestSchema.addProperties(name, paramSchema);
     });
+    if (!paramsDescription.isEmpty()) {
+      requestSchema.addExtension(
+          EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION,
+          new LinkedHashMap<>(paramsDescription));
+    }
     return requestBody;
   }
 
