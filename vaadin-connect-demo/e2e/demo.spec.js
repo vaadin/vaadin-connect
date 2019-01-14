@@ -102,6 +102,14 @@ describe('demo application', () => {
 
   describe('single page application', () => {
 
+    it('should get index when url is root', async(context) => {
+      const page = context.remote.get('');
+      await page
+        .findById('number').getVisibleText().then(text =>
+          expect(text).to.equal('1')
+        );
+    });
+
     it('should get index when url has .html extension', async(context) => {
       const page = context.remote.get('app/anypage.html');
       await page
@@ -123,6 +131,14 @@ describe('demo application', () => {
       await page
         .findByCssSelector('body').getVisibleText().then(text =>
           expect(text).to.match(/error/i)
+        );
+    });
+
+    it('should load static resource when it exists', async(context) => {
+      const page = context.remote.get('README.txt');
+      await page
+        .findByCssSelector('body').getVisibleText().then(text =>
+          expect(text).to.match(/README content/i)
         );
     });
   });
