@@ -22,8 +22,12 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportAware;
+import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
@@ -38,13 +42,23 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
  */
 @Configuration
 public class VaadinFrontendInterceptor
-    implements HandlerInterceptor, WebMvcConfigurer {
+    implements HandlerInterceptor, WebMvcConfigurer, ImportAware {
+
+  private AnnotationAttributes config;
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(new VaadinFrontendInterceptor())
-        .addPathPatterns("/**/*")
-        .excludePathPatterns("/**/{filename:.*\\.(?!html)[a-z]+}");
+        .addPathPatterns((String[]) config.get("dynamicRoutesPattern"))
+        .excludePathPatterns((String[]) config.get("staticContentPattern"));
+  }
+
+  @Override
+  public void addViewControllers(ViewControllerRegistry registry) {
+    String index = (String)config.get("singlePageTemplate");
+    if (!index.isEmpty()) {
+      registry.addViewController("/").setViewName("forward:" + index);
+    }
   }
 
   @Override
@@ -78,5 +92,19 @@ public class VaadinFrontendInterceptor
     }
 
     return true;
+  }
+
+  @Override
+  public void setImportMetadata(AnnotationMetadata importMetadata) {
+    this.config = AnnotationAttributes
+        .fromMap(importMetadata.getAnnotationAttributes(
+            EnableVaadinFrontendServer.class.getName(), false));
+
+    if (config == null) {
+      throw new IllegalArgumentException(
+          "@" + EnableVaadinFrontendServer.class.getSimpleName()
+              + " is not present on importing class "
+              + importMetadata.getClassName());
+    }
   }
 }
