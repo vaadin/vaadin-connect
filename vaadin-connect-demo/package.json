@@ -25,6 +25,7 @@
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.3",
+    "@babel/register": "^7.0.0",
     "babel-loader": "^8.0.4",
     "bundlesize": "^0.17.0",
     "copy-webpack-plugin": "^4.6.0",
@@ -33,17 +34,30 @@
     "html-webpack-plugin": "^3.2.0",
     "intern": "^4.3.3",
     "regenerator-runtime": "^0.13.1",
+    "swagger-ui-dist": "^3.20.2",
     "webpack": "^4.28.0",
     "webpack-babel-multi-target-plugin": "^2.0.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-middleware": "^3.4.0",
-    "webpack-dev-server": "^3.1.10",
-    "swagger-ui-dist": "^3.20.2"
+    "webpack-dev-server": "^3.1.10"
   },
   "bundlesize": [
     {
       "path": "./target/classes/META-INF/resources/index.js",
       "maxSize": "2.4 kB"
     }
-  ]
+  ],
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": true
+          }
+        }
+      ]
+    ],
+    "sourceMaps": true
+  }
 }

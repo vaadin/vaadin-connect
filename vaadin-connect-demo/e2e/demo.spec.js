@@ -1,6 +1,8 @@
 const {describe, it, beforeEach} = intern.getPlugin('interface.bdd');
 const {expect} = intern.getPlugin('chai');
 
+import {pollUntil} from '@theintern/leadfoot';
+
 describe('demo application', () => {
   describe('index page', () => {
     let page;
@@ -21,26 +23,24 @@ describe('demo application', () => {
     });
 
     it('should say hello after logging in', async() => {
-      await page
-        .findById('login').click().end()
-        .sleep(2000)
-        .findById('loginMessage').getVisibleText().then(text =>
-          expect(text).to.equal('Hello, test_login!')
-        );
+      await page.findById('login').click();
+      await pollUntil(
+        text => document.getElementById('loginMessage').textContent === text,
+        'Hello, test_login!'
+      );
     });
 
     it('should increment number on button click', async() => {
-      await page
-        .findById('addOne').click().end()
-        .sleep(2000)
-        .findById('number').getVisibleText().then(text =>
-          expect(text).to.equal('2')
-        );
+      await page.findById('addOne').click();
+      await pollUntil(
+        text => document.getElementById('number').textContent === text,
+        '2'
+      );
     });
 
     describe('anonymous access', () => {
       beforeEach(async() => {
-        await page.findById('logout').click().end();
+        await page.findById('logout').click();
       });
 
       it('should allow anonymous access with missing credentials', async() => {
@@ -51,11 +51,11 @@ describe('demo application', () => {
           .findById('access').getVisibleText().then(text =>
             expect(text).to.equal('')
           ).end()
-          .findById('checkAnonymousAccess').click().end()
-          .sleep(2000)
-          .findById('access').getVisibleText().then(text =>
-            expect(text).to.equal('anonymous success')
-          );
+          .findById('checkAnonymousAccess').click();
+        await pollUntil(
+          text => document.getElementById('access').textContent === text,
+          'anonymous success'
+        );
       });
 
       it('should allow anonymous access with wrong credentials', async() => {
@@ -66,11 +66,11 @@ describe('demo application', () => {
           .findById('access').getVisibleText().then(text =>
             expect(text).to.equal('')
           ).end()
-          .findById('checkAnonymousAccess').click().end()
-          .sleep(2000)
-          .findById('access').getVisibleText().then(text =>
-            expect(text).to.equal('anonymous success')
-          );
+          .findById('checkAnonymousAccess').click();
+        await pollUntil(
+          text => document.getElementById('access').textContent === text,
+          'anonymous success'
+        );
       });
     });
   });
