@@ -52,15 +52,14 @@ public class VaadinFrontendInterceptor
       HttpServletResponse response, Object handler) throws Exception {
 
     if (handler instanceof ResourceHttpRequestHandler) {
+      // Wrap the response to check if sendError is called
       HttpServletResponse wrappedResponse = new HttpServletResponseWrapper(
           response) {
-
         @Override
         public void sendError(int sc) throws IOException {
           setStatus(sc);
         }
       };
-
       wrappedResponse.setStatus(SC_OK);
 
       // Check whether the static resource can be handled
@@ -72,8 +71,10 @@ public class VaadinFrontendInterceptor
         request.getRequestDispatcher("/").forward(request, response);
         // pretend that the response is OK since we forwarded it
         wrappedResponse.setStatus(SC_OK);
-        return false;
       }
+
+      // handleRequest was already run, do not continue
+      return false;
     }
 
     return true;
