@@ -150,7 +150,7 @@
                 <configuration>
                     <folders>
                         <!-- webpack output folder -->
-                        <folder>target/classes/WEB-INF/resources</folder>
+                        <folder>target/classes/META-INF/resources</folder>
                     </folders>
                 </configuration>
             </plugin>
