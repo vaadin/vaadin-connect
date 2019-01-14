@@ -11,13 +11,13 @@ Use Yarn to install the JS dependencies:
 
 ## Running the Demo Application
 
-Use the following command to run the Java backend and the frontend development
-server simultaniously for the demo project:
+Use the following command to run the Webpack process and the Java Server
+for the demo project:
 
     $ yarn start
 
 After the server is up and running, open
-<a href="http://localhost:8081" target="_blank">http://localhost:8081</a> in
+<a href="http://localhost:8080" target="_blank">http://localhost:8080</a> in
 your browser.
 
 ## Tests

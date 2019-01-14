@@ -129,11 +129,6 @@
                         <goals>
                             <goal>start</goal>
                         </goals>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <server.port>8081</server.port>
-                            </systemPropertyVariables>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>stop-backend-server</id>
@@ -152,8 +147,13 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <folders>
+                        <!-- webpack output folder -->
+                        <folder>target/classes/WEB-INF/resources</folder>
+                    </folders>
+                </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
