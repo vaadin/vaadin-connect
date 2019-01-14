@@ -29,4 +29,30 @@ import org.springframework.context.annotation.Import;
 @Retention(RetentionPolicy.RUNTIME)
 @Import(VaadinFrontendInterceptor.class)
 public @interface EnableVaadinFrontendServer {
+
+  /**
+   * Pattern used in the application for routing views. These paths should be
+   * redirected to `/` when not found.
+   * 
+   * Default is to include all requests
+   */
+  String[] dynamicRoutesPattern() default "/**/*";
+
+  /**
+   * Pattern used for static content. These paths should not be redirected to
+   * `/` when not found
+   * 
+   * A String Array of Ant patterns. Default is any file with extension
+   * excluding `.html`
+   */
+  String[] staticContentPattern() default "/**/{filename:.*\\.(?!html)[a-z]+}";
+
+  /**
+   * The index file to show when '/' is requested.
+   * 
+   * Default is empty than means to use the servlet-container configuration
+   * which normally is `index.html`
+   */
+  String singlePageTemplate() default "";
+
 }

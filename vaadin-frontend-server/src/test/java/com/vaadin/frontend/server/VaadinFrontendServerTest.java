@@ -58,22 +58,34 @@ public class VaadinFrontendServerTest {
           Arrays.asList(ConfigureContext.class, HtmlNotFoundTest.class) },
         { "Spring should fail if an asset resource does not exist",
           null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, AssetNotFoundTest.class) },
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetNotFoundTest.class) },
+        { "Enabling frontend-server should forward / location to index.html",
+            null,
+            Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, RootTest.class) },
         { "Enabling frontend-server should serve static files",
           null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, AssetFoundTest.class) },
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetFoundTest.class) },
         { "Enabling frontend-server should serve index.html location if exists",
           null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, IndexFoundTest.class) },
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, IndexFoundTest.class) },
         { "Enabling frontend-server should forward to / if .html is not found",
           null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, HtmlForwardTest.class) },
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, HtmlForwardTest.class) },
         { "Enabling frontend-server should forward to / if a route is not found",
           null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, RouteForwardTest.class) },
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, RouteForwardTest.class) },
         { "Enabling frontend-server should fail if asset not found",
           null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, AssetNotFoundTest.class) },
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetNotFoundTest.class) },
+        { "Enabling custon frontend-server should change welcome file",
+          null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, CustomRootTest.class) },
+        { "Enabling custon frontend-server should forward any route path",
+          null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, RouteForwardTest.class) },
+        { "Enabling custon frontend-server should not forward any extension",
+          null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, HtmlNotFoundTest.class) },
       }); // @formatter:on
   }
 
@@ -92,7 +104,7 @@ public class VaadinFrontendServerTest {
   /**
    * Called as many times as items are returned in the
    * {@link VaadinFrontendServerTest#parameters()} method.
-   * 
+   *
    * @param testMessage
    *          text shown when running the test
    * @param exception
@@ -133,8 +145,17 @@ public class VaadinFrontendServerTest {
   }
 
   @Configuration
-  @EnableVaadinFrontendServer
-  protected static class EnableVaadinFrontend {
+  @EnableVaadinFrontendServer()
+  protected static class EnableVaadinFrontendDefault {
+  }
+
+  @Configuration
+  @EnableVaadinFrontendServer(// @formatter:off
+      singlePageTemplate = "my-app.html",
+      dynamicRoutesPattern = {"/**/*" },
+      staticContentPattern = {"/**/*.*"}
+  )// @formatter:on
+  protected static class EnableVaadinFrontendCustom {
   }
 
   @Configuration
@@ -188,7 +209,6 @@ public class VaadinFrontendServerTest {
     }
   }
 
-
   @Configuration
   protected static class HtmlForwardTest implements TestRunner {
     @Override
@@ -210,6 +230,17 @@ public class VaadinFrontendServerTest {
           .andExpect(status().isOk()).andReturn().getResponse();
 
       assertEquals("/", response.getForwardedUrl());
+    }
+  }
+
+  @Configuration
+  protected static class CustomRootTest implements TestRunner {
+    @Override
+    public void run(AnnotationConfigWebApplicationContext context)
+        throws Exception {
+      MockHttpServletResponse response = getResource(context, "/")
+          .andExpect(status().isOk()).andReturn().getResponse();
+      assertEquals("my-app.html", response.getForwardedUrl());
     }
   }
 
