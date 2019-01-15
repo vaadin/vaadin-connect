@@ -20,11 +20,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportAware;
-import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -36,20 +37,27 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 /**
  * Intercepts calls to ResourceHttpRequestHandler in order to verify when the
  * resource does not exist and forward to '/'
- * 
- * It only intercepts paths without extension or with the the `.html` one.
+ *
+ * By default it only intercepts paths without any extension. If you want to
+ * configure the interceptor to match your routing pattern, you need to provide
+ * a {@link VaadinFrontendRouteMatcher} bean in your configuration.
  */
 @Configuration
 public class VaadinFrontendInterceptor
-    implements HandlerInterceptor, WebMvcConfigurer, ImportAware {
+    implements HandlerInterceptor, WebMvcConfigurer {
 
-  private AnnotationAttributes config;
+  private final PathMatcher pathMatcher;
+
+  @Autowired
+  public VaadinFrontendInterceptor(
+      @Autowired(required = false) VaadinFrontendRouteMatcher routeMatcher) {
+    pathMatcher = new DelegatingPathMatcher(routeMatcher);
+  }
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(new VaadinFrontendInterceptor())
-        .addPathPatterns((String[]) config.get("dynamicRoutesPattern"))
-        .excludePathPatterns((String[]) config.get("staticContentPattern"));
+    registry.addInterceptor(this).addPathPatterns(new String[] { "*" })
+        .pathMatcher(pathMatcher);
   }
 
   @Override
@@ -81,21 +89,45 @@ public class VaadinFrontendInterceptor
       // handleRequest was already run, do not continue
       return false;
     }
-
     return true;
   }
 
-  @Override
-  public void setImportMetadata(AnnotationMetadata importMetadata) {
-    this.config = AnnotationAttributes
-        .fromMap(importMetadata.getAnnotationAttributes(
-            EnableVaadinFrontendServer.class.getName(), false));
+  private static class DelegatingPathMatcher implements PathMatcher {
+    private final VaadinFrontendRouteMatcher routeMatcher;
 
-    if (config == null) {
-      throw new IllegalArgumentException(
-          "@" + EnableVaadinFrontendServer.class.getSimpleName()
-              + " is not present on importing class "
-              + importMetadata.getClassName());
+    public DelegatingPathMatcher(VaadinFrontendRouteMatcher routeMatcher) {
+      this.routeMatcher = routeMatcher != null ? routeMatcher
+          : new VaadinFrontendRouteMatcher() {
+          };
+    }
+
+    public boolean isPattern(String path) {
+      return false;
+    }
+
+    public boolean match(String pattern, String path) {
+      return routeMatcher.isDynamicRoutePath(path);
+    }
+
+    public boolean matchStart(String pattern, String path) {
+      return false;
+    }
+
+    public String extractPathWithinPattern(String pattern, String path) {
+      return null;
+    }
+
+    public Map<String, String> extractUriTemplateVariables(String pattern,
+        String path) {
+      return null;
+    }
+
+    public Comparator<String> getPatternComparator(String path) {
+      return null;
+    }
+
+    public String combine(String pattern1, String pattern2) {
+      return null;
     }
   }
 }
