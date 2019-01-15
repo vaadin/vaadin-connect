@@ -127,7 +127,7 @@ describe('demo application', () => {
     });
 
     it('should get error when url have an extension', async(context) => {
-      const page = context.remote.get('app/invalidfile.png');
+      const page = context.remote.get('app/invalidfile.html');
       await page
         .findByCssSelector('body').getVisibleText().then(text =>
           expect(text).to.match(/error/i)
