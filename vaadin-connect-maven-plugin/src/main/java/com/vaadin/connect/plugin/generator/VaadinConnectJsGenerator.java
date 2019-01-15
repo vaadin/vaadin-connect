@@ -484,8 +484,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
         && StringUtils.isNotBlank(requestBodySchema.get$ref())) {
       Schema requestSchema = schemas
           .get(getSimpleRef(requestBodySchema.get$ref()));
-      List<ParameterInformation> paramsList = getParamsList(
-          requestSchema.getProperties());
+      List<ParameterInformation> paramsList = getParamsList(requestSchema);
       codegenParameter.getVendorExtensions()
           .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);
     }
@@ -493,18 +492,33 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     return codegenParameter;
   }
 
-  private List<ParameterInformation> getParamsList(
-      Map<String, Schema> properties) {
+  private List<ParameterInformation> getParamsList(Schema requestSchema) {
+    Map<String, Schema> properties = requestSchema.getProperties();
     List<ParameterInformation> paramsList = new ArrayList<>();
     for (Map.Entry<String, Schema> entry : properties.entrySet()) {
       String name = entry.getKey();
       name = isReservedWord(name) ? escapeReservedWord(name) : name;
       String type = getTypeFromSchema(entry.getValue());
+      String description = entry.getValue().getDescription();
+      if (StringUtils.isBlank(description)) {
+        description = getDescriptionFromParameterExtension(name, requestSchema);
+      }
       ParameterInformation parameterInformation = new ParameterInformation(name,
-          type, entry.getValue().getDescription());
+          type, description);
       paramsList.add(parameterInformation);
     }
     return paramsList;
+  }
+
+  private String getDescriptionFromParameterExtension(String paramName,
+      Schema requestSchema) {
+    if (requestSchema.getExtensions() == null) {
+      return "";
+    }
+    Map<String, String> paramDescription = (Map<String, String>) requestSchema
+        .getExtensions()
+        .get(OpenApiParser.EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION);
+    return paramDescription.getOrDefault(paramName, "");
   }
 
   private String getTypeFromSchema(Schema schema) {
