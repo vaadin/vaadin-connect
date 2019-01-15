@@ -48,6 +48,13 @@ public class VaadinFrontendInterceptor
 
   private final PathMatcher pathMatcher;
 
+  /**
+   * Default constructor.
+   * 
+   * @param routeMatcher
+   *          the custom route matcher for the interceptor, if null it uses
+   *          default implementation
+   */
   @Autowired
   public VaadinFrontendInterceptor(
       @Autowired(required = false) VaadinFrontendRouteMatcher routeMatcher) {
@@ -92,10 +99,11 @@ public class VaadinFrontendInterceptor
     return true;
   }
 
+  @SuppressWarnings("squid:NP_NONNULL_RETURN_VIOLATION")
   private static class DelegatingPathMatcher implements PathMatcher {
     private final VaadinFrontendRouteMatcher routeMatcher;
 
-    public DelegatingPathMatcher(VaadinFrontendRouteMatcher routeMatcher) {
+    private DelegatingPathMatcher(VaadinFrontendRouteMatcher routeMatcher) {
       this.routeMatcher = routeMatcher != null ? routeMatcher
           : new VaadinFrontendRouteMatcher() {
           };

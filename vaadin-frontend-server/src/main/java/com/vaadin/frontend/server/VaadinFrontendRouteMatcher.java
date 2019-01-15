@@ -23,7 +23,7 @@ package com.vaadin.frontend.server;
 public interface VaadinFrontendRouteMatcher {
 
   /**
-   * Return whether a request meets your routing schema
+   * Return whether a request meets your routing schema.
    *
    * @param path
    *          the request path without the initial slash
