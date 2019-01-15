@@ -13,7 +13,7 @@ const assertResponseIsOk = async(response) => {
       // not a json
     }
 
-    if (typeof responseJson !== 'undefined') {
+    if (responseJson !== undefined) {
       throw new VaadinConnectException(responseJson.message, responseJson.type, responseJson.detail);
     } else if (responseText !== null && responseText.length > 0) {
       throw new VaadinConnectException(responseText);

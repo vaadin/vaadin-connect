@@ -141,7 +141,8 @@ public class VaadinConnectController {
           Class<?> beanType = context.getType(name);
           if (beanType == null) {
             throw new IllegalStateException(String.format(
-                "Unable to determine a type for the bean with name '%s', double check your bean configuration",
+                "Unable to determine a type for the bean with name '%s', "
+                    + "double check your bean configuration",
                 name));
           }
 
@@ -151,10 +152,12 @@ public class VaadinConnectController {
               .orElse(beanType.getSimpleName());
           if (serviceName.isEmpty()) {
             throw new IllegalStateException(String.format(
-                "A bean with name '%s' and type '%s' is annotated with '%s' annotation but is an anonymous class hence has no name. ",
+                "A bean with name '%s' and type '%s' is annotated with '%s' "
+                    + "annotation but is an anonymous class hence has no name. ",
                 name, beanType, VaadinService.class)
                 + String.format(
-                    "Either modify the bean declaration so that it is not an anonymous class or specify a service name in the '%s' annotation",
+                    "Either modify the bean declaration so that it is not an "
+                        + "anonymous class or specify a service name in the '%s' annotation",
                     VaadinService.class));
           }
           String validationError = serviceNameChecker.check(serviceName);
@@ -237,7 +240,8 @@ public class VaadinConnectController {
           body, vaadinServiceData);
     } catch (JsonProcessingException e) {
       String errorMessage = String.format(
-          "Failed to serialize service '%s' method '%s' response. Double check method's return type or specify a custom mapper bean with qualifier '%s'",
+          "Failed to serialize service '%s' method '%s' response. "
+              + "Double check method's return type or specify a custom mapper bean with qualifier '%s'",
           serviceName, methodName, VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER);
       getLogger().error(errorMessage, e);
       try {
@@ -245,7 +249,8 @@ public class VaadinConnectController {
             .body(createResponseErrorObject(errorMessage));
       } catch (JsonProcessingException unexpected) {
         throw new IllegalStateException(String.format(
-            "Unexpected: Failed to serialize a plain Java string '%s' into a JSON. Double check the provided mapper's configuration.",
+            "Unexpected: Failed to serialize a plain Java string '%s' into a JSON. "
+                + "Double check the provided mapper's configuration.",
             errorMessage), unexpected);
       }
     }
@@ -267,7 +272,8 @@ public class VaadinConnectController {
     if (javaParameters.length != requestParameters.size()) {
       return ResponseEntity.badRequest()
           .body(createResponseErrorObject(String.format(
-              "Incorrect number of parameters for service '%s' method '%s', expected: %s, got: %s",
+              "Incorrect number of parameters for service '%s' method '%s', "
+                  + "expected: %s, got: %s",
               serviceName, methodName, javaParameters.length,
               requestParameters.size())));
     }
@@ -278,7 +284,8 @@ public class VaadinConnectController {
           javaParameters);
     } catch (IOException e) {
       String errorMessage = String.format(
-          "Unable to deserialize parameters for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
+          "Unable to deserialize parameters for service '%s' method '%s'. "
+              + "Expected parameter types (and their order) are: '[%s]'",
           serviceName, methodName, listMethodParameterTypes(javaParameters));
       getLogger().debug(errorMessage, e);
       return ResponseEntity.badRequest()
@@ -291,7 +298,8 @@ public class VaadinConnectController {
           vaadinServiceParameters);
     } catch (IllegalArgumentException e) {
       String errorMessage = String.format(
-          "Received incorrect arguments for service '%s' method '%s'. Expected parameter types (and their order) are: '[%s]'",
+          "Received incorrect arguments for service '%s' method '%s'. "
+              + "Expected parameter types (and their order) are: '[%s]'",
           serviceName, methodName, listMethodParameterTypes(javaParameters));
       getLogger().debug(errorMessage, e);
       return ResponseEntity.badRequest()
