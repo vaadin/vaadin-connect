@@ -46,13 +46,4 @@ public @interface EnableVaadinFrontendServer {
    * excluding `.html`
    */
   String[] staticContentPattern() default "/**/{filename:.*\\.(?!html)[a-z]+}";
-
-  /**
-   * The index file to show when '/' is requested.
-   * 
-   * Default is empty than means to use the servlet-container configuration
-   * which normally is `index.html`
-   */
-  String singlePageTemplate() default "";
-
 }

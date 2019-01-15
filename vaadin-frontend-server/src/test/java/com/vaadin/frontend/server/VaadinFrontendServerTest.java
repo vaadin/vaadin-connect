@@ -77,9 +77,6 @@ public class VaadinFrontendServerTest {
         { "Enabling frontend-server should fail if asset not found",
           null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetNotFoundTest.class) },
-        { "Enabling custon frontend-server should change welcome file",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, CustomRootTest.class) },
         { "Enabling custon frontend-server should forward any route path",
           null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, RouteForwardTest.class) },
@@ -151,7 +148,6 @@ public class VaadinFrontendServerTest {
 
   @Configuration
   @EnableVaadinFrontendServer(// @formatter:off
-      singlePageTemplate = "my-app.html",
       dynamicRoutesPattern = {"/**/*" },
       staticContentPattern = {"/**/*.*"}
   )// @formatter:on
@@ -230,17 +226,6 @@ public class VaadinFrontendServerTest {
           .andExpect(status().isOk()).andReturn().getResponse();
 
       assertEquals("/", response.getForwardedUrl());
-    }
-  }
-
-  @Configuration
-  protected static class CustomRootTest implements TestRunner {
-    @Override
-    public void run(AnnotationConfigWebApplicationContext context)
-        throws Exception {
-      MockHttpServletResponse response = getResource(context, "/")
-          .andExpect(status().isOk()).andReturn().getResponse();
-      assertEquals("my-app.html", response.getForwardedUrl());
     }
   }
 

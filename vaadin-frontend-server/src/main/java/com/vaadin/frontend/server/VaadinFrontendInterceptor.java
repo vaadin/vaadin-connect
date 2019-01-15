@@ -27,7 +27,6 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
@@ -51,14 +50,6 @@ public class VaadinFrontendInterceptor
     registry.addInterceptor(new VaadinFrontendInterceptor())
         .addPathPatterns((String[]) config.get("dynamicRoutesPattern"))
         .excludePathPatterns((String[]) config.get("staticContentPattern"));
-  }
-
-  @Override
-  public void addViewControllers(ViewControllerRegistry registry) {
-    String index = (String)config.get("singlePageTemplate");
-    if (!index.isEmpty()) {
-      registry.addViewController("/").setViewName("forward:" + index);
-    }
   }
 
   @Override
