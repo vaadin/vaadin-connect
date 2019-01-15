@@ -110,8 +110,8 @@ describe('demo application', () => {
         );
     });
 
-    it('should get index when url has .html extension', async(context) => {
-      const page = context.remote.get('app/anypage.html');
+    it('should get index when url has no extension', async(context) => {
+      const page = context.remote.get('app/anyroute');
       await page
         .findById('number').getVisibleText().then(text =>
           expect(text).to.equal('1')
