@@ -132,7 +132,7 @@ public class VaadinFrontendServerTest {
   }
 
   @Configuration
-  @EnableVaadinFrontendServer()
+  @EnableVaadinFrontendServer
   protected static class EnableVaadinFrontendDefault {
   }
 
