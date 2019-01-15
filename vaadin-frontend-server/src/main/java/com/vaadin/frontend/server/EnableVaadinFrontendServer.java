@@ -33,7 +33,7 @@ public @interface EnableVaadinFrontendServer {
   /**
    * Pattern used in the application for routing views. These paths should be
    * redirected to `/` when not found.
-   * 
+   *
    * Default is to include all requests
    */
   String[] dynamicRoutesPattern() default "/**/*";
@@ -41,9 +41,12 @@ public @interface EnableVaadinFrontendServer {
   /**
    * Pattern used for static content. These paths should not be redirected to
    * `/` when not found
-   * 
-   * A String Array of Ant patterns. Default is any file with extension
-   * excluding `.html`
+   *
+   * A String Array of Ant patterns. Default is any file with extension.
+   *
+   * It accepts Ant expressions, so for example to consider static all files but
+   * those ending with `.html` you can use this expression:
+   * <code>{filename:.*\\.(?!html)[a-z]+}</code>
    */
-  String[] staticContentPattern() default "/**/{filename:.*\\.(?!html)[a-z]+}";
+  String[] staticContentPattern() default "/**/*.*";
 }

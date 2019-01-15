@@ -68,21 +68,24 @@ public class VaadinFrontendServerTest {
         { "Enabling frontend-server should serve index.html location if exists",
           null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, IndexFoundTest.class) },
-        { "Enabling frontend-server should forward to / if .html is not found",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, HtmlForwardTest.class) },
         { "Enabling frontend-server should forward to / if a route is not found",
           null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, RouteForwardTest.class) },
+        { "Enabling frontend-server should fail if file with extension is not found",
+            null,
+            Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, HtmlNotFoundTest.class) },
         { "Enabling frontend-server should fail if asset not found",
           null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetNotFoundTest.class) },
         { "Enabling custon frontend-server should forward any route path",
           null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, RouteForwardTest.class) },
-        { "Enabling custon frontend-server should not forward any extension",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, HtmlNotFoundTest.class) },
+        { "Enabling custom frontend-server should forward to / if .html is not found",
+            null,
+            Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, HtmlForwardTest.class) },
+        { "Enabling frontend-server should fail if asset not found",
+              null,
+              Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, AssetNotFoundTest.class) },
       }); // @formatter:on
   }
 
@@ -149,7 +152,7 @@ public class VaadinFrontendServerTest {
   @Configuration
   @EnableVaadinFrontendServer(// @formatter:off
       dynamicRoutesPattern = {"/**/*" },
-      staticContentPattern = {"/**/*.*"}
+      staticContentPattern = {"/**/{filename:.*\\.(?!html)[a-z]+}"}
   )// @formatter:on
   protected static class EnableVaadinFrontendCustom {
   }
