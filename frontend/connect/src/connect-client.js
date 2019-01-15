@@ -3,18 +3,29 @@
  * @param {Response} response The response to assert.
  * @private
  */
-const assertResponseIsOk = response => {
+const assertResponseIsOk = async(response) => {
   if (!response.ok) {
-    throw new TypeError(
-      `expected '200 OK' response, but got ${response.status}`
-      + ` ${response.statusText}`
-    );
+    const responseText = await response.text();
+    let responseJson;
+    try {
+      responseJson = JSON.parse(responseText);
+    } catch (ignored) {
+      // not a json
+    }
+
+    if (responseJson !== undefined) {
+      throw new VaadinConnectException(responseJson.message, responseJson.type, responseJson.detail);
+    } else if (responseText !== null && responseText.length > 0) {
+      throw new VaadinConnectException(responseText);
+    } else {
+      throw new VaadinConnectException(`expected '200 OK' response, but got ${response.status} ${response.statusText}`);
+    }
   }
 };
 
 /**
  * Authenticate a Vaadin Connect client
- * @param {ConnectClient} the connect client instance
+ * @param {ConnectClient} client the connect client instance
  * @private
  */
 const authenticateClient = async client => {
@@ -72,7 +83,7 @@ const authenticateClient = async client => {
         // Wrong credentials response, loop to ask again with the message
         message = invalidResponse.error_description;
       } else {
-        assertResponseIsOk(tokenResponse);
+        await assertResponseIsOk(tokenResponse);
         // Successful token response
         tokens = new AuthTokens(await tokenResponse.json());
         _private.tokens = tokens;
@@ -137,6 +148,22 @@ class AuthTokens {
       }
     }
     return this;
+  }
+}
+
+/**
+ * An exception that gets thrown when the Vaadin Connect backend responds with not ok status.
+ *
+ * @property {string} message the error message
+ * @property {string} type the optional name of the exception that was thrown on a backend
+ * @property {object} detail the optional detail object, containing additional information sent from a backend
+ */
+export class VaadinConnectException extends Error {
+  constructor(message, type, detail) {
+    super(message);
+    this.type = type;
+    this.message = message;
+    this.detail = detail;
   }
 }
 
@@ -319,7 +346,7 @@ export class ConnectClient {
       }
     );
 
-    assertResponseIsOk(response);
+    await assertResponseIsOk(response);
 
     return response.json();
   }

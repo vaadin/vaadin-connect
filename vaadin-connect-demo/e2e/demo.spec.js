@@ -73,6 +73,31 @@ describe('demo application', () => {
         );
       });
     });
+
+    describe('exception handling', () => {
+      beforeEach(async() => {
+        await page.findById('login').click().end();
+      });
+
+      it('should throw when backend server throws a generic exception', async() => {
+        await page
+          .findById('exceptionButton').click().end()
+          .sleep(2000)
+          .findById('exceptionMessage').getVisibleText().then(text =>
+            expect(text).to.equal('Service \'DemoVaadinService\' method \'throwsException\' execution failure')).end()
+          .findById('exceptionType').getVisibleText().then(text => expect(text).to.be.empty).end()
+          .findById('exceptionDetail').getVisibleText().then(text => expect(text).to.be.empty).end();
+      });
+
+      it('should throw when backend server throws VaadinConnect exception', async() => {
+        await page
+          .findById('submitButton').click().end()
+          .sleep(2000)
+          .findById('exceptionMessage').getVisibleText().then(text => expect(text).to.equal('You had one job to do!')).end()
+          .findById('exceptionType').getVisibleText().then(text => expect(text).to.equal('java.lang.ArithmeticException')).end()
+          .findById('exceptionDetail').getVisibleText().then(text => expect(text).to.equal('{"wrong_parameter":0}')).end();
+      });
+    });
   });
 
   describe('single page application', () => {
