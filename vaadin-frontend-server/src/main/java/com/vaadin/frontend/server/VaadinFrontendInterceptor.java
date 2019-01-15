@@ -26,6 +26,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.PathMatcher;
+import org.springframework.web.client.HttpServerErrorException.NotImplemented;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -48,7 +49,13 @@ public class VaadinFrontendInterceptor
 
   private final PathMatcher pathMatcher;
 
-  @Autowired
+  /**
+   * Default constructor.
+   * 
+   * @param routeMatcher
+   *          the custom route matcher for the interceptor, if null it uses
+   *          default implementation
+   */
   public VaadinFrontendInterceptor(
       @Autowired(required = false) VaadinFrontendRouteMatcher routeMatcher) {
     pathMatcher = new DelegatingPathMatcher(routeMatcher);
@@ -56,7 +63,7 @@ public class VaadinFrontendInterceptor
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(this).addPathPatterns(new String[] { "*" })
+    registry.addInterceptor(this).addPathPatterns("*")
         .pathMatcher(pathMatcher);
   }
 
@@ -95,39 +102,39 @@ public class VaadinFrontendInterceptor
   private static class DelegatingPathMatcher implements PathMatcher {
     private final VaadinFrontendRouteMatcher routeMatcher;
 
-    public DelegatingPathMatcher(VaadinFrontendRouteMatcher routeMatcher) {
+    private DelegatingPathMatcher(VaadinFrontendRouteMatcher routeMatcher) {
       this.routeMatcher = routeMatcher != null ? routeMatcher
           : new VaadinFrontendRouteMatcher() {
           };
     }
-
-    public boolean isPattern(String path) {
-      return false;
-    }
-
+    @Override
     public boolean match(String pattern, String path) {
       return routeMatcher.isDynamicRoutePath(path);
     }
-
+    @Override
+    public boolean isPattern(String path) {
+      throw new UnsupportedOperationException();
+    }
+    @Override
     public boolean matchStart(String pattern, String path) {
-      return false;
+      throw new UnsupportedOperationException();
     }
-
+    @Override
     public String extractPathWithinPattern(String pattern, String path) {
-      return null;
+      throw new UnsupportedOperationException();
     }
-
+    @Override
     public Map<String, String> extractUriTemplateVariables(String pattern,
         String path) {
-      return null;
+      throw new UnsupportedOperationException();
     }
-
+    @Override
     public Comparator<String> getPatternComparator(String path) {
-      return null;
+      throw new UnsupportedOperationException();
     }
-
+    @Override
     public String combine(String pattern1, String pattern2) {
-      return null;
+      throw new UnsupportedOperationException();
     }
   }
 }
