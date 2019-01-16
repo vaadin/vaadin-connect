@@ -13,6 +13,31 @@ toc::[]
 == What is Vaadin Connect
 
 Vaadin Connect is a bridge between stateless Java backend services and a JavaScript frontend.
+It includes a REST server and generates JavaScript REST clients to call the Java backend in a type-checkable way.
+Security is built-in by default.
+
+[source,java]
+.DateService.java
+----
+@VaadinService
+public class DateService {
+    public int getDayOfYear(LocalDate date) {
+        return date.getDayOfYear();
+    }
+}
+----
+
+[source,js]
+.app.js
+----
+import {getDayOfYear} from './generated/DateService.js';
+
+const dayOfYear = await getDayOfYear(new Date());
+----
+
+
+.Simplified Vaadin Connect RPC sequence diagram
+image::simplified-rpc-sequence.svg[opts=inline]
 
 The Vaadin Connect collection of tools and libraries includes:
 
@@ -20,9 +45,6 @@ The Vaadin Connect collection of tools and libraries includes:
 - `@vaadin/connect` JavaScript (ES Module) client library.
 - `vaadin-connect-maven-plugin` Maven plugin.
 - `base-starter-connect` example application project.
-
-.Simplified Vaadin Connect RPC sequence diagram
-image::simplified-rpc-sequence.svg[opts=inline]
 
 [NOTE]
 The current version of the `vaadin-connect` Java library is implemented using link:https://spring.io/projects/spring-framework[Spring].
