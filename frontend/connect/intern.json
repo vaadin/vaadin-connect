@@ -1,7 +1,6 @@
 {
   "coverage": [
-    "index.js",
-    "src/**/*.js"
+    "src/vaadin-connect.js"
   ],
   "suites": "test/**/*.spec.js",
   "environments": ["node"],
