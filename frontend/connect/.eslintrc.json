@@ -6,6 +6,7 @@
   },
   "globals": {
     "Promise": true,
-    "WeakMap": true
+    "WeakMap": true,
+    "window": true
   }
 }

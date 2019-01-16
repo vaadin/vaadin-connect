@@ -98,6 +98,15 @@ describe('demo application', () => {
           .findById('exceptionDetail').getVisibleText().then(text => expect(text).to.equal('{"wrong_parameter":0}')).end();
       });
     });
+
+    describe('statistics', () => {
+      it('should be registered in Vaadin namespace', async() => {
+        var registrations = await page.execute(function() {
+          return window.Vaadin.registrations;
+        });
+        expect(registrations[0].is).to.equal('@vaadin/connect');
+      });
+    });
   });
 
   describe('single page application', () => {
