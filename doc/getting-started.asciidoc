@@ -30,9 +30,13 @@ public class DateService {
 [source,js]
 .app.js
 ----
-import {getDayOfYear} from './generated/DateService.js';
+import * as dateService from './generated/DateService.js';
 
-const dayOfYear = await getDayOfYear(new Date());
+showDayOfYearButton.onclick = async() => {
+  const dayOfYear = await dateService.getDayOfYear(new Date());
+  dayOfYearLabel.textContent = dayOfYear;
+};
+
 ----
 
 .Simplified Vaadin Connect RPC sequence diagram
