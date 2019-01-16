@@ -51,16 +51,14 @@ The current version of the `vaadin-connect` Java library is implemented using li
 
 == Why use Vaadin Connect?
 
-=== Java backend, JavaScript frontend
+Vaadin Connect gives a _"better than REST"_ experience for the development teams that use Java on the backend, and JavaScript on the fronted.
 
-Vaadin Connect implies using Java on the backend, and building the fronted using JavaScript.
-
-=== Generated JavaScript RPC services client
+=== Type-checkable API access from JavaScript
 
 Vaadin Connect uses Java service classes code to generate a JavaScript frontend
 counterparts. The key benefits of this approach are:
 
-- Easy to use RPC. No manual network requests to API endpoints needed, instead
+- Easy to access the API. No manual REST network requests to API endpoints needed, instead
   there are generated async JavaScript methods to call.
 - Automatic JSON serialization and parsing. Vaadin Connect supports builtin Java
   data types and Beans.
