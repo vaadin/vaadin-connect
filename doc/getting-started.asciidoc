@@ -1,10 +1,14 @@
-
+---
 title: Getting Started
 order: 790
 layout: page
 ---
 
 = Getting Started
+:toc: macro
+:toc-placement: preamble
+
+toc::[]
 
 == What is Vaadin Connect
 
