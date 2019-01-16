@@ -87,15 +87,12 @@ Web Token access token containg the information about the user.
 This enables easy cluster backend deployments, as there is no need to manage a
 shared session storage between multiple backend servers.
 
-=== Vaadin components
+=== Works with any UI framework
 
-The frontend part in the `base-starter-connect` Vaadin Connect example
-application is using Vaadin components, as well as provides support for
-third-party and community Web Components:
+TODO (rewrite to highlight these points):
 
-- Uses `npm` for frontend package management.
-- Includes the `@webcomponents/webcomponentsjs` polyfill.
-- Provides ES modules support with bundling (more on that below).
+ - Vaadin Connect is UI framework-agnostic and can be used with React, Angular, etc.
+ - The base starter gives an example of using it with vanilla JS and Vaadin Components.
 
 === Modern ES6 / ES2017 based frontend
 
