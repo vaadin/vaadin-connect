@@ -14,6 +14,17 @@
  */{{/vaadinConnectClassDescription}}{{/operations}}
 
 import client from '{{vaadinConnectDefaultClientPath}}';
+{{#each vaadinConnectUserTypes}}
+
+/**{{#description}}
+ * {{description}}
+ *{{/description}}
+ * {{#type}}@typedef {{=<% %>=}}{<%type%>}<%={{ }}=%>{{#name}} {{name}}{{/name}}{{/type}}
+{{#each parameterInformation}}
+ * @param {{=<% %>=}}{<%type%>}<%={{ }}=%>{{#name}} {{name}}{{/name}}{{#description}} - {{description}}{{/description}}
+{{/each}}
+ */
+{{/each}}
 {{#operations}}
 {{#operation}}
 {{#vendorExtensions.x-vaadin-connect-show-jsdoc}}

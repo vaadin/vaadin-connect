@@ -8,6 +8,20 @@
 import client from './connect-client.default.js';
 
 /**
+ * @typedef {object} User
+ * @param {string} name
+ * @param {string} password
+ * @param {object} roles
+ */
+
+/**
+ * Role bean
+ *
+ * @typedef {object} Role
+ * @param {string} roleName
+ */
+
+/**
  * Get number of users
  *
  * @returns {Promise<number>} Return number of user
