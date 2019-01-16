@@ -12,8 +12,7 @@ toc::[]
 
 == What is Vaadin Connect
 
-Vaadin Connect is a bridge between stateless Java backend services and Single
-Page Application frontend.
+Vaadin Connect is a bridge between stateless Java backend services and a JavaScript frontend.
 
 The Vaadin Connect collection of tools and libraries includes:
 
@@ -30,8 +29,7 @@ image::simplified-rpc-sequence.svg[opts=inline]
 
 === Java backend, JavaScript frontend
 
-Vaadin Connect implies using Java on the backend, and building the fronted as a
-JavaScript single-page application.
+Vaadin Connect implies using Java on the backend, and building the fronted using JavaScript.
 
 === Generated JavaScript RPC services client
 
