@@ -16,14 +16,16 @@ Vaadin Connect is a bridge between stateless Java backend services and a JavaScr
 
 The Vaadin Connect collection of tools and libraries includes:
 
-- `vaadin-connect` Java library for developing stateless backend services, based
-  on Spring Boot.
+- `vaadin-connect` Java library for developing stateless backend services (based on the Servlet API v3).
 - `@vaadin/connect` JavaScript (ES Module) client library.
 - `vaadin-connect-maven-plugin` Maven plugin.
 - `base-starter-connect` example application project.
 
 .Simplified Vaadin Connect RPC sequence diagram
 image::simplified-rpc-sequence.svg[opts=inline]
+
+[NOTE]
+The current version of the `vaadin-connect` Java library is implemented using link:https://spring.io/projects/spring-framework[Spring].
 
 == Why use Vaadin Connect?
 
