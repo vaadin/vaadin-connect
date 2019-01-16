@@ -26,11 +26,11 @@ public interface VaadinFrontendRouteMatcher {
    * Return whether a request meets your routing schema.
    *
    * @param path
-   *          the request path without the initial slash
-   * @return true if the path is a valid route. The default implementations
+   *          the request path without the initial slash.
+   * @return true if the path is a valid route. The default implementation
    *         returns true when the path does not have an extension.
    */
   default boolean isDynamicRoutePath(String path) {
-    return path != null && !path.matches("^.*\\.[a-z]+$");
+    return path != null && !path.matches("^.*\\.[a-zA-Z0-9]+$");
   }
 }
