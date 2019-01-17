@@ -20,8 +20,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -33,18 +37,33 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 /**
  * Intercepts calls to ResourceHttpRequestHandler in order to verify when the
  * resource does not exist and forward to '/'
- * 
- * It only intercepts paths without extension or with the the `.html` one.
+ *
+ * By default it only intercepts paths without any extension. If you want to
+ * configure the interceptor to match your routing pattern, you need to provide
+ * a {@link VaadinFrontendRouteMatcher} bean in your configuration.
  */
 @Configuration
 public class VaadinFrontendInterceptor
     implements HandlerInterceptor, WebMvcConfigurer {
 
+  private final PathMatcher pathMatcher;
+
+  /**
+   * Default constructor.
+   * 
+   * @param routeMatcher
+   *          the custom route matcher for the interceptor, if null it uses
+   *          default implementation
+   */
+  public VaadinFrontendInterceptor(
+      @Autowired(required = false) VaadinFrontendRouteMatcher routeMatcher) {
+    pathMatcher = new DelegatingPathMatcher(routeMatcher);
+  }
+
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(new VaadinFrontendInterceptor())
-        .addPathPatterns("/**/*")
-        .excludePathPatterns("/**/{filename:.*\\.(?!html)[a-z]+}");
+    registry.addInterceptor(this).addPathPatterns("*")
+        .pathMatcher(pathMatcher);
   }
 
   @Override
@@ -76,7 +95,45 @@ public class VaadinFrontendInterceptor
       // handleRequest was already run, do not continue
       return false;
     }
-
     return true;
+  }
+
+  private static class DelegatingPathMatcher implements PathMatcher {
+    private final VaadinFrontendRouteMatcher routeMatcher;
+
+    private DelegatingPathMatcher(VaadinFrontendRouteMatcher routeMatcher) {
+      this.routeMatcher = routeMatcher != null ? routeMatcher
+          : new VaadinFrontendRouteMatcher() {
+          };
+    }
+    @Override
+    public boolean match(String pattern, String path) {
+      return routeMatcher.isDynamicRoutePath(path);
+    }
+    @Override
+    public boolean isPattern(String path) {
+      throw new UnsupportedOperationException();
+    }
+    @Override
+    public boolean matchStart(String pattern, String path) {
+      throw new UnsupportedOperationException();
+    }
+    @Override
+    public String extractPathWithinPattern(String pattern, String path) {
+      throw new UnsupportedOperationException();
+    }
+    @Override
+    public Map<String, String> extractUriTemplateVariables(String pattern,
+        String path) {
+      throw new UnsupportedOperationException();
+    }
+    @Override
+    public Comparator<String> getPatternComparator(String path) {
+      throw new UnsupportedOperationException();
+    }
+    @Override
+    public String combine(String pattern1, String pattern2) {
+      throw new UnsupportedOperationException();
+    }
   }
 }

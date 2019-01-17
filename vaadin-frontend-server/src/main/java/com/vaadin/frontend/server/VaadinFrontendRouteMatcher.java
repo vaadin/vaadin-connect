@@ -15,19 +15,22 @@
  */
 package com.vaadin.frontend.server;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import org.springframework.context.annotation.Import;
-
 /**
- * Enable Vaadin Frontend Server enables Single Page Application features as
- * forwarding to the application index file when requesting a routed end-point.
+ * Provide a bean implementing this interface if you want to customize the path
+ * end-points that match your single page application routing schema.
+ *
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Import(VaadinFrontendInterceptor.class)
-public @interface EnableVaadinFrontendServer {
+public interface VaadinFrontendRouteMatcher {
+
+  /**
+   * Return whether a request meets your routing schema.
+   *
+   * @param path
+   *          the request path without the initial slash.
+   * @return true if the path is a valid route. The default implementation
+   *         returns true when the path does not have an extension.
+   */
+  default boolean isDynamicRoutePath(String path) {
+    return path != null && !path.matches("^.*\\.[a-zA-Z0-9]+$");
+  }
 }

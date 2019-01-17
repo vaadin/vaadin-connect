@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
@@ -44,36 +45,34 @@ public class VaadinFrontendServerTest {
   public static List<Object[]> parameters() {
     return Arrays.asList( // @formatter:off
       new Object[][] {
-        { "Spring should forward / location to index.html",
-          null,
+        { "Spring should forward / location to index.html", null,
           Arrays.asList(ConfigureContext.class, RootTest.class) },
-        { "Spring should serve static files",
-          null,
+        { "Spring should serve static files", null,
           Arrays.asList(ConfigureContext.class, AssetFoundTest.class) },
-        { "Spring should serve index.html location if exists",
-          null,
+        { "Spring should serve index.html location if exists", null,
           Arrays.asList(ConfigureContext.class, IndexFoundTest.class) },
-        { "Spring should fail if an .html resource does not exist",
-          null,
+        { "Spring should fail if an .html resource does not exist", null,
           Arrays.asList(ConfigureContext.class, HtmlNotFoundTest.class) },
-        { "Spring should fail if an asset resource does not exist",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, AssetNotFoundTest.class) },
-        { "Enabling frontend-server should serve static files",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, AssetFoundTest.class) },
-        { "Enabling frontend-server should serve index.html location if exists",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, IndexFoundTest.class) },
-        { "Enabling frontend-server should forward to / if .html is not found",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, HtmlForwardTest.class) },
-        { "Enabling frontend-server should forward to / if a route is not found",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, RouteForwardTest.class) },
-        { "Enabling frontend-server should fail if asset not found",
-          null,
-          Arrays.asList(ConfigureContext.class, EnableVaadinFrontend.class, AssetNotFoundTest.class) },
+        { "Spring should fail if an asset resource does not exist", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetNotFoundTest.class) },
+        { "Enabling frontend-server should forward / location to index.html", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, RootTest.class) },
+        { "Enabling frontend-server should serve static files", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetFoundTest.class) },
+        { "Enabling frontend-server should serve index.html location if exists", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, IndexFoundTest.class) },
+        { "Enabling frontend-server should forward to / if a route is not found", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, RouteForwardTest.class) },
+        { "Enabling frontend-server should fail if file with extension is not found", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, HtmlNotFoundTest.class) },
+        { "Enabling frontend-server should fail if asset not found", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetNotFoundTest.class) },
+        { "Enabling custon frontend-server should forward any route path", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, RouteForwardTest.class) },
+        { "Enabling custom frontend-server should forward to / if .html is not found", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, HtmlForwardTest.class) },
+        { "Enabling frontend-server should fail if asset not found", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, AssetNotFoundTest.class) },
       }); // @formatter:on
   }
 
@@ -92,7 +91,7 @@ public class VaadinFrontendServerTest {
   /**
    * Called as many times as items are returned in the
    * {@link VaadinFrontendServerTest#parameters()} method.
-   * 
+   *
    * @param testMessage
    *          text shown when running the test
    * @param exception
@@ -134,7 +133,21 @@ public class VaadinFrontendServerTest {
 
   @Configuration
   @EnableVaadinFrontendServer
-  protected static class EnableVaadinFrontend {
+  protected static class EnableVaadinFrontendDefault {
+  }
+
+  @Configuration
+  @EnableVaadinFrontendServer
+  protected static class EnableVaadinFrontendCustom {
+    @Bean
+    VaadinFrontendRouteMatcher vaadinFrontendRouteMatcher() {
+      return new VaadinFrontendRouteMatcher() {
+        @Override
+        public boolean isDynamicRoutePath(String path) {
+          return path.endsWith(".html") || !path.matches(".*\\.[a-z]+");
+        }
+      };
+    }
   }
 
   @Configuration
@@ -187,7 +200,6 @@ public class VaadinFrontendServerTest {
       assertEquals("CSS-CONTENT", response.getContentAsString().trim());
     }
   }
-
 
   @Configuration
   protected static class HtmlForwardTest implements TestRunner {
