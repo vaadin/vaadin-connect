@@ -16,6 +16,8 @@
 
 package com.vaadin.connect.plugin.generator;
 
+import org.apache.commons.configuration.PropertiesConfiguration;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,8 +44,8 @@ public class VaadinConnectClientGenerator {
    * @param applicationProperties
    *          the properties with the data required for the generation
    */
-  public VaadinConnectClientGenerator(Properties applicationProperties) {
-    this.endpoint = applicationProperties.getProperty(ENDPOINT,
+  public VaadinConnectClientGenerator(PropertiesConfiguration applicationProperties) {
+    this.endpoint = applicationProperties.getString(ENDPOINT,
         DEFAULT_ENDPOINT);
   }
 

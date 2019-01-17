@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,7 +49,7 @@ public class VaadinConnectClientGeneratorTest {
   public void should_GenerateConnectClientDefault_When_NoApplicationPropertiesInput()
       throws Exception {
     VaadinConnectClientGenerator generator = new VaadinConnectClientGenerator(
-        new Properties());
+        new PropertiesConfiguration());
 
     generator.generateVaadinConnectClientFile(outputPath);
 

@@ -16,6 +16,9 @@
 
 package com.vaadin.connect.plugin;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,11 +31,11 @@ public final class TestUtils {
   private TestUtils() {
   }
 
-  public static Properties readProperties(String filePath) {
-    Properties properties = new Properties();
-    try (BufferedReader reader = Files.newBufferedReader(Paths.get(filePath))) {
-      properties.load(reader);
-    } catch (IOException e) {
+  public static PropertiesConfiguration readProperties(String filePath) {
+    PropertiesConfiguration properties = new PropertiesConfiguration();
+    try {
+      properties.load(filePath);
+    } catch (ConfigurationException e) {
       throw new AssertionError(
           String.format("Failed to read the properties file '%s", filePath));
     }
