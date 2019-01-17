@@ -1,0 +1,331 @@
+---
+title: Getting Started
+order: 790
+layout: page
+---
+
+= Getting Started
+:toc: macro
+:toc-placement: preamble
+
+toc::[]
+
+== What is Vaadin Connect
+
+Vaadin Connect is a bridge between Java backend services and a JavaScript
+frontend. It includes a REST server and generates JavaScript REST clients to
+call the Java backend in a type-checkable way. Security is built-in by default.
+
+[source,java]
+.DateService.java
+----
+@VaadinService
+public class DateService {
+    public int getDayOfYear(LocalDate date) {
+        return date.getDayOfYear();
+    }
+}
+----
+
+[source,js]
+.app.js
+----
+import * as dateService from './generated/DateService.js';
+
+showDayOfYearButton.onclick = async() => {
+  const dayOfYear = await dateService.getDayOfYear(new Date());
+  dayOfYearLabel.textContent = dayOfYear;
+};
+
+----
+
+.Simplified Vaadin Connect RPC sequence diagram
+image::simplified-rpc-sequence.svg[opts=inline]
+
+The Vaadin Connect collection of tools and libraries includes:
+
+- `vaadin-connect` Java library providing backend services based on the Servlet
+  API v3.
+- `@vaadin/connect` JavaScript (ES module) client library consuming Vaadin
+  Connect services.
+- `vaadin-connect-maven-plugin` Maven plugin generating JavaScript API modules
+  from Java service classes.
+- `base-starter-connect` example application project.
+
+[NOTE]
+The current version of the `vaadin-connect` Java library is implemented using link:https://spring.io/projects/spring-framework[Spring].
+
+== Why to use Vaadin Connect?
+
+Vaadin Connect gives a _"better than REST"_ experience for the development teams
+that use Java on the backend, and JavaScript on the fronted.
+
+=== Type-checkable API access from JavaScript
+
+Vaadin Connect uses Java service classes code to generate a JavaScript frontend
+counterparts. The key benefits of this approach are:
+
+- Easy to access the API. No manual REST network requests to API endpoints needed, instead
+  there are generated async JavaScript methods to call.
+- Automatic JSON serialization and parsing. Vaadin Connect supports builtin Java
+  data types and Beans.
+- Automatic validation based on Java annotations is provided on both the client
+  and the server.
+- IDEs give autocomplete and code suggestions for generated JavaScript services.
+
+=== Security
+
+The authentication layer based on OAuth 2.0 is included in Vaadin Connect.
+
+- The backend requires authentication for all annotated service methods by
+  default.
+- A configurable OAuth 2.0 authentication server is included in the backend and
+  supported on the frontend.
+- The frontend client can authenticate with password credentials or using a
+  `refresh_token`, which is stored in `localStorage` from a previous successful
+  authentication.
+
+=== Easy to scale
+
+In Vaadin Connect, the backend services are stateless. Instead of storing the
+sessions on the backend server, every authenticated request comes with an
+`access_token` containg the information about the user.
+
+This enables easy cluster backend deployments, as there is no need to manage a
+shared session storage between multiple backend servers.
+
+NOTE: Although Vaadin Connect services do not need session to work, the app
+logic still can use sessions when needed.
+
+=== Works with any UI framework
+
+Vaadin Connect is agnostic to frontend frameworks, and can be used with React,
+Angular, Vue, etc.
+
+=== Supports Vaadin components
+
+The link:https://github.com/vaadin/base-starter-connect[`base-starter-connect`]
+example application provides the basic structure of a new application made with
+Vaadin Connect.
+
+The frontend part of the `base-starter-connect` uses Vaadin components, as well
+as provides support for third-party and community Web Components out-of-the-box:
+
+- Uses `npm` for frontend package management.
+- Includes the `@webcomponents/webcomponentsjs` polyfill.
+- Provides ES modules support with bundling (more on that below).
+
+=== Modern ES6 / ES2017 based frontend
+
+Vaadin Connect generated JavaScript uses ES modules format. ES modules is an
+established web standard, that allows static code analysis and processing, and
+is supported by all modern web browsers, as well as many existing tools and
+libraries.
+
+The generated services are build around `async` / `await`, and use the `fetch` API
+as a network layer.
+
+The `base-starter-connect` example application provides bundling, transpilation,
+and necessary polyfills for the frontend code. The bundling is made with
+differencial serving in mind, and results in two bundle versions:
+
+- The modern `.js` bundle, targeted for browsers having native ES6, `fetch` and
+  modules support. This allows to decrease the bundle size for modern web
+  browsers by excluding unecessary polyfills and using a more concise syntax.
+- The legacy `.es5.js` bundle with all the classes transpiled to ES5, and all
+  the polyfills included. This enables browser support down to IE 11.
+
+== First steps
+
+=== 1. Setup up a new Vaadin Connect project
+
+Open a terminal and run the following commands.
+
+Clone the `base-starter-connect` project:
+
+[source,console]
+----
+$ git clone --depth 1 https://github.com/vaadin/base-starter-connect
+$ cd base-starter-connect
+----
+
+Install dependencies:
+
+[source,console]
+----
+$ npm install
+----
+
+Start the development server:
+
+[source,console]
+----
+$ npm start
+----
+
+Browse http://localhost:8080 to make sure that the application works.
+
+Open http://localhost:8082 to see the API browser.
+
+Keep your terminal open and development server running for the next steps.
+
+=== 2. Learn the project sturcture
+
+The `base-starter-connect` combines a Java backend and a JS frontend under a
+single project.
+
+.Java parts:
+* `pom.xml` Maven project description and dependencies list
+** `src/main/java/` source directory
+** `src/main/java/com/vaadin/connect/starter/StarterApplication.java` main Java
+   file
+* `src/main/resources/application.properties` application properties
+* `src/test/java/` tests
+* `target` build directory
+** `target/generated/resources/openapi.json` generated OpenAPI specification
+
+.Frontend JS parts:
+* `package.json` npm project description and dependencies list
+* `node_modules/` npm dependencies installation directory
+* `frontend/` source directory
+** `frontend/index.html` main HTML file
+** `frontend/index.js` main JS file
+** `frontend/generated/` generated JavaScript directory
+** `frontend/test/` unit tests
+* `static/` static frontend resources (favicon, images, fonts, etc)
+
+.Non-frontend JS parts:
+* `scripts/` Node scripts starting development servers, needed for the `npm
+  start` and `npm test` commands
+* `e2e/` End-to-end test scenarios written in JS for the backend and the
+  frontend together
+
+[NOTE]
+.Where is the web root directory?
+====
+Any file from the `static/` directory (e. g., `static/favicon.ico`) is served
+from the web root (`/favicon.ico`).
+
+In addition, the selected `frontend/` directory contents (namely,
+`frontend/index.html`, `frontend/index.js`, `frontend/polyfills.js` files and
+all their dependencies) are compiled and served from the root, and the frontend
+dependencies from `node_modules/` are included in the compiled bundle.
+
+Unlike in many frontend frameworks, the repository root is not served, i. e. the
+`GET /package.json` request will result in the `404 Not Found` error response.
+
+Unlike in many Java web frameworks, the Java resources directory
+`src/main/webapp` is not used for the frontend files.
+====
+
+=== 3. Make your first backend service
+
+Open the project in your IDE and make a new Java file under the
+`src/main/java/com/vaadin/connect/starter/` directory:
+
+[source,java]
+.CounterService.java
+----
+package com.vaadin.connect.starter;
+
+import com.vaadin.connect.VaadinService;
+
+/**
+ * A Vaadin Connect service that counts numbers.
+ */
+@VaadinService
+public class CounterService {
+    /**
+     * A method that adds one to the argument.
+     */
+    public int addOne(int number) {
+        return number + 1;
+    }
+}
+----
+
+Save the file and wait a few seconds for the development server to compile the
+changes and reload.
+
+Open link:http://localhost:8082[the development API browser] and see that the
+`CounterService` and the `addOne` method are now listed there.
+
+NOTE: There is also a JavaScript module generated automatically for your new
+service, `frontend/generated/CounterService.js`.
+
+=== 4. Use your new service in the frontend
+
+Now let us built a simple UI to utilize the new backend service.
+
+Open `frontend/index.html` and add the following lines to the beginning of the
+`<body>` section:
+
+[source,html]
+.frontend/index.html additions
+----
+<body>
+  <vaadin-text-field id="counter" label="Counter" value="1"></vaadin-text-field>
+  <vaadin-button id="addOne">Add one</vaadin-button>
+  <br>
+
+  <!-- ... -->
+</body>
+----
+
+Then, add the following to the beginning of `frontend/index.js`:
+
+[source,js]
+----
+import * as counterService from './generated/CounterService.js';
+
+const counter = document.getElementById('counter');
+document.getElementById('addOne').onclick = async() => {
+  counter.value = await counterService.addOne(counter.value);
+};
+
+/* ... */
+----
+
+[NOTE]
+.The `async` and `await` JavaScript keywords
+====
+We use `async` and `await` keywords in JavaScript. This allows to write
+asynchronous code in a flat manner, avoiding callbacks and explicit `Promise`
+usage.
+
+The generated JavaScript is made with that in mind: the backend service methods
+are translated to `async` JavaScript methods.
+====
+
+Now open http://localhost:8080 the browser.
+
+Now, there is a counter text field in the beginning of the page with the initial
+value of 1. Click the “Add one” button.
+
+There is a login form shown. Use the credentials shown in the bottom of the page
+to authenticate.
+
+After successful authentication, the counter should show 2. Your backend and
+frontend now work together, congratulations!
+
+If you press the button again, you are not prompted for the authentication
+anymore, instead the counter increments right away.
+
+[IMPORTANT]
+.Security in Vaadin Connect
+====
+You may wonder, why are you prompted to authenticate? The reason is that every
+Vaadin Connect method is secure by default. The user is required to be
+authenticated in order to call.
+
+You can optionally bypass this authentication requirement and make a method
+available for anonymous users by using the `@AnonymousAllowed` annotation.
+
+The `base-starter-connect` project already sets up a login form using the
+`<vaadin-login-overlay>` component in order to implement the authentication with
+the Vaadin Connect server. You can see login form wiring code yourself in the
+`frontend/index.js` file.
+
+See the link:security.asciidoc[Vaadin Connect Security] guide to learn more on
+how the authentication works.
+====
