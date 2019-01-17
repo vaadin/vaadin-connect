@@ -108,6 +108,7 @@
                     <execution>
                         <id>vaadin-connect-resources</id>
                         <goals>
+                            <goal>generate-token-signing-key</goal>
                             <goal>generate-openapi-spec</goal>
                             <goal>generate-vaadin-client</goal>
                             <goal>generate-connect-modules</goal>
