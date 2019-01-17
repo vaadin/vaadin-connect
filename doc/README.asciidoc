@@ -15,3 +15,4 @@ Vaadin Connect is a Vaadin Labs experiment with a secure stateless communication
 ** <<javascript-generator#,Generating JavaScript wrappers for `@VaadinService` Java classes>>
 ** <<default-client#,Vaadin Connect JavaScript client>>
 ** <<type-conversion#,Type conversion between JavaScript and Java>>
+** <<frontend-server#,Vaadin frontend server>>

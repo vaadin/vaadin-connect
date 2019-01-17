@@ -1,0 +1,89 @@
+---
+title: Vaadin Frontend Server
+order: 804
+layout: page
+---
+
+= Vaadin frontend server
+
+Vaadin frontend server helps to create a https://en.wikipedia.org/wiki/Single-page_application[Single-page application (SPA)] from a https://spring.io/projects/spring-boot[Spring boot] project. It means when using the Vaadin frontend server, your application always serves the `index.html` for non-static content and non-mapped path requests. You can define which requests should be handled by the frontend server by <<customize-frontend-server,customizing it>>.
+
+For example, by default, `http://localhost:8080/` and `http://localhost:8080/users` could return the same content of `index.html` if `'users'` route is not mapped to any controller.
+
+== Uses Vaadin frontend server in your application
+
+Vaadin frontend server is currently published at `vaadin-prereleases` Maven repository. To use the server, first of all, you need add the depenedency to your project with the bellow snippet:
+
+.pom.xml
+[source, xml]
+----
+<!-- Other configurations -->
+
+<repositories>
+    <!-- Other repositories -->
+    <repository>
+        <id>vaadin-prerelease</id>
+        <url>http://maven.vaadin.com/vaadin-prereleases</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <!-- Other dependencies -->
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-frontend-server</artifactId>
+        <!-- Replace with the latest version -->
+        <version>0.4.0</version>
+    </dependency>
+<dependencies/>
+
+<!-- Other configurations -->
+----
+
+Then you need to add `@EnableVaadinFrontendServer` in your application class to enable the server.
+
+.DemoApplication.java
+[source, java]
+----
+@SpringBootApplication
+@EnableVaadinFrontendServer
+public class DemoApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(DemoApplication.class, args);
+  }
+}
+----
+
+After doing that, all the requests to your application are served with the same content of `index.html` if they are not mapped to a controller and don't have an extension in the path.
+
+[NOTE]
+The current version of the `vaadin-frontend-server` is implemented based on https://spring.io/projects/spring-boot[Spring boot], so it requires you to have  `org.springframework.boot:spring-boot-starter-web` dependency in your project.
+
+== Customizes the frontend server [[customize-frontend-server]]
+
+In some cases, you might want to define your own path-matching algorithm to decide which requests are routes in your SPA. Vaadin frontend server provides `VaadinFrontendRouteMatcher` interface with a default implementation which accepts all the paths without file extension e.g. `/users` or `/app/myview`. You can override the behavior by creating a `VaadinFrontendRouteMatcher` bean in your configuration. For example, the following snippet makes the frontend server accept any paths without an extension or ending with `.html`.
+
+.DemoApplication.java
+[source, java]
+----
+@SpringBootApplication
+@EnableVaadinFrontendServer
+public class DemoApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(DemoApplication.class, args);
+  }
+
+  @Bean
+  public VaadinFrontendRouteMatcher getFrontendRouteMatcher() {
+    return new VaadinFrontendRouteMatcher() {
+      @Override
+      public boolean isDynamicRoutePath(String path) {
+        // Only accept path without extension or path ending with '.html'
+        return path != null && (!path.contains(".") || path.endsWith(".html"));
+      }
+    };
+  }
+}
+----
