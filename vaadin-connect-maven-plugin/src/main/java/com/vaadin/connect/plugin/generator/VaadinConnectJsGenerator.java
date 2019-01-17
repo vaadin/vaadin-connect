@@ -665,13 +665,17 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o)
+      if (this == o) {
         return true;
-      if (o == null || getClass() != o.getClass())
+      }
+      if (o == null || getClass() != o.getClass()) {
         return false;
+      }
+
       ParameterInformation that = (ParameterInformation) o;
-      return Objects.equals(name, that.name) && Objects.equals(type, that.type)
-          && Objects.equals(description, that.description);
+      return Objects.equals(name, that.name) &&
+              Objects.equals(type, that.type) &&
+              Objects.equals(description, that.description);
     }
 
     @Override
@@ -712,14 +716,18 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o)
+      if (this == o) {
         return true;
-      if (o == null || getClass() != o.getClass())
+      }
+      if (o == null || getClass() != o.getClass()) {
         return false;
+      }
+
       TypeInformation that = (TypeInformation) o;
-      return Objects.equals(name, that.name) && Objects.equals(type, that.type)
-          && Objects.equals(description, that.description)
-          && Objects.equals(parameterInformation, that.parameterInformation);
+      return Objects.equals(name, that.name) &&
+              Objects.equals(type, that.type) &&
+              Objects.equals(description, that.description) &&
+              Objects.equals(parameterInformation, that.parameterInformation);
     }
 
     @Override
