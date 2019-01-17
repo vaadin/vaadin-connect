@@ -8,9 +8,9 @@
   "scripts": {
     "build:frontend": "webpack",
     "start:backend": "node scripts/start/backend.js",
-    "start:webpack": "webpack -w",
+    "start:webpack": "webpack --mode development -w",
     "start:apibrowser": "node scripts/start/apibrowser.js",
-    "start": "node scripts/start/backend.js -- node scripts/start/apibrowser.js -- webpack -w",
+    "start": "node scripts/start/backend.js -- node scripts/start/apibrowser.js -- yarn start:webpack",
     "test:e2e": "intern",
     "test": "yarn lint && yarn build:frontend && yarn bundlesize && yarn start:backend -- -- intern",
     "lint": "eslint frontend/ scripts/ e2e/"
@@ -44,7 +44,7 @@
   "bundlesize": [
     {
       "path": "./target/classes/META-INF/resources/index.js",
-      "maxSize": "2.4 kB"
+      "maxSize": "2.6 kB"
     }
   ],
   "babel": {
