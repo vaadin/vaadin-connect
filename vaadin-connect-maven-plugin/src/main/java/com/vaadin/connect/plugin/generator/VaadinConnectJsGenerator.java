@@ -87,6 +87,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String CLIENT_PATH_TEMPLATE_PROPERTY = "vaadinConnectDefaultClientPath";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
+  private static final String OPERATION = "operation";
 
   private List<Tag> tags;
   private Map<String, Set<TypeInformation>> userTypes = new HashMap<>();
@@ -422,22 +423,22 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     if (objs.get(VAADIN_CONNECT_CLASS_DESCRIPTION) == null) {
       warnNoClassInformation(classname);
     }
-    setShouldShowJsDoc(operations);
-    objs.put(VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS,
-        ((List<CodegenOperation>) operations.get("operation")).stream()
-            .map(CodegenOperation::getTags).flatMap(Collection::stream)
-            .map(Tag::getName).map(userTypes::get).filter(Objects::nonNull)
-            .flatMap(Collection::stream).collect(Collectors.toSet()));
+
+    if ((operations.get(OPERATION) instanceof List)) {
+      List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
+          .get(OPERATION);
+      setShouldShowJsDoc(codegenOperations);
+      objs.put(VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS,
+          codegenOperations.stream().map(CodegenOperation::getTags)
+              .flatMap(Collection::stream).map(Tag::getName).map(userTypes::get)
+              .filter(Objects::nonNull).flatMap(Collection::stream)
+              .collect(Collectors.toSet()));
+    }
     return super.postProcessOperations(objs);
   }
 
-  private void setShouldShowJsDoc(Map<String, Object> operations) {
-    if (!(operations.get("operation") instanceof List)) {
-      return;
-    }
-    List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
-        .get("operation");
-    for (CodegenOperation coop : codegenOperations) {
+  private void setShouldShowJsDoc(List<CodegenOperation> operations) {
+    for (CodegenOperation coop : operations) {
       boolean hasDescription = StringUtils.isNotBlank(coop.getNotes());
       boolean hasParameter = hasParameter(coop);
       boolean hasReturnType = StringUtils.isNotBlank(coop.getReturnType());
