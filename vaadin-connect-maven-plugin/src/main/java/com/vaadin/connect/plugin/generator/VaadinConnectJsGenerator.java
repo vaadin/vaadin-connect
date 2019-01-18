@@ -19,7 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -80,12 +82,16 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String EXTENSION_VAADIN_CONNECT_SHOW_JSDOC = "x-vaadin-connect-show-jsdoc";
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
   private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
+  private static final String VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS = "vaadinConnectUserTypes";
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
   private static final String CLIENT_PATH_TEMPLATE_PROPERTY = "vaadinConnectDefaultClientPath";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
+  private static final String OPERATION = "operation";
 
   private List<Tag> tags;
+  private Map<String, Set<TypeInformation>> userTypes = new HashMap<>();
+  private String currentTag;
 
   private static class VaadinConnectJSOnlyGenerator extends DefaultGenerator {
     @Override
@@ -417,17 +423,22 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     if (objs.get(VAADIN_CONNECT_CLASS_DESCRIPTION) == null) {
       warnNoClassInformation(classname);
     }
-    setShouldShowJsDoc(operations);
+
+    if ((operations.get(OPERATION) instanceof List)) {
+      List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
+          .get(OPERATION);
+      setShouldShowJsDoc(codegenOperations);
+      objs.put(VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS,
+          codegenOperations.stream().map(CodegenOperation::getTags)
+              .flatMap(Collection::stream).map(Tag::getName).map(userTypes::get)
+              .filter(Objects::nonNull).flatMap(Collection::stream)
+              .collect(Collectors.toSet()));
+    }
     return super.postProcessOperations(objs);
   }
 
-  private void setShouldShowJsDoc(Map<String, Object> operations) {
-    if (!(operations.get("operation") instanceof List)) {
-      return;
-    }
-    List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
-        .get("operation");
-    for (CodegenOperation coop : codegenOperations) {
+  private void setShouldShowJsDoc(List<CodegenOperation> operations) {
+    for (CodegenOperation coop : operations) {
       boolean hasDescription = StringUtils.isNotBlank(coop.getNotes());
       boolean hasParameter = hasParameter(coop);
       boolean hasReturnType = StringUtils.isNotBlank(coop.getReturnType());
@@ -463,6 +474,8 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   public void preprocessOpenAPI(OpenAPI openAPI) {
     super.processOpenAPI(openAPI);
     List<Tag> openAPITags = openAPI.getTags();
+    userTypes.clear();
+    currentTag = null;
     this.tags = openAPITags != null ? openAPITags : Collections.emptyList();
   }
 
@@ -489,7 +502,46 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
           .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);
     }
 
+    for (String schemaName : imports) {
+      Schema schema = schemas.get(schemaName);
+      if (schema != null) {
+        addUserTypesFromSchema(schemas, currentTag, schemaName, schema);
+      }
+    }
+
     return codegenParameter;
+  }
+
+  @Override
+  public String sanitizeTag(String tag) {
+    this.currentTag = tag;
+    return super.sanitizeTag(tag);
+  }
+
+  private void addUserTypesFromSchema(Map<String, Schema> schemas, String tag,
+      String schemaName, Schema schema) {
+    Set<TypeInformation> types = userTypes.computeIfAbsent(tag,
+        key -> new HashSet<>());
+
+    List<ParameterInformation> schemaParams = getParamsList(schema);
+    if (!schemaParams.isEmpty() || !StringUtils.isAllBlank(schemaName,
+        schema.getType(), schema.getDescription())) {
+      types.add(new TypeInformation(schemaName, schema.getType(),
+          schema.getDescription(), schemaParams));
+    }
+
+    ((Map<String, Schema>) schema.getProperties()).values().stream()
+        .map(Schema::getAdditionalProperties)
+        .filter(property -> property instanceof Schema)
+        .map(property -> ((Schema) property)).map(Schema::get$ref)
+        .filter(Objects::nonNull).map(this::getSimpleRef)
+        .forEach(nestedSchemaName -> {
+          Schema nestedSchema = schemas.get(nestedSchemaName);
+          if (nestedSchema != null) {
+            addUserTypesFromSchema(schemas, tag, nestedSchemaName,
+                nestedSchema);
+          }
+        });
   }
 
   private List<ParameterInformation> getParamsList(Schema requestSchema) {
@@ -609,6 +661,78 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
     public String getDescription() {
       return description;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      ParameterInformation that = (ParameterInformation) o;
+      return Objects.equals(name, that.name) &&
+              Objects.equals(type, that.type) &&
+              Objects.equals(description, that.description);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, type, description);
+    }
+  }
+
+  private static class TypeInformation {
+    private final String name;
+    private final String type;
+    private final String description;
+    private final List<ParameterInformation> parameterInformation;
+
+    TypeInformation(String name, String type, String description,
+        List<ParameterInformation> parameterInformation) {
+      this.name = name;
+      this.type = type;
+      this.description = description;
+      this.parameterInformation = parameterInformation;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getDescription() {
+      return description;
+    }
+
+    public List<ParameterInformation> getParameterInformation() {
+      return parameterInformation;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      TypeInformation that = (TypeInformation) o;
+      return Objects.equals(name, that.name) &&
+              Objects.equals(type, that.type) &&
+              Objects.equals(description, that.description) &&
+              Objects.equals(parameterInformation, that.parameterInformation);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, type, description, parameterInformation);
     }
   }
 }
