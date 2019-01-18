@@ -24,18 +24,33 @@
     </scm>
 
     <repositories>
+        <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <!-- The current version of vaadin-connect is a pre-release version, so vaadin-prereleases repository is needed. -->
+        <repository>
+            <id>vaadin-prereleases</id>
+            <url>
+                http://maven.vaadin.com/vaadin-prereleases/
+            </url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <!-- The snapshot repository is needed when people want to test the starter with the latest snapshot of vaadin-connect. -->
         <repository>
             <id>vaadin-snapshots</id>
             <url>
                 https://oss.sonatype.org/content/repositories/vaadin-snapshots/
             </url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>vaadin-prerelease</id>
-            <url>http://maven.vaadin.com/vaadin-prereleases</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
         </repository>
     </repositories>
 
