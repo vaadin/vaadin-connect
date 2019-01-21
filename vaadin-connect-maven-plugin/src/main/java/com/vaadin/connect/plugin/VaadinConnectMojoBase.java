@@ -16,11 +16,15 @@
 
 package com.vaadin.connect.plugin;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -42,7 +46,7 @@ abstract class VaadinConnectMojoBase extends AbstractMojo {
   public static final String DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH = "frontend/connect-client.js";
 
   @Parameter(defaultValue = "${project.basedir}/src/main/resources/application.properties")
-  private File applicationProperties;
+  protected File applicationProperties;
 
   @Parameter(defaultValue = "${project.build.directory}/generated-resources/openapi.json", required = true)
   protected File openApiJsonFile;
@@ -62,11 +66,13 @@ abstract class VaadinConnectMojoBase extends AbstractMojo {
    */
   protected PropertiesConfiguration readApplicationProperties() {
     PropertiesConfiguration config = new PropertiesConfiguration();
-    config.setFile(applicationProperties);
+
     if (applicationProperties != null && applicationProperties.exists()) {
       try {
-        config.load(applicationProperties);
-      } catch (ConfigurationException e) {
+        BufferedReader bufferedReader = Files.newBufferedReader(
+            applicationProperties.toPath(), StandardCharsets.UTF_8);
+        config.read(bufferedReader);
+      } catch (IOException | ConfigurationException e) {
         log.info("Can't read the application.properties file from {}",
             applicationProperties, e);
       }

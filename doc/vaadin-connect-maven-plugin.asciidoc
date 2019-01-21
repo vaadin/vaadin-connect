@@ -15,9 +15,9 @@ Full generation consists of four consequent steps:
 
 === Token-signing-key generation
 
-As mentioned in <<security#authentication-flow, the authentication flow>>, Vaadin Connect server returns `access_token` and `refresh_token` for client side after the successful authentications. Actually, the tokens are generated and signed with a secret `token-signing-key`. The token signature is an important information for the server to validate the tokens. If the `token-signing-key` changes, all the issued tokens will be invalid.
+As mentioned in <<security#authentication-flow, the authentication flow>>, Vaadin Connect server returns `access_token` and `refresh_token` to the client side after the successful authentications. Actually, the tokens are generated and signed with a secret `token-signing-key`. The token signature is an important information for the server to validate the tokens. If the `token-signing-key` changes, all the issued tokens will be invalid.
 
-So to avoid invalidating all the issued tokens every time the server restarts (which happens quite often in development mode), the generator will check if the property value is defined or not and generates a new random key if necessary. Then it is saved into `application.properties` after generated.
+When starting the server, the `JwtAccessTokenConverter` bean gets the value of `token-signing-key` from https://github.com/vaadin/base-starter-connect/blob/master/src/main/resources/application.properties#L22[`application.properties`]. If the value is not defined or empty, the bean will generate and use a random one which will be discarded when the server stops. That means every time the server starts without a `token-signing-key`, a random key is used and all previously issued `access_token` and `refresh_token` become invalid. To avoid the situation, the generator will check for its existence and, if not defined, generate a new random key, then save it to the `application.properties` file.
 
 .Token-signing-key definition in application.properties
 [source]
