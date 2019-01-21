@@ -50,7 +50,7 @@ public class VaadinFrontendInterceptor
 
   /**
    * Default constructor.
-   * 
+   *
    * @param routeMatcher
    *          the custom route matcher for the interceptor, if null it uses
    *          default implementation
@@ -85,9 +85,11 @@ public class VaadinFrontendInterceptor
       ((ResourceHttpRequestHandler) handler).handleRequest(request,
           wrappedResponse);
 
-      // forward to root if not found
-      if (wrappedResponse.getStatus() == SC_NOT_FOUND) {
+      // forward to root when not found and not already redirected
+      if (wrappedResponse.getStatus() == SC_NOT_FOUND
+          && request.getAttribute("vaadin-frontend-redirected") == null) {
         request.getRequestDispatcher("/").forward(request, response);
+        request.setAttribute("vaadin-frontend-redirected", true);
         // pretend that the response is OK since we forwarded it
         wrappedResponse.setStatus(SC_OK);
       }
