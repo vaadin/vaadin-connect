@@ -198,6 +198,8 @@
                                     <exclude>com/vaadin/connect/plugin/*</exclude>
                                     <!--no point to unit test Spring bean configurations-->
                                     <exclude>com/vaadin/connect/VaadinConnectControllerConfiguration*</exclude>
+                                    <!--no point to test unimplemented methods-->
+                                    <exclude>com/vaadin/frontend/server/VaadinFrontendInterceptor$DelegatingPathMatcher*</exclude>
                                 </excludes>
                             </configuration>
                         </execution>
