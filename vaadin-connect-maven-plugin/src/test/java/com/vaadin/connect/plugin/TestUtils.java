@@ -16,16 +16,15 @@
 
 package com.vaadin.connect.plugin;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Properties;
 import java.util.stream.Collectors;
+
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 
 public final class TestUtils {
   private TestUtils() {
@@ -34,8 +33,8 @@ public final class TestUtils {
   public static PropertiesConfiguration readProperties(String filePath) {
     PropertiesConfiguration properties = new PropertiesConfiguration();
     try {
-      properties.load(filePath);
-    } catch (ConfigurationException e) {
+      properties.read(new FileReader(filePath));
+    } catch (Exception e) {
       throw new AssertionError(
           String.format("Failed to read the properties file '%s", filePath));
     }

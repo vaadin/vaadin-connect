@@ -15,20 +15,16 @@
  */
 package com.vaadin.connect.plugin.generator;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class generates token-signing-key and writes it back to the application
  * properties file.
  */
 public class TokenSigningKeyGenerator {
-  private static final Logger LOGGER = LoggerFactory
-      .getLogger(TokenSigningKeyGenerator.class);
+
   private static final int TOKEN_SIGNING_KEY_LENGTH = 6;
   static final String VAADIN_CONNECT_AUTH_TOKEN_SIGNING_KEY = "vaadin.connect.auth.token-signing-key";
 
@@ -43,13 +39,14 @@ public class TokenSigningKeyGenerator {
    * @param propertiesConfiguration
    *          the properties configuration object which contains information of
    *          the application.properties
+   * @return the properties object with token-signing-key
    */
-  public static void generateTokenSigningKey(
+  public static PropertiesConfiguration generateTokenSigningKey(
       PropertiesConfiguration propertiesConfiguration) {
     String tokenSigningKey = propertiesConfiguration
         .getString(VAADIN_CONNECT_AUTH_TOKEN_SIGNING_KEY);
     if (StringUtils.isNotBlank(tokenSigningKey)) {
-      return;
+      return propertiesConfiguration;
     }
     String oldComment = StringUtils.defaultIfBlank(propertiesConfiguration
         .getLayout().getComment(VAADIN_CONNECT_AUTH_TOKEN_SIGNING_KEY), "");
@@ -65,22 +62,6 @@ public class TokenSigningKeyGenerator {
         .randomAlphanumeric(TOKEN_SIGNING_KEY_LENGTH);
     propertiesConfiguration.setProperty(VAADIN_CONNECT_AUTH_TOKEN_SIGNING_KEY,
         randomTokenSigningKey);
-
-    writeProperties(propertiesConfiguration);
-  }
-
-  private static void writeProperties(
-      PropertiesConfiguration propertiesConfiguration) {
-    try {
-      LOGGER.info("Generating token-signing-key and saving into {}.",
-          propertiesConfiguration.getFile().getAbsolutePath());
-      propertiesConfiguration.save();
-    } catch (ConfigurationException e) {
-      String message = String.format(
-          "Can't generate token signing key to properties file   %s."
-              + "A random key will be used for the Authentication server every time the application starts.",
-          propertiesConfiguration.getFile().getAbsolutePath());
-      LOGGER.error(message, e);
-    }
+    return propertiesConfiguration;
   }
 }
