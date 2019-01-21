@@ -169,7 +169,7 @@ Open http://localhost:8082 to see the API browser.
 
 Keep your terminal open and development server running for the next steps.
 
-=== 2. Learn the project sturcture
+=== 2. Learn the project structure
 
 The `base-starter-connect` combines a Java backend and a JS frontend under a
 single project.

@@ -23,7 +23,9 @@ image::vaadin-connect-oauth-flow.png[Vaadin Connect Authentication Diagram]
 
 The Vaadin Connect Java runtime comes with a built-in auth endpoint that by default makes it easy to configure authentication for the exposed services. It includes everything needed for the *authentication* providing easy mechanisms to validate credentials and tokens, and for the *authorization* of which roles can access certain services.
 
-In addition, the Vaadin Connect front-end API covers out-of-the-box the flow whether to ask for the `user/password` pair, or use the `refresh token` when requesting the `access token` from the server endpoint. Also, it automatically adds headers with the `access token` to each request made to consume services. Therefore the developer does not have to worry about implementing anything related with OAuth in the front-end.
+In addition, the Vaadin Connect front-end API covers the flow whether to ask for the `user/password` pair, or use the `refresh token` when consuming Vaadin Connect services. Also, it automatically adds headers with the `access token` to each request made to consume services.
+
+Therefore the developer only have to worry about implementing the way to ask for the user credentials. The client API as well provides methods to login and logout.
 
 Since Vaadin Connect is implemented on top of Spring, the OAuth part relies on https://spring.io/projects/spring-security-oauth[Spring Security OAuth], though Vaadin Connect simplifies the process by providing the `@EnableVaadinConnectOAuthServer` annotation which configures everything, except the users repository that must be provided by the developer via the `UserDetailsService` Bean.
 
@@ -31,6 +33,58 @@ Since Vaadin Connect is implemented on top of Spring, the OAuth part relies on h
 ====
 By default, Vaadin Connect uses BCrypted passwords, but you can override it by providing your own `PasswordEncoder` Bean.
 ====
+
+== Client Configuration
+
+You need provide a credentials function to the `client` instance.
+The function can either, return an object with the `username`, `password` and `stayLoggedIn` properties, or a `Promise` that will resolve when the user asynchronously introduces those values in a UI form. It receives as parameter an `options` object. If `options.message` is set, it means that credentials are asked again and contains the server error description from last authentication response.
+
+=== Synchronous example
+
+This demo shows how to automatically login to the app with hardcoded credentials when the user requests a service.
+
+[source,javascript]
+----
+import client from './generated/connect-client.default.js';
+client.credentials = (options = {}) => {
+  return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
+};
+----
+
+=== Login form example
+
+This examples demonstrates a login form used to asynchronously ask for user credentials.
+
+[source,html]
+----
+Username: <input id="name">
+Username: <input id="password"type="password">
+<button id="login">Login</button>
+<button id="logout">Logout</button>
+----
+
+
+[source,javascript]
+----
+import client from './generated/connect-client.default.js';
+
+const username = document.getElementById('username');
+const password = document.getElementById('password');
+const login = document.getElementById('login');
+const logout = document.getElementById('logout');
+
+client.credentials = (options = {}) => {
+  return new Promise(resolve => {
+    login.addEventListener('click', e => {
+      resolve({username: username.value, password: password.value, stayLoggedIn: true};
+    }, {once: true});
+  });
+};
+
+logout.addEventListener('click', e => client.logout());
+
+client.login();
+----
 
 == Server Configuration
 
