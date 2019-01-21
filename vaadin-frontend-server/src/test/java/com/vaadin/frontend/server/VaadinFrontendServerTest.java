@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -63,6 +64,8 @@ public class VaadinFrontendServerTest {
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, IndexFoundTest.class) },
         { "Enabling frontend-server should forward to / if a route is not found", null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, RouteForwardTest.class) },
+        { "Enabling frontend-server should not loop if a route is not found", null,
+          Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, RouteNotFoundIfLoopDetectedTest.class) },
         { "Enabling frontend-server should fail if file with extension is not found", null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, HtmlNotFoundTest.class) },
         { "Enabling frontend-server should fail if asset not found", null,
@@ -218,10 +221,25 @@ public class VaadinFrontendServerTest {
     @Override
     public void run(AnnotationConfigWebApplicationContext context)
         throws Exception {
-      MockHttpServletResponse response = getResource(context, "/foo/bar")
-          .andExpect(status().isOk()).andReturn().getResponse();
 
-      assertEquals("/", response.getForwardedUrl());
+      MvcResult result = getResource(context, "/foo/bar")
+          .andExpect(status().isOk()).andReturn();
+
+      assertEquals("/", result.getResponse().getForwardedUrl());
+      assertEquals(true, result.getRequest().getAttribute("vaadin-frontend-redirected"));
+    }
+  }
+
+  @Configuration
+  protected static class RouteNotFoundIfLoopDetectedTest implements TestRunner {
+    @Override
+    public void run(AnnotationConfigWebApplicationContext context)
+        throws Exception {
+
+      MockMvcBuilders.webAppContextSetup(context).build()
+          .perform(
+              get("/foo/bar").requestAttr("vaadin-frontend-redirected", true))
+          .andExpect(status().is(404));
     }
   }
 
