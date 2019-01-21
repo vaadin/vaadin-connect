@@ -4,10 +4,10 @@ order: 1
 layout: page
 ---
 
-[NOTE]
-Vaadin Connect is a Vaadin Labs experiment with a secure stateless communication framework. To see a working sample project check out the https://github.com/vaadin/base-starter-connect[base-starter-connect] repo.
 
-= Table of contents
+= Vaadin Connect
+
+== Table of contents
 
 ** <<getting-started#,Getting Started>>
 ** <<vaadin-connect-exceptions#,Vaadin Connect Exceptions>>
