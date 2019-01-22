@@ -7,10 +7,6 @@ layout: page
 As mentioned in <<getting-started#,Getting started>>, Vaadin Connect utilizes the REST-alike semantics for querying the
 connect services defined on the backend side.
 
-When started, Vaadin Connect processes the backend code metadata and automatically exposes the urls for calling the services.
-
-After this, it is possible to call any service method via POST request.
-
 = How to create a Vaadin Service?
 
 Annotate any existing class with `@VaadinService` annotation or create such class from scratch:
@@ -67,9 +63,13 @@ By default, `/connect` is used, but this can be configured in the application pr
 
 For the application started locally with the <<CounterService.java,service defined above>>, the service url will be the following:
 `http://localhost:8080/connect/counterservice/addone`
-Note that Vaadin Connect does not take into account the case of the service name and method, so the url above and
+
+[NOTE]
+====
+Service name and the method name are not case sensitive for Vaadin Connect, so the url above is the same as
 `http://localhost:8080/connect/CounterService/addOne` or `http://localhost:8080/connect/COUNTERSERVICE/ADDONE`
-or any other case combination for the service and method name point to the same service method.
+or any other case combination for the service and method name.
+====
 
 = How to configure the API endpoint URL?
 
