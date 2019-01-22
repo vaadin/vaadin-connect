@@ -1,0 +1,31 @@
+:linkattrs:
+
+== Prerequisites
+
+You need to have Java 8 or newer, Node 8 or newer and https://yarnpkg.com/lang/en/[Yarn] installed.
+
+Once you meet the prerequisites, install frontend dependencies by running `yarn install`.
+
+== Compiling the project
+
+Run `mvn package` to compile all modules and run all integration tests
+
+== Running de demo project
+
+Use the following command to run the Webpack process and the Java Server
+for the demo project:
+
+    $ yarn start
+
+After the server is up and running, open http://localhost:8080[,target="_blank"] in
+your browser.
+
+== Running tests
+
+To run frontend unit tests, and end-to-end tests run `yarn test`
+
+To run server tests, run `mvn test`
+
+To tun all tests at once you can run `mvn verify`
+
+
