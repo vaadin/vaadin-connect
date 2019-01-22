@@ -6,7 +6,9 @@ layout: page
 
 = Getting started
 
-=== 1. Setup up a new Vaadin Connect project
+== Steps to setup the Application
+
+=== 1. Create a new Vaadin Connect project
 
 Open a terminal and run the following commands.
 
@@ -199,7 +201,8 @@ See the link:security.asciidoc[Vaadin Connect Security] guide to learn more on
 how the authentication works.
 ====
 
-=== Next Steps
+== Next Steps
 
-- <<README#,Browse through the docs>>
+- <<how-to-add-login-form#,How to add a login form to your Application>>
 - https://github.com/vaadin/base-starter-connect[Try out a Starter project]
+- <<README#,Browse through the docs>>

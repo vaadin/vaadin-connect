@@ -1,13 +1,16 @@
 ---
 title: How to add an API endpoint
-order: 791
+order: 792
 layout: page
 ---
+
+= How to add an API endpoint
+
 
 As mentioned in <<getting-started#,Getting started>>, Vaadin Connect utilizes the REST-alike semantics for querying the
 connect services defined on the backend side.
 
-= How to create a Vaadin Service?
+== How to create a Vaadin Service?
 
 Annotate any existing class with `@VaadinService` annotation or create such class from scratch:
 
@@ -71,7 +74,7 @@ Service name and the method name are not case sensitive for Vaadin Connect, so t
 or any other case combination for the service and method name.
 ====
 
-= How to configure the API endpoint URL?
+== How to configure the API endpoint URL?
 
 Vaadin Connect allows to configure the following url parts:
 
@@ -84,10 +87,16 @@ By default, the Java class name is taken. It is possible to specify a value in t
 `@VaadinService("customName")`. In this case, the `customName` value will be used as a `${service_name}`
 to accept incoming requests, also case-insensitive.
 
-= How to test the API endpoint with an API browser?
+== How to test the API endpoint with an API browser?
 
 There is a possibility to explore all the services in the API browser.
 Use `npm start` command (don't forget to install the dependencies required with the `npm install` command before)
 in the project and open the `http://localhost:8082` page to see all Vaadin Connect service methods available.
 
-Refer to https://github.com/vaadin/base-starter-connect/[base starter project] to see how the things are set up to show the api page.
+
+== Next Steps
+
+- <<how-to-use-an-api-endpoint#,How to use an API endpoint in to your Application>>
+- https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/GreeterService.java[Visit the Services Java code in the Starter Project]
+- <<README#,Browse through the docs>>
+
