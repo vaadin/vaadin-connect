@@ -291,6 +291,34 @@ public class VaadinConnectOauthAclCheckerTest {
   }
 
   @Test
+  public void should_DisallowNotMatchingRoleAccess_When_RolesAllowedAndPermitAll()
+          throws Exception {
+    class PermitAllAndRolesAllowed {
+      @RolesAllowed("ADMIN")
+      @PermitAll
+      public void myMethod() {
+      }
+    }
+
+    Method method = PermitAllAndRolesAllowed.class.getMethod("myMethod");
+    assertNotNull(checker.check(method));
+  }
+
+  @Test
+  public void should_AllowSpecificRoleAccess_When_RolesAllowedAndPermitAll()
+          throws Exception {
+    class PermitAllAndRolesAllowed {
+      @RolesAllowed(ROLE_USER)
+      @PermitAll
+      public void myMethod() {
+      }
+    }
+
+    Method method = PermitAllAndRolesAllowed.class.getMethod("myMethod");
+    assertNull(checker.check(method));
+  }
+
+  @Test
   public void should_DisallowAnonymousAccess_When_DenyAllAndAnonymousAllowed()
       throws Exception {
     class DenyAllAndAnonymousAllowed {
