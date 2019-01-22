@@ -11,7 +11,26 @@ declaration of every `@VaadinService` annotated Java class.
 
 == Generation steps
 
-Full generation consists of three consequent steps:
+Full generation consists of four consequent steps:
+
+=== Token-signing-key generation
+
+As mentioned in <<security#authentication-flow, the authentication flow>>, Vaadin Connect server returns `access_token` and `refresh_token` to the client side after the successful authentications. Actually, the tokens are generated and signed with a secret `token-signing-key`. The token signature is an important information for the server to validate the tokens. If the `token-signing-key` changes, all the issued tokens will be invalid.
+
+When starting the server, the `JwtAccessTokenConverter` bean gets the value of `token-signing-key` from https://github.com/vaadin/base-starter-connect/blob/master/src/main/resources/application.properties#L22[`application.properties`]. If the value is not defined or empty, the bean will generate and use a random one which will be discarded when the server stops. That means every time the server starts without a `token-signing-key`, a random key is used and all previously issued `access_token` and `refresh_token` become invalid. To avoid the situation, the generator will check for its existence and, if not defined, generate a new random key, then save it to the `application.properties` file.
+
+.Token-signing-key definition in application.properties
+[source]
+----
+# Other properties
+vaadin.connect.auth.token-signing-key=someRandomKey
+----
+
+
+[NOTE]
+====
+It is highly recommended to use your own secret token signing key in production.
+====
 
 === Open Api v3 specification generation
 
@@ -89,6 +108,8 @@ If you're starting the project from scratch and not sure which steps to use, use
             <!--Steps for generating Vaadin Connect helpers for the application-->
             <id>vaadin-connect-resources</id>
             <goals>
+                <!--Generates token-signing-key if necessary-->
+                <goal>generate-token-signing-key</goal>
                 <!--Generates Open Api v3 spec, happens on process-sources phase by default-->
                 <goal>generate-openapi-spec</goal>
                 <!--Generates the default Vaadin Connect client for sending requests to Vaadin Connect services, happens on generate-resources phase by default-->

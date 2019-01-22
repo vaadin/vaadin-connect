@@ -18,10 +18,10 @@ package com.vaadin.connect.plugin.generator;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Properties;
 
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class OpenApiSpecGenerator {
    * @param applicationProperties
    *          the properties with the data required for the generation
    */
-  public OpenApiSpecGenerator(Properties applicationProperties) {
+  public OpenApiSpecGenerator(PropertiesConfiguration applicationProperties) {
     generator = new OpenApiParser();
     generator.setOpenApiConfiguration(
         extractOpenApiConfiguration(applicationProperties));
@@ -98,17 +98,17 @@ public class OpenApiSpecGenerator {
   }
 
   private OpenApiConfiguration extractOpenApiConfiguration(
-      Properties applicationProperties) {
-    String endpoint = applicationProperties.getProperty(ENDPOINT,
+      PropertiesConfiguration applicationProperties) {
+    String endpoint = applicationProperties.getString(ENDPOINT,
         DEFAULT_ENDPOINT);
     String server = StringUtils.removeEnd(
-        applicationProperties.getProperty(SERVER, DEFAULT_SERVER), "/");
+        applicationProperties.getString(SERVER, DEFAULT_SERVER), "/");
     String serverDescription = applicationProperties
-        .getProperty(SERVER_DESCRIPTION, DEFAULT_SERVER_DESCRIPTION);
-    String applicationTitle = applicationProperties
-        .getProperty(APPLICATION_TITLE, DEFAULT_APPLICATION_TITLE);
+        .getString(SERVER_DESCRIPTION, DEFAULT_SERVER_DESCRIPTION);
+    String applicationTitle = applicationProperties.getString(APPLICATION_TITLE,
+        DEFAULT_APPLICATION_TITLE);
     String applicationApiVersion = applicationProperties
-        .getProperty(APPLICATION_API_VERSION, DEFAULT_APPLICATION_API_VERSION);
+        .getString(APPLICATION_API_VERSION, DEFAULT_APPLICATION_API_VERSION);
     return new OpenApiConfiguration(applicationTitle, applicationApiVersion,
         server + endpoint, serverDescription);
   }

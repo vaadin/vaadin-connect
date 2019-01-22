@@ -17,22 +17,24 @@
 package com.vaadin.connect.plugin;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Properties;
 import java.util.stream.Collectors;
+
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 
 public final class TestUtils {
   private TestUtils() {
   }
 
-  public static Properties readProperties(String filePath) {
-    Properties properties = new Properties();
-    try (BufferedReader reader = Files.newBufferedReader(Paths.get(filePath))) {
-      properties.load(reader);
-    } catch (IOException e) {
+  public static PropertiesConfiguration readProperties(String filePath) {
+    PropertiesConfiguration properties = new PropertiesConfiguration();
+    try {
+      properties.read(new FileReader(filePath));
+    } catch (Exception e) {
       throw new AssertionError(
           String.format("Failed to read the properties file '%s", filePath));
     }

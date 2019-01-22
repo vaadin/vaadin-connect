@@ -20,8 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Properties;
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,7 +45,7 @@ public class OpenApiSpecGeneratorTest {
 
   @Test
   public void should_GenerateOpenApi_When_NoApplicationPropertiesInput() {
-    new OpenApiSpecGenerator(new Properties()).generateOpenApiSpec(
+    new OpenApiSpecGenerator(new PropertiesConfiguration()).generateOpenApiSpec(
         Collections.singletonList(Paths
             .get("src/test/java/com/vaadin/connect/plugin/generator/service")),
         outputPath);

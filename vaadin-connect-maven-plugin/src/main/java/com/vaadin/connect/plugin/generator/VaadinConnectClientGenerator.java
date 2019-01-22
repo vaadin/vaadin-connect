@@ -21,8 +21,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Properties;
 import java.util.stream.Collectors;
+
+import org.apache.commons.configuration2.PropertiesConfiguration;
 
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.DEFAULT_ENDPOINT;
 import static com.vaadin.connect.plugin.generator.GeneratorUtils.ENDPOINT;
@@ -42,9 +43,9 @@ public class VaadinConnectClientGenerator {
    * @param applicationProperties
    *          the properties with the data required for the generation
    */
-  public VaadinConnectClientGenerator(Properties applicationProperties) {
-    this.endpoint = applicationProperties.getProperty(ENDPOINT,
-        DEFAULT_ENDPOINT);
+  public VaadinConnectClientGenerator(
+      PropertiesConfiguration applicationProperties) {
+    this.endpoint = applicationProperties.getString(ENDPOINT, DEFAULT_ENDPOINT);
   }
 
   /**

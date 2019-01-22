@@ -25,10 +25,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -123,7 +123,7 @@ public class ESModuleGeneratorTest {
         outputDirectory.getRoot().getAbsolutePath(),
         DEFAULT_GENERATED_CONNECT_CLIENT_NAME);
     VaadinConnectClientGenerator vaadinConnectClientGenerator = new VaadinConnectClientGenerator(
-        new Properties());
+        new PropertiesConfiguration());
     // First generating round
     vaadinConnectClientGenerator
         .generateVaadinConnectClientFile(defaultConnectClient);

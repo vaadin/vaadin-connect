@@ -6,7 +6,7 @@ layout: page
 
 = Security in Vaadin Connect
 
-== Authentication flow
+== Authentication flow [[authentication-flow]]
 
 
 *_Vaadin Connect Authentication flow_* meets a simplified specification of the *_OAuth 2.0_* known as the *_Password Grant flow_*, which is explained in the <<appendix,appendix>>.
