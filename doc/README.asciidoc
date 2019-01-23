@@ -9,7 +9,11 @@ layout: page
 
 == Table of contents
 
+* Tutorials
 ** <<getting-started#,Getting Started>>
+** <<how-to-add-login-form#,How to add a login form>>
+** <<how-to-add-api-endpoint#,How to add an API endpoint>>
+* Reference documents
 ** <<vaadin-connect-exceptions#,Vaadin Connect Exceptions>>
 ** <<vaadin-connect-maven-plugin#,Building a Vaadin Connect app with `vaadin-connect-maven-plugin`>>
 ** <<security#,Security in Vaadin Connect>>
