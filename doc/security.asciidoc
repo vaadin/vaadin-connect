@@ -86,13 +86,13 @@ logout.addEventListener('click', e => client.logout());
 client.login();
 ----
 
-== Server Configuration
+== [[server-configuration]]Server Configuration
 
 === Authentication
 
-In order to enable built-int authentication, you need to mark your application with the `@EnableVaadinConnectOAuthServer` annotation, and provide a valid `UserDetailsService`.
+In order to enable built-in authentication, you need to mark your application with the `@EnableVaadinConnectOAuthServer` annotation, and provide a valid `UserDetailsService`.
 
-==== Harcoded User Account example
+==== Hardcoded User Account example
 
 The following example defines just one valid user for the entire application.
 
