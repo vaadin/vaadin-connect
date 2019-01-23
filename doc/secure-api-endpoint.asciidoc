@@ -11,23 +11,34 @@ layout: page
 Consider the basic Vaadin Connect service defined:
 
 [source,java]
+.CounterService.java
 ----
-@VaadinService
-public class MyService {
+package com.vaadin.connect.starter;
 
-  public void doSomething() {
-  }
+import com.vaadin.connect.VaadinService;
+
+/**
+ * A Vaadin Connect service that counts numbers.
+ */
+@VaadinService
+public class CounterService {
+    /**
+     * A method that adds one to the argument.
+     */
+    public int addOne(int number) {
+        return number + 1;
+    }
 }
 ----
 
 For this service definition, when the application is started locally, it awaits the POST requests to the
-`http://localhost:8080/connect/myService/doSomething` endpoint to be able to invoke the method.
+`http://localhost:8080/connect/CounterService/addOne` endpoint to be able to invoke the method.
 
 But if you try to send any POST request to the endpoint (not using the Vaadin Client), you'll get a
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401[401 Unauthorized] response instead of the method invocation.
 
 This happens due to Vaadin Connect access control features enabled by default for any service method:
-if not specified in Java code explicitly, every service method in secured and requires a correct access token to be
+if not specified in Java code explicitly, every service method is secured and requires a correct access token to be
 specified in the request in order to be invoked.
 
 You don't have to worry about the tokens if you're using Vaadin Connect Client library that takes care of such things,
