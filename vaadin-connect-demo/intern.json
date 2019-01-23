@@ -3,12 +3,7 @@
   "serverUrl": "http://localhost:8080",
   "serverPort": 9002,
   "socketPort": 9003,
-  "environments": [
-    {
-      "browserName": "chrome",
-      "fixSessionCapabilities": "no-detect"
-    }
-  ],
+  "environments": ["chrome"],
   "tunnelOptions": {
     "version": "3.141.59",
     "drivers": [
@@ -27,43 +22,43 @@
           "platform": "Windows 10",
           "browserName": "chrome",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": "no-detect"
+          "extendedDebugging": true
         },
         {
           "platform": "Windows 10",
           "browserName": "firefox",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": "no-detect"
+          "extendedDebugging": true
         },
         {
           "platform": "Windows 10",
           "browserName": "MicrosoftEdge",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": "no-detect"
+          "extendedDebugging": true
         },
         {
           "platform": "Windows 10",
           "browserName": "internet explorer",
           "version": "11",
-          "fixSessionCapabilities": "no-detect"
+          "extendedDebugging": true
         },
         {
           "platform": "OS X 10.13",
           "browserName": "safari",
           "version": ["latest-1", "latest"],
-          "fixSessionCapabilities": "no-detect"
+          "extendedDebugging": true
         },
         {
           "platform": "OS X 10.13",
           "browserName": "iphone",
           "version": ["11.3", "12.0"],
-          "fixSessionCapabilities": "no-detect"
+          "extendedDebugging": true
         },
         {
           "platform": "Linux",
           "browserName": "android",
           "version": "6.0",
-          "fixSessionCapabilities": "no-detect"
+          "extendedDebugging": true
         }
       ]
     },
