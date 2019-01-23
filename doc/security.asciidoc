@@ -51,7 +51,7 @@ client.credentials = (options = {}) => {
 };
 ----
 
-=== Login form example
+=== Login form example [[login-form-example]]
 
 This examples demonstrates a login form used to asynchronously ask for user credentials.
 
