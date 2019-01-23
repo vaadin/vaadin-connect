@@ -169,19 +169,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <executions>
-                    <execution>
-                        <id>install-frontend-deps</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>yarn</executable>
-                            <arguments>
-                                <argument>install</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
+                    <!-- Build frontend production bundle -->
                     <execution>
                         <id>build-frontend</id>
                         <phase>prepare-package</phase>
@@ -223,4 +211,31 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- Install frontend NPM packages if not done yet -->
+        <profile>
+            <id>yarn-install</id>
+            <activation>
+                <file><missing>node_modules</missing></file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>validate</phase>
+                                <goals><goal>exec</goal></goals>
+                                <configuration>
+                                    <executable>yarn</executable>
+                                    <arguments><argument>install</argument></arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

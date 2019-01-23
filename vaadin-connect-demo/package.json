@@ -12,7 +12,7 @@
     "start:apibrowser": "node scripts/start/apibrowser.js",
     "lint": "eslint frontend/ scripts/ e2e/",
     "test:e2e": "intern",
-    "start": "webpack --mode development --silent && yarn start:backend -- -- yarn start:apibrowser -- -- yarn start:webpack",
+    "start": "yarn start:backend -- -- yarn start:apibrowser -- -- yarn start:webpack",
     "test": "yarn lint && yarn build:frontend && yarn bundlesize && yarn start:backend -- --nowatch -- yarn test:e2e"
   },
   "dependencies": {
