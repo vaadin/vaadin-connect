@@ -212,7 +212,7 @@ public class VaadinConnectController {
    *          called has parameters
    * @return execution result as a JSON string or an error message string
    */
-  @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @PostMapping(path = "/{service}/{method}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   public ResponseEntity<String> serveVaadinService(
       @PathVariable("service") String serviceName,
       @PathVariable("method") String methodName,
