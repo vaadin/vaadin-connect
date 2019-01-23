@@ -1,0 +1,96 @@
+---
+title: How To Use An API Endpoint
+order: 805
+layout: page
+---
+
+= How to use an API endpoint
+
+== Available API endpoints
+
+Running the https://github.com/vaadin/base-starter-connect[`base-starter-connect`] project with `npm install && npm start` will also include an API browser server at http://localhost:8082. You can check it out and see all the available API endpoints which are exposed from `@VaadinService` Java classes.
+
+.API browser
+[#img-api-browser]
+image::api-browser.png[API browser]
+
+In addition, the API browser also shows all the documentation of your services and API endpoints based on the Javadocs from your service classes.
+
+== Generate ES modules from your Java services [[generate-js-wrappers]]
+
+To easily use the API endpoints in JavaScript, the <<vaadin-connect-maven-plugin#, `vaadin-connect-maven-plugin`>> helps you to generate all the neccessary files. All the plugin's goals are attached to the `compile` phase of https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html[Maven lifecycle]. So whenever you run `mvn compile`, the plugin will generate all the needed files for you. By default, `npm start` also triggers the `mvn compile`, therefore everything should be ready when running the application with `npm start`.
+
+For example, the generated ES module for the Java service defined in <<how-to-add-api-endpoint#CounterService.java,CounterService.java>> would looks like:
+
+.CounterService.js
+[source,javascript]
+[[CounterService.js]]
+----
+/**
+ * A Vaadin Connect service that counts numbers.
+ *
+ * This module has been generated from CounterService.java
+ * @module CounterService
+ */
+
+import client from './connect-client.default.js';
+
+/**
+ * A method that adds one to the argument.
+ *
+ * @param {number} number
+ * @returns {Promise<number>}
+ */
+export function addOne(number) {
+  return client.call('CounterService', 'addOne', {number}, {requireCredentials: true});
+}
+----
+
+By default, the generated files are located under `${project.dir}/frontend/generated`. You can change the folder by <<vaadin-connect-maven-plugin#generatedFrontendDirectory,providing the path for the generator>>.
+
+[NOTE]
+====
+The plugin also re-generates all the files whenever you make changes to your Java files.
+====
+
+== Import and use generated ES modules
+
+All the methods in the generated modules are exported so you can either import them separately or the whole module as a service. For instance, the <<CounterService.js>> could be used as the following snippets:
+
+.index.js (import the whole module)
+[[index.js]]
+[source,javascript]
+----
+// Other imports
+import * as counterService from './generated/CounterService.js';
+
+// Other code
+counterService.addOne(1).then(result => console.log(result));
+----
+
+.index.js (only import the needed method)
+[source,javascript]
+----
+// Other imports
+import {addOne} from './generated/CounterService.js';
+
+// Other code
+addOne(1).then(result => console.log(result));
+----
+
+== How is the security taken into account?
+
+With the snippet in <<index.js>>, your application might not work as you expected because all the API endpoints are secured by default. You will need to authenticate before you can call the API endpoint. See <<security#, Vaadin Connect sercurity>> for information about authentication, authorization and example how to create <<how-to-add-login-form#,a login form>>.
+
+== Code-completion for JavaScript
+
+As you see in <<CounterService.js>>, the Javadoc of `@VaadinService` class is preserved the generated JavaScript file. This helps code-compeletion work pretty well in *Visual Studio Code* and *Intellij IDEA Ultimate Edition*.
+
+.Code-completion in Visual Studio Code
+image::codecompletion.gif[Code-completion]
+
+
+== Next Steps
+- https://github.com/vaadin/base-starter-connect/blob/master/frontend/status-controller.js[Visit the status-controller.js in the Starter Project]
+
+- <<README#,Browse through the docs>>
