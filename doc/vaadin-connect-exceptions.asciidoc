@@ -31,4 +31,4 @@ a backend side with the particular exception message and the details.
 ** When a service Java method invocation fails by some reason, for instance, the method throws an exception,
 that is not the VaadinConnectException and does not inherit it.
 
-** The Vaadin Connect framework is not able to process a request because of some technical reasons.
+** The Vaadin Connect is not able to process a request because of some technical reasons.
