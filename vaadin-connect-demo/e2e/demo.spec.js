@@ -1,41 +1,40 @@
-const {describe, it, beforeEach} = intern.getPlugin('interface.bdd');
+const {describe, it, before, beforeEach, after} = intern.getPlugin('interface.bdd');
 const {expect} = intern.getPlugin('chai');
 
-import {pollUntil} from '@theintern/leadfoot';
+import {pollUntilTruthy} from '@theintern/leadfoot';
 
 describe('demo application', () => {
   describe('index page', () => {
     let page;
-    beforeEach(context => page = context.remote.get(''));
+
+    before(async context => {
+      await context.remote.session.setExecuteAsyncTimeout(30000);
+      await context.remote.session.setFindTimeout(30000);
+      page = context.remote.get('');
+    });
 
     it('should have number', async() => {
-      await page
-        .findById('number').getVisibleText().then(text =>
-          expect(text).to.equal('1')
-        );
+      const number = await page.findById('number').getVisibleText();
+      expect(number).to.equal('1');
     });
 
     it('should not have logged in', async() => {
-      await page
-        .findById('loginMessage').getVisibleText().then(text =>
-          expect(text).to.equal('')
-        );
+      const loginMessage = await page.findById('loginMessage').getVisibleText();
+      expect(loginMessage).to.equal('');
     });
 
     it('should say hello after logging in', async() => {
       await page.findById('login').click();
-      await pollUntil(
-        text => document.getElementById('loginMessage').textContent === text,
-        'Hello, test_login!'
-      );
+      await pollUntilTruthy(function(text) {
+        return document.getElementById('loginMessage').textContent === text;
+      }, ['Hello, test_login!']).call(page);
     });
 
     it('should increment number on button click', async() => {
       await page.findById('addOne').click();
-      await pollUntil(
-        text => document.getElementById('number').textContent === text,
-        '2'
-      );
+      await pollUntilTruthy(function(text) {
+        return document.getElementById('number').textContent === text;
+      }, ['2']).call(page);
     });
 
     describe('anonymous access', () => {
@@ -46,56 +45,67 @@ describe('demo application', () => {
       it('should allow anonymous access with missing credentials', async() => {
         // Reload the page in anonymous mode after logout
         page = page.get('?credentials=none');
+        await page;
 
-        await page
-          .findById('access').getVisibleText().then(text =>
-            expect(text).to.equal('')
-          ).end()
-          .findById('checkAnonymousAccess').click();
-        await pollUntil(
-          text => document.getElementById('access').textContent === text,
-          'anonymous success'
-        );
+        const access = await page.findById('access').getVisibleText();
+        expect(access).to.equal('');
+        await page.findById('checkAnonymousAccess').click();
+        await pollUntilTruthy(function(text) {
+          return document.getElementById('access').textContent === text;
+        }, ['anonymous success']).call(page);
       });
 
       it('should allow anonymous access with wrong credentials', async() => {
         // Reload the page in anonymous mode after logout
         page = page.get('?credentials=wrong');
+        await page;
 
-        await page
-          .findById('access').getVisibleText().then(text =>
-            expect(text).to.equal('')
-          ).end()
-          .findById('checkAnonymousAccess').click();
-        await pollUntil(
-          text => document.getElementById('access').textContent === text,
-          'anonymous success'
-        );
+        const access = await page.findById('access').getVisibleText();
+        await page.findById('checkAnonymousAccess').click();
+        expect(access).to.equal('');
+        await pollUntilTruthy(function(text) {
+          return document.getElementById('access').textContent === text;
+        }, ['anonymous success']).call(page);
+      });
+
+      after(async() => {
+        // Get back to working credentials and login
+        page = page.get('');
+        await page.findById('login').click();
+        await pollUntilTruthy(function(text) {
+          return document.getElementById('loginMessage').textContent === text;
+        }, ['Hello, test_login!']).call(page);
       });
     });
 
     describe('exception handling', () => {
-      beforeEach(async() => {
-        await page.findById('login').click().end();
+      before(async() => {
       });
 
       it('should throw when backend server throws a generic exception', async() => {
-        await page
-          .findById('exceptionButton').click().end()
-          .sleep(2000)
-          .findById('exceptionMessage').getVisibleText().then(text =>
-            expect(text).to.equal('Service \'DemoVaadinService\' method \'throwsException\' execution failure')).end()
-          .findById('exceptionType').getVisibleText().then(text => expect(text).to.be.empty).end()
-          .findById('exceptionDetail').getVisibleText().then(text => expect(text).to.be.empty).end();
+        await page.findById('exceptionButton').click();
+        await pollUntilTruthy(function(text) {
+          return document.getElementById('exceptionMessage').textContent === text;
+        }, [
+          'Service \'DemoVaadinService\' method \'throwsException\' execution failure'
+        ]).call(page);
+        const exceptionType = await page.findById('exceptionType').getVisibleText();
+        expect(exceptionType).to.be.empty;
+        const exceptionDetail = await page.findById('exceptionDetail').getVisibleText();
+        expect(exceptionDetail).to.be.empty;
       });
 
       it('should throw when backend server throws VaadinConnect exception', async() => {
-        await page
-          .findById('submitButton').click().end()
-          .sleep(2000)
-          .findById('exceptionMessage').getVisibleText().then(text => expect(text).to.equal('You had one job to do!')).end()
-          .findById('exceptionType').getVisibleText().then(text => expect(text).to.equal('java.lang.ArithmeticException')).end()
-          .findById('exceptionDetail').getVisibleText().then(text => expect(text).to.equal('{"wrong_parameter":0}')).end();
+        await page.findById('submitButton').click();
+        await pollUntilTruthy(function(text) {
+          return document.getElementById('exceptionMessage').textContent === text;
+        }, [
+          'You had one job to do!'
+        ]).call(page);
+        const exceptionType = await page.findById('exceptionType').getVisibleText();
+        expect(exceptionType).to.equal('java.lang.ArithmeticException');
+        const exceptionDetail = await page.findById('exceptionDetail').getVisibleText();
+        expect(exceptionDetail).to.equal('{"wrong_parameter":0}');
       });
     });
 
