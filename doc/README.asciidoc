@@ -14,6 +14,7 @@ layout: page
 ** <<how-to-add-login-form#,How to add a login form>>
 ** <<how-to-add-api-endpoint#,How to add an API endpoint>>
 ** <<how-to-use-an-api-endpoint#,How to use an API endpoint>>
+** <<how-to-setup-authentication-backend#,How to set up authentication in backend>>
 * Reference documents
 ** <<vaadin-connect-exceptions#,Vaadin Connect Exceptions>>
 ** <<vaadin-connect-maven-plugin#,Building a Vaadin Connect app with `vaadin-connect-maven-plugin`>>
