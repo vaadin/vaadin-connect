@@ -80,7 +80,7 @@ addOne(1).then(result => console.log(result));
 
 == How is the security taken into account?
 
-With the snippet in <<index.js>>, your application might not work as you expected because all the API endpoints are secured by default. You will need to authenticate before you can call the API endpoint. See <<security#, Vaadin Connect sercurity>> for information about authentication, authorization and example how to create <<security#login-form-example,a login form>>.
+With the snippet in <<index.js>>, your application might not work as you expected because all the API endpoints are secured by default. You will need to authenticate before you can call the API endpoint. See <<security#, Vaadin Connect sercurity>> for information about authentication, authorization and example how to create <<how-to-add-login-form#,a login form>>.
 
 == Code-completion for JavaScript
 
