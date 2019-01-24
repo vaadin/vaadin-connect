@@ -312,7 +312,7 @@ export class ConnectClient {
    * @param {string} method Method name to call in the service class.
    * @param {Object=} params Optional object to be send in JSON request body.
    * @param {Object=} options Optional client options for this call.
-   * @param {boolean=true} options.requireCredentials Require authorization.
+   * @param {boolean} [options.requireCredentials=true] Require authorization.
    * @returns {} Decoded JSON response data.
    */
   async call(service, method, params, options = {}) {
