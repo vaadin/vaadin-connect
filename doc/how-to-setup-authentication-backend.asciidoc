@@ -1,0 +1,128 @@
+---
+title: How To Set Up Authentication In Backend
+order: 794
+layout: page
+---
+
+= How to set up authentication in backend
+
+Vaadin Connect provides a built-in authentication server which can be enabled with the annotation `@EnableVaadinConnectOAuthServer` in your application. The annotation configures almost everything related to the authentication and authorization but there are still a few things left that you have to customize for your own application's needs.
+
+
+== 1. Define `UserDetailsService` bean
+
+`UserDetailsService` bean is a requirement to make the authentication actually work. It bascially fetches user information from your storage (either from your database or in-memory data) based on a given `username`. You can create a simple `UserDetailsService` with one test user with the following snippet:
+
+.StarterOAuthConfiguration.java
+[[StarterOAuthConfiguration.java]]
+[source,java]
+----
+@Configuration
+public class StarterOAuthConfiguration {
+    private static final String TEST_LOGIN = "test_login";
+    private static final String TEST_PASSWORD = "test_password";
+
+    private final PasswordEncoder encoder;
+
+     /**
+     * @param encoder the auto wired PasswordEncoder.
+     *                The default {@link BCryptPasswordEncoder} will be used if no {@link PasswordEncoder} bean is defined
+     */
+    public StarterOAuthConfiguration(PasswordEncoder encoder) {
+        this.encoder = encoder;
+    }
+
+    private UserDetails createTestUserDetails() {
+        // User's password will be erased after a successful authentication.
+        // So a new instance is created every time the authentication server requests.
+        return User.builder()
+                .username(TEST_LOGIN)
+                .password(encoder.encode(TEST_PASSWORD))
+                .roles("USER")
+                .build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> {
+            if (TEST_LOGIN.equals(username)) {
+                return createTestUserDetails();
+            }
+            throw new UsernameNotFoundException(username);
+        };
+    }
+}
+----
+[NOTE]
+====
+See <<security#server-configuration, Server Configuration>> in security page to explore other examples like using a persistent accounts database.
+====
+== 2. Define `PasswordEncoder`
+
+Vaadin Connect configures `BCryptPasswordEncoder` as the default `PasswordEncoder` if the bean is not provided. When defining your own `PasswordEncoder` bean, you need to make sure that your `UserDetailsService` takes the new `PasswordEncoder` into account.
+
+.StarterOAuthConfiguration.java with PasswordEncoder
+[source,java]
+----
+@Configuration
+public class StarterOAuthConfiguration {
+    private static final String TEST_LOGIN = "test_login";
+    private static final String TEST_PASSWORD = "test_password";
+
+    private UserDetails createTestUserDetails() {
+        // User's password will be erased after a successful authentication.
+        // So a new instance is created every time the authentication server requests.
+        return User.builder()
+                .username(TEST_LOGIN)
+                .password(passwordEncoder().encode(TEST_PASSWORD))
+                .roles("USER")
+                .build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> {
+            if (TEST_LOGIN.equals(username)) {
+                return createTestUserDetails();
+            }
+            throw new UsernameNotFoundException(username);
+        };
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new SCryptPasswordEncoder();
+    }
+}
+----
+
+== 3. Enable the built-in authentication server
+
+With the above setups, you now can enable the built-in authentication server by using the annotation `@EnableVaadinConnectOAuthServer`.
+
+.StarterApplication.java
+[source,java]
+----
+@SpringBootApplication
+@EnableVaadinConnectOAuthServer
+@EnableVaadinFrontendServer
+public class StarterApplication {
+
+    /**
+     * Main method to run the application.
+     *
+     * @param args arguments
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(StarterApplication.class, args);
+    }
+
+}
+----
+
+== Next steps
+
+- <<sercurity#,Refer to Security in Vaadin Connect for more information>>
+- https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/StarterOAuthConfiguration.java[Visit the StarterOAuthConfiguration.java in the Starter Project]
+
+- <<README#,Browse through the docs>>
