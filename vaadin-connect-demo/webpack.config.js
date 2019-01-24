@@ -4,128 +4,142 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const {BabelMultiTargetPlugin} = require('webpack-babel-multi-target-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackIncludeAssetsPlugin = require('html-webpack-include-assets-plugin');
 
  // This folder is served as static in a spring-boot installation
  const outputFolder = 'target/classes/META-INF/resources';
 
-module.exports = {
-  // Default build mode (the frontend development server forces 'development')
-  mode: 'production',
+module.exports = (env, argv) => {
+  return {
 
-  // Include source maps in the build
-  devtool: 'source-map',
+    // Default build mode (the frontend development server forces 'development')
+    mode: 'production',
 
-  // The directory with the frontend sources
-  context: path.resolve(__dirname, 'frontend'),
+    // Include source maps in the build
+    devtool: 'source-map',
 
-  entry: {
-    polyfills: './polyfills.js',
-    index: './index.js'
-  },
+    // The directory with the frontend sources
+    context: path.resolve(__dirname, 'frontend'),
 
-  resolve: {
-    // Prefer ES module dependencies when declared in package.json
-    mainFields: [
-      'es2015',
-      'module',
-      'main'
-    ]
-  },
+    entry: {
+      polyfills: './polyfills.js',
+      index: './index.js'
+    },
 
-  module: {
-    rules: [
-      // Process .js files though Babel with multiple targets
-      {
-        test: /\.js$/,
-        use: [
-          BabelMultiTargetPlugin.loader()
-        ],
-      }
-    ]
-  },
+    resolve: {
+      // Prefer ES module dependencies when declared in package.json
+      mainFields: [
+        'es2015',
+        'module',
+        'main'
+      ]
+    },
 
-  output: {
-    filename: '[name].js',
-    path: path.resolve(__dirname, outputFolder),
-    publicPath: '/'
-  },
-
-  performance: {
-    maxAssetSize: 500000,
-    maxEntrypointSize: 500000
-  },
-
-  plugins: [
-    // Copy static assets
-    new CopyWebpackPlugin(['**/*'], {context: path.resolve(__dirname, 'static')}),
-
-    // Copy @webcomponents/webcomponentsjs
-    new CopyWebpackPlugin(['webcomponentsjs/**/*'], {
-      context: path.resolve(path.dirname(
-        require.resolve('@webcomponents/webcomponentsjs/package.json')
-      ), '..')
-    }),
-
-    // Provide regeneratorRuntime for Babel async transforms
-    new webpack.ProvidePlugin({
-      regeneratorRuntime: 'regenerator-runtime'
-    }),
-
-    // Babel configuration for multiple output bundles targeting different sets
-    // of browsers
-    new BabelMultiTargetPlugin({
-      babel: {
-        // @babel/preset-env options common for all bundles
-        presetOptions: {
-          // debug: true, // uncomment to debug the babel configuration
-
-          // Don’t add polyfills, they are provided from webcomponents-loader.js
-          useBuiltIns: false
-        }
-      },
-
-      // Modules excluded from targeting into different bundles
-      doNotTarget: [
-        // Array of RegExp patterns
-      ],
-
-      // Modules that should not be transpiled
-      exclude: [
-        // Array of RegExp patterns
-      ],
-
-      // Target browsers with and without ES modules support
-      targets: {
-        'es6': {
-          browsers: [
-            'last 2 Chrome major versions',
-            'last 2 ChromeAndroid major versions',
-            'last 2 Edge major versions',
-            'last 2 Firefox major versions',
-            'last 2 Safari major versions',
-            'last 2 iOS major versions'
+    module: {
+      rules: [
+        // Process .js files though Babel with multiple targets
+        {
+          test: /\.js$/,
+          use: [
+            BabelMultiTargetPlugin.loader()
           ],
-          tagAssetsWithKey: false, // don’t append a suffix to the file name
-          esModule: true // marks the bundle used with <script type="module">
+        }
+      ]
+    },
+
+    output: {
+      filename: '[name].js',
+      path: path.resolve(__dirname, outputFolder),
+      publicPath: '/'
+    },
+
+    performance: {
+      maxAssetSize: 500000,
+      maxEntrypointSize: 500000
+    },
+
+    plugins: [
+      // Copy static assets
+      new CopyWebpackPlugin(['**/*'], {context: path.resolve(__dirname, 'static')}),
+
+      // Copy @webcomponents/webcomponentsjs
+      new CopyWebpackPlugin(['webcomponentsjs/**/*'], {
+        context: path.resolve(path.dirname(
+          require.resolve('@webcomponents/webcomponentsjs/package.json')
+        ), '..')
+      }),
+
+      // Provide regeneratorRuntime for Babel async transforms
+      new webpack.ProvidePlugin({
+        regeneratorRuntime: 'regenerator-runtime'
+      }),
+
+      // Babel configuration for multiple output bundles targeting different sets
+      // of browsers
+      new BabelMultiTargetPlugin({
+        babel: {
+          // @babel/preset-env options common for all bundles
+          presetOptions: {
+            // debug: true, // uncomment to debug the babel configuration
+
+            // Don’t add polyfills, they are provided from webcomponents-loader.js
+            useBuiltIns: false
+          }
         },
-        'es5': {
-          browsers: [
-            'ie 11'
-          ],
-          tagAssetsWithKey: true, // append a suffix to the file name
-          noModule: true // marks the bundle included without `type="module"`
+
+        // Modules excluded from targeting into different bundles
+        doNotTarget: [
+          // Array of RegExp patterns
+        ],
+
+        // Modules that should not be transpiled
+        exclude: [
+          // Array of RegExp patterns
+        ],
+
+        // Target browsers with and without ES modules support
+        targets: {
+          'es6': {
+            browsers: [
+              'last 2 Chrome major versions',
+              'last 2 ChromeAndroid major versions',
+              'last 2 Edge major versions',
+              'last 2 Firefox major versions',
+              'last 2 Safari major versions',
+              'last 2 iOS major versions'
+            ],
+            tagAssetsWithKey: false, // don’t append a suffix to the file name
+            esModule: true // marks the bundle used with <script type="module">
+          },
+          'es5': {
+            browsers: [
+              'ie 11'
+            ],
+            tagAssetsWithKey: true, // append a suffix to the file name
+            noModule: true // marks the bundle included without `type="module"`
+          }
         }
-      }
-    }),
+      }),
 
-    // Insert the bundles in the html file
-    new HtmlWebpackPlugin({
-      template: 'index.html',
+      // Insert the bundles in the html file
+      new HtmlWebpackPlugin({
+        template: 'index.html',
 
-      // Prevent adding multiple bunldles for polyfills, browsers that have ES
-      // modules support don’t need them. The polyfills are listed directly in
-      // the html template to ensure correct loading order.
-      excludeChunks: ['polyfills']
-    })
-  ]
+        // Prevent adding multiple bunldles for polyfills, browsers that have ES
+        // modules support don’t need them. The polyfills are listed directly in
+        // the html template to ensure correct loading order.
+        excludeChunks: ['polyfills']
+      }),
+
+      // Append Spring Boot LiveReload script in development mode
+      argv.mode === 'development' && new HtmlWebpackIncludeAssetsPlugin({
+        assets: ['http://localhost:35729/livereload.js'],
+        append: true,
+        resolvePaths: false,
+        publicPath: false
+      })
+
+    ].filter(Boolean)
+
+  };
 };
