@@ -1,12 +1,12 @@
 ---
 title: How To Set Up Authentication In Backend
-order: 806
+order: 794
 layout: page
 ---
 
 = How to set up authentication in backend
 
-Vaadin Connect provides a built-in authentication server which can enable easily with the annotation `@EnableVaadinConnectOAuthServer` in your application. The annotation configures almost everything related to the authentication and authorization but there are still a few things left that you have to customize for your own application's needs.
+Vaadin Connect provides a built-in authentication server which can be enabled with the annotation `@EnableVaadinConnectOAuthServer` in your application. The annotation configures almost everything related to the authentication and authorization but there are still a few things left that you have to customize for your own application's needs.
 
 
 == 1. Define `UserDetailsService` bean
@@ -22,29 +22,22 @@ public class StarterOAuthConfiguration {
     private static final String TEST_LOGIN = "test_login";
     private static final String TEST_PASSWORD = "test_password";
 
-    private final PasswordEncoder encoder;
+    private final InMemoryUserDetailsManager inMemoryUserDetailsManager;
 
-     /**
-     * @param encoder the auto wired PasswordEncoder.
-     *                The default {@link BCryptPasswordEncoder} will be used if no {@link PasswordEncoder} bean is defined
-     */
     public StarterOAuthConfiguration(PasswordEncoder encoder) {
-        this.encoder = encoder;
-    }
-
-    private UserDetails createTestUserDetails() {
-        return User.builder()
+        UserDetails testUser = User.builder()
                 .username(TEST_LOGIN)
                 .password(encoder.encode(TEST_PASSWORD))
                 .roles("USER")
                 .build();
+        inMemoryUserDetailsManager = new InMemoryUserDetailsManager(testUser);
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
             if (TEST_LOGIN.equals(username)) {
-                return createTestUserDetails();
+                return inMemoryUserDetailsManager.loadUserByUsername(username);
             }
             throw new UsernameNotFoundException(username);
         };
@@ -53,11 +46,11 @@ public class StarterOAuthConfiguration {
 ----
 [NOTE]
 ====
-See <<security#server-configuration, Server Configuration>> in Security page to see example code for retrieving user accounts from persistent database.
+See <<security#server-configuration, Server Configuration>> in security page to explore other examples like using a persistent accounts database.
 ====
 == 2. Define `PasswordEncoder`
 
-Vaadin Connect configures `BCryptPasswordEncoder` as the default `PasswordEncoder` if the bean doesn't exist. When defining your own `PasswordEncoder` bean, you need to make sure that your `UserDetailsService` takes the new `PasswordEncoder` into account.
+Vaadin Connect configures `BCryptPasswordEncoder` as the default `PasswordEncoder` if the bean is not provided. When defining your own `PasswordEncoder` bean, you need to make sure that your `UserDetailsService` takes the new `PasswordEncoder` into account.
 
 .StarterOAuthConfiguration.java with PasswordEncoder
 [source,java]
@@ -67,27 +60,36 @@ public class StarterOAuthConfiguration {
     private static final String TEST_LOGIN = "test_login";
     private static final String TEST_PASSWORD = "test_password";
 
-    private UserDetails createTestUserDetails() {
-        return User.builder()
-                .username(TEST_LOGIN)
-                .password(passwordEncoder().encode(TEST_PASSWORD))
-                .roles("USER")
-                .build();
+    private final InMemoryUserDetailsManager inMemoryUserDetailsManager;
+
+    public StarterOAuthConfiguration() {
+        inMemoryUserDetailsManager = new InMemoryUserDetailsManager();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new SCryptPasswordEncoder();
+    private UserDetails getTestUser() {
+        if (!inMemoryUserDetailsManager.userExists(TEST_LOGIN)) {
+            UserDetails testUser = User.builder()
+                    .username(TEST_LOGIN)
+                    .password(passwordEncoder().encode(TEST_PASSWORD))
+                    .roles("USER")
+                    .build();
+            inMemoryUserDetailsManager.createUser(testUser);
+        }
+        return inMemoryUserDetailsManager.loadUserByUsername(TEST_LOGIN);
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
             if (TEST_LOGIN.equals(username)) {
-                return createTestUserDetails();
+                return getTestUser();
             }
             throw new UsernameNotFoundException(username);
         };
+    }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new SCryptPasswordEncoder();
     }
 }
 ----
