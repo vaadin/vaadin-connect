@@ -16,8 +16,18 @@
 
 package com.vaadin.connect.oauth;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,9 +35,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Base64Utils;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.vaadin.connect.VaadinConnectProperties;
 
@@ -43,36 +56,69 @@ public class VaadinConnectOAuthConfigurer
   private static final String[] GRANT_TYPES = new String[] { "password",
       "refresh_token" };
 
+  private static final String CLIENT_ID = "vaadin-connect-client";
+  private static final String CLIENT_SECRET = "*";
+
   private final PasswordEncoder encoder;
-  private final VaadinConnectProperties vaadinConnectProperties;
   private final TokenStore tokenStore;
   private final JwtAccessTokenConverter accessTokenConverter;
   private final AuthenticationManager authenticationManager;
   private final UserDetailsService userDetails;
 
+  // This filter adds HTTP authorization headers to the request to bypass the
+  // requirement of passing a client-id and secret to spring oauth-2
+  private static class PreBasicHttpFilter extends OncePerRequestFilter {
+    private final String basic;
+
+    PreBasicHttpFilter(String user, String pass) {
+      basic = "Basic " + Base64Utils
+          .encodeToString((user + ":" + pass).getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+        HttpServletResponse response, FilterChain filterChain)
+        throws ServletException, IOException {
+
+      HttpServletRequestWrapper wrapper = new HttpServletRequestWrapper(
+          request) {
+        @Override
+        public String getHeader(String name) {
+          // Always return a valid HTTP auth header
+          return HttpHeaders.AUTHORIZATION.equals(name) ? basic : null;
+        }
+      };
+
+      filterChain.doFilter(wrapper, response);
+    }
+  }
+
   /**
    * Creates VaadinConnectOAuthConfigurer bean.
    *
-   * @param encoder password encoder bean
-   * @param vaadinConnectProperties Vaadin Connect properties bean
-   * @param tokenStore token store bean
-   * @param accessTokenConverter access token converter bean
-   * @param authenticationConfiguration authentication configuration bean
-   * @param userDetails custom user details service, optional
-   * @param authenticationManager custom authentication manager, optional
+   * @param encoder
+   *          password encoder bean
+   * @param tokenStore
+   *          token store bean
+   * @param accessTokenConverter
+   *          access token converter bean
+   * @param authenticationConfiguration
+   *          authentication configuration bean
+   * @param userDetails
+   *          custom user details service, optional
+   * @param authenticationManager
+   *          custom authentication manager, optional
    * @throws Exception
    *           if bean configuration fails due to
    *           {@link AuthenticationConfiguration#getAuthenticationManager()}
    */
   public VaadinConnectOAuthConfigurer(PasswordEncoder encoder,
-      VaadinConnectProperties vaadinConnectProperties, TokenStore tokenStore,
-      JwtAccessTokenConverter accessTokenConverter,
+      TokenStore tokenStore, JwtAccessTokenConverter accessTokenConverter,
       AuthenticationConfiguration authenticationConfiguration,
       @Autowired(required = false) UserDetailsService userDetails,
       @Autowired(required = false) AuthenticationManager authenticationManager)
       throws Exception {
     this.encoder = encoder;
-    this.vaadinConnectProperties = vaadinConnectProperties;
     this.tokenStore = tokenStore;
     this.accessTokenConverter = accessTokenConverter;
     this.userDetails = userDetails;
@@ -93,10 +139,15 @@ public class VaadinConnectOAuthConfigurer
   @Override
   public void configure(ClientDetailsServiceConfigurer clients)
       throws Exception {
-    clients.inMemory()
-        .withClient(vaadinConnectProperties.getVaadinConnectClientAppname())
-        .secret(encoder
-            .encode(vaadinConnectProperties.getVaadinConnectClientSecret()))
-        .scopes(SCOPES).authorizedGrantTypes(GRANT_TYPES);
+    clients.inMemory().withClient(CLIENT_ID)
+        .secret(encoder.encode(CLIENT_SECRET)).scopes(SCOPES)
+        .authorizedGrantTypes(GRANT_TYPES);
+  }
+
+  @Override
+  public void configure(AuthorizationServerSecurityConfigurer oauthServer)
+      throws Exception {
+    oauthServer.addTokenEndpointAuthenticationFilter(
+        new PreBasicHttpFilter(CLIENT_ID, CLIENT_SECRET));
   }
 }
