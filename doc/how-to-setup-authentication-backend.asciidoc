@@ -22,22 +22,31 @@ public class StarterOAuthConfiguration {
     private static final String TEST_LOGIN = "test_login";
     private static final String TEST_PASSWORD = "test_password";
 
-    private final InMemoryUserDetailsManager inMemoryUserDetailsManager;
+    private final PasswordEncoder encoder;
 
+     /**
+     * @param encoder the auto wired PasswordEncoder.
+     *                The default {@link BCryptPasswordEncoder} will be used if no {@link PasswordEncoder} bean is defined
+     */
     public StarterOAuthConfiguration(PasswordEncoder encoder) {
-        UserDetails testUser = User.builder()
+        this.encoder = encoder;
+    }
+
+    private UserDetails createTestUserDetails() {
+        // User's password will be erased after a successful authentication.
+        // So a new instance is created every time the authentication server requests.
+        return User.builder()
                 .username(TEST_LOGIN)
                 .password(encoder.encode(TEST_PASSWORD))
                 .roles("USER")
                 .build();
-        inMemoryUserDetailsManager = new InMemoryUserDetailsManager(testUser);
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
             if (TEST_LOGIN.equals(username)) {
-                return inMemoryUserDetailsManager.loadUserByUsername(username);
+                return createTestUserDetails();
             }
             throw new UsernameNotFoundException(username);
         };
@@ -60,33 +69,26 @@ public class StarterOAuthConfiguration {
     private static final String TEST_LOGIN = "test_login";
     private static final String TEST_PASSWORD = "test_password";
 
-    private final InMemoryUserDetailsManager inMemoryUserDetailsManager;
-
-    public StarterOAuthConfiguration() {
-        inMemoryUserDetailsManager = new InMemoryUserDetailsManager();
-    }
-
-    private UserDetails getTestUser() {
-        if (!inMemoryUserDetailsManager.userExists(TEST_LOGIN)) {
-            UserDetails testUser = User.builder()
-                    .username(TEST_LOGIN)
-                    .password(passwordEncoder().encode(TEST_PASSWORD))
-                    .roles("USER")
-                    .build();
-            inMemoryUserDetailsManager.createUser(testUser);
-        }
-        return inMemoryUserDetailsManager.loadUserByUsername(TEST_LOGIN);
+    private UserDetails createTestUserDetails() {
+        // User's password will be erased after a successful authentication.
+        // So a new instance is created every time the authentication server requests.
+        return User.builder()
+                .username(TEST_LOGIN)
+                .password(passwordEncoder().encode(TEST_PASSWORD))
+                .roles("USER")
+                .build();
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
             if (TEST_LOGIN.equals(username)) {
-                return getTestUser();
+                return createTestUserDetails();
             }
             throw new UsernameNotFoundException(username);
         };
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new SCryptPasswordEncoder();
