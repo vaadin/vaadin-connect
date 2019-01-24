@@ -15,6 +15,9 @@
  */
 package com.vaadin.connect.demo;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,8 +26,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -297,6 +304,27 @@ public class VaadinConnectControllerIT {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals("\"anonymous success\"", response.getBody());
+  }
+
+  // TestRestTemplate always injects custom headers that I was not able to
+  // remove with the interceptors hence the apache http client is used to make a
+  // simple POST request
+  @Test
+  public void should_AllowAnonymousAccess_When_NoHeadersSpecified() {
+    String url = getRequestUrl("DemoVaadinService", "hasAnonymousAccess");
+    CloseableHttpClient client = HttpClients.createDefault();
+
+    List<String> response;
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(
+        client.execute(new HttpPost(url)).getEntity().getContent()))) {
+      response = br.lines().collect(Collectors.toList());
+    } catch (IOException e) {
+      throw new AssertionError(
+          String.format("Failed to send a request to url '%s'", url), e);
+    }
+
+    assertEquals(1, response.size());
+    assertEquals("\"anonymous success\"", response.get(0));
   }
 
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,
