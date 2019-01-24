@@ -18,10 +18,9 @@ package com.vaadin.connect.plugin.generator;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import com.google.common.base.Charsets;
 
 /**
  * A set of utils for generator functionality.
@@ -51,7 +50,7 @@ final class GeneratorUtils {
         Files.createFile(outputPath);
       }
       try (BufferedWriter bufferedWriter = Files.newBufferedWriter(outputPath,
-          Charsets.UTF_8)) {
+          StandardCharsets.UTF_8)) {
         bufferedWriter.write(content);
       }
     } catch (IOException e) {
