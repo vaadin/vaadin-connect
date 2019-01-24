@@ -7,6 +7,7 @@
           <goal>generate-openapi-spec</goal>
           <goal>generate-vaadin-client</goal>
           <goal>generate-connect-modules</goal>
+          <goal>generate-token-signing-key</goal>
         </goals>
       </pluginExecutionFilter>
       <action>
