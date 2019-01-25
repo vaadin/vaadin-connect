@@ -1,6 +1,6 @@
 {
   "name": "@vaadin/connect",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A Vaadin Labs experiment with a secure stateless communication framework",
   "main": "index.js",
   "directories": {
