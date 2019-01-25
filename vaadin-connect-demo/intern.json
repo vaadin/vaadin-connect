@@ -40,12 +40,13 @@
           "platform": "Windows 10",
           "browserName": "internet explorer",
           "version": "11",
-          "extendedDebugging": true
+          "extendedDebugging": true,
+          "fixSessionCapabilities": false
         },
         {
           "platform": "OS X 10.13",
           "browserName": "safari",
-          "version": ["latest-1", "latest"],
+          "version": ["11"],
           "extendedDebugging": true
         },
         {
