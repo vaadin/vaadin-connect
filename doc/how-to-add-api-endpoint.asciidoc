@@ -97,6 +97,6 @@ in the project and open the `http://localhost:8082` page to see all Vaadin Conne
 == Next Steps
 
 - <<how-to-use-an-api-endpoint#,How to use an API endpoint in to your Application>>
-- https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/GreeterService.java[Visit the Services Java code in the Starter Project]
+- https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/StatusService.java[Visit the Services Java code in the Starter Project]
 - <<README#,Browse through the docs>>
 
