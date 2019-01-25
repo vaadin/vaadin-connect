@@ -43,7 +43,7 @@
           }
         },
         "security" : [{
-          "vaadin-connect-jwt" : [ ]
+          "vaadin-connect-oauth2" : [ ]
         }]
       }
     }
@@ -78,10 +78,14 @@
         }
       },
       "securitySchemes" : {
-        "vaadin-connect-jwt" : {
-          "type" : "http",
-          "scheme" : "bearer",
-          "bearerFormat" : "JWT"
+        "vaadin-connect-oauth2" : {
+          "type" : "oauth2",
+          "flows" : {
+            "password" : {
+              "tokenUrl" : "/oauth/token",
+              "scopes" : { }
+            }
+          }
         }
       }
     }

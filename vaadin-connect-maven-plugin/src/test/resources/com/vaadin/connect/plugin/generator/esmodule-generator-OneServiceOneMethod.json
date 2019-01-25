@@ -37,7 +37,7 @@
           }
         },
         "security" : [ {
-          "vaadin-connect-jwt" : [ ]
+          "vaadin-connect-oauth2" : [ ]
         } ]
       }
     }

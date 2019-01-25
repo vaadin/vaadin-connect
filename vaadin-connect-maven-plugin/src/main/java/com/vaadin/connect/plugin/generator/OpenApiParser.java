@@ -80,6 +80,9 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.security.OAuthFlow;
+import io.swagger.v3.oas.models.security.OAuthFlows;
+import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
@@ -98,7 +101,9 @@ import com.vaadin.connect.oauth.AnonymousAllowed;
 class OpenApiParser {
   public static final String EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION = "x-vaadin-parameters-description";
 
-  private static final String VAADIN_CONNECT_JWT_SECURITY_SCHEME = "vaadin-connect-jwt";
+  private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
+  private static final String VAADIN_CONNECT_OAUTH2_TOKEN_URL = "/oauth/token";
+
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Set<String> usedSchemas;
@@ -220,12 +225,17 @@ class OpenApiParser {
     server.setDescription(configuration.getServerDescription());
     openAPI.setServers(Collections.singletonList(server));
     Components components = new Components();
-    SecurityScheme vaadinConnectJwtScheme = new SecurityScheme();
-    vaadinConnectJwtScheme.type(SecurityScheme.Type.HTTP);
-    vaadinConnectJwtScheme.scheme("bearer");
-    vaadinConnectJwtScheme.bearerFormat("JWT");
-    components.addSecuritySchemes(VAADIN_CONNECT_JWT_SECURITY_SCHEME,
-        vaadinConnectJwtScheme);
+    SecurityScheme vaadinConnectOAuth2Scheme = new SecurityScheme()
+        .type(SecurityScheme.Type.OAUTH2)
+        .flows(
+            new OAuthFlows().password(
+                new OAuthFlow()
+                    .tokenUrl(VAADIN_CONNECT_OAUTH2_TOKEN_URL)
+                    .scopes(new Scopes())
+            )
+        );
+    components.addSecuritySchemes(VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME,
+        vaadinConnectOAuth2Scheme);
     openAPI.components(components);
     return openAPI;
   }
@@ -379,7 +389,7 @@ class OpenApiParser {
     Operation post = new Operation();
     if (requiresAuthentication) {
       SecurityRequirement securityItem = new SecurityRequirement();
-      securityItem.addList(VAADIN_CONNECT_JWT_SECURITY_SCHEME);
+      securityItem.addList(VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME);
       post.addSecurityItem(securityItem);
     }
 
