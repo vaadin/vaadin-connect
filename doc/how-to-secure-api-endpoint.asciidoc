@@ -1,0 +1,146 @@
+---
+title: How to configure security for an API endpoint
+order: 792
+layout: page
+---
+
+= Vaadin Connect endpoint security
+
+== Default security options
+
+Consider the basic Vaadin Connect service defined:
+
+[source,java]
+.CounterService.java
+----
+package com.vaadin.connect.starter;
+
+import com.vaadin.connect.VaadinService;
+
+/**
+ * A Vaadin Connect service that counts numbers.
+ */
+@VaadinService
+public class CounterService {
+    /**
+     * A method that adds one to the argument.
+     */
+    public int addOne(int number) {
+        return number + 1;
+    }
+}
+----
+
+For this service definition, when the application is started locally, it awaits the POST requests to the
+`http://localhost:8080/connect/CounterService/addOne` endpoint to be able to invoke the method.
+
+But if you try to send any POST request to the endpoint (not using the Vaadin Client), you'll get a
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401[401 Unauthorized] response instead of the method invocation.
+
+This happens due to Vaadin Connect access control features enabled by default for any service method:
+if not specified in Java code explicitly, every service method is secured and requires a correct access token to be
+specified in the request in order to be invoked.
+
+You don't have to worry about the tokens if you're using Vaadin Connect Client library that takes care of such things,
+requiring from you to specify the users and their permissions in the backend part.
+After that, whenever any method is called via the client library, it automatically fetches the token and appends it to the corresponding request.
+For a better overview on the internals, you can read more about the security in the <<security,advanced security documentation>>.
+
+== Other security options
+
+As explained before, by default every Vaadin Connect service method is secured and requires authorization and
+any authorized user is allowed to call the method via the request.
+
+In order to change the default behavior, a security Java annotation should either be placed on the service class or on the service method.
+There are the following annotations:
+
+* `@PermitAll`
+Same as no annotations, allows any authenticated user to call a method via the request.
+* `@RolesAllowed`
+Grants access to users having the roles, specified in the annotation value.
+Allows the users with such roles to call a method via the request. The roles are covered in the <<permissions,next section>>.
+* `@DenyAll`
+Disallows to call the method via the request by anyone.
+* `@AnonymousAllowed`
+Allows anyone to call the method via the request without the authorization.
+
+A security annotation that is placed on a class is applied to any public method of this class that has no security annotations.
+If the method has any security annotations, any class-level annotations are discarded and only method ones are applied.
+
+If there are multiple annotations specified on some entity, the following rules are applied:
+* `DenyAll` overrides other annotations
+* `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`
+* `RolesAllowed` overrides `PermitAll`
+
+Example:
+
+[source,java]
+----
+@VaadinService
+@DenyAll
+public class MyService {
+
+  public void deniedService() {
+    // Not possible to call by any request due to class-level annotation
+  }
+
+  @AnonymousAllowed
+  public void anonymousService() {
+    // Possible to call by any request (even without authorization) since method level annotation overrides class-level one
+  }
+
+  @PermitAll
+  public void permittedToAllService() {
+    // Permited to all authenticated users, same as if there were no security annotations on the class and the methods.
+    // Since there's a `@DenyAll` annotation is on the class, we specify this one on a method to override the class one.
+  }
+
+  @RolesAllowed("ROLE_ADMIN")
+  public void permittedToToleService() {
+    // Permited to all authenticated users belonging to the ROLE_ADMIN
+  }
+}
+----
+
+== Defining user permissions[[permissions]]
+
+As mentioned in the previous section, every user can have roles and may affect his ability to access some service methods.
+This section explains how to specify those for each user.
+
+Currently, Vaadin Connect is based on top of Spring Boot, which allows us to define a single bean for looking for user data: a `UserDetailsService`.
+This bean is a part of Spring Security and requires a single method implementation: `loadUserByUsername`.
+In the context of Vaadin Connect, three main properties should be defined:
+* username
+The name of a user to look for.
+
+* password (encoded)
+The password of a user to check when a matching one is found by the name.
+
+* roles
+The access roles list for the user. Those roles are checked whenever any secured service method is called.
+
+Neither Spring nor Vaadin Connect enforce the way those users should be found — you store this data somewhere
+(in the code, in the database, in memory etc.) and return it when the bean method is invoked.
+
+Here are a few examples on how it can be done via
+https://github.com/vaadin/vaadin-connect/blob/12995cef0c452eb3cb97bb3f006e0941ead40a27/vaadin-connect-demo/src/main/java/com/vaadin/connect/demo/DemoVaadinOAuthConfiguration.java#L35[database lookup]
+https://github.com/vaadin/base-starter-connect/blob/c9944e9ba6e6362d292ee2fdb9164787c41051c2/src/main/java/com/vaadin/connect/starter/StarterOAuthConfiguration.java#L16[hardcoded user data]
+
+When the Vaadin Connect Client receives a request for the secured service, it requests the user credentials
+and those are used to search the user data via the bean specified above.
+
+If the credentials match and the data is successfully found, a corresponding token is issued that is used by the
+client library to access the secured service methods.
+Whenever a method is accessed with a token, the roles of the user are checked, if needed and, if everything is ok, the method is executed.
+
+== Accessing user information in a service method
+
+Since currently Vaadin Connect is based on Spring Boot, we can use its capabilities to access the user data:
+
+[source,java]
+----
+Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+authentication.getPrincipal(); // use this method to get the username
+authentication.getAuthorities(); // use this method to get the info about the roles the user has
+authentication.getDetails(); // use this method to get the details about the auth token used
+----
