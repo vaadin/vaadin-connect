@@ -15,6 +15,9 @@
  */
 package com.vaadin.connect.demo;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,12 +26,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,7 +47,6 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.ResourceAccessException;
 
 import com.vaadin.connect.VaadinConnectProperties;
 
@@ -68,18 +72,17 @@ public class VaadinConnectControllerIT {
   @Autowired
   private VaadinConnectProperties vaadinConnectProperties;
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
-
   @Before
   public void authenticate() {
     if (!tokenInjected) {
       String accessToken = getAccessToken();
-      template.getRestTemplate().getInterceptors()
-          .add((request, body, execution) -> {
-            request.getHeaders().setBearerAuth(accessToken);
-            return execution.execute(request, body);
-          });
+      List<ClientHttpRequestInterceptor> interceptors = template
+          .getRestTemplate().getInterceptors();
+      interceptors.clear();
+      interceptors.add((request, body, execution) -> {
+        request.getHeaders().setBearerAuth(accessToken);
+        return execution.execute(request, body);
+      });
       tokenInjected = true;
     }
   }
@@ -271,20 +274,18 @@ public class VaadinConnectControllerIT {
   public void should_RequestFail_When_InvalidRoleUsedInRequest() {
     String methodName = "permitRoleAdmin";
 
-    exception.expect(ResourceAccessException.class);
-    exception.expectMessage(methodName);
-
-    sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+    ResponseEntity<String> response = sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertVaadinErrorResponse(response.getBody(), methodName);
   }
 
   @Test
   public void should_RequestFail_When_MethodCallProhibitedByClassAnnotation() {
     String methodName = "deniedByClass";
 
-    exception.expect(ResourceAccessException.class);
-    exception.expectMessage(methodName);
-
-    sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+    ResponseEntity<String> response = sendVaadinServiceRequest(methodName, Collections.emptyMap(), String.class);
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertVaadinErrorResponse(response.getBody(), methodName);
   }
 
   @Test
@@ -297,6 +298,27 @@ public class VaadinConnectControllerIT {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals("\"anonymous success\"", response.getBody());
+  }
+
+  // TestRestTemplate always injects custom headers that I was not able to
+  // remove with the interceptors hence the apache http client is used to make a
+  // simple POST request
+  @Test
+  public void should_AllowAnonymousAccess_When_NoHeadersSpecified() {
+    String url = getRequestUrl("DemoVaadinService", "hasAnonymousAccess");
+    CloseableHttpClient client = HttpClients.createDefault();
+
+    List<String> response;
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(
+        client.execute(new HttpPost(url)).getEntity().getContent()))) {
+      response = br.lines().collect(Collectors.toList());
+    } catch (IOException e) {
+      throw new AssertionError(
+          String.format("Failed to send a request to url '%s'", url), e);
+    }
+
+    assertEquals(1, response.size());
+    assertEquals("\"anonymous success\"", response.get(0));
   }
 
   private <T> ResponseEntity<T> sendVaadinServiceRequest(String methodName,
