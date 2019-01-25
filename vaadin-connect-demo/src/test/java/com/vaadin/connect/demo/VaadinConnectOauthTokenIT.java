@@ -38,7 +38,6 @@ import org.springframework.web.context.WebApplicationContext;
 import static com.vaadin.connect.demo.DemoVaadinOAuthConfiguration.TEST_LOGIN;
 import static com.vaadin.connect.demo.DemoVaadinOAuthConfiguration.TEST_PASSWORD;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

@@ -58,7 +58,7 @@ The current version of the `vaadin-connect` Java library is implemented using li
 Vaadin Connect gives a _"better than REST"_ experience for the development teams
 that use Java on the backend, and JavaScript on the frontend.
 
-=== Easy to expose bussiness services
+=== Easy to expose business services
 
 Vaadin Connect is designed to facilitate the access of business procedures that run in
 the java backend, hence, business logic can still be developed in Java taking advantage
@@ -70,8 +70,7 @@ Vaadin Connect provides the the following features:
   data types and Beans.
 - Automatic validation based on Java annotations is provided on both the client
   and the server.
-- Backend errors an Exceptions are smothly passed to the frontend in order to appropriatelly
-inform the UI.
+- Backend errors and exceptions are passed to the frontend to inform the UI.
 
 === Type-checkable API access from JavaScript
 
@@ -97,7 +96,7 @@ The authentication layer based on OAuth 2.0 is included in Vaadin Connect.
 
 In Vaadin Connect, the backend services are stateless. Instead of storing the
 sessions on the backend server, every authenticated request comes with an
-`access_token` containg the information about the user.
+`access_token` containing the information about the user.
 
 This enables easy cluster backend deployments, as there is no need to manage a
 shared session storage between multiple backend servers.
@@ -139,7 +138,7 @@ differencial serving in mind, and results in two bundle versions:
 
 - The modern `.js` bundle, targeted for browsers having native ES6, `fetch` and
   modules support. This allows to decrease the bundle size for modern web
-  browsers by excluding unecessary polyfills and using a more concise syntax.
+  browsers by excluding unnecessary polyfills and using a more concise syntax.
 - The legacy `.es5.js` bundle with all the classes transpiled to ES5, and all
   the polyfills included. This enables browser support down to IE 11.
 

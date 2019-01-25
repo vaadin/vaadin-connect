@@ -15,8 +15,6 @@
  */
 package com.vaadin.connect.demo;
 
-import java.util.stream.Stream;
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +36,8 @@ public class DemoVaadinOAuthConfiguration {
   static final String TEST_PASSWORD = "test_password";
 
   @Bean
-  public UserDetailsService userDetailsService(AccountRepository accountRepository) {
+  public UserDetailsService userDetailsService(
+      AccountRepository accountRepository) {
     return username -> accountRepository.findByUsername(username)
         .map(account -> User.builder().username(account.getUsername())
             .password(account.getPassword()).roles("USER").build())
@@ -46,16 +45,9 @@ public class DemoVaadinOAuthConfiguration {
   }
 
   @Bean
-  CommandLineRunner init(
-      AccountRepository accountRepository,
+  CommandLineRunner init(AccountRepository accountRepository,
       PasswordEncoder encoder) {
-    return args -> {
-      Stream.of("manolo", "viktor", "kirill", "anton", "tien")
-          .forEach(username -> accountRepository
-              .save(new Account(username, encoder.encode("abc123"))));
-
-      accountRepository
-          .save(new Account(TEST_LOGIN, encoder.encode(TEST_PASSWORD)));
-    };
+    return args -> accountRepository
+        .save(new Account(TEST_LOGIN, encoder.encode(TEST_PASSWORD)));
   }
 }

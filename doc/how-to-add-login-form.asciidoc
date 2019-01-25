@@ -22,7 +22,7 @@ Although you can use any HTML components for the form, in our example we use the
 <vaadin-login-overlay></vaadin-login-overlay>
 ----
 
-Then, the import for the compoment library is needed to make it work, and eventually you can configure it by using its JavaScript API:
+Then, the import for the component library is needed to make it work, and eventually you can configure it by using its JavaScript API:
 
 [source,javascript]
 ----

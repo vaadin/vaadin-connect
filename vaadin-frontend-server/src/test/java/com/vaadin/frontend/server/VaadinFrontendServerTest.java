@@ -21,8 +21,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
-import com.vaadin.frontend.server.EnableVaadinFrontendServer;
-
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -70,7 +68,7 @@ public class VaadinFrontendServerTest {
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, HtmlNotFoundTest.class) },
         { "Enabling frontend-server should fail if asset not found", null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendDefault.class, AssetNotFoundTest.class) },
-        { "Enabling custon frontend-server should forward any route path", null,
+        { "Enabling custom frontend-server should forward any route path", null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, RouteForwardTest.class) },
         { "Enabling custom frontend-server should forward to / if .html is not found", null,
           Arrays.asList(ConfigureContext.class, EnableVaadinFrontendCustom.class, HtmlForwardTest.class) },

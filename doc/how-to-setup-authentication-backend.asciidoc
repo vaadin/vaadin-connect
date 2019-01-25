@@ -11,7 +11,7 @@ Vaadin Connect provides a built-in authentication server which can be enabled wi
 
 == 1. Define `UserDetailsService` bean
 
-`UserDetailsService` bean is a requirement to make the authentication actually work. It bascially fetches user information from your storage (either from your database or in-memory data) based on a given `username`. You can create a simple `UserDetailsService` with one test user with the following snippet:
+`UserDetailsService` bean is a requirement to make the authentication actually work. It fetches user information from your storage (either from your database or in-memory data) based on a given `username`. You can create a simple `UserDetailsService` with one test user with the following snippet:
 
 .StarterOAuthConfiguration.java
 [[StarterOAuthConfiguration.java]]
@@ -122,7 +122,7 @@ public class StarterApplication {
 
 == Next steps
 
-- <<sercurity#,Refer to Security in Vaadin Connect for more information>>
+- <<security#,Refer to Security in Vaadin Connect for more information>>
 - https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/StarterOAuthConfiguration.java[Visit the StarterOAuthConfiguration.java in the Starter Project]
 
 - <<README#,Browse through the docs>>

@@ -299,7 +299,7 @@ public class MyService {
 
 https://tools.ietf.org/html/rfc6749[OAuth 2.0 Authorization Framework] is mainly intended for federated login and server-to-server requests, but It can also be used for other purposes.
 
-Based on the authentication process it defines different types, the typical one is the https://tools.ietf.org/html/rfc6749#section-4.1[*_Authorization Code grant_*] that describes the most complex OAuth flow, thouth,  we are interested in the https://tools.ietf.org/html/rfc6749#section-4.3[*_Password grant_*] which is a simplified case of that, and is used in the *_Vaadin Connect Authentication flow_*.
+Based on the authentication process it defines different types, the typical one is the https://tools.ietf.org/html/rfc6749#section-4.1[*_Authorization Code grant_*] that describes the most complex OAuth flow, although we are interested in the https://tools.ietf.org/html/rfc6749#section-4.3[*_Password grant_*] which is a simplified case of that, and is used in the *_Vaadin Connect Authentication flow_*.
 
 [NOTE]
 ====
@@ -316,7 +316,7 @@ image::password-grant-oauth-flow.png[Password Grant Diagram]
 
 === _Authorization Code Grant_ flow
 
-It is applicable for more complex scenarios, the typical case is when the the `_resource server_` does not have any authorization system and trusts on 3rd party user-accout databases like Google, Twitter, etc.
+It is applicable for more complex scenarios, the typical case is when the the `_resource server_` does not have any authorization system and trusts on 3rd party user-account databases like Google, Twitter, etc.
 
 The *_Authorization Code Grant flow_* describes how the `_user_` is redirected to the `_authorization server_` in order to, once authenticated, get an  `_authentication code_` that is passed back to the `_client application_` through the user's browser. The `_client application_` uses the `_authentication code_` besides the `_client secret_` to get an `_access token_` from the `_authorization server_` that the `_client_` will use to consume the service from the `_resource server_`.
 
