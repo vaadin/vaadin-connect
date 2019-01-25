@@ -66,6 +66,17 @@ public class OpenApiParserTest {
     Assert.assertEquals(expectedJson, Json.pretty(openAPI));
   }
 
+  @Test
+  public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
+    OpenAPI openAPI = getGenerator("denyall").generateOpenApi();
+    String expectedJson = TestUtils.getExpectedJson(this.getClass(),
+            "expected-denyall-service.json");
+
+    String actualJson = Json.pretty(openAPI);
+    Assert.assertEquals(expectedJson, actualJson);
+    Assert.assertFalse(actualJson.contains("shouldBeDenied"));
+  }
+
   private OpenApiParser getGenerator(String path) {
     OpenApiParser generator = new OpenApiParser();
 

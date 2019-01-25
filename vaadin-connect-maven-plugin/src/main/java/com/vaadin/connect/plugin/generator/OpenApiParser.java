@@ -316,8 +316,7 @@ class OpenApiParser {
       ClassOrInterfaceDeclaration typeDeclaration) {
     Map<String, PathItem> newPathItems = new HashMap<>();
     for (MethodDeclaration methodDeclaration : typeDeclaration.getMethods()) {
-      if (!methodDeclaration.isPublic()
-          || methodDeclaration.isAnnotationPresent(DenyAll.class)) {
+      if (isAccessForbidden(typeDeclaration, methodDeclaration)) {
         continue;
       }
       String methodName = methodDeclaration.getNameAsString();
@@ -349,12 +348,19 @@ class OpenApiParser {
     return newPathItems;
   }
 
+  private boolean isAccessForbidden(ClassOrInterfaceDeclaration typeDeclaration,
+      MethodDeclaration methodDeclaration) {
+    return !methodDeclaration.isPublic()
+        || (hasSecurityAnnotation(methodDeclaration)
+            ? methodDeclaration.isAnnotationPresent(DenyAll.class)
+            : typeDeclaration.isAnnotationPresent(DenyAll.class));
+  }
+
   private boolean requiresAuthentication(
       ClassOrInterfaceDeclaration typeDeclaration,
       MethodDeclaration methodDeclaration) {
     if (hasSecurityAnnotation(methodDeclaration)) {
-      return !methodDeclaration.isAnnotationPresent(AnonymousAllowed.class)
-          || methodDeclaration.isAnnotationPresent(DenyAll.class);
+      return !methodDeclaration.isAnnotationPresent(AnonymousAllowed.class);
     } else if (hasSecurityAnnotation(typeDeclaration)) {
       return !typeDeclaration.isAnnotationPresent(AnonymousAllowed.class);
     }
