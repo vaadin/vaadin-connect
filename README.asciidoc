@@ -70,7 +70,7 @@ Vaadin Connect provides the the following features:
   data types and Beans.
 - Automatic validation based on Java annotations is provided on both the client
   and the server.
-- Backend errors an Exceptions are passed to the frontend to inform the UI.
+- Backend errors and exceptions are passed to the frontend to inform the UI.
 
 === Type-checkable API access from JavaScript
 
