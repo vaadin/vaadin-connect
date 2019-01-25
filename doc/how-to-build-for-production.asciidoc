@@ -13,7 +13,7 @@ than the https://github.com/vaadin/base-starter-connect/[base starter project]
 == What is the difference between the development and production builds?
 
 Vaadin Connect application meets Java web application standards, but in addition, the static
-files served by the Java servlet container are optimized, minimized and bundled before they are
+files served by the Java servlet container are optimized, minified and bundled before they are
 served to the browser.
 
 In both development and production modes, the bundle is always generated, though in devmode, the
@@ -109,7 +109,7 @@ dependency as being provided.
 ...
 ----
 
-2. Make the application main class extend `SpringBootServletInitializer`
+2. Make the application main class extend `SpringBootServletInitializer` and override `configure` in order to provide your application main class.
 +
 [source,java]
 ----
@@ -132,20 +132,6 @@ public class MyApplication extends SpringBootServletInitializer {
 3. Execute `./mvnw package` as described above, and you will get a `{my-app-name}-{my-app-version}.war` file in the `target` folder.
 
 4. Finally, drop the `.war` file into your Java servlet container as usual.
-
-== How to customize the build
-
-If you want a custom build, it's important to understand the steps involved in the process:
-
-1. The Vaadin Connect Generated JavaScript is produced in the Maven `compile` phase.
-2. The frontend production bundle is made by the `https://webpack.js.org/concepts/[webpack]` utility, which is executed during the Maven `pre-package` phase.
-3. The final artifact including backend classes and frontend bundle, is generated in the Maven `package` phase.
-
-Therefore, everything looks like a typical Java web application, but the frontend bundling phase.
-
-By default, if your application already has an `index.hml` for the initial page load, and a `index.js` for the application code,
-you don't need to modify anything in the build script, but if you still need to customize something, edit the `webpack.config.js`
-
 
 == Next Steps
 
