@@ -129,7 +129,7 @@ const logout = document.getElementById('logout');
 logout.addEventListener('click', e => client.logout());
 ----
 
-== Next Steps
+== Next steps
 
 - <<how-to-add-api-endpoint#,How to add an API endpoint to your Application>>
 - https://github.com/vaadin/base-starter-connect/blob/master/frontend/login-controller.js[Visit the Login JavaScript code in the Starter Project]

@@ -87,15 +87,9 @@ By default, the Java class name is taken. It is possible to specify a value in t
 `@VaadinService("customName")`. In this case, the `customName` value will be used as a `${service_name}`
 to accept incoming requests, also case-insensitive.
 
-== How to test the API endpoint with an API browser?
+== Next steps
 
-There is a possibility to explore all the services in the API browser.
-Use `npm start` command (don't forget to install the dependencies required with the `npm install` command before)
-in the project and open the `http://localhost:8082` page to see all Vaadin Connect service methods available.
-
-
-== Next Steps
-
+- <<how-to-browse-api#,How to browse the API>>
 - <<how-to-use-an-api-endpoint#,How to use an API endpoint in to your Application>>
 - https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/StatusService.java[Visit the Services Java code in the Starter Project]
 - <<README#,Browse through the docs>>

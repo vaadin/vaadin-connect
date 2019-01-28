@@ -13,6 +13,7 @@ layout: page
 ** <<getting-started#,Getting Started>>
 ** <<how-to-add-login-form#,How to add a login form>>
 ** <<how-to-add-api-endpoint#,How to add an API endpoint>>
+** <<how-to-browse-api#,How to browse the API>>
 ** <<how-to-secure-api-endpoint#,How to configure security for an API endpoint>>
 ** <<how-to-use-an-api-endpoint#,How to use an API endpoint>>
 ** <<how-to-setup-authentication-backend#,How to set up authentication in backend>>
