@@ -1,0 +1,103 @@
+---
+title: How to create a SPA
+order: 797
+layout: page
+---
+
+= How to create a single-page application (SPA)
+
+
+== Why is extra effort necessary to create a SPA?
+
+An https://en.wikipedia.org/wiki/Single-page_application[SPA] is a web application that only performs
+a single page load, therefore any user interaction does not transfer more pages, but renders the
+content in the current page.
+
+When programing SPA's, it is a good practice to update the URL when the user navigates the application,
+so as the user can link or reload the application to an specific state.
+
+The main issue then, is that updates should happen without the browser requesting a new page.
+Changes to browser location were traditionally performed by changing the location hash-fragment
+which does not trigger a new network request. For example:
+
+[source,javascript]
+----
+// This changes http://localhost/ to http://localhost/#!user/edit
+window.location.hash = '#!user/edit';
+----
+
+Though nowadays, apps do prefer to update the path-name fragment via the  modern `https://developer.mozilla.org/en-US/docs/Web/API/History_API#Adding_and_modifying_history_entries[pushState]`
+history API which modifies the history stack without sending the request. For example:
+
+[source,javascript]
+----
+// This changes http://localhost/ to http://localhost/user/edit
+history.pushState(null, null, 'user/edit');
+----
+
+But, what happens when the user reloads the page?
+
+In the first case it still request the same page, but in the second case, the request has a new
+path, and the server will respond with a non-found page, since `/user/edit` does not correspond
+with any static or dynamic backend content.
+
+The solution would be to define as many end-points in the backend as possible routes in the client,
+or otherwise to enable the <<frontend-server#,Vaadin frontend server>>.
+
+== How to enable the Vaadin Frontend Server?
+
+In order to enable Vaadin frontend server, you need to include the `vaadin-frontend-server` dependency and
+annotate your main application class with the `@EnableVaadinFrontendServer` as it is explained in the
+<<frontend-server#,Vaadin frontend server>> guide.
+
+== How to set up client-side routing?
+
+=== Using the `history.pushState` API
+
+Use the `history.pushState` API for modifying the location, and listen to the `window.onpopstate` event
+to detect when navigation happens in order to bring the user to the appropriate view.
+
+[source,javascript]
+----
+
+document.querySelector('#edit-user').addEventListener('click', e => {
+   history.pushState(null, null, '/user/edit');
+   showUsersEditView();
+});
+
+window.addEventListener('popstate', e => {
+  if (window.location.pathname === '/user/edit') {
+    showUsersEditView();
+  }
+});
+----
+
+=== Using 3rd party libraries
+
+There are plenty of javascript libraries to handle client routing. The following example shows how
+to use https://vaadin.com/router[Vaadin Router] when your application is based on web components:
+
+[source,javascript]
+----
+import {Router} from '@vaadin/router';
+
+const outlet = document.getElementById('outlet');
+const router = new Router(outlet);
+router.setRoutes([
+  {path: '/',     component: 'x-home-view'},
+  {path: '/users',  component: 'x-user-list'},
+  {path: '/user/edit',  component: 'x-user-edit'},
+  {path: '(.*)', component: 'x-not-found-view'},
+]);
+----
+
+The demo creates a different web component for each view, for instance `x-user-edit` for the `/user/edit` route,
+and replace the content of the DOM `container` element with it.
+
+
+== Next Steps
+
+- <<how-to-build-for-production#,How to build for production>>
+- <<frontend-server#,Vaadin frontend server>>
+- <<README#,Browse through the docs>>
+
