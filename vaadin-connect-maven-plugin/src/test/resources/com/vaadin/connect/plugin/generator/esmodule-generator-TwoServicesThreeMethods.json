@@ -40,7 +40,7 @@
           }
         },
         "security" : [ {
-          "vaadin-connect-jwt" : [ ]
+          "vaadin-connect-oauth2" : [ ]
         } ]
       }
     },
@@ -68,7 +68,7 @@
           }
         },
         "security" : [ {
-          "vaadin-connect-jwt" : [ ]
+          "vaadin-connect-oauth2" : [ ]
         } ]
       }
     },
@@ -96,7 +96,7 @@
           }
         },
         "security" : [ {
-          "vaadin-connect-jwt" : [ ]
+          "vaadin-connect-oauth2" : [ ]
         } ]
       }
     }
