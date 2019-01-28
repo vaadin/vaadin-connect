@@ -1,0 +1,141 @@
+---
+title: How to build for production
+order: 798
+layout: page
+---
+
+= How to build for production
+
+For this tutorial we assume that your application has been created as described in the
+<<getting-started#,Getting started>> guide, therefore it has the same tooling and configuration
+than the https://github.com/vaadin/base-starter-connect/[base starter project]
+
+== What is the difference between the development and production builds?
+
+Vaadin Connect application meets Java web application standards, but in addition, the static
+files served by the Java servlet container are optimized, minified and bundled before they are
+served to the browser.
+
+In both development and production modes, the bundle is always generated, though in devmode, the
+optimization is less aggressive in order to be easier to debug the application in browser.
+
+In the case of JavaScript files, they are also transpiled, hence, the code written following ES6 syntax
+can be run in older browsers.
+In devmode, source maps are generated to make possible debug by inspecting the original JavaScript source files.
+
+== Supported browsers
+
+Vaadin Connect supports IE11+ and any of the evergreen browsers, in both production and development modes.
+
+== How to run development mode
+
+The template project is configured with everything necessary to run and debug the application.
+
+Assuming that you have Java 8 or newer and  Node 8 or newer, when in the root folder of your project run the following:
+
+[source,bash]
+----
+$ npm install
+$ npm start
+----
+
+Then, open your browser pointing to http://localhost:8080 to open and debug the application.
+
+[NOTE]
+====
+When in devmode, you can change either backend or frontend code, and your browser will be reloaded
+automatically when changes are applied.
+====
+
+== How to run the project in production
+
+=== Building the artifact
+
+The template is also configured with all the tooling needed to bundle, minify, and package frontend
+files with backend classes into the deployable Java artifact. Run the following command to get the
+application artifact:
+
+[source,bash]
+----
+$ ./mvnw package
+----
+
+
+[NOTE]
+====
+Alternatively you can run `mvn package` if you already have Maven installed in your system.
+====
+
+=== Running the embedded java servlet
+
+The build process outputs a completely self-contained executable jar file named `target/{my-app-name}-{my-app-version}.jar`
+that we could run in production.
+Move it to your production server, which need to have Java 8 or newer installed, and execute the following command:
+
+[source,bash]
+----
+$ java -Dserver.port=80 -jar {my-app-name}-{my-app-version}.jar
+----
+
+Finally you can access your web application at `\http://your-server-address/`
+
+[NOTE]
+====
+To listen to the `80` port, as indicated in the snippet, you might need to run it with a privileged account.
+====
+
+[NOTE]
+====
+If `server.port` is not specified, the embedded server will listen to `8080` by default.
+====
+
+=== Deploying to a servlet container
+
+When your organization has Java servers in their infra, you can deliver a standard `.war` file for production.
+
+1. In the `pom.xml` file, adjust the project to assemble a `war` file, and mark the embedded servlet container
+dependency as being provided.
++
+[source,xml]
+----
+...
+<packaging>war</packaging>
+...
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-tomcat</artifactId>
+        <scope>provided</scope>
+    </dependency>
+...
+----
+
+2. Make the application main class extend `SpringBootServletInitializer` and override `configure` in order to provide your application main class.
++
+[source,java]
+----
+@SpringBootApplication
+@EnableVaadinConnectOAuthServer
+@EnableVaadinFrontendServer
+public class MyApplication extends SpringBootServletInitializer {
+
+  @Override
+  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+      return application.sources(MyApplication.class);
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(MyApplication.class, args);
+  }
+}
+----
+
+3. Execute `./mvnw package` as described above, and you will get a `{my-app-name}-{my-app-version}.war` file in the `target` folder.
+
+4. Finally, drop the `.war` file into your Java servlet container as usual.
+
+== Next Steps
+
+- <<how-to-browse-backend-api#,How to browse the backend API>>
+- https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/GreeterService.java[Visit the Services Java code in the Starter Project]
+- <<README#,Browse through the docs>>
+
