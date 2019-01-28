@@ -17,6 +17,7 @@ layout: page
 ** <<how-to-secure-api-endpoint#,How to configure security for an API endpoint>>
 ** <<how-to-use-an-api-endpoint#,How to use an API endpoint>>
 ** <<how-to-setup-authentication-backend#,How to set up authentication in backend>>
+** <<how-to-create-spa#,How to create a single-page application>>
 ** <<how-to-build-for-production#,How to build for production>>
 * Reference documents
 ** <<vaadin-connect-exceptions#,Vaadin Connect Exceptions>>

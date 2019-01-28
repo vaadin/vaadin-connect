@@ -1,6 +1,6 @@
 ---
 title: How to add an API endpoint
-order: 791
+order: 792
 layout: page
 ---
 
