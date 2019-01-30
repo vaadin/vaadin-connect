@@ -201,7 +201,7 @@ See the link:security.asciidoc[Vaadin Connect Security] guide to learn more on
 how the authentication works.
 ====
 
-== Next Steps
+== Next steps
 
 - <<how-to-add-login-form#,How to add a login form to your Application>>
 - https://github.com/vaadin/base-starter-connect[Try out a Starter project]

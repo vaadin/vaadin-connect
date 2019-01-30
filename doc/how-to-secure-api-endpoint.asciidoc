@@ -1,6 +1,6 @@
 ---
 title: How to configure security for an API endpoint
-order: 792
+order: 793
 layout: page
 ---
 

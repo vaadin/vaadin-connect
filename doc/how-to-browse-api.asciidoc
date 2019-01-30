@@ -1,0 +1,70 @@
+---
+title: How to browse the API
+order: 792
+layout: page
+---
+
+= How to browse the API
+
+== Starting the API browser
+
+The API browser is an utility that lists and describes all the available APIs on the backend, and allows to call the APIs with a desired input and inspect their output. The https://github.com/vaadin/base-starter-connect[`base-starter-connect`] example application project has the API browser included.
+
+To use the API browser, start the development server by running the following command from terminal in your project:
+
+[source,console]
+----
+$ npm start
+----
+
+After that, open the API browser UI in your web browser: http://localhost:8082.
+
+The API browser is available while the development server is running.
+
+== Authentication in the API browser
+
+The `base-starter-connect` includes an example API endpoint, which requires authentication. To call it, you have to authenticate in the API browser first.
+
+In the API browser UI, click the “Authorize” button. This will open the “Available authorizations” dialog.
+
+The dialog contains the `vaadin-connect-oauth2` authorization type, which is based on OAuth2 and uses password credentials.
+
+Enter the username (`test_login`), and the password (`test_password`), leave other fields unchanged, press the “Authorize” button in the dialog.
+
+[NOTE]
+.Custom authentication setup
+====
+Above are the default password credentials used for authentication in the base starter project. You can change these credentials while configuring the authentication server. See the <<how-to-setup-authentication-backend#,How to setup authentication>> guide for more information.
+====
+
+After successful authentication, the dialog should say “Authorized”. You can now close the dialog and proceed to calling the APIs.
+
+[NOTE]
+.How to logout
+====
+To logout, press the “Authorize” button to open the authorizations dialog again, then press the “Logout” button in the dialog.
+====
+
+== Calling API methods
+
+The API browser lists all the services and their methods. For example, let us try to call the `update` method from the `StatusService`:
+
+- Click the `POST /StatusService/update` line to open the method details.
+- Press the “Try it out” button to start a new request.
+- Optionally, edit the request body, or leave the default generated one.
+- Click “Execute” to send the request.
+- After a short while, the request execution completes, and the server response is shown below.
+
+[NOTE]
+.Authentication error
+====
+You might get the `401 Error: Unauthorized` error response. Typically, this happens if you have not authenticated in the API browser while trying to call an API method that requires authentication. Follow the previous section to authenticate in the API browser.
+
+You can call the APIs that are available for public use (i. e., have the `@AnonymousAllowed` annotation) from the API browser without any prior authentication.
+====
+
+== Next steps
+
+- <<how-to-secure-api-endpoint#,How to configure security for an API endpoint>>
+- <<how-to-use-an-api-endpoint#,How to use an API endpoint>>
+- <<README#,Browse through the docs>>

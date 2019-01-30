@@ -1,6 +1,6 @@
 ---
-title: How To Use An API Endpoint
-order: 793
+title: How to use an API endpoint
+order: 794
 layout: page
 ---
 
@@ -90,7 +90,7 @@ As you see in <<CounterService.js>>, the Javadoc of `@VaadinService` class is pr
 image::codecompletion.gif[Code-completion]
 
 
-== Next Steps
+== Next steps
 - https://github.com/vaadin/base-starter-connect/blob/master/frontend/status-controller.js[Visit the status-controller.js in the Starter Project]
 
 - <<README#,Browse through the docs>>
