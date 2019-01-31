@@ -48,7 +48,6 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.LiteralStringValueExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
-import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
@@ -227,13 +226,8 @@ class OpenApiParser {
     Components components = new Components();
     SecurityScheme vaadinConnectOAuth2Scheme = new SecurityScheme()
         .type(SecurityScheme.Type.OAUTH2)
-        .flows(
-            new OAuthFlows().password(
-                new OAuthFlow()
-                    .tokenUrl(VAADIN_CONNECT_OAUTH2_TOKEN_URL)
-                    .scopes(new Scopes())
-            )
-        );
+        .flows(new OAuthFlows().password(new OAuthFlow()
+            .tokenUrl(VAADIN_CONNECT_OAUTH2_TOKEN_URL).scopes(new Scopes())));
     components.addSecuritySchemes(VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME,
         vaadinConnectOAuth2Scheme);
     openAPI.components(components);
@@ -371,17 +365,16 @@ class OpenApiParser {
       MethodDeclaration methodDeclaration) {
     if (hasSecurityAnnotation(methodDeclaration)) {
       return !methodDeclaration.isAnnotationPresent(AnonymousAllowed.class);
-    } else if (hasSecurityAnnotation(typeDeclaration)) {
+    } else {
       return !typeDeclaration.isAnnotationPresent(AnonymousAllowed.class);
     }
-    return true;
   }
 
-  private boolean hasSecurityAnnotation(NodeWithAnnotations<?> node) {
-    return node.isAnnotationPresent(AnonymousAllowed.class)
-        || node.isAnnotationPresent(PermitAll.class)
-        || node.isAnnotationPresent(DenyAll.class)
-        || node.isAnnotationPresent(RolesAllowed.class);
+  private boolean hasSecurityAnnotation(MethodDeclaration method) {
+    return method.isAnnotationPresent(AnonymousAllowed.class)
+        || method.isAnnotationPresent(PermitAll.class)
+        || method.isAnnotationPresent(DenyAll.class)
+        || method.isAnnotationPresent(RolesAllowed.class);
   }
 
   private Operation createPostOperation(MethodDeclaration methodDeclaration,

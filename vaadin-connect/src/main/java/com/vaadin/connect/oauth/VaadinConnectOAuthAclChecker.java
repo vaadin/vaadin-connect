@@ -99,14 +99,14 @@ public class VaadinConnectOAuthAclChecker {
   }
 
   private String verifyAnonymousUser(Method method) {
-    if (cannotAccessAnonymously(method)
+    if (requiresAuthentication(method)
         || cannotAccessMethod(method, Collections.emptyList())) {
       return "Anonymous access is not allowed";
     }
     return null;
   }
 
-  private boolean cannotAccessAnonymously(Method method) {
+  public boolean requiresAuthentication(Method method) {
     if (hasSecurityAnnotation(method)) {
       return !method.isAnnotationPresent(AnonymousAllowed.class);
     }

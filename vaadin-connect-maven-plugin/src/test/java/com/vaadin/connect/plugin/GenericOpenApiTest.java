@@ -16,15 +16,11 @@
 
 package com.vaadin.connect.plugin;
 
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -36,16 +32,19 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 
-import com.vaadin.connect.oauth.AnonymousAllowed;
+import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+// TODO kb naming, tests in asserts. Make it as a base abstract class or a static method.
 public class GenericOpenApiTest {
 
   public void verify(OpenAPI actualOpenAPI, Class<?> testServiceClass) {
+    assertTrue(testServiceClass.isAnnotationPresent(VaadinService.class));
     assertPaths(actualOpenAPI.getPaths(), testServiceClass);
     assertComponentSchemas(actualOpenAPI.getComponents().getSchemas(),
         testServiceClass);
@@ -55,13 +54,13 @@ public class GenericOpenApiTest {
     Method[] expectedServiceMethods = testServiceClass.getDeclaredMethods();
     assertEquals(expectedServiceMethods.length, actualPaths.size());
 
-    Stream.of(expectedServiceMethods).forEach(expectedServiceMethod -> {
+    for (Method expectedServiceMethod : expectedServiceMethods) {
       String expectedServiceUrl = String.format("/%s/%s",
           testServiceClass.getSimpleName(), expectedServiceMethod.getName());
       PathItem actualPath = actualPaths.get(expectedServiceUrl);
       assertNotNull(actualPath);
       assertPath(testServiceClass, expectedServiceMethod, actualPath);
-    });
+    }
   }
 
   private void assertPath(Class<?> testServiceClass,
@@ -90,18 +89,12 @@ public class GenericOpenApiTest {
     assertSchema(extractSchema(apiResponse.getContent()),
         expectedServiceMethod.getReturnType());
 
-    if (expectedServiceMethod.isAnnotationPresent(AnonymousAllowed.class)
-        || (hasNoSecurityAnnotation(expectedServiceMethod)
-            && testServiceClass.isAnnotationPresent(AnonymousAllowed.class))) {
-      assertNull(actualOperation.getSecurity());
-    } else {
+    if (new VaadinConnectOAuthAclChecker()
+        .requiresAuthentication(expectedServiceMethod)) {
       assertNotNull(actualOperation.getSecurity());
+    } else {
+      assertNull(actualOperation.getSecurity());
     }
-  }
-
-  private boolean hasNoSecurityAnnotation(Method method) {
-    return Stream.of(AnonymousAllowed.class, DenyAll.class, PermitAll.class,
-        RolesAllowed.class).noneMatch(method::isAnnotationPresent);
   }
 
   private void assertRequestSchema(Schema requestSchema,
@@ -125,21 +118,20 @@ public class GenericOpenApiTest {
     Class<?>[] declaredClasses = testServiceClass.getDeclaredClasses();
     assertEquals(declaredClasses.length, actualSchemas.size());
 
-    Stream.of(declaredClasses).forEach(expectedSchemaClass -> {
+    for (Class<?> expectedSchemaClass : declaredClasses) {
       Schema actualSchema = actualSchemas
           .get(expectedSchemaClass.getSimpleName());
       assertNotNull(actualSchema);
       assertSchema(actualSchema, expectedSchemaClass);
-    });
+    }
   }
 
   private void assertSchema(Schema actualSchema, Class<?> expectedSchemaClass) {
     if (expectedSchemaClass.isArray()) {
       assertEquals("array", actualSchema.getType());
       assertTrue(actualSchema instanceof ArraySchema);
-      Stream.of(((ArraySchema) actualSchema).getItems())
-          .forEach(arrayItemSchema -> assertSchema(actualSchema,
-              expectedSchemaClass.getComponentType()));
+      assertSchema(((ArraySchema) actualSchema).getItems(),
+          expectedSchemaClass.getComponentType());
     } else if (String.class.isAssignableFrom(expectedSchemaClass)) {
       assertEquals("string", actualSchema.getType());
     } else if (Number.class.isAssignableFrom(expectedSchemaClass)) {
@@ -155,12 +147,11 @@ public class GenericOpenApiTest {
         assertEquals(expectedSchemaClass.getDeclaredFields().length,
             properties.size());
 
-        Stream.of(expectedSchemaClass.getDeclaredFields())
-            .forEach(expectedSchemaField -> {
-              Schema propertySchema = properties
-                  .get(expectedSchemaField.getName());
-              assertSchema(propertySchema, expectedSchemaField.getType());
-            });
+        for (Field expectedSchemaField : expectedSchemaClass
+            .getDeclaredFields()) {
+          Schema propertySchema = properties.get(expectedSchemaField.getName());
+          assertSchema(propertySchema, expectedSchemaField.getType());
+        }
       } else {
         assertNull(actualSchema.getProperties());
       }
