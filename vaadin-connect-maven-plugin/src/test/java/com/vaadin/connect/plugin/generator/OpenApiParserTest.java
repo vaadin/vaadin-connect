@@ -18,18 +18,15 @@ package com.vaadin.connect.plugin.generator;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.vaadin.connect.plugin.GenericOpenApiTest;
-import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.collectionservice.CollectionTestService;
 import com.vaadin.connect.plugin.generator.denyall.DenyAllClass;
-
-import static org.junit.Assert.assertEquals;
+import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
 
 public class OpenApiParserTest {
 
@@ -41,11 +38,9 @@ public class OpenApiParserTest {
     OpenApiParser generator = getGenerator("service");
 
     OpenAPI openAPI = generator.getOpenApi();
-    String expectedJson = TestUtils.getExpectedJson(this.getClass(),
-        "expected-openapi.json");
-    assertEquals(Json.pretty(openAPI),
-        Json.pretty(generator.generateOpenApi()));
-    assertEquals(expectedJson, Json.pretty(openAPI));
+    GenericOpenApiTest.verify(openAPI, GeneratorTestClass.class);
+    GenericOpenApiTest.verifyJson(openAPI,
+        getClass().getResource("expected-openapi.json"));
   }
 
   @Test
@@ -65,13 +60,13 @@ public class OpenApiParserTest {
   @Test
   public void should_DistinguishBetweenUserAndBuiltinTypes_When_TheyHaveSameName() {
     OpenAPI openAPI = getGenerator("collectionservice").generateOpenApi();
-    new GenericOpenApiTest().verify(openAPI, CollectionTestService.class);
+    GenericOpenApiTest.verify(openAPI, CollectionTestService.class);
   }
 
   @Test
   public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
     OpenAPI openAPI = getGenerator("denyall").generateOpenApi();
-    new GenericOpenApiTest().verify(openAPI, DenyAllClass.class);
+    GenericOpenApiTest.verify(openAPI, DenyAllClass.class);
   }
 
   private OpenApiParser getGenerator(String path) {

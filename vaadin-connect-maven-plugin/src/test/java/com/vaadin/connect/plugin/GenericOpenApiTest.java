@@ -18,21 +18,36 @@ package com.vaadin.connect.plugin;
 
 import javax.annotation.security.DenyAll;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MapSchema;
+import io.swagger.v3.oas.models.media.NumberSchema;
+import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 
@@ -44,47 +59,92 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-// TODO kb naming, tests in asserts. Make it as a base abstract class or a static method.
-public class GenericOpenApiTest {
+// TODO kb naming, tests in asserts.
+public final class GenericOpenApiTest {
+  private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
+      Number.class, byte.class, char.class, short.class, int.class, long.class,
+      float.class, double.class);
 
-  private VaadinConnectOAuthAclChecker securityChecker = new VaadinConnectOAuthAclChecker();
+  private static final VaadinConnectOAuthAclChecker securityChecker = new VaadinConnectOAuthAclChecker();
 
-  public void verify(OpenAPI actualOpenAPI, Class<?> testServiceClass) {
-    assertTrue(testServiceClass.isAnnotationPresent(VaadinService.class));
-    assertPaths(actualOpenAPI.getPaths(), testServiceClass);
+  private GenericOpenApiTest() {
+  }
+
+  public static void verifyJson(OpenAPI actualOpenAPI, URL expectedJsonUrl) {
+    String expectedJson;
+    try (BufferedReader input = new BufferedReader(
+        new InputStreamReader(expectedJsonUrl.openStream()))) {
+      expectedJson = input.lines().collect(Collectors.joining("\n"));
+    } catch (IOException e) {
+      throw new AssertionError(
+          String.format("Failed to read json from '%s'", expectedJsonUrl), e);
+    }
+    assertEquals(expectedJson, Json.pretty(actualOpenAPI));
+  }
+
+  public static void verify(OpenAPI actualOpenAPI,
+      Class<?>... testServiceClasses) {
+    List<Class<?>> serviceClasses = new ArrayList<>();
+    List<Class<?>> nonServiceClasses = new ArrayList<>();
+
+    collectServiceClasses(serviceClasses, nonServiceClasses,
+        testServiceClasses);
+
+    assertPaths(actualOpenAPI.getPaths(), serviceClasses);
 
     Optional.ofNullable(actualOpenAPI.getComponents())
         .map(Components::getSchemas).ifPresent(
-            schemas -> assertComponentSchemas(schemas, testServiceClass));
+            schemas -> assertComponentSchemas(schemas, nonServiceClasses));
   }
 
-  private void assertPaths(Paths actualPaths, Class<?> testServiceClass) {
-    Method[] expectedServiceMethods = testServiceClass.getDeclaredMethods();
-
-    int expectedMethodCount = 0;
-    for (Method expectedServiceMethod : expectedServiceMethods) {
-      if (securityChecker.getSecurityTarget(expectedServiceMethod)
-          .isAnnotationPresent(DenyAll.class)) {
-        continue;
+  private static void collectServiceClasses(List<Class<?>> serviceClasses,
+      List<Class<?>> nonServiceClasses, Class<?>... inputClasses) {
+    for (Class<?> testServiceClass : inputClasses) {
+      if (testServiceClass.isAnnotationPresent(VaadinService.class)) {
+        serviceClasses.add(testServiceClass);
+      } else {
+        nonServiceClasses.add(testServiceClass);
       }
-      String expectedServiceUrl = String.format("/%s/%s",
-          testServiceClass.getSimpleName(), expectedServiceMethod.getName());
-      PathItem actualPath = actualPaths.get(expectedServiceUrl);
-      assertNotNull(actualPath);
-      assertPath(testServiceClass, expectedServiceMethod, actualPath);
-      expectedMethodCount++;
+      collectServiceClasses(serviceClasses, nonServiceClasses,
+          testServiceClass.getDeclaredClasses());
     }
-
-    assertEquals(expectedMethodCount, actualPaths.size());
   }
 
-  private void assertPath(Class<?> testServiceClass,
+  private static void assertPaths(Paths actualPaths,
+      List<Class<?>> testServiceClasses) {
+    int pathCount = 0;
+    for (Class<?> testServiceClass : testServiceClasses) {
+      for (Method expectedServiceMethod : testServiceClass
+          .getDeclaredMethods()) {
+        if (!Modifier.isPublic(expectedServiceMethod.getModifiers())
+            || securityChecker.getSecurityTarget(expectedServiceMethod)
+                .isAnnotationPresent(DenyAll.class)) {
+          continue;
+        }
+        pathCount++;
+        String expectedServiceUrl = String.format("/%s/%s",
+            getServiceName(testServiceClass), expectedServiceMethod.getName());
+        PathItem actualPath = actualPaths.get(expectedServiceUrl);
+        assertNotNull(actualPath);
+        assertPath(testServiceClass, expectedServiceMethod, actualPath);
+      }
+    }
+    assertEquals(pathCount, actualPaths.size());
+  }
+
+  private static String getServiceName(Class<?> testServiceClass) {
+    String customName = testServiceClass.getAnnotation(VaadinService.class)
+        .value();
+    return customName.isEmpty() ? testServiceClass.getSimpleName() : customName;
+  }
+
+  private static void assertPath(Class<?> testServiceClass,
       Method expectedServiceMethod, PathItem actualPath) {
     Operation actualOperation = actualPath.getPost();
     assertEquals(actualOperation.getTags(),
         Collections.singletonList(testServiceClass.getSimpleName()));
     assertTrue(actualOperation.getOperationId()
-        .contains(testServiceClass.getSimpleName()));
+        .contains(getServiceName(testServiceClass)));
     assertTrue(actualOperation.getOperationId()
         .contains(expectedServiceMethod.getName()));
 
@@ -105,7 +165,6 @@ public class GenericOpenApiTest {
           expectedServiceMethod.getReturnType());
     }
 
-    securityChecker = new VaadinConnectOAuthAclChecker();
     if (securityChecker.requiresAuthentication(expectedServiceMethod)) {
       assertNotNull(actualOperation.getSecurity());
     } else {
@@ -113,7 +172,7 @@ public class GenericOpenApiTest {
     }
   }
 
-  private void assertRequestSchema(Schema requestSchema,
+  private static void assertRequestSchema(Schema requestSchema,
       Class<?>... parameterTypes) {
     Map<String, Schema> properties = requestSchema.getProperties();
     assertEquals(parameterTypes.length, properties.size());
@@ -124,50 +183,63 @@ public class GenericOpenApiTest {
     }
   }
 
-  private Schema extractSchema(Content content) {
+  private static Schema extractSchema(Content content) {
     assertEquals(1, content.size());
     return content.get("application/json").getSchema();
   }
 
-  private void assertComponentSchemas(Map<String, Schema> actualSchemas,
-      Class<?> testServiceClass) {
-    Class<?>[] declaredClasses = testServiceClass.getDeclaredClasses();
-    assertEquals(declaredClasses.length, actualSchemas.size());
-
-    for (Class<?> expectedSchemaClass : declaredClasses) {
+  private static void assertComponentSchemas(Map<String, Schema> actualSchemas,
+      List<Class<?>> testServiceClasses) {
+    int schemasCount = 0;
+    for (Class<?> expectedSchemaClass : testServiceClasses) {
+      schemasCount++;
       Schema actualSchema = actualSchemas
           .get(expectedSchemaClass.getSimpleName());
       assertNotNull(actualSchema);
       assertSchema(actualSchema, expectedSchemaClass);
     }
+    assertEquals(schemasCount, actualSchemas.size());
   }
 
-  private void assertSchema(Schema actualSchema, Class<?> expectedSchemaClass) {
+  private static void assertSchema(Schema actualSchema,
+      Class<?> expectedSchemaClass) {
     if (expectedSchemaClass.isArray()) {
       assertEquals("array", actualSchema.getType());
       assertTrue(actualSchema instanceof ArraySchema);
       assertSchema(((ArraySchema) actualSchema).getItems(),
           expectedSchemaClass.getComponentType());
     } else if (String.class.isAssignableFrom(expectedSchemaClass)) {
-      assertEquals("string", actualSchema.getType());
-    } else if (Number.class.isAssignableFrom(expectedSchemaClass)) {
-      assertEquals("number", actualSchema.getType());
+      assertTrue(actualSchema instanceof StringSchema);
+    } else if (boolean.class.isAssignableFrom(expectedSchemaClass)
+        || Boolean.class.isAssignableFrom(expectedSchemaClass)) {
+      assertTrue(actualSchema instanceof BooleanSchema);
+    } else if (JSON_NUMBER_CLASSES.stream()
+        .anyMatch(jsonNumberClass -> jsonNumberClass
+            .isAssignableFrom(expectedSchemaClass))) {
+      assertTrue(actualSchema instanceof NumberSchema);
     } else if (Collection.class.isAssignableFrom(expectedSchemaClass)) {
-      assertEquals("array", actualSchema.getType());
+      assertTrue(actualSchema instanceof ArraySchema);
+    } else if (Map.class.isAssignableFrom(expectedSchemaClass)) {
+      assertTrue(actualSchema instanceof MapSchema);
     } else {
-      assertEquals("object", actualSchema.getType());
+      assertTrue(actualSchema instanceof ObjectSchema);
       if (actualSchema.get$ref() == null) {
         Map<String, Schema> properties = actualSchema.getProperties();
         assertNotNull(properties);
         assertTrue(properties.size() > 0);
-        assertEquals(expectedSchemaClass.getDeclaredFields().length,
-            properties.size());
 
+        int expectedFieldsCount = 0;
         for (Field expectedSchemaField : expectedSchemaClass
             .getDeclaredFields()) {
+          if (Modifier.isTransient(expectedSchemaField.getModifiers())) {
+            continue;
+          }
+
+          expectedFieldsCount++;
           Schema propertySchema = properties.get(expectedSchemaField.getName());
           assertSchema(propertySchema, expectedSchemaField.getType());
         }
+        assertEquals(expectedFieldsCount, properties.size());
       } else {
         assertNull(actualSchema.getProperties());
       }
