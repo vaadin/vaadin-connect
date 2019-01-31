@@ -52,69 +52,71 @@ annotate your main application class with the `@EnableVaadinFrontendServer` as i
 
 == How to set up client-side routing?
 
-There are plenty of javascript libraries to handle client routing. The following example shows how
-to use the https://vaadin.com/router[Vaadin Router] which is thought for application based on web components:
+There are plenty of JavaScript libraries to handle client-side routing. The following example shows how
+to use https://vaadin.com/router[Vaadin Router] which is intended for application based on web components:
 
-=== Step 1 - Add `vaadin-router` dependency to your App
+=== Step 1 - Add the `vaadin-router` dependency to your App
 
 [source,bash]
 ----
-npm install --save '@vaadin/router'
+npm install --save @vaadin/router
 ----
 
-=== Step 2 - Set an empty container for the content in the `index.html`
+=== Step 2 - Add an empty container for dynamic content into `index.html`
 
 [source,html]
 ----
 <body>
   ...
-  <div id='outlet'></div>
+  <div id="outlet"></div>
 </body>
 ----
 
-=== Step 3 - Create the views as web-components
+=== Step 3 - Create the views as Web Components
 
-We are adding two pages to our application, thus we need to create two web-components, in this case
-we are using the https://polymer-library.polymer-project.org/[Polymer-3] library.
+We are adding two pages to our application, thus we need to create two Web Components. In this case
+we are using the https://lit-element.polymer-project.org/[LitElement] base class for them.
 
-Type the following command to install the `polymer` dependency:
+Type the following command to install the `lit-element` dependency:
 
 [source,bash]
 ----
-npm install --save '@polymer/polymer'
+npm install --save lit-element
 ----
 
 Then create the following files:
 
-.root-view.js
+.home-view.js
 [source,javascript]
 ----
-import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
+import { LitElement, html } from 'lit-element';
 
-class RootView extends PolymerElement {
-  static get template() {
+class HomeView extends LitElement {
+  render() {
     return html`
-      <h3>Root View</h3>
+      <h3>Home View</h3>
       <a href="user">User View</a>
     `;
   }
 }
-customElements.define('root-view', RootView);
+
+customElements.define('home-view', HomeView);
 ----
 
 .user-view.js
 [source,javascript]
 ----
-import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
+import { LitElement, html } from 'lit-element';
 
-class UserView extends PolymerElement {
-  static get template() {
+class UserView extends LitElement {
+  render() {
     return html`
       <h3>User View</h3>
-      <a href="/">Root View</a>
+      <a href="/">Home View</a>
     `;
   }
 }
+
 customElements.define('user-view', UserView);
 ----
 
@@ -126,13 +128,13 @@ Replace the content in your `index.js` with the following code
 [source,javascript]
 ----
 import {Router} from '@vaadin/router';
-import './root-view.js';
+import './home-view.js';
 import './user-view.js';
 
 const outlet = document.getElementById('outlet');
 const router = new Router(outlet);
 router.setRoutes([
-  {path: '/',     component: 'root-view'},
+  {path: '/',      component: 'home-view'},
   {path: '/user',  component: 'user-view'}
 ]);
 ----
