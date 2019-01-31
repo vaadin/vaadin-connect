@@ -16,12 +16,16 @@
 
 package com.vaadin.connect.plugin;
 
+import javax.annotation.security.DenyAll;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -43,24 +47,35 @@ import static org.junit.Assert.assertTrue;
 // TODO kb naming, tests in asserts. Make it as a base abstract class or a static method.
 public class GenericOpenApiTest {
 
+  private VaadinConnectOAuthAclChecker securityChecker = new VaadinConnectOAuthAclChecker();
+
   public void verify(OpenAPI actualOpenAPI, Class<?> testServiceClass) {
     assertTrue(testServiceClass.isAnnotationPresent(VaadinService.class));
     assertPaths(actualOpenAPI.getPaths(), testServiceClass);
-    assertComponentSchemas(actualOpenAPI.getComponents().getSchemas(),
-        testServiceClass);
+
+    Optional.ofNullable(actualOpenAPI.getComponents())
+        .map(Components::getSchemas).ifPresent(
+            schemas -> assertComponentSchemas(schemas, testServiceClass));
   }
 
   private void assertPaths(Paths actualPaths, Class<?> testServiceClass) {
     Method[] expectedServiceMethods = testServiceClass.getDeclaredMethods();
-    assertEquals(expectedServiceMethods.length, actualPaths.size());
 
+    int expectedMethodCount = 0;
     for (Method expectedServiceMethod : expectedServiceMethods) {
+      if (securityChecker.getSecurityTarget(expectedServiceMethod)
+          .isAnnotationPresent(DenyAll.class)) {
+        continue;
+      }
       String expectedServiceUrl = String.format("/%s/%s",
           testServiceClass.getSimpleName(), expectedServiceMethod.getName());
       PathItem actualPath = actualPaths.get(expectedServiceUrl);
       assertNotNull(actualPath);
       assertPath(testServiceClass, expectedServiceMethod, actualPath);
+      expectedMethodCount++;
     }
+
+    assertEquals(expectedMethodCount, actualPaths.size());
   }
 
   private void assertPath(Class<?> testServiceClass,
@@ -72,7 +87,6 @@ public class GenericOpenApiTest {
         .contains(testServiceClass.getSimpleName()));
     assertTrue(actualOperation.getOperationId()
         .contains(expectedServiceMethod.getName()));
-    assertNotNull(actualOperation.getDescription());
 
     if (expectedServiceMethod.getParameterCount() > 0) {
       Schema requestSchema = extractSchema(
@@ -86,11 +100,13 @@ public class GenericOpenApiTest {
     ApiResponse apiResponse = responses.get("200");
     assertNotNull(apiResponse);
 
-    assertSchema(extractSchema(apiResponse.getContent()),
-        expectedServiceMethod.getReturnType());
+    if (expectedServiceMethod.getReturnType() != void.class) {
+      assertSchema(extractSchema(apiResponse.getContent()),
+          expectedServiceMethod.getReturnType());
+    }
 
-    if (new VaadinConnectOAuthAclChecker()
-        .requiresAuthentication(expectedServiceMethod)) {
+    securityChecker = new VaadinConnectOAuthAclChecker();
+    if (securityChecker.requiresAuthentication(expectedServiceMethod)) {
       assertNotNull(actualOperation.getSecurity());
     } else {
       assertNull(actualOperation.getSecurity());

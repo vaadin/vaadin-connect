@@ -20,7 +20,6 @@ import java.nio.file.Paths;
 
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -28,6 +27,7 @@ import org.junit.rules.ExpectedException;
 import com.vaadin.connect.plugin.GenericOpenApiTest;
 import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.collectionservice.CollectionTestService;
+import com.vaadin.connect.plugin.generator.denyall.DenyAllClass;
 
 import static org.junit.Assert.assertEquals;
 
@@ -71,12 +71,7 @@ public class OpenApiParserTest {
   @Test
   public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
     OpenAPI openAPI = getGenerator("denyall").generateOpenApi();
-    String expectedJson = TestUtils.getExpectedJson(this.getClass(),
-        "expected-denyall-service.json");
-
-    String actualJson = Json.pretty(openAPI);
-    assertEquals(expectedJson, actualJson);
-    Assert.assertFalse(actualJson.contains("shouldBeDenied"));
+    new GenericOpenApiTest().verify(openAPI, DenyAllClass.class);
   }
 
   private OpenApiParser getGenerator(String path) {
