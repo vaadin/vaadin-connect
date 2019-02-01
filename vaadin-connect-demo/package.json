@@ -20,7 +20,7 @@
     "@vaadin/connect": "*",
     "@webcomponents/webcomponentsjs": "^2.2.1",
     "abortcontroller-polyfill": "^1.2.1",
-    "unfetch": "^4.0.1"
+    "whatwg-fetch": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
