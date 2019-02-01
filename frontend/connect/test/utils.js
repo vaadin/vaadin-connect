@@ -3,7 +3,8 @@ if (intern.environment === 'node') {
   /* global require, global */
 
   if (!global.fetch) {
-    global.fetch = require('node-fetch');
+    const {fetch, Request, Response, Headers} = require('node-fetch');
+    Object.assign(global, {fetch, Request, Response, Headers});
   }
 
   if (!global.URLSearchParams) {

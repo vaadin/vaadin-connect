@@ -5,7 +5,7 @@ const {sinon} = intern.getPlugin('sinon');
 
 import {ConnectClient, VaadinConnectException} from '../src/connect-client.js';
 
-/* global btoa localStorage setTimeout URLSearchParams */
+/* global btoa localStorage setTimeout URLSearchParams Request Response */
 describe('ConnectClient', () => {
 
   function generateOAuthJson() {
@@ -24,6 +24,10 @@ describe('ConnectClient', () => {
 
   async function sleep(ms) {
     await new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function myMiddleware(ctx, next) {
+    return next(ctx);
   }
 
   beforeEach(() => localStorage.clear());
@@ -47,6 +51,12 @@ describe('ConnectClient', () => {
       const client = new ConnectClient({tokenEndpoint: '/foo'});
       expect(client).to.have.property('tokenEndpoint', '/foo');
     });
+
+    it('should support middlewares', () => {
+      const client = new ConnectClient({middlewares: [myMiddleware]});
+      expect(client).to.have.property('middlewares')
+        .deep.equal([myMiddleware]);
+    });
   });
 
   describe('endpoint', () => {
@@ -59,6 +69,21 @@ describe('ConnectClient', () => {
       const client = new ConnectClient();
       client.endpoint = '/foo';
       expect(client).to.have.property('endpoint', '/foo');
+    });
+  });
+
+  describe('middlewares', () => {
+    it('should have empty middlewares by default', () => {
+      const client = new ConnectClient();
+      expect(client).to.have.property('middlewares')
+        .deep.equal([]);
+    });
+
+    it('should allow setting middlewares', () => {
+      const client = new ConnectClient();
+      client.middlewares = [myMiddleware];
+      expect(client).to.have.property('middlewares')
+        .deep.equal([myMiddleware]);
     });
   });
 
@@ -112,9 +137,9 @@ describe('ConnectClient', () => {
       await client.call('FooService', 'fooMethod');
 
       const headers = fetchMock.lastOptions().headers;
-      expect(headers).to.include({
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+      expect(headers).to.deep.include({
+        'Accept': ['application/json'],
+        'Content-Type': ['application/json']
       });
     });
 
@@ -180,9 +205,129 @@ describe('ConnectClient', () => {
     it('should pass 3rd argument as JSON request body', async() => {
       await client.call('FooService', 'fooMethod', {fooParam: 'foo'});
 
-      const requestBody = fetchMock.lastOptions().body;
+      const requestBody = fetchMock.lastCall().request.body;
       expect(requestBody).to.be.a('string');
       expect(JSON.parse(requestBody)).to.deep.equal({fooParam: 'foo'});
+    });
+
+    describe('middleware invocation', () => {
+      it('should not invoke middleware before call', async() => {
+        const spyMiddleware = sinon.spy(async(context, next) => {
+          return await next(context);
+        });
+        client.middlewares = [spyMiddleware];
+
+        expect(spyMiddleware).to.not.be.called;
+      });
+
+      it('should invoke middleware during call', async() => {
+        const spyMiddleware = sinon.spy(async(context, next) => {
+          expect(context.service).to.equal('FooService');
+          expect(context.method).to.equal('fooMethod');
+          expect(context.params).to.deep.equal({fooParam: 'foo'});
+          expect(context.options)
+            .to.deep.equal({option: true, requireCredentials: true});
+          expect(context.request).to.be.instanceOf(Request);
+          return await next(context);
+        });
+        client.middlewares = [spyMiddleware];
+
+        await client.call(
+          'FooService',
+          'fooMethod',
+          {fooParam: 'foo'},
+          {option: true}
+        );
+
+        expect(spyMiddleware).to.be.calledOnce;
+      });
+
+      it('should allow modified request', async() => {
+        const myUrl = 'https://api.example.com/';
+        fetchMock.post(myUrl, {});
+
+        const myMiddleware = async(context, next) => {
+          context.request = new Request(
+            myUrl,
+            {
+              method: 'POST',
+              headers: Object.assign({}, context.request.headers, {
+                'X-Foo': 'Bar'
+              }),
+              body: '{"baz": "qux"}'
+            }
+          );
+          return await next(context);
+        };
+
+        client.middlewares = [myMiddleware];
+        await client.call('FooService', 'fooMethod', {fooParam: 'foo'});
+
+        const request = fetchMock.lastCall().request;
+        expect(request.url).to.equal(myUrl);
+        expect(request.headers.get('X-Foo')).to.equal('Bar');
+        expect(request.body).to.equal('{"baz": "qux"}');
+      });
+
+      it('should allow modified response', async() => {
+        const myMiddleware = async(context, next) => {
+          return new Response('{"baz": "qux"}');
+        };
+
+        client.middlewares = [myMiddleware];
+        const responseData = await client.call('FooService', 'fooMethod', {fooParam: 'foo'});
+
+        expect(responseData).to.deep.equal({baz: 'qux'});
+      });
+
+      it('should invoke middlewares in order', async() => {
+        const firstMiddleware = sinon.spy(async(context, next) => {
+          expect(secondMiddleware).to.not.be.called;
+          const response = await next(context);
+          expect(secondMiddleware).to.be.calledOnce;
+          return response;
+        });
+
+        const secondMiddleware = sinon.spy(async(context, next) => {
+          expect(firstMiddleware).to.be.calledOnce;
+          return await next(context);
+        });
+
+        client.middlewares = [firstMiddleware, secondMiddleware];
+
+        expect(firstMiddleware).to.not.be.called;
+        expect(secondMiddleware).to.not.be.called;
+
+        await client.call('FooService', 'fooMethod', {fooParam: 'foo'});
+
+        expect(firstMiddleware).to.be.calledOnce;
+        expect(secondMiddleware).to.be.calledOnce;
+        expect(firstMiddleware).to.be.calledBefore(secondMiddleware);
+      });
+
+      it('should carry the context and the response', async() => {
+        const myRequest = new Request();
+        const myResponse = new Response('{}');
+        const myContext = {foo: 'bar', request: myRequest};
+
+        const firstMiddleware = async(context, next) => {
+          // Pass modified context
+          const response = await next(myContext);
+          // Expect modified response
+          expect(response).to.equal(myResponse);
+          return response;
+        };
+
+        const secondMiddleware = async(context, next) => {
+          // Expect modified context
+          expect(context).to.equal(myContext);
+          // Pass modified response
+          return myResponse;
+        };
+
+        client.middlewares = [firstMiddleware, secondMiddleware];
+        await client.call('FooService', 'fooMethod', {fooParam: 'foo'});
+      });
     });
   });
 
@@ -408,7 +553,9 @@ describe('ConnectClient', () => {
         [url, {method, headers, body}] = fetchMock.calls()[1];
         expect(method).to.equal('POST');
         expect(url).to.equal('/connect/FooService/fooMethod');
-        expect(headers).to.have.property('Authorization', `Bearer ${response.access_token}`);
+        expect(headers).to.deep.include({
+          'Authorization': [`Bearer ${response.access_token}`]
+        });
         expect(data).to.deep.equal({fooData: 'foo'});
       });
 
@@ -562,8 +709,9 @@ describe('ConnectClient', () => {
           await client.call('FooService', 'fooMethod', undefined,
             {requireCredentials: false});
 
-          expect(fetchMock.lastOptions().headers)
-            .to.have.property('Authorization', `Bearer ${response.access_token}`);
+          expect(fetchMock.lastOptions().headers).to.deep.include({
+            'Authorization': [`Bearer ${response.access_token}`]
+          });
         });
 
         it('should not include Authorization header by default', async() => {
