@@ -1,6 +1,6 @@
 ---
 title: How To Set Up Authentication In Backend
-order: 795
+order: 796
 layout: page
 ---
 
@@ -121,7 +121,6 @@ public class StarterApplication {
 ----
 
 == Next steps
-
 - <<security#,Refer to Security in Vaadin Connect for more information>>
 - https://github.com/vaadin/base-starter-connect/blob/master/src/main/java/com/vaadin/connect/starter/StarterOAuthConfiguration.java[Visit the StarterOAuthConfiguration.java in the Starter Project]
 

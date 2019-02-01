@@ -1,0 +1,154 @@
+---
+title: How to create a SPA
+order: 797
+layout: page
+---
+
+= How to create a single-page application (SPA)
+
+
+== Why is extra effort necessary to create a SPA?
+
+An https://en.wikipedia.org/wiki/Single-page_application[SPA] is a web application that only performs
+a single page load, therefore any user interaction does not transfer more pages, but renders the
+content in the current page.
+
+When programing SPA's, it is a good practice to update the URL when the user navigates the application,
+so as the user can link or reload the application to an specific state.
+
+The main issue then, is that updates should happen without the browser requesting a new page.
+Changes to browser location were traditionally performed by changing the location hash-fragment
+which does not trigger a new network request. For example:
+
+[source,javascript]
+----
+// This changes http://localhost/ to http://localhost/#!user/edit
+window.location.hash = '#!user/edit';
+----
+
+Though nowadays, apps do prefer to update the path-name fragment via the  modern `https://developer.mozilla.org/en-US/docs/Web/API/History_API#Adding_and_modifying_history_entries[pushState]`
+history API which modifies the history stack without sending the request. For example:
+
+[source,javascript]
+----
+// This changes http://localhost/ to http://localhost/user/edit
+history.pushState(null, null, 'user/edit');
+----
+
+But, what happens when the user reloads the page?
+
+In the first case it still request the same page, but in the second case, the request has a new
+path, and the server will respond with a non-found page, since `/user/edit` does not correspond
+with any static or dynamic backend content.
+
+The solution would be to define as many end-points in the backend as possible routes in the client,
+or otherwise to enable the <<frontend-server#,Vaadin frontend server>>.
+
+== How to enable the Vaadin Frontend Server?
+
+In order to enable Vaadin frontend server, you need to include the `vaadin-frontend-server` dependency and
+annotate your main application class with the `@EnableVaadinFrontendServer` as it is explained in the
+<<frontend-server#,Vaadin frontend server>> guide.
+
+== How to set up client-side routing?
+
+There are plenty of JavaScript libraries to handle client-side routing. The following example shows how
+to use https://vaadin.com/router[Vaadin Router] which is intended for application based on web components:
+
+=== Step 1 - Add the `vaadin-router` dependency to your App
+
+[source,bash]
+----
+npm install --save @vaadin/router
+----
+
+=== Step 2 - Add an empty container for dynamic content into `index.html`
+
+[source,html]
+----
+<body>
+  ...
+  <div id="outlet"></div>
+</body>
+----
+
+=== Step 3 - Create the views as Web Components
+
+We are adding two pages to our application, thus we need to create two Web Components. In this case
+we are using the https://lit-element.polymer-project.org/[LitElement] base class for them.
+
+Type the following command to install the `lit-element` dependency:
+
+[source,bash]
+----
+npm install --save lit-element
+----
+
+Then create the following files:
+
+.home-view.js
+[source,javascript]
+----
+import { LitElement, html } from 'lit-element';
+
+class HomeView extends LitElement {
+  render() {
+    return html`
+      <h3>Home View</h3>
+      <a href="user">User View</a>
+    `;
+  }
+}
+
+customElements.define('home-view', HomeView);
+----
+
+.user-view.js
+[source,javascript]
+----
+import { LitElement, html } from 'lit-element';
+
+class UserView extends LitElement {
+  render() {
+    return html`
+      <h3>User View</h3>
+      <a href="/">Home View</a>
+    `;
+  }
+}
+
+customElements.define('user-view', UserView);
+----
+
+=== Step 4 - Configure the router
+
+Replace the content in your `index.js` with the following code
+
+.index.js
+[source,javascript]
+----
+import {Router} from '@vaadin/router';
+import './home-view.js';
+import './user-view.js';
+
+const outlet = document.getElementById('outlet');
+const router = new Router(outlet);
+router.setRoutes([
+  {path: '/',      component: 'home-view'},
+  {path: '/user',  component: 'user-view'}
+]);
+----
+
+=== Step 5 - Test the routes
+
+Run the application in devmode by executing `npm start`, then visit these URLs at
+http://localhost:8080/ and http://localhost:8080/user.
+
+You can play with routes by clicking on the links, pressing history buttons, and reloading  the application.
+
+== Next Steps
+
+- <<how-to-build-for-production#,How to build for production>>
+- <<frontend-server#,Vaadin frontend server>>
+- <<README#,Browse through the docs>>
+

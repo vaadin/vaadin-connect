@@ -1,6 +1,6 @@
 ---
 title: How to configure security for an API endpoint
-order: 793
+order: 794
 layout: page
 ---
 
@@ -144,3 +144,10 @@ authentication.getPrincipal(); // use this method to get the username
 authentication.getAuthorities(); // use this method to get the info about the roles the user has
 authentication.getDetails(); // use this method to get the details about the auth token used
 ----
+
+
+== Next Steps
+
+- <<how-to-use-an-api-endpoint#,How to use an API endpoint>>
+- <<security#,Learn more about the Vaadin Connect security mechanism>>
+- <<README#,Browse through the docs>>
