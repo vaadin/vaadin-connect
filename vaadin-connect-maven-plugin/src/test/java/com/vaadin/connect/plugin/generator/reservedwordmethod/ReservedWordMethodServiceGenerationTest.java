@@ -16,21 +16,27 @@
 
 package com.vaadin.connect.plugin.generator.reservedwordmethod;
 
+import java.util.Collections;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.vaadin.connect.plugin.generator.GenericOpenApiTest;
+import com.vaadin.connect.plugin.generator.AbstractGeneratedFilesTest;
 
-public class OpenApiTest {
+public class ReservedWordMethodServiceGenerationTest extends AbstractGeneratedFilesTest {
   @Rule
   public ExpectedException expected = ExpectedException.none();
+
+  public ReservedWordMethodServiceGenerationTest() {
+    super(Collections.emptyList());
+  }
 
   @Test
   public void Should_Fail_When_UsingReservedWordInMethod() {
     expected.expect(IllegalStateException.class);
     expected.expectMessage("reserved");
-    GenericOpenApiTest.verifyOpenApi(getClass().getPackage());
+    verifyGeneratedFiles(null, null);
   }
 
 }

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * A Vaadin Connect mojo base class, defining common Maven properties that are
  * used by all mojo classes.
  */
-abstract class VaadinConnectMojoBase extends AbstractMojo {
+public abstract class VaadinConnectMojoBase extends AbstractMojo {
   private static final Logger log = LoggerFactory
       .getLogger(VaadinConnectMojoBase.class);
 

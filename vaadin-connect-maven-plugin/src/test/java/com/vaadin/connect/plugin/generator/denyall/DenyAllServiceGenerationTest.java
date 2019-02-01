@@ -16,14 +16,20 @@
 
 package com.vaadin.connect.plugin.generator.denyall;
 
+import java.util.Collections;
+
 import org.junit.Test;
 
-import com.vaadin.connect.plugin.generator.GenericOpenApiTest;
+import com.vaadin.connect.plugin.generator.AbstractGeneratedFilesTest;
 
-public class OpenApiTest {
+public class DenyAllServiceGenerationTest extends AbstractGeneratedFilesTest {
+
+  public DenyAllServiceGenerationTest() {
+    super(Collections.singletonList(DenyAllService.class));
+  }
 
   @Test
   public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
-    GenericOpenApiTest.verifyOpenApi(getClass().getPackage(), DenyAllService.class);
+    verifyGeneratedFiles(null, null);
   }
 }

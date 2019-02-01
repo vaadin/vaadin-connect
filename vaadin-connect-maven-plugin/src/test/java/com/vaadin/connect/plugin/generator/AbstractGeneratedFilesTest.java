@@ -20,11 +20,12 @@ import javax.annotation.security.DenyAll;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -34,7 +35,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -53,6 +58,11 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
@@ -64,18 +74,65 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 // TODO kb naming, texts in asserts.
-public final class GenericOpenApiTest {
+public abstract class AbstractGeneratedFilesTest {
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
       float.class, double.class);
 
   private static final VaadinConnectOAuthAclChecker securityChecker = new VaadinConnectOAuthAclChecker();
 
-  private GenericOpenApiTest() {
+  @Rule
+  public TemporaryFolder outputDirectory = new TemporaryFolder();
+
+  protected Path openApiJsonOutput;
+
+  private final List<Class<?>> serviceClasses = new ArrayList<>();
+  private final List<Class<?>> nonServiceClasses = new ArrayList<>();
+
+  private final Package testPackage;
+
+  public AbstractGeneratedFilesTest(List<Class<?>> testClasses) {
+    collectServiceClasses(serviceClasses, nonServiceClasses, testClasses);
+    testPackage = getClass().getPackage();
   }
 
-  public static void verifyJson(Package testPackage, Path actualJsonOutput,
-      URL customApplicationProperties, URL expectedJsonResourceUrl) {
+  private void collectServiceClasses(List<Class<?>> serviceClasses,
+      List<Class<?>> nonServiceClasses, List<Class<?>> inputClasses) {
+    for (Class<?> testServiceClass : inputClasses) {
+      if (testServiceClass.isAnnotationPresent(VaadinService.class)) {
+        serviceClasses.add(testServiceClass);
+      } else {
+        nonServiceClasses.add(testServiceClass);
+      }
+      collectServiceClasses(serviceClasses, nonServiceClasses,
+          Arrays.asList(testServiceClass.getDeclaredClasses()));
+    }
+  }
+
+  @BeforeClass
+  public static void beforeClass() {
+    ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME))
+        .setLevel(Level.WARN);
+  }
+
+  @Before
+  public void setUpOutputFile() {
+    openApiJsonOutput = java.nio.file.Paths
+        .get(outputDirectory.getRoot().getAbsolutePath(), "openapi.json");
+  }
+
+  protected String readFileInTempDir(String fileName) {
+    Path outputPath = outputDirectory.getRoot().toPath().resolve(fileName);
+    try {
+      return StringUtils.toEncodedString(Files.readAllBytes(outputPath),
+          StandardCharsets.UTF_8).trim();
+    } catch (IOException e) {
+      throw new AssertionError("Failed to read the output file '%s'");
+    }
+  }
+
+  protected void verifyGeneratedFiles(URL customApplicationProperties,
+      URL expectedOpenApiJsonResourceUrl) {
     new OpenApiSpecGenerator(
         customApplicationProperties == null ? new PropertiesConfiguration()
             : TestUtils.readProperties(customApplicationProperties.getPath()))
@@ -83,39 +140,76 @@ public final class GenericOpenApiTest {
                     Collections.singletonList(
                         java.nio.file.Paths.get("src/test/java", testPackage
                             .getName().replace('.', File.separatorChar))),
-                    actualJsonOutput);
+                    openApiJsonOutput);
 
     Assert.assertTrue("No generated json found",
-        actualJsonOutput.toFile().exists());
-    String actualJson;
-    try {
-      actualJson = StringUtils.toEncodedString(
-          Files.readAllBytes(actualJsonOutput), Charset.defaultCharset());
-    } catch (IOException e) {
-      throw new AssertionError(String
-          .format("Failed to read generated json at '%s'", actualJsonOutput));
-    }
+        openApiJsonOutput.toFile().exists());
 
-    assertEquals(TestUtils.readResource(expectedJsonResourceUrl), actualJson);
+    if (expectedOpenApiJsonResourceUrl != null) {
+      verifyOpenApiJson(expectedOpenApiJsonResourceUrl);
+    }
+    verifyOpenApiObject();
+    verifyJsModule();
   }
 
-  public static void verifyOpenApi(Package testPackage,
-      Class<?>... testServiceClasses) {
-    OpenAPI actualOpenAPI = getOpenApiObject(testPackage);
+  private void verifyJsModule(){
+    VaadinConnectJsGenerator.launch(openApiJsonOutput.toFile(),
+        outputDirectory.getRoot());
+    List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
+        .filter(fileName -> fileName.endsWith(".js"))
+        .collect(Collectors.toList());
+    assertEquals(String.format(
+        "Expected to have only %s classes processed in the test: '%s', but found the following files: '%s'",
+        serviceClasses.size(), serviceClasses, foundFiles),
+        serviceClasses.size(), foundFiles.size());
+    for (Class<?> expectedClass : serviceClasses) {
+      assertClassGeneratedJs(expectedClass);
+    }
+  }
 
-    List<Class<?>> serviceClasses = new ArrayList<>();
-    List<Class<?>> nonServiceClasses = new ArrayList<>();
-    collectServiceClasses(serviceClasses, nonServiceClasses,
-        testServiceClasses);
-
+  private void verifyOpenApiObject() {
+    OpenAPI actualOpenAPI = getOpenApiObject();
     assertPaths(actualOpenAPI.getPaths(), serviceClasses);
-
     Optional.ofNullable(actualOpenAPI.getComponents())
         .map(Components::getSchemas).ifPresent(
             schemas -> assertComponentSchemas(schemas, nonServiceClasses));
   }
 
-  private static OpenAPI getOpenApiObject(Package testPackage) {
+  private void verifyOpenApiJson(URL expectedOpenApiJsonResourceUrl) {
+    String actualJson;
+    try {
+      actualJson = StringUtils.toEncodedString(
+          Files.readAllBytes(openApiJsonOutput), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new AssertionError(String
+          .format("Failed to read generated json at '%s'", openApiJsonOutput));
+    }
+
+    assertEquals(TestUtils.readResource(expectedOpenApiJsonResourceUrl),
+        actualJson);
+  }
+
+  private void assertClassGeneratedJs(Class<?> expectedClass) {
+    Path outputFilePath = outputDirectory.getRoot().toPath()
+        .resolve(expectedClass.getSimpleName() + ".js");
+    String actualJs;
+    try {
+      actualJs = StringUtils.toEncodedString(Files.readAllBytes(outputFilePath),
+          StandardCharsets.UTF_8).trim();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    URL expectedResource = expectedClass.getResource(
+        String.format("expected-%s.js", expectedClass.getSimpleName()));
+    String expectedJs = TestUtils.readResource(expectedResource);
+
+    Assert.assertEquals(
+        String.format("Class '%s' has unexpected json produced in file '%s'",
+            expectedClass, expectedResource.getPath()),
+        expectedJs, actualJs);
+  }
+
+  private OpenAPI getOpenApiObject() {
     OpenApiObjectGenerator generator = new OpenApiObjectGenerator();
 
     Path javaSourcePath = java.nio.file.Paths.get("src/test/java/",
@@ -128,20 +222,7 @@ public final class GenericOpenApiTest {
     return generator.getOpenApi();
   }
 
-  private static void collectServiceClasses(List<Class<?>> serviceClasses,
-      List<Class<?>> nonServiceClasses, Class<?>... inputClasses) {
-    for (Class<?> testServiceClass : inputClasses) {
-      if (testServiceClass.isAnnotationPresent(VaadinService.class)) {
-        serviceClasses.add(testServiceClass);
-      } else {
-        nonServiceClasses.add(testServiceClass);
-      }
-      collectServiceClasses(serviceClasses, nonServiceClasses,
-          testServiceClass.getDeclaredClasses());
-    }
-  }
-
-  private static void assertPaths(Paths actualPaths,
+  private void assertPaths(Paths actualPaths,
       List<Class<?>> testServiceClasses) {
     int pathCount = 0;
     for (Class<?> testServiceClass : testServiceClasses) {
@@ -163,13 +244,13 @@ public final class GenericOpenApiTest {
     assertEquals(pathCount, actualPaths.size());
   }
 
-  private static String getServiceName(Class<?> testServiceClass) {
+  private String getServiceName(Class<?> testServiceClass) {
     String customName = testServiceClass.getAnnotation(VaadinService.class)
         .value();
     return customName.isEmpty() ? testServiceClass.getSimpleName() : customName;
   }
 
-  private static void assertPath(Class<?> testServiceClass,
+  private void assertPath(Class<?> testServiceClass,
       Method expectedServiceMethod, PathItem actualPath) {
     Operation actualOperation = actualPath.getPost();
     assertEquals(actualOperation.getTags(),
@@ -203,7 +284,7 @@ public final class GenericOpenApiTest {
     }
   }
 
-  private static void assertRequestSchema(Schema requestSchema,
+  private void assertRequestSchema(Schema requestSchema,
       Class<?>... parameterTypes) {
     Map<String, Schema> properties = requestSchema.getProperties();
     assertEquals(parameterTypes.length, properties.size());
@@ -214,12 +295,12 @@ public final class GenericOpenApiTest {
     }
   }
 
-  private static Schema extractSchema(Content content) {
+  private Schema extractSchema(Content content) {
     assertEquals(1, content.size());
     return content.get("application/json").getSchema();
   }
 
-  private static void assertComponentSchemas(Map<String, Schema> actualSchemas,
+  private void assertComponentSchemas(Map<String, Schema> actualSchemas,
       List<Class<?>> testServiceClasses) {
     int schemasCount = 0;
     for (Class<?> expectedSchemaClass : testServiceClasses) {
@@ -232,8 +313,7 @@ public final class GenericOpenApiTest {
     assertEquals(schemasCount, actualSchemas.size());
   }
 
-  private static void assertSchema(Schema actualSchema,
-      Class<?> expectedSchemaClass) {
+  private void assertSchema(Schema actualSchema, Class<?> expectedSchemaClass) {
     if (expectedSchemaClass.isArray()) {
       assertEquals("array", actualSchema.getType());
       assertTrue(actualSchema instanceof ArraySchema);

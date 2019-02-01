@@ -40,15 +40,6 @@ public final class TestUtils {
     return properties;
   }
 
-  public static String getExpectedJson(Class<?> resourceOwner, String name) {
-    try (BufferedReader input = new BufferedReader(
-        new InputStreamReader(resourceOwner.getResourceAsStream(name)))) {
-      return input.lines().collect(Collectors.joining("\n"));
-    } catch (IOException e) {
-      return "";
-    }
-  }
-
   public static String readResource(URL resourceUrl) {
     String text;
     try (BufferedReader input = new BufferedReader(
