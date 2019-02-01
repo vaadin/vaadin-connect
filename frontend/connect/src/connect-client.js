@@ -181,6 +181,38 @@ export class VaadinConnectException extends Error {
  */
 
 /**
+ * An object with call arguments and the Request constructed from them.
+ *
+ * @typedef {Object} CallContext
+ * @property {string} service
+ * @property {stirng} method
+ * @property {Object=} params
+ * @property {Object=} options
+ * @property {Request} request
+ */
+
+/**
+ * An async callback function that can intercept the request and response
+ * of a call.
+ *
+ * @callback ConnectMiddleware
+ * @async
+ * @param {CallContext} context The information about the call and request
+ * @param {ConnectMiddlewareNext} next Invokes the next in the call chain
+ * @returns {Response}
+ */
+
+/**
+ * An async middleware callback that invokes the next middleware in the chain
+ * or makes the actual request.
+ *
+ * @callback ConnectMiddlewareNext
+ * @async
+ * @param {CallContext} context The information about the call and request
+ * @returns {Response}
+ */
+
+/**
  * The Access Token structure returned by the authentication server.
  *
  * @typedef {Object} AccessToken
@@ -242,6 +274,7 @@ export class ConnectClient {
    * @param {string=} options.endpoint The `endpoint` initial value.
    * @param {string=} options.tokenEndpoint The `tokenEndpoint` initial value.
    * @param {CredentialsCallback=} options.credentials The `credentials` initial value.
+   * @param {Array<ConnectMiddleware>} options.middlewares The `middlewares` initial value.
    */
   constructor(options = {}) {
     /**
@@ -266,6 +299,12 @@ export class ConnectClient {
      * @type {CredentialsCallback}
      */
     this.credentials = options.credentials;
+
+    /**
+     * The array of middlewares that are invoked during a call.
+     * @type {Array<ConnectMiddleware>}
+     */
+    this.middlewares = options.middlewares || [];
 
     /* global AbortController */
     privates.set(this, {
@@ -330,8 +369,9 @@ export class ConnectClient {
       headers['Authorization'] = `Bearer ${accessToken.token}`;
     }
 
-    /* global fetch */
-    const response = await fetch(
+    // Construct a Request instance from arguments
+    /* global Request */
+    const request = new Request(
       `${this.endpoint}/${service}/${method}`,
       {
         method: 'POST',
@@ -340,9 +380,50 @@ export class ConnectClient {
       }
     );
 
-    await assertResponseIsOk(response);
+    // The middleware `context`, includes the call arguments and the request
+    // constructed from them
+    const context = {service, method, params, options, request};
 
-    return response.json();
+    // The internal middleware to assert and parse the response. The internal
+    // response handling should come last after the other middlewares are done
+    // with processing the response. That is why this middleware is first
+    // in the final middlewares array.
+    const responseHandlerMiddleware = async(context, next) => {
+      const response = await next(context);
+      await assertResponseIsOk(response);
+      return response.json();
+    };
+
+    // The actual fetch call itself is expressed as a last middleware
+    // in the chain for our convenience. Always having a last middleware
+    // this way makes the folding down below more concise.
+    const fetchMiddleware = async(context) => {
+      // This middleware is always last in the array, so we can omit
+      // the `next` argument here.
+      /* global fetch */
+      return await fetch(context.request);
+    };
+
+    // Assemble the final middlewares array from internal and external middlewares
+    const middlewares = [responseHandlerMiddleware]
+      .concat(this.middlewares, fetchMiddleware);
+
+    // Fold the final middlewares array into a single function
+    const next = middlewares.reduceRight((next, middleware) => {
+      // Compose and return the new chain step, that takes the context and
+      // invokes the current middleware with the context and the further chain
+      // as the next argument
+      return context => middleware(context, next);
+
+      // Note the missing initial `next` accumulator value here.
+      // This is reduceRight, it starts from the last value of the array. We can
+      // skip initializing the accumulator, because:
+      // 1. the last value is always the `fetchMiddleware`,
+      // 2. the `fetchMiddleware` does not use `next`, only the `context`
+    });
+
+    // Invoke all the folded async middlewares and return
+    return await next(context);
   }
 
   /**

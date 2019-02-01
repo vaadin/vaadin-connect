@@ -1,0 +1,134 @@
+---
+title: Vaadin Connect client middleware
+order: 805
+layout: page
+---
+
+= Vaadin Connect client middleware
+
+The middleware in Vaadin Connect client is a special JavaScript async callback function that is executed by the frontend client during calls to backend. It intercepts the request and the response for every call. The middleware has access to the call context information, including the service and the method names, the supplied parameters, and other client call options.
+
+== When to use a middleware?
+
+The middleware could be used for processing requests and their responses. The typical use cases are:
+
+- Performance measurement
+- Logging the requests
+- Retrying
+- Batching
+- Caching the response
+- Custom request and response headers and body handling
+
+== The middleware structure
+
+Here is an example logging middleware with the structure explained.
+
+.my-log-middleware.js
+[source, javascript]
+----
+// A middleware is an async function, that receives the `context` and `next`
+export async function MyLogMiddleware(context, next) {
+  // The context object contains the call arguments. See the `call` method
+  // of the `ConnectClient` class for their descriptions.
+  const {service, method, params, options} = context;
+  console.log(
+    `Sending request to service: ${service} ` +
+    `method: ${method} ` +
+    `parameters: ${JSON.stringify(params)} ` +
+    `call options ${JSON.stringify(options)} `
+  );
+
+  // Also, the context contains the `request`, which is a Fetch API `Request`
+  // instance to be sent over the network.
+  const request = context.request;
+  console.log(`${request.method} ${request.url}`);
+
+  // Call the `next` async function to send the request and get the response.
+  const response = await next(context);
+
+  // The response is a Fetch API `Response` object.
+  console.log(`Received response: ${response.status} ${response.statusText}`);
+  console.log(await response.body.text());
+
+  // A middleware returns a response.
+  return response;
+}
+----
+
+[NOTE]
+.`Request` and `Response` are Fetch API interfaces
+====
+The middleware in Vaadin Connect does not invent a new data structure to represent the network request and response, but uses the interfaces declared by the https://fetch.spec.whatwg.org[Fetch API specification] instead.
+
+See the MDN web docs to learn more about the https://developer.mozilla.org/en-US/docs/Web/API/Request[Request API] and https://developer.mozilla.org/en-US/docs/Web/API/Response[Response API].
+====
+
+== Using a middleware with a client
+
+To use a middleware, when the Vaadin Connect client is instantiated, include your middleware in the `middlewares` array option:
+
+.connect-client.js
+[source, javascript]
+----
+import {ConnectClient} from '@vaadin/connect';
+import {MyLogMiddleware} from './my-log-middleware.js';
+
+const client = new ConectClient({
+  endpoint: '/connect',
+  middlewares: [MyLogMiddleware]
+});
+
+export default client;
+----
+
+Alternatively, you can modify the `middlewares` array property on the existing client, for example, if you use a generated client:
+
+.index.js
+[source, javascript]
+----
+import client from './generated/connect-client.default.js';
+import {MyLogMiddleware} from './my-log-middleware.js';
+
+client.middlewares = [MyLogMiddleware];
+----
+
+NOTE: If you modify the middlewares array, only calls initiated after the modification will use the new middlewares array. To avoid issues related with that, it is better to avoid the modification of middlewares, or only modify the middlewares before the first call.
+
+== Changing the request from a middleware
+
+To make a low-level modification on the request in a middleware, replace the `context.request` with a new Fetch API `Request` instance:
+
+.my-api-dispatcher-middleware.js
+[source, javascript]
+----
+// An example middleware that uses a different server for selected requests
+export async function MyApiDispatcherMiddleware(context, next) {
+  if (context.service === 'ExternalService') {
+    const url = context.request.url.replace(
+      'https//my-app.example.com',
+      'https://external-service.example.com'
+    );
+    context.request = new Request(url, context.request);
+  }
+
+  return await next(context);
+};
+----
+
+== Custom response from a middleware
+
+A middleware can also replace the response by returning a custom `Response` instance:
+
+.my-stub-middleware.js
+[source, javascript]
+----
+// An example middleware that returns an empty response instead of calling the backend service
+export async function MyStubMiddleware(context, next) {
+  if (context.service === 'StubService') {
+    //
+    return new Response('{}');
+  }
+
+  return await next(context);
+}
+----

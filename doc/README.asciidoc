@@ -27,3 +27,4 @@ layout: page
 ** <<default-client#,Vaadin Connect JavaScript client>>
 ** <<type-conversion#,Type conversion between JavaScript and Java>>
 ** <<frontend-server#,Vaadin frontend server>>
+** <<client-middleware#,Vaadin Connect client middleware>>
