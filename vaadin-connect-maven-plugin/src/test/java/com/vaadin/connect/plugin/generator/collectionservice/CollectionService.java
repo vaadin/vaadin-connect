@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import com.vaadin.connect.VaadinService;
 
 @VaadinService
-public class CollectionTestService {
+public class CollectionService {
 
   /**
    * Get a collection by author name. The generator should not mix this type

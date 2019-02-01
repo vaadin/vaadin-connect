@@ -13,17 +13,17 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator.reservedwordmethod;
 
-import com.vaadin.connect.VaadinService;
+package com.vaadin.connect.plugin.generator.denyall;
 
-/**
- * This class is used for OpenApi generator test
- */
-@VaadinService
-public class ErrorTestClass {
-  
-  public void delete() {
+import org.junit.Test;
+
+import com.vaadin.connect.plugin.generator.GenericOpenApiTest;
+
+public class OpenApiTest {
+
+  @Test
+  public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
+    GenericOpenApiTest.verifyOpenApi(getClass().getPackage(), DenyAllService.class);
   }
-
 }

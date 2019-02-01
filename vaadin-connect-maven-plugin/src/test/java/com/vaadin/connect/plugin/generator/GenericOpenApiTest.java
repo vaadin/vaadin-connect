@@ -14,17 +14,19 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin;
+package com.vaadin.connect.plugin.generator;
 
 import javax.annotation.security.DenyAll;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,9 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -50,16 +50,20 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
+import com.vaadin.connect.plugin.TestUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-// TODO kb naming, tests in asserts.
+// TODO kb naming, texts in asserts.
 public final class GenericOpenApiTest {
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
@@ -70,23 +74,37 @@ public final class GenericOpenApiTest {
   private GenericOpenApiTest() {
   }
 
-  public static void verifyJson(OpenAPI actualOpenAPI, URL expectedJsonUrl) {
-    String expectedJson;
-    try (BufferedReader input = new BufferedReader(
-        new InputStreamReader(expectedJsonUrl.openStream()))) {
-      expectedJson = input.lines().collect(Collectors.joining("\n"));
+  public static void verifyJson(Package testPackage, Path actualJsonOutput,
+      URL customApplicationProperties, URL expectedJsonResourceUrl) {
+    new OpenApiSpecGenerator(
+        customApplicationProperties == null ? new PropertiesConfiguration()
+            : TestUtils.readProperties(customApplicationProperties.getPath()))
+                .generateOpenApiSpec(
+                    Collections.singletonList(
+                        java.nio.file.Paths.get("src/test/java", testPackage
+                            .getName().replace('.', File.separatorChar))),
+                    actualJsonOutput);
+
+    Assert.assertTrue("No generated json found",
+        actualJsonOutput.toFile().exists());
+    String actualJson;
+    try {
+      actualJson = StringUtils.toEncodedString(
+          Files.readAllBytes(actualJsonOutput), Charset.defaultCharset());
     } catch (IOException e) {
-      throw new AssertionError(
-          String.format("Failed to read json from '%s'", expectedJsonUrl), e);
+      throw new AssertionError(String
+          .format("Failed to read generated json at '%s'", actualJsonOutput));
     }
-    assertEquals(expectedJson, Json.pretty(actualOpenAPI));
+
+    assertEquals(TestUtils.readResource(expectedJsonResourceUrl), actualJson);
   }
 
-  public static void verify(OpenAPI actualOpenAPI,
+  public static void verifyOpenApi(Package testPackage,
       Class<?>... testServiceClasses) {
+    OpenAPI actualOpenAPI = getOpenApiObject(testPackage);
+
     List<Class<?>> serviceClasses = new ArrayList<>();
     List<Class<?>> nonServiceClasses = new ArrayList<>();
-
     collectServiceClasses(serviceClasses, nonServiceClasses,
         testServiceClasses);
 
@@ -95,6 +113,19 @@ public final class GenericOpenApiTest {
     Optional.ofNullable(actualOpenAPI.getComponents())
         .map(Components::getSchemas).ifPresent(
             schemas -> assertComponentSchemas(schemas, nonServiceClasses));
+  }
+
+  private static OpenAPI getOpenApiObject(Package testPackage) {
+    OpenApiObjectGenerator generator = new OpenApiObjectGenerator();
+
+    Path javaSourcePath = java.nio.file.Paths.get("src/test/java/",
+        testPackage.getName().replace('.', File.separatorChar));
+    generator.addSourcePath(javaSourcePath);
+
+    generator.setOpenApiConfiguration(new OpenApiConfiguration("Test title",
+        "0.0.1", "https://server.test", "Test description"));
+
+    return generator.getOpenApi();
   }
 
   private static void collectServiceClasses(List<Class<?>> serviceClasses,

@@ -48,7 +48,7 @@ public class OpenApiSpecGenerator {
 
   private static final Logger log = LoggerFactory
       .getLogger(OpenApiSpecGenerator.class);
-  private final OpenApiParser generator;
+  private final OpenApiObjectGenerator generator;
 
   /**
    * Creates the generator, getting the data needed for the generation out of
@@ -58,7 +58,7 @@ public class OpenApiSpecGenerator {
    *          the properties with the data required for the generation
    */
   public OpenApiSpecGenerator(PropertiesConfiguration applicationProperties) {
-    generator = new OpenApiParser();
+    generator = new OpenApiObjectGenerator();
     generator.setOpenApiConfiguration(
         extractOpenApiConfiguration(applicationProperties));
   }

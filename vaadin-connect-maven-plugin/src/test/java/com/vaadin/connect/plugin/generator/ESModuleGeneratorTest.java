@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -36,11 +38,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 
 import com.vaadin.connect.plugin.TestUtils;
-import com.vaadin.connect.plugin.generator.service.GeneratorTestClass;
+import com.vaadin.connect.plugin.generator.json.JsonTestService;
 
 import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
 import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
@@ -72,8 +72,8 @@ public class ESModuleGeneratorTest {
         outputDirectory.getRoot());
 
     List<String> expectedClasses = Arrays.asList(
-        GeneratorTestClass.class.getSimpleName(),
-        GeneratorTestClass.GeneratorAnonymousAllowedTestClass.class
+        JsonTestService.class.getSimpleName(),
+        JsonTestService.GeneratorAnonymousAllowedTestClass.class
             .getSimpleName());
     List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
         .filter(fileName -> fileName.endsWith(".js"))

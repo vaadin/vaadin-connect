@@ -97,7 +97,7 @@ import com.vaadin.connect.oauth.AnonymousAllowed;
  * Java parser class which scans for all {@link VaadinService} classes and
  * produces OpenApi json.
  */
-class OpenApiParser {
+class OpenApiObjectGenerator {
   public static final String EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION = "x-vaadin-parameters-description";
 
   private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
@@ -192,7 +192,7 @@ class OpenApiParser {
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiParser.class).error(e.getMessage(), e);
+      LoggerFactory.getLogger(OpenApiObjectGenerator.class).error(e.getMessage(), e);
       throw new IllegalStateException(String.format(
           "Can't parse the java files in the source root '%s'", sourceRoot), e);
     }
@@ -468,7 +468,7 @@ class OpenApiParser {
     try {
       return parseResolvedTypeToSchema(javaType.resolve());
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiParser.class).info(String.format(
+      LoggerFactory.getLogger(OpenApiObjectGenerator.class).info(String.format(
           "Can't resolve type '%s' for creating custom OpenAPI Schema. Using the default ObjectSchema instead.",
           javaType.asString()), e);
     }

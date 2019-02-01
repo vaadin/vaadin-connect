@@ -569,7 +569,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     }
     Map<String, String> paramDescription = (Map<String, String>) requestSchema
         .getExtensions()
-        .get(OpenApiParser.EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION);
+        .get(OpenApiObjectGenerator.EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION);
     return paramDescription.getOrDefault(paramName, "");
   }
 

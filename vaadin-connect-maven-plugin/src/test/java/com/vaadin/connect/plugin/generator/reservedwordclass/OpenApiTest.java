@@ -14,31 +14,22 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin.generator.denyall;
+package com.vaadin.connect.plugin.generator.reservedwordclass;
 
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.oauth.AnonymousAllowed;
+import com.vaadin.connect.plugin.generator.GenericOpenApiTest;
 
-@VaadinService
-@DenyAll
-public class DenyAllClass {
+public class OpenApiTest {
+  @Rule
+  public ExpectedException expected = ExpectedException.none();
 
-    public void shouldBeDenied() {
-    }
-
-    @PermitAll
-    public void shouldBeDisplayed1() {
-    }
-
-    @RolesAllowed("test")
-    public void shouldBeDisplayed2() {
-    }
-
-    @AnonymousAllowed
-    public void shouldBeDisplayed3() {
-    }
+  @Test
+  public void Should_Fail_When_UsingReservedWordInClass() {
+    expected.expect(IllegalStateException.class);
+    expected.expectMessage("reserved");
+    GenericOpenApiTest.verifyOpenApi(getClass().getPackage());
+  }
 }
