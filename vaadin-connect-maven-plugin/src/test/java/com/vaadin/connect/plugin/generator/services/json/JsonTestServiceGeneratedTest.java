@@ -42,7 +42,7 @@ public class JsonTestServiceGeneratedTest extends AbstractServiceGenerationTest 
   public void should_GenerateOpenApi_When_NoApplicationPropertiesInput() {
     String expectedImport = String.format("import client from '%s';",
         DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
-    verifyGeneratedFiles(null, getClass().getResource("expected-openapi.json"));
+    verifyGenerationFully(null, getClass().getResource("expected-openapi.json"));
 
     getJsFiles(outputDirectory.getRoot()).stream().map(File::getName)
         .map(this::readFileInTempDir).forEach(
@@ -51,7 +51,7 @@ public class JsonTestServiceGeneratedTest extends AbstractServiceGenerationTest 
 
   @Test
   public void should_GenerateOpenApiWithCustomApplicationProperties_When_InputApplicationPropertiesGiven() {
-    verifyGeneratedFiles(
+    verifyGenerationFully(
         AbstractServiceGenerationTest.class
             .getResource("../application.properties.for.testing"),
         getClass().getResource(

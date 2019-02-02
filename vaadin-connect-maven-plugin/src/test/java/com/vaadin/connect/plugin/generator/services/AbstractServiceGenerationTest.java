@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -135,7 +136,18 @@ public abstract class AbstractServiceGenerationTest {
     }
   }
 
-  protected void verifyGeneratedFiles(URL customApplicationProperties,
+  protected void verifyOpenApiObjectAndGeneratedJs() {
+    verifyGeneratedFiles(null, null);
+  }
+
+  protected void verifyGenerationFully(URL customApplicationProperties,
+      URL expectedOpenApiJsonResourceUrl) {
+    verifyGeneratedFiles(customApplicationProperties,
+        Objects.requireNonNull(expectedOpenApiJsonResourceUrl,
+            "Full verification requires an expected open api spec file"));
+  }
+
+  private void verifyGeneratedFiles(URL customApplicationProperties,
       URL expectedOpenApiJsonResourceUrl) {
     new OpenApiSpecGenerator(
         customApplicationProperties == null ? new PropertiesConfiguration()
