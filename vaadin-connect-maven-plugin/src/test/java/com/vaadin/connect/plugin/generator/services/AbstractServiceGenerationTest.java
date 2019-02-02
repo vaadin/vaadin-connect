@@ -20,7 +20,6 @@ import javax.annotation.security.DenyAll;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -32,12 +31,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -80,6 +79,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractServiceGenerationTest {
+  private static final org.slf4j.Logger log = LoggerFactory
+      .getLogger(AbstractServiceGenerationTest.class);
+
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
       float.class, double.class);
@@ -93,6 +95,7 @@ public abstract class AbstractServiceGenerationTest {
 
   private final List<Class<?>> serviceClasses = new ArrayList<>();
   private final List<Class<?>> nonServiceClasses = new ArrayList<>();
+  private final Set<String> schemaReferences = new HashSet<>();
 
   private final Package testPackage;
 
@@ -126,103 +129,73 @@ public abstract class AbstractServiceGenerationTest {
         .get(outputDirectory.getRoot().getAbsolutePath(), "openapi.json");
   }
 
-  protected String readFileInTempDir(String fileName) {
-    Path outputPath = outputDirectory.getRoot().toPath().resolve(fileName);
+  protected List<File> getJsFiles(File directory) {
+    return Arrays
+        .asList(directory.listFiles((dir, name) -> name.endsWith(".js")));
+  }
+
+  protected String readFile(Path file) {
     try {
-      return StringUtils.toEncodedString(Files.readAllBytes(outputPath),
-          StandardCharsets.UTF_8).trim();
+      return StringUtils
+          .toEncodedString(Files.readAllBytes(file), StandardCharsets.UTF_8)
+          .trim();
     } catch (IOException e) {
-      throw new AssertionError("Failed to read the output file '%s'");
+      throw new AssertionError(
+          String.format("Failed to read the file '%s'", file));
     }
   }
 
   protected void verifyOpenApiObjectAndGeneratedJs() {
-    verifyGeneratedFiles(null, null);
+    generateAndVerify(null, null);
   }
 
   protected void verifyGenerationFully(URL customApplicationProperties,
       URL expectedOpenApiJsonResourceUrl) {
-    verifyGeneratedFiles(customApplicationProperties,
+    generateAndVerify(customApplicationProperties,
         Objects.requireNonNull(expectedOpenApiJsonResourceUrl,
             "Full verification requires an expected open api spec file"));
   }
 
-  private void verifyGeneratedFiles(URL customApplicationProperties,
+  private void generateAndVerify(URL customApplicationProperties,
       URL expectedOpenApiJsonResourceUrl) {
-    new OpenApiSpecGenerator(
-        customApplicationProperties == null ? new PropertiesConfiguration()
-            : TestUtils.readProperties(customApplicationProperties.getPath()))
-                .generateOpenApiSpec(
-                    Collections.singletonList(
-                        java.nio.file.Paths.get("src/test/java", testPackage
-                            .getName().replace('.', File.separatorChar))),
-                    openApiJsonOutput);
+    PropertiesConfiguration applicationProperties = customApplicationProperties == null
+        ? new PropertiesConfiguration()
+        : TestUtils.readProperties(customApplicationProperties.getPath());
+    new OpenApiSpecGenerator(applicationProperties).generateOpenApiSpec(
+        Collections.singletonList(java.nio.file.Paths.get("src/test/java",
+            testPackage.getName().replace('.', File.separatorChar))),
+        openApiJsonOutput);
 
     Assert.assertTrue(String.format("No generated json found at path '%s'",
         openApiJsonOutput), openApiJsonOutput.toFile().exists());
 
+    verifyOpenApiObject();
     if (expectedOpenApiJsonResourceUrl != null) {
       verifyOpenApiJson(expectedOpenApiJsonResourceUrl);
     }
-    verifyOpenApiObject();
-    verifyJsModule();
-  }
 
-  private void verifyJsModule() {
     VaadinConnectJsGenerator.launch(openApiJsonOutput.toFile(),
         outputDirectory.getRoot());
-    List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
-        .filter(fileName -> fileName.endsWith(".js"))
-        .collect(Collectors.toList());
-    assertEquals(String.format(
-        "Expected to have only %s classes processed in the test '%s', but found the following files: '%s'",
-        serviceClasses.size(), serviceClasses, foundFiles),
-        serviceClasses.size(), foundFiles.size());
-    for (Class<?> expectedClass : serviceClasses) {
-      assertClassGeneratedJs(expectedClass);
-    }
+    verifyJsModule();
   }
 
   private void verifyOpenApiObject() {
     OpenAPI actualOpenAPI = getOpenApiObject();
     assertPaths(actualOpenAPI.getPaths(), serviceClasses);
-    Optional.ofNullable(actualOpenAPI.getComponents())
-        .map(Components::getSchemas).ifPresent(
-            schemas -> assertComponentSchemas(schemas, nonServiceClasses));
-  }
 
-  private void verifyOpenApiJson(URL expectedOpenApiJsonResourceUrl) {
-    String actualJson;
-    try {
-      actualJson = StringUtils.toEncodedString(
-          Files.readAllBytes(openApiJsonOutput), StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new AssertionError(String
-          .format("Failed to read generated json at '%s'", openApiJsonOutput));
+    if (!nonServiceClasses.isEmpty()) {
+      assertComponentSchemas(actualOpenAPI.getComponents().getSchemas(),
+          nonServiceClasses);
+    } else {
+      Map<String, Schema> componentSchemas = Optional
+          .ofNullable(actualOpenAPI.getComponents()).map(Components::getSchemas)
+          .orElse(Collections.emptyMap());
+      assertTrue(String.format(
+          "Got schemas that correspond to no class provided in test parameters, schemas: '%s'",
+          componentSchemas), componentSchemas.isEmpty());
     }
 
-    assertEquals(TestUtils.readResource(expectedOpenApiJsonResourceUrl),
-        actualJson);
-  }
-
-  private void assertClassGeneratedJs(Class<?> expectedClass) {
-    Path outputFilePath = outputDirectory.getRoot().toPath()
-        .resolve(expectedClass.getSimpleName() + ".js");
-    String actualJs;
-    try {
-      actualJs = StringUtils.toEncodedString(Files.readAllBytes(outputFilePath),
-          StandardCharsets.UTF_8).trim();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-    URL expectedResource = expectedClass.getResource(
-        String.format("expected-%s.js", expectedClass.getSimpleName()));
-    String expectedJs = TestUtils.readResource(expectedResource);
-
-    Assert.assertEquals(
-        String.format("Class '%s' has unexpected json produced in file '%s'",
-            expectedClass, expectedResource.getPath()),
-        expectedJs, actualJs);
+    verifySchemaReferences();
   }
 
   private OpenAPI getOpenApiObject() {
@@ -292,6 +265,10 @@ public abstract class AbstractServiceGenerationTest {
           actualOperation.getRequestBody().getContent());
       assertRequestSchema(requestSchema,
           expectedServiceMethod.getParameterTypes());
+    } else {
+      assertNull(String.format(
+          "No request body should be present in path schema for service method with no parameters, method: '%s'",
+          expectedServiceMethod), actualOperation.getRequestBody());
     }
 
     ApiResponses responses = actualOperation.getResponses();
@@ -304,6 +281,10 @@ public abstract class AbstractServiceGenerationTest {
     if (expectedServiceMethod.getReturnType() != void.class) {
       assertSchema(extractSchema(apiResponse.getContent()),
           expectedServiceMethod.getReturnType());
+    } else {
+      assertNull(String.format(
+          "No response is expected to be present for void method '%s'",
+          expectedServiceMethod), apiResponse.getContent());
     }
 
     if (securityChecker.getSecurityTarget(expectedServiceMethod)
@@ -355,26 +336,29 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private void assertSchema(Schema actualSchema, Class<?> expectedSchemaClass) {
-    if (expectedSchemaClass.isArray()) {
-      assertTrue(actualSchema instanceof ArraySchema);
-      assertSchema(((ArraySchema) actualSchema).getItems(),
-          expectedSchemaClass.getComponentType());
-    } else if (String.class.isAssignableFrom(expectedSchemaClass)) {
-      assertTrue(actualSchema instanceof StringSchema);
-    } else if (boolean.class.isAssignableFrom(expectedSchemaClass)
-        || Boolean.class.isAssignableFrom(expectedSchemaClass)) {
-      assertTrue(actualSchema instanceof BooleanSchema);
-    } else if (JSON_NUMBER_CLASSES.stream()
-        .anyMatch(jsonNumberClass -> jsonNumberClass
-            .isAssignableFrom(expectedSchemaClass))) {
-      assertTrue(actualSchema instanceof NumberSchema);
-    } else if (Collection.class.isAssignableFrom(expectedSchemaClass)) {
-      assertTrue(actualSchema instanceof ArraySchema);
-    } else if (Map.class.isAssignableFrom(expectedSchemaClass)) {
-      assertTrue(actualSchema instanceof MapSchema);
+    if (actualSchema.get$ref() != null) {
+      assertNull(actualSchema.getProperties());
+      schemaReferences.add(actualSchema.get$ref());
     } else {
-      assertTrue(actualSchema instanceof ObjectSchema);
-      if (actualSchema.get$ref() == null) {
+      if (actualSchema instanceof StringSchema) {
+        assertTrue(String.class.isAssignableFrom(expectedSchemaClass));
+      } else if (actualSchema instanceof BooleanSchema) {
+        assertTrue((boolean.class.isAssignableFrom(expectedSchemaClass)
+            || Boolean.class.isAssignableFrom(expectedSchemaClass)));
+      } else if (actualSchema instanceof NumberSchema) {
+        assertTrue(JSON_NUMBER_CLASSES.stream()
+            .anyMatch(jsonNumberClass -> jsonNumberClass
+                .isAssignableFrom(expectedSchemaClass)));
+      } else if (actualSchema instanceof ArraySchema) {
+        if (expectedSchemaClass.isArray()) {
+          assertSchema(((ArraySchema) actualSchema).getItems(),
+              expectedSchemaClass.getComponentType());
+        } else {
+          assertTrue(Collection.class.isAssignableFrom(expectedSchemaClass));
+        }
+      } else if (actualSchema instanceof MapSchema) {
+        assertTrue(Map.class.isAssignableFrom(expectedSchemaClass));
+      } else if (actualSchema instanceof ObjectSchema) {
         Map<String, Schema> properties = actualSchema.getProperties();
         assertNotNull(properties);
         assertTrue(properties.size() > 0);
@@ -392,8 +376,52 @@ public abstract class AbstractServiceGenerationTest {
         }
         assertEquals(expectedFieldsCount, properties.size());
       } else {
-        assertNull(actualSchema.getProperties());
+        throw new AssertionError(
+            String.format("Unknown schema '%s' for class '%s'",
+                actualSchema.getClass(), expectedSchemaClass));
       }
     }
+  }
+
+  private void verifySchemaReferences() {
+    nonServiceClasses.stream().map(Class::getSimpleName)
+        .forEach(schemaClass -> schemaReferences
+            .removeIf(ref -> ref.endsWith(String.format("/%s", schemaClass))));
+    // TODO add assertion later, when the types are processed
+    if (!schemaReferences.isEmpty()) {
+      log.warn(String.format(
+          "Got schema references that are not in the OpenAPI schemas: '%s'",
+          schemaReferences));
+    }
+  }
+
+  private void verifyOpenApiJson(URL expectedOpenApiJsonResourceUrl) {
+    assertEquals(TestUtils.readResource(expectedOpenApiJsonResourceUrl),
+        readFile(openApiJsonOutput));
+  }
+
+  private void verifyJsModule() {
+    List<File> foundFiles = getJsFiles(outputDirectory.getRoot());
+    assertEquals(String.format(
+        "Expected to have only %s classes processed in the test '%s', but found the following files: '%s'",
+        serviceClasses.size(), serviceClasses, foundFiles),
+        serviceClasses.size(), foundFiles.size());
+    for (Class<?> expectedClass : serviceClasses) {
+      assertClassGeneratedJs(expectedClass);
+    }
+  }
+
+  private void assertClassGeneratedJs(Class<?> expectedClass) {
+    URL expectedResource = expectedClass.getResource(
+        String.format("expected-%s.js", expectedClass.getSimpleName()));
+    String expectedJs = TestUtils.readResource(expectedResource);
+
+    Path outputFilePath = outputDirectory.getRoot().toPath()
+        .resolve(expectedClass.getSimpleName() + ".js");
+
+    Assert.assertEquals(
+        String.format("Class '%s' has unexpected json produced in file '%s'",
+            expectedClass, expectedResource.getPath()),
+        expectedJs, readFile(outputFilePath));
   }
 }

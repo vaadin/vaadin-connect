@@ -17,9 +17,7 @@
 package com.vaadin.connect.plugin.generator.services.json;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.junit.Test;
@@ -32,7 +30,8 @@ import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERA
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class JsonTestServiceGeneratedTest extends AbstractServiceGenerationTest {
+public class JsonTestServiceGeneratedTest
+    extends AbstractServiceGenerationTest {
 
   public JsonTestServiceGeneratedTest() {
     super(Collections.singletonList(JsonTestService.class));
@@ -42,10 +41,11 @@ public class JsonTestServiceGeneratedTest extends AbstractServiceGenerationTest 
   public void should_GenerateOpenApi_When_NoApplicationPropertiesInput() {
     String expectedImport = String.format("import client from '%s';",
         DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
-    verifyGenerationFully(null, getClass().getResource("expected-openapi.json"));
+    verifyGenerationFully(null,
+        getClass().getResource("expected-openapi.json"));
 
-    getJsFiles(outputDirectory.getRoot()).stream().map(File::getName)
-        .map(this::readFileInTempDir).forEach(
+    getJsFiles(outputDirectory.getRoot()).stream().map(File::toPath)
+        .map(this::readFile).forEach(
             fileContents -> assertTrue(fileContents.contains(expectedImport)));
   }
 
@@ -73,8 +73,8 @@ public class JsonTestServiceGeneratedTest extends AbstractServiceGenerationTest 
     VaadinConnectJsGenerator.launch(openApiJsonOutput.toFile(),
         outputDirectory.getRoot(), customConnectClientPath);
 
-    getJsFiles(outputDirectory.getRoot()).stream().map(File::getName)
-        .map(this::readFileInTempDir).forEach(
+    getJsFiles(outputDirectory.getRoot()).stream().map(File::toPath)
+        .map(this::readFile).forEach(
             fileContents -> assertTrue(fileContents.contains(expectedImport)));
   }
 
@@ -91,8 +91,4 @@ public class JsonTestServiceGeneratedTest extends AbstractServiceGenerationTest 
     assertFalse(getJsFiles(nonExistingOutputDirectory).isEmpty());
   }
 
-  private List<File> getJsFiles(File directory) {
-    return Arrays
-        .asList(directory.listFiles((dir, name) -> name.endsWith(".js")));
-  }
 }
