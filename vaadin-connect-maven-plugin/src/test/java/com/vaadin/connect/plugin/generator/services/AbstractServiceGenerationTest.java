@@ -78,7 +78,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-// TODO kb texts in asserts, refactor the checks.
 public abstract class AbstractServiceGenerationTest {
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
@@ -147,8 +146,8 @@ public abstract class AbstractServiceGenerationTest {
                             .getName().replace('.', File.separatorChar))),
                     openApiJsonOutput);
 
-    Assert.assertTrue("No generated json found",
-        openApiJsonOutput.toFile().exists());
+    Assert.assertTrue(String.format("No generated json found at path '%s'",
+        openApiJsonOutput), openApiJsonOutput.toFile().exists());
 
     if (expectedOpenApiJsonResourceUrl != null) {
       verifyOpenApiJson(expectedOpenApiJsonResourceUrl);
@@ -164,7 +163,7 @@ public abstract class AbstractServiceGenerationTest {
         .filter(fileName -> fileName.endsWith(".js"))
         .collect(Collectors.toList());
     assertEquals(String.format(
-        "Expected to have only %s classes processed in the test: '%s', but found the following files: '%s'",
+        "Expected to have only %s classes processed in the test '%s', but found the following files: '%s'",
         serviceClasses.size(), serviceClasses, foundFiles),
         serviceClasses.size(), foundFiles.size());
     for (Class<?> expectedClass : serviceClasses) {
@@ -242,11 +241,15 @@ public abstract class AbstractServiceGenerationTest {
         String expectedServiceUrl = String.format("/%s/%s",
             getServiceName(testServiceClass), expectedServiceMethod.getName());
         PathItem actualPath = actualPaths.get(expectedServiceUrl);
-        assertNotNull(actualPath);
+        assertNotNull(String.format(
+            "Expected to find a path '%s' for the service method '%s' in the class '%s'",
+            expectedServiceUrl, expectedServiceMethod, testServiceClass),
+            actualPath);
         assertPath(testServiceClass, expectedServiceMethod, actualPath);
       }
     }
-    assertEquals(pathCount, actualPaths.size());
+    assertEquals("Unexpected number of OpenAPI paths found", pathCount,
+        actualPaths.size());
   }
 
   private String getServiceName(Class<?> testServiceClass) {
@@ -258,12 +261,19 @@ public abstract class AbstractServiceGenerationTest {
   private void assertPath(Class<?> testServiceClass,
       Method expectedServiceMethod, PathItem actualPath) {
     Operation actualOperation = actualPath.getPost();
-    assertEquals(actualOperation.getTags(),
+    assertEquals("Unexpected tag in the OpenAPI spec",
+        actualOperation.getTags(),
         Collections.singletonList(testServiceClass.getSimpleName()));
-    assertTrue(actualOperation.getOperationId()
-        .contains(getServiceName(testServiceClass)));
-    assertTrue(actualOperation.getOperationId()
-        .contains(expectedServiceMethod.getName()));
+    assertTrue(String.format(
+        "Unexpected OpenAPI operation id: does not contain the service name of the class '%s'",
+        testServiceClass.getSimpleName()),
+        actualOperation.getOperationId()
+            .contains(getServiceName(testServiceClass)));
+    assertTrue(String.format(
+        "Unexpected OpenAPI operation id: does not contain the name of the service method '%s'",
+        expectedServiceMethod.getName()),
+        actualOperation.getOperationId()
+            .contains(expectedServiceMethod.getName()));
 
     if (expectedServiceMethod.getParameterCount() > 0) {
       Schema requestSchema = extractSchema(
@@ -273,9 +283,11 @@ public abstract class AbstractServiceGenerationTest {
     }
 
     ApiResponses responses = actualOperation.getResponses();
-    assertEquals(1, responses.size());
+    assertEquals("Every operation is expected to have a single '200' response",
+        1, responses.size());
     ApiResponse apiResponse = responses.get("200");
-    assertNotNull(apiResponse);
+    assertNotNull("Every operation is expected to have a single '200' response",
+        apiResponse);
 
     if (expectedServiceMethod.getReturnType() != void.class) {
       assertSchema(extractSchema(apiResponse.getContent()),
@@ -284,16 +296,22 @@ public abstract class AbstractServiceGenerationTest {
 
     if (securityChecker.getSecurityTarget(expectedServiceMethod)
         .isAnnotationPresent(AnonymousAllowed.class)) {
-      assertNull(actualOperation.getSecurity());
+      assertNull(
+          "Expected to have no security data for anonymous service method",
+          actualOperation.getSecurity());
     } else {
-      assertNotNull(actualOperation.getSecurity());
+      assertNotNull(
+          "Non-anonymous service method should have a security data defined for it in the schema",
+          actualOperation.getSecurity());
     }
   }
 
   private void assertRequestSchema(Schema requestSchema,
       Class<?>... parameterTypes) {
     Map<String, Schema> properties = requestSchema.getProperties();
-    assertEquals(parameterTypes.length, properties.size());
+    assertEquals(
+        "Request schema should have the same amount of properties as the corresponding service method parameters number",
+        parameterTypes.length, properties.size());
     int index = 0;
     for (Schema propertySchema : properties.values()) {
       assertSchema(propertySchema, parameterTypes[index]);
@@ -302,7 +320,8 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private Schema extractSchema(Content content) {
-    assertEquals(1, content.size());
+    assertEquals("Expecting a single application content — a json schema", 1,
+        content.size());
     return content.get("application/json").getSchema();
   }
 
@@ -313,15 +332,18 @@ public abstract class AbstractServiceGenerationTest {
       schemasCount++;
       Schema actualSchema = actualSchemas
           .get(expectedSchemaClass.getSimpleName());
-      assertNotNull(actualSchema);
+      assertNotNull(
+          String.format("Expected to have a schema defined for a class '%s'",
+              expectedSchemaClass),
+          actualSchema);
       assertSchema(actualSchema, expectedSchemaClass);
     }
-    assertEquals(schemasCount, actualSchemas.size());
+    assertEquals("Expected to have all service classes defined in schemas",
+        schemasCount, actualSchemas.size());
   }
 
   private void assertSchema(Schema actualSchema, Class<?> expectedSchemaClass) {
     if (expectedSchemaClass.isArray()) {
-      assertEquals("array", actualSchema.getType());
       assertTrue(actualSchema instanceof ArraySchema);
       assertSchema(((ArraySchema) actualSchema).getItems(),
           expectedSchemaClass.getComponentType());
