@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin.generator;
+package com.vaadin.connect.plugin.generator.services;
 
 import javax.annotation.security.DenyAll;
 
@@ -68,6 +68,10 @@ import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.oauth.AnonymousAllowed;
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 import com.vaadin.connect.plugin.TestUtils;
+import com.vaadin.connect.plugin.generator.OpenApiConfiguration;
+import com.vaadin.connect.plugin.generator.OpenApiObjectGenerator;
+import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
+import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -75,7 +79,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 // TODO kb texts in asserts, refactor the checks.
-public abstract class AbstractGeneratedFilesTest {
+public abstract class AbstractServiceGenerationTest {
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
       float.class, double.class);
@@ -92,7 +96,7 @@ public abstract class AbstractGeneratedFilesTest {
 
   private final Package testPackage;
 
-  public AbstractGeneratedFilesTest(List<Class<?>> testClasses) {
+  public AbstractServiceGenerationTest(List<Class<?>> testClasses) {
     collectServiceClasses(serviceClasses, nonServiceClasses, testClasses);
     testPackage = getClass().getPackage();
   }

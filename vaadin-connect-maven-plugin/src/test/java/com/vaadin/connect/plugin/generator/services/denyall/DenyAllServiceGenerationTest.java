@@ -14,22 +14,22 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin.generator.collectionservice;
+package com.vaadin.connect.plugin.generator.services.denyall;
 
 import java.util.Collections;
 
 import org.junit.Test;
 
-import com.vaadin.connect.plugin.generator.AbstractGeneratedFilesTest;
+import com.vaadin.connect.plugin.generator.services.AbstractServiceGenerationTest;
 
-public class CollectionServiceGenerationTest extends AbstractGeneratedFilesTest {
+public class DenyAllServiceGenerationTest extends AbstractServiceGenerationTest {
 
-  public CollectionServiceGenerationTest() {
-    super(Collections.singletonList(CollectionService.class));
+  public DenyAllServiceGenerationTest() {
+    super(Collections.singletonList(DenyAllService.class));
   }
 
   @Test
-  public void should_DistinguishBetweenUserAndBuiltinTypes_When_TheyHaveSameName() {
+  public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
     verifyGeneratedFiles(null, null);
   }
 }

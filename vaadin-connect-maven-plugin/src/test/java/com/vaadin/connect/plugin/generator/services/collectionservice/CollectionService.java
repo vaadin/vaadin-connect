@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator.collectionservice;
+package com.vaadin.connect.plugin.generator.services.collectionservice;
 
 import java.util.ArrayList;
 

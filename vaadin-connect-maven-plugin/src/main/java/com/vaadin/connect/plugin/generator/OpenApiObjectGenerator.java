@@ -97,7 +97,7 @@ import com.vaadin.connect.oauth.AnonymousAllowed;
  * Java parser class which scans for all {@link VaadinService} classes and
  * produces OpenApi json.
  */
-class OpenApiObjectGenerator {
+public class OpenApiObjectGenerator {
   public static final String EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION = "x-vaadin-parameters-description";
 
   private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
@@ -113,13 +113,20 @@ class OpenApiObjectGenerator {
   private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
   private ClassLoader typeResolverClassLoader;
 
-  void addSourcePath(Path sourcePath) {
+  /**
+   * Adds the source path to the generator to process.
+   *
+   * @param sourcePath
+   *          the source path to generate the medatata from
+   */
+  public void addSourcePath(Path sourcePath) {
     if (sourcePath == null) {
       throw new IllegalArgumentException(
           "Java source path must be a valid directory");
     }
     if (!sourcePath.toFile().exists()) {
-      throw new IllegalArgumentException("Java source path doesn't exist");
+      throw new IllegalArgumentException(
+          String.format("Java source path '%s' doesn't exist", sourcePath));
     }
     this.javaSourcePaths.add(sourcePath);
   }
@@ -135,11 +142,22 @@ class OpenApiObjectGenerator {
     this.typeResolverClassLoader = typeResolverClassLoader;
   }
 
-  void setOpenApiConfiguration(OpenApiConfiguration configuration) {
+  /**
+   * Sets the configuration to be used when generating an Open API spec.
+   *
+   * @param configuration
+   *          the generator configuration
+   */
+  public void setOpenApiConfiguration(OpenApiConfiguration configuration) {
     this.configuration = configuration;
   }
 
-  OpenAPI getOpenApi() {
+  /**
+   * Gets the Open API, generates it if necessary.
+   *
+   * @return the Open API data
+   */
+  public OpenAPI getOpenApi() {
     if (openApiModel == null) {
       init();
     }
@@ -192,7 +210,8 @@ class OpenApiObjectGenerator {
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiObjectGenerator.class).error(e.getMessage(), e);
+      LoggerFactory.getLogger(OpenApiObjectGenerator.class)
+          .error(e.getMessage(), e);
       throw new IllegalStateException(String.format(
           "Can't parse the java files in the source root '%s'", sourceRoot), e);
     }

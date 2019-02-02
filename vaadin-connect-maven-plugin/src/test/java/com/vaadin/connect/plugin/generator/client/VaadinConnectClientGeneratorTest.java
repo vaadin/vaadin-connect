@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.vaadin.connect.plugin.TestUtils;
-import com.vaadin.connect.plugin.generator.AbstractGeneratedFilesTest;
 import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
 
 import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
@@ -67,8 +66,8 @@ public class VaadinConnectClientGeneratorTest {
   public void should_GenerateConnectClientDefault_When_ApplicationPropertiesInput()
       throws Exception {
     VaadinConnectClientGenerator generator = new VaadinConnectClientGenerator(
-        TestUtils.readProperties(AbstractGeneratedFilesTest.class
-            .getResource("application.properties.for.testing").getPath()));
+        TestUtils.readProperties(getClass()
+            .getResource("../application.properties.for.testing").getPath()));
 
     generator.generateVaadinConnectClientFile(outputPath);
 

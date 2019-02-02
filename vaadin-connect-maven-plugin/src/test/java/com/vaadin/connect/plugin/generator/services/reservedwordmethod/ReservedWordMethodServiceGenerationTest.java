@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin.generator.reservedwordclass;
+package com.vaadin.connect.plugin.generator.services.reservedwordmethod;
 
 import java.util.Collections;
 
@@ -22,20 +22,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.vaadin.connect.plugin.generator.AbstractGeneratedFilesTest;
+import com.vaadin.connect.plugin.generator.services.AbstractServiceGenerationTest;
 
-public class ReservedWordClassServiceGenerationTest extends AbstractGeneratedFilesTest {
+public class ReservedWordMethodServiceGenerationTest extends AbstractServiceGenerationTest {
   @Rule
   public ExpectedException expected = ExpectedException.none();
 
-  public ReservedWordClassServiceGenerationTest() {
+  public ReservedWordMethodServiceGenerationTest() {
     super(Collections.emptyList());
   }
 
   @Test
-  public void Should_Fail_When_UsingReservedWordInClass() {
+  public void Should_Fail_When_UsingReservedWordInMethod() {
     expected.expect(IllegalStateException.class);
     expected.expectMessage("reserved");
     verifyGeneratedFiles(null, null);
   }
+
 }

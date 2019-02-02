@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin.generator.json;
+package com.vaadin.connect.plugin.generator.services.json;
 
 import java.io.File;
 import java.util.Arrays;
@@ -24,15 +24,15 @@ import java.util.List;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.junit.Test;
 
-import com.vaadin.connect.plugin.generator.AbstractGeneratedFilesTest;
 import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
 import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
+import com.vaadin.connect.plugin.generator.services.AbstractServiceGenerationTest;
 
 import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class JsonTestServiceGeneratedTest extends AbstractGeneratedFilesTest {
+public class JsonTestServiceGeneratedTest extends AbstractServiceGenerationTest {
 
   public JsonTestServiceGeneratedTest() {
     super(Collections.singletonList(JsonTestService.class));
@@ -52,8 +52,8 @@ public class JsonTestServiceGeneratedTest extends AbstractGeneratedFilesTest {
   @Test
   public void should_GenerateOpenApiWithCustomApplicationProperties_When_InputApplicationPropertiesGiven() {
     verifyGeneratedFiles(
-        AbstractGeneratedFilesTest.class
-            .getResource("application.properties.for.testing"),
+        AbstractServiceGenerationTest.class
+            .getResource("../application.properties.for.testing"),
         getClass().getResource(
             "expected-openapi-custom-application-properties.json"));
   }

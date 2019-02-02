@@ -14,22 +14,28 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin.generator.denyall;
+package com.vaadin.connect.plugin.generator.services.reservedwordclass;
 
 import java.util.Collections;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import com.vaadin.connect.plugin.generator.AbstractGeneratedFilesTest;
+import com.vaadin.connect.plugin.generator.services.AbstractServiceGenerationTest;
 
-public class DenyAllServiceGenerationTest extends AbstractGeneratedFilesTest {
+public class ReservedWordClassServiceGenerationTest extends AbstractServiceGenerationTest {
+  @Rule
+  public ExpectedException expected = ExpectedException.none();
 
-  public DenyAllServiceGenerationTest() {
-    super(Collections.singletonList(DenyAllService.class));
+  public ReservedWordClassServiceGenerationTest() {
+    super(Collections.emptyList());
   }
 
   @Test
-  public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
+  public void Should_Fail_When_UsingReservedWordInClass() {
+    expected.expect(IllegalStateException.class);
+    expected.expectMessage("reserved");
     verifyGeneratedFiles(null, null);
   }
 }

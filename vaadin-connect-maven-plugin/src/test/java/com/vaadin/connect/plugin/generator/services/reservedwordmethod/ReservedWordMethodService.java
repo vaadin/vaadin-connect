@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator.reservedwordclass;
+package com.vaadin.connect.plugin.generator.services.reservedwordmethod;
 
 import com.vaadin.connect.VaadinService;
 
@@ -21,8 +21,9 @@ import com.vaadin.connect.VaadinService;
  * This class is used for OpenApi generator test
  */
 @VaadinService
-public class await {
-  public void foo() {
+public class ReservedWordMethodService {
+
+  public void delete() {
   }
 
 }
