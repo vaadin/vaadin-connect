@@ -65,6 +65,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 import com.vaadin.connect.plugin.TestUtils;
 
@@ -73,7 +74,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-// TODO kb naming, texts in asserts.
+// TODO kb texts in asserts, refactor the checks.
 public abstract class AbstractGeneratedFilesTest {
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
@@ -152,7 +153,7 @@ public abstract class AbstractGeneratedFilesTest {
     verifyJsModule();
   }
 
-  private void verifyJsModule(){
+  private void verifyJsModule() {
     VaadinConnectJsGenerator.launch(openApiJsonOutput.toFile(),
         outputDirectory.getRoot());
     List<String> foundFiles = Stream.of(outputDirectory.getRoot().list())
@@ -277,10 +278,11 @@ public abstract class AbstractGeneratedFilesTest {
           expectedServiceMethod.getReturnType());
     }
 
-    if (securityChecker.requiresAuthentication(expectedServiceMethod)) {
-      assertNotNull(actualOperation.getSecurity());
-    } else {
+    if (securityChecker.getSecurityTarget(expectedServiceMethod)
+        .isAnnotationPresent(AnonymousAllowed.class)) {
       assertNull(actualOperation.getSecurity());
+    } else {
+      assertNotNull(actualOperation.getSecurity());
     }
   }
 

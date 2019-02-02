@@ -10,7 +10,9 @@ import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
@@ -27,6 +30,9 @@ import static org.mockito.Mockito.when;
 
 public class VaadinConnectOauthAclCheckerTest {
   private static final String ROLE_USER = "ROLE_USER";
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   private static SecurityContext securityContext;
 
@@ -292,7 +298,7 @@ public class VaadinConnectOauthAclCheckerTest {
 
   @Test
   public void should_DisallowNotMatchingRoleAccess_When_RolesAllowedAndPermitAll()
-          throws Exception {
+      throws Exception {
     class PermitAllAndRolesAllowed {
       @RolesAllowed("ADMIN")
       @PermitAll
@@ -306,7 +312,7 @@ public class VaadinConnectOauthAclCheckerTest {
 
   @Test
   public void should_AllowSpecificRoleAccess_When_RolesAllowedAndPermitAll()
-          throws Exception {
+      throws Exception {
     class PermitAllAndRolesAllowed {
       @RolesAllowed(ROLE_USER)
       @PermitAll
@@ -383,6 +389,68 @@ public class VaadinConnectOauthAclCheckerTest {
     Method method = AnonymousAllowedOverriddenWithPermitAll.class
         .getMethod("myMethod");
     assertNotNull(checker.check(method));
+  }
+
+  @Test
+  public void should_Throw_When_PrivateMethodIsPassed() throws Exception {
+    class Test {
+      private void test() {
+      }
+    }
+
+    Method method = Test.class.getDeclaredMethod("test");
+
+    exception.expect(IllegalArgumentException.class);
+    exception.expectMessage(method.toString());
+    checker.getSecurityTarget(method);
+  }
+
+  @Test
+  public void should_ReturnEnclosingClassAsSecurityTarget_When_NoSecurityAnnotationsPresent()
+      throws Exception {
+    class Test {
+      public void test() {
+      }
+    }
+    assertEquals(Test.class,
+        checker.getSecurityTarget(Test.class.getMethod("test")));
+  }
+
+  @Test
+  public void should_ReturnEnclosingClassAsSecurityTarget_When_OnlyClassHasSecurityAnnotations()
+      throws Exception {
+    @AnonymousAllowed
+    class Test {
+      public void test() {
+      }
+    }
+    assertEquals(Test.class,
+        checker.getSecurityTarget(Test.class.getMethod("test")));
+  }
+
+  @Test
+  public void should_ReturnMethodAsSecurityTarget_When_OnlyMethodHasSecurityAnnotations()
+      throws Exception {
+    class Test {
+      @AnonymousAllowed
+      public void test() {
+      }
+    }
+    Method securityMethod = Test.class.getMethod("test");
+    assertEquals(securityMethod, checker.getSecurityTarget(securityMethod));
+  }
+
+  @Test
+  public void should_ReturnMethodAsSecurityTarget_When_BothClassAndMethodHaveSecurityAnnotations()
+      throws Exception {
+    @AnonymousAllowed
+    class Test {
+      @AnonymousAllowed
+      public void test() {
+      }
+    }
+    Method securityMethod = Test.class.getMethod("test");
+    assertEquals(securityMethod, checker.getSecurityTarget(securityMethod));
   }
 
   private SecurityContext createAnonymousContext() {

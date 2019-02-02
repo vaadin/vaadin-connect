@@ -22,6 +22,7 @@ import javax.annotation.security.RolesAllowed;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -100,18 +101,27 @@ public class VaadinConnectOAuthAclChecker {
     return "Bad authentication, the request should use oauth2";
   }
 
-  // TODO kb javadocs, tests
-  public boolean requiresAuthentication(Method method) {
-    return !getSecurityTarget(method)
-        .isAnnotationPresent(AnonymousAllowed.class);
-  }
-
+  /**
+   * Gets the entity to check for Vaadin Connect security restrictions.
+   *
+   * @param method
+   *          the method to analyze, not {@code null}
+   * @return the entity that is responsible for security settings for the method
+   *         passed
+   * @throws IllegalArgumentException
+   *           if the method is not public
+   */
   public AnnotatedElement getSecurityTarget(Method method) {
+    if (!Modifier.isPublic(method.getModifiers())) {
+      throw new IllegalArgumentException(String.format(
+          "The method '%s' is not public hence cannot have a security target",
+          method));
+    }
     return hasSecurityAnnotation(method) ? method : method.getDeclaringClass();
   }
 
   private String verifyAnonymousUser(Method method) {
-    if (requiresAuthentication(method)
+    if (!getSecurityTarget(method).isAnnotationPresent(AnonymousAllowed.class)
         || cannotAccessMethod(method, Collections.emptyList())) {
       return "Anonymous access is not allowed";
     }
