@@ -3,7 +3,7 @@ const {expect} = intern.getPlugin('chai');
 const {fetchMock} = intern.getPlugin('fetchMock');
 const {sinon} = intern.getPlugin('sinon');
 
-import {ConnectClient, VaadinConnectException} from '../src/connect-client.js';
+import {ConnectClient, VaadinConnectException} from '../connect-client.js';
 
 /* global btoa localStorage setTimeout URLSearchParams Request Response */
 describe('ConnectClient', () => {
