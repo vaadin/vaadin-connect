@@ -104,7 +104,7 @@ class Token {
   token: string;
   json: any;
 
-  constructor(token) {
+  constructor(token: string) {
     this.token = token;
     this.json = JSON.parse(atob(token.split('.')[1]));
   }
@@ -121,9 +121,9 @@ interface AuthJson {
 
 /** @ignore */
 class AuthTokens {
-  accessToken: Token;
-  refreshToken: Token;
-  stayLoggedIn: boolean;
+  accessToken?: Token;
+  refreshToken?: Token;
+  stayLoggedIn?: boolean;
 
   constructor(authJson?: AuthJson) {
     if (authJson) {
@@ -378,7 +378,7 @@ export class ConnectClient {
    * the authorization is skipped, the requests made by the `call` method
    * would not include the authorization header.
    */
-  credentials: CredentialsCallback;
+  credentials?: CredentialsCallback;
 
   /**
    * The array of middlewares that are invoked during a call.
@@ -456,7 +456,7 @@ export class ConnectClient {
     }
 
     const accessToken = privates.get(this).tokens.accessToken;
-    const headers = {
+    const headers: Record<string, string> = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     };

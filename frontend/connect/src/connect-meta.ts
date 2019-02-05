@@ -1,3 +1,4 @@
+/// <reference path="vaadin-usage-statistics.d.ts">
 import {usageStatistics} from '@vaadin/vaadin-usage-statistics/vaadin-usage-statistics.js';
 
 declare global {
