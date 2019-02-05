@@ -3,7 +3,7 @@
  * @param response The response to assert.
  * @ignore
  */
-const assertResponseIsOk = async(response: Response): Promise<void> => {
+const assertResponseIsOk = async (response: Response): Promise<void> => {
   if (!response.ok) {
     const responseText = await response.text();
     let responseJson;
@@ -14,11 +14,18 @@ const assertResponseIsOk = async(response: Response): Promise<void> => {
     }
 
     if (responseJson !== undefined) {
-      throw new VaadinConnectException(responseJson.message, responseJson.type, responseJson.detail);
+      throw new VaadinConnectException(
+        responseJson.message,
+        responseJson.type,
+        responseJson.detail
+      );
     } else if (responseText !== null && responseText.length > 0) {
       throw new VaadinConnectException(responseText);
     } else {
-      throw new VaadinConnectException(`expected '200 OK' response, but got ${response.status} ${response.statusText}`);
+      throw new VaadinConnectException(
+        'expected "200 OK" response, but got ' +
+          `${response.status} ${response.statusText}`
+      );
     }
   }
 };
@@ -28,7 +35,7 @@ const assertResponseIsOk = async(response: Response): Promise<void> => {
  * @param client the connect client instance
  * @ignore
  */
-const authenticateClient = async(client: ConnectClient): Promise<void> => {
+const authenticateClient = async (client: ConnectClient): Promise<void> => {
   let message;
   const _private = privates.get(client);
   let tokens = _private.tokens;
@@ -65,11 +72,11 @@ const authenticateClient = async(client: ConnectClient): Promise<void> => {
     if (body.has('grant_type')) {
       const tokenResponse = await fetch(client.tokenEndpoint, {
         method: 'POST',
-        signal: _private.controller.signal,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: body.toString()
+        body: body.toString(),
+        signal: _private.controller.signal
       });
 
       if (tokenResponse.status === 400 || tokenResponse.status === 401) {
@@ -108,13 +115,14 @@ class Token {
     this.token = token;
     this.json = JSON.parse(atob(token.split('.')[1]));
   }
-  isValid() {
+
+  isValid(): boolean {
     return this.json.exp > Date.now() / 1000;
   }
 }
 
 /** @ignore */
-interface AuthJson {
+interface IAuthJson {
   access_token: string;
   refresh_token: string;
 }
@@ -125,12 +133,13 @@ class AuthTokens {
   refreshToken?: Token;
   stayLoggedIn?: boolean;
 
-  constructor(authJson?: AuthJson) {
+  constructor(authJson?: IAuthJson) {
     if (authJson) {
       this.accessToken = new Token(authJson.access_token);
       this.refreshToken = new Token(authJson.refresh_token);
     }
   }
+
   save() {
     if (this.refreshToken) {
       localStorage.setItem(refreshTokenKey, this.refreshToken.token);
@@ -140,6 +149,7 @@ class AuthTokens {
     }
     return this;
   }
+
   restore() {
     const token = localStorage.getItem(refreshTokenKey);
     if (token) {
@@ -156,7 +166,8 @@ class AuthTokens {
 }
 
 /**
- * An exception that gets thrown when the Vaadin Connect backend responds with not ok status.
+ * An exception that gets thrown when the Vaadin Connect backend responds
+ * with not ok status.
  */
 export class VaadinConnectException extends Error {
   /**
@@ -170,7 +181,8 @@ export class VaadinConnectException extends Error {
   type?: string;
 
   /**
-   * The optional detail object, containing additional information sent from a backend
+   * The optional detail object, containing additional information sent
+   * from a backend
    */
   detail?: any;
 
@@ -190,7 +202,7 @@ export class VaadinConnectException extends Error {
 /**
  * The Access Token structure returned by the authentication server.
  */
-interface AccessToken {
+interface IAccessToken {
   /**
    * The user used in credentials.
    */
@@ -210,13 +222,13 @@ interface AccessToken {
 /**
  * An object to provide user credentials for authorization grants.
  */
-interface Credentials {
+interface ICredentials {
   username: string;
   password: string;
   stayLoggedIn?: boolean;
 }
 
-interface CredentialsCallbackOptions {
+interface ICredentialsCallbackOptions {
   /**
    * When credentials are asked again, contains
    * the error description from last token response.
@@ -228,13 +240,13 @@ interface CredentialsCallbackOptions {
  * An async callback function providing credentials for authorization.
  * @param options
  */
-type CredentialsCallback = (options?: CredentialsCallbackOptions) =>
-  Promise<Credentials>;
+type CredentialsCallback = (options?: ICredentialsCallbackOptions) =>
+  Promise<ICredentials>;
 
 /**
  * The `ConnectClient` constructor options.
  */
-interface ConnectClientOptions {
+interface IConnectClientOptions {
   /**
    * The `endpoint` property value.
    */
@@ -256,7 +268,7 @@ interface ConnectClientOptions {
   middlewares?: Middleware[];
 }
 
-interface CallOptions {
+interface ICallOptions {
   /**
    * Require authentication.
    */
@@ -267,7 +279,7 @@ interface CallOptions {
  * An object with the call arguments and the related Request instance.
  * See also {@link ConnectClient.call | the call() method in ConnectClient}.
  */
-interface MiddlewareContext {
+interface IMiddlewareContext {
   /**
    * The service class name.
    */
@@ -286,7 +298,7 @@ interface MiddlewareContext {
   /**
    * Client options related with the call.
    */
-  options: CallOptions;
+  options: ICallOptions;
 
   /**
    * The Fetch API Request object reflecting the other properties.
@@ -299,7 +311,7 @@ interface MiddlewareContext {
  * or makes the actual request.
  * @param context The information about the call and request
  */
-type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
+type MiddlewareNext = (context: IMiddlewareContext) => Promise<Response>;
 
 /**
  * An async callback function that can intercept the request and response
@@ -307,7 +319,7 @@ type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
  * @param context The information about the call and request
  * @param next Invokes the next in the call chain
  */
-type Middleware = (context: MiddlewareContext, next: MiddlewareNext) =>
+type Middleware = (context: IMiddlewareContext, next: MiddlewareNext) =>
   Promise<Response>;
 
 /**
@@ -388,7 +400,7 @@ export class ConnectClient {
   /**
    * @param options Constructor options.
    */
-  constructor(options: ConnectClientOptions = {}) {
+  constructor(options: IConnectClientOptions = {}) {
     if (options.endpoint) {
       this.endpoint = options.endpoint;
     }
@@ -406,15 +418,17 @@ export class ConnectClient {
     }
 
     privates.set(this, {
-      tokens: new AuthTokens().restore(),
-      controller: new AbortController()
+      controller: new AbortController(),
+      tokens: new AuthTokens().restore()
     });
   }
 
   /**
-   * Remove current accessToken and refreshToken, and cancel any authentication request
-   * that might be in progress.
-   * After calling `logout()`, any new service call will ask for user credentials.
+   * Remove current accessToken and refreshToken, and cancel any authentication
+   * request that might be in progress.
+   *
+   * After calling `logout()`, any new service call will ask for
+   * user credentials.
    */
   async logout() {
     const _private = privates.get(this);
@@ -427,7 +441,7 @@ export class ConnectClient {
   /**
    * The access token returned by the authorization server.
    */
-  get token(): AccessToken {
+  get token(): IAccessToken {
     const token = privates.get(this).tokens.accessToken;
     return token && Object.assign({}, token.json);
   }
@@ -443,7 +457,12 @@ export class ConnectClient {
    * @param options Optional client options for this call.
    * @returns {} Decoded JSON response data.
    */
-  async call(service: string, method: string, params?: any, options: CallOptions = {}) {
+  async call(
+    service: string,
+    method: string,
+    params?: any,
+    options: ICallOptions = {}
+  ) {
     if (arguments.length < 2) {
       throw new TypeError(
         `2 arguments required, but got only ${arguments.length}`
@@ -461,6 +480,7 @@ export class ConnectClient {
       'Content-Type': 'application/json'
     };
     if (accessToken) {
+      // tslint:disable-next-line:no-string-literal
       headers['Authorization'] = `Bearer ${accessToken.token}`;
     }
 
@@ -476,7 +496,7 @@ export class ConnectClient {
 
     // The middleware `context`, includes the call arguments and the request
     // constructed from them
-    const context: MiddlewareContext = {
+    const initialContext: IMiddlewareContext = {
       service,
       method,
       params,
@@ -490,7 +510,7 @@ export class ConnectClient {
     // in the final middlewares array.
     const responseHandlerMiddleware: Middleware =
       async (
-        context: MiddlewareContext,
+        context: IMiddlewareContext,
         next: MiddlewareNext
       ): Promise<Response> => {
         const response = await next(context);
@@ -502,27 +522,28 @@ export class ConnectClient {
     // chain item for our convenience. Always having an ending of the chain
     // this way makes the folding down below more concise.
     const fetchNext: MiddlewareNext =
-      async (context: MiddlewareContext): Promise<Response> => {
+      async (context: IMiddlewareContext): Promise<Response> => {
         return await fetch(context.request);
       };
 
-    // Assemble the final middlewares array from internal and external middlewares
+    // Assemble the final middlewares array from internal
+    // and external middlewares
     const middlewares = [responseHandlerMiddleware].concat(this.middlewares);
 
     // Fold the final middlewares array into a single function
-    const next = middlewares.reduceRight(
+    const chain = middlewares.reduceRight(
       (next: MiddlewareNext, middleware: Middleware) => {
         // Compose and return the new chain step, that takes the context and
         // invokes the current middleware with the context and the further chain
         // as the next argument
-        return <MiddlewareNext>(context => middleware(context, next));
+        return (context => middleware(context, next)) as MiddlewareNext;
       },
       // Initialize reduceRight the accumulator with `fetchNext`
       fetchNext
     );
 
     // Invoke all the folded async middlewares and return
-    return await next(context);
+    return await chain(initialContext);
   }
 
   /**
