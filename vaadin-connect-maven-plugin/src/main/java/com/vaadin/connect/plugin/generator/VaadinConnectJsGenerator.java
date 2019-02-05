@@ -61,8 +61,8 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinServiceNameChecker;
 
-import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
-import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
+import static com.vaadin.connect.plugin.VaadinConnectMojoBase.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
+import static com.vaadin.connect.plugin.VaadinConnectMojoBase.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
 
 /**
  * Vaadin connect JavaScript generator implementation for swagger-codegen. Some
@@ -665,20 +665,6 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      ParameterInformation that = (ParameterInformation) o;
-      return Objects.equals(name, that.name) && Objects.equals(type, that.type)
-          && Objects.equals(description, that.description);
-    }
-
-    @Override
     public int hashCode() {
       return Objects.hash(name, type, description);
     }
@@ -712,21 +698,6 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
     public List<ParameterInformation> getParameterInformation() {
       return parameterInformation;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      TypeInformation that = (TypeInformation) o;
-      return Objects.equals(name, that.name) && Objects.equals(type, that.type)
-          && Objects.equals(description, that.description)
-          && Objects.equals(parameterInformation, that.parameterInformation);
     }
 
     @Override
