@@ -200,6 +200,8 @@
                                     <exclude>com/vaadin/connect/VaadinConnectControllerConfiguration*</exclude>
                                     <!--no point to test unimplemented methods-->
                                     <exclude>com/vaadin/frontend/server/VaadinFrontendInterceptor$DelegatingPathMatcher*</exclude>
+                                    <!--no point to test equal and hash of private classes-->
+                                    <exclude>com/vaadin/connect/plugin/generator/VaadinConnectJsGenerator$*.class</exclude>
                                 </excludes>
                             </configuration>
                         </execution>
