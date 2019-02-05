@@ -3,7 +3,6 @@
 import {usageStatistics} from '@vaadin/vaadin-usage-statistics/vaadin-usage-statistics.js';
 
 declare global {
-  // tslint:disable-next-line:interface-name
   interface Window { Vaadin: any; }
 }
 

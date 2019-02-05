@@ -122,7 +122,7 @@ class Token {
 }
 
 /** @ignore */
-interface IAuthJson {
+interface AuthJson {
   access_token: string;
   refresh_token: string;
 }
@@ -133,7 +133,7 @@ class AuthTokens {
   refreshToken?: Token;
   stayLoggedIn?: boolean;
 
-  constructor(authJson?: IAuthJson) {
+  constructor(authJson?: AuthJson) {
     if (authJson) {
       this.accessToken = new Token(authJson.access_token);
       this.refreshToken = new Token(authJson.refresh_token);
@@ -202,7 +202,7 @@ export class VaadinConnectException extends Error {
 /**
  * The Access Token structure returned by the authentication server.
  */
-interface IAccessToken {
+interface AccessToken {
   /**
    * The user used in credentials.
    */
@@ -222,13 +222,13 @@ interface IAccessToken {
 /**
  * An object to provide user credentials for authorization grants.
  */
-interface ICredentials {
+interface Credentials {
   username: string;
   password: string;
   stayLoggedIn?: boolean;
 }
 
-interface ICredentialsCallbackOptions {
+interface CredentialsCallbackOptions {
   /**
    * When credentials are asked again, contains
    * the error description from last token response.
@@ -240,13 +240,13 @@ interface ICredentialsCallbackOptions {
  * An async callback function providing credentials for authorization.
  * @param options
  */
-type CredentialsCallback = (options?: ICredentialsCallbackOptions) =>
-  Promise<ICredentials>;
+type CredentialsCallback = (options?: CredentialsCallbackOptions) =>
+  Promise<Credentials>;
 
 /**
  * The `ConnectClient` constructor options.
  */
-interface IConnectClientOptions {
+interface ConnectClientOptions {
   /**
    * The `endpoint` property value.
    */
@@ -268,7 +268,7 @@ interface IConnectClientOptions {
   middlewares?: Middleware[];
 }
 
-interface ICallOptions {
+interface CallOptions {
   /**
    * Require authentication.
    */
@@ -279,7 +279,7 @@ interface ICallOptions {
  * An object with the call arguments and the related Request instance.
  * See also {@link ConnectClient.call | the call() method in ConnectClient}.
  */
-interface IMiddlewareContext {
+interface MiddlewareContext {
   /**
    * The service class name.
    */
@@ -298,7 +298,7 @@ interface IMiddlewareContext {
   /**
    * Client options related with the call.
    */
-  options: ICallOptions;
+  options: CallOptions;
 
   /**
    * The Fetch API Request object reflecting the other properties.
@@ -311,7 +311,7 @@ interface IMiddlewareContext {
  * or makes the actual request.
  * @param context The information about the call and request
  */
-type MiddlewareNext = (context: IMiddlewareContext) => Promise<Response>;
+type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
 
 /**
  * An async callback function that can intercept the request and response
@@ -319,7 +319,7 @@ type MiddlewareNext = (context: IMiddlewareContext) => Promise<Response>;
  * @param context The information about the call and request
  * @param next Invokes the next in the call chain
  */
-type Middleware = (context: IMiddlewareContext, next: MiddlewareNext) =>
+type Middleware = (context: MiddlewareContext, next: MiddlewareNext) =>
   Promise<Response>;
 
 /**
@@ -400,7 +400,7 @@ export class ConnectClient {
   /**
    * @param options Constructor options.
    */
-  constructor(options: IConnectClientOptions = {}) {
+  constructor(options: ConnectClientOptions = {}) {
     if (options.endpoint) {
       this.endpoint = options.endpoint;
     }
@@ -441,7 +441,7 @@ export class ConnectClient {
   /**
    * The access token returned by the authorization server.
    */
-  get token(): IAccessToken {
+  get token(): AccessToken {
     const token = privates.get(this).tokens.accessToken;
     return token && Object.assign({}, token.json);
   }
@@ -461,7 +461,7 @@ export class ConnectClient {
     service: string,
     method: string,
     params?: any,
-    options: ICallOptions = {}
+    options: CallOptions = {}
   ) {
     if (arguments.length < 2) {
       throw new TypeError(
@@ -496,7 +496,7 @@ export class ConnectClient {
 
     // The middleware `context`, includes the call arguments and the request
     // constructed from them
-    const initialContext: IMiddlewareContext = {
+    const initialContext: MiddlewareContext = {
       service,
       method,
       params,
@@ -510,7 +510,7 @@ export class ConnectClient {
     // in the final middlewares array.
     const responseHandlerMiddleware: Middleware =
       async (
-        context: IMiddlewareContext,
+        context: MiddlewareContext,
         next: MiddlewareNext
       ): Promise<Response> => {
         const response = await next(context);
@@ -522,7 +522,7 @@ export class ConnectClient {
     // chain item for our convenience. Always having an ending of the chain
     // this way makes the folding down below more concise.
     const fetchNext: MiddlewareNext =
-      async (context: IMiddlewareContext): Promise<Response> => {
+      async (context: MiddlewareContext): Promise<Response> => {
         return await fetch(context.request);
       };
 

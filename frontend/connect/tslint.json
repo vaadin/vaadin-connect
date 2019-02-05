@@ -7,6 +7,7 @@
     "no-any": false,
     "max-classes-per-file": false,
     "member-access": false,
+    "interface-name": false,
     "arrow-parens": false,
     "object-literal-sort-keys": false,
     "one-line": [true, "check-open-brace", "check-whitespace"],
