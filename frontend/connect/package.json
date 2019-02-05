@@ -7,12 +7,18 @@
     "test": "test"
   },
   "files": [
-    "src/**/*.js"
+    "/*.js",
+    "/*.js.map",
+    "/*.d.ts",
+    "/*.d.ts.map"
   ],
   "scripts": {
-    "lint": "eslint src/ test/ *.js",
-    "test": "yarn lint && intern",
-    "test:watch": "chokidar \"index.js\" \"src/**/*.js\" \"test/**/*.js\" -c \"yarn test\""
+    "build": "yarn lint && tsc",
+    "prepublish": "yarn build",
+    "lint": "tslint 'src/**/*.ts'",
+    "test": "yarn build && intern",
+    "test:watch": "chokidar \"src/**/*.ts\" \"test/**/*.js\" -c \"yarn build && yarn test\"",
+    "version": "node scripts/version.js"
   },
   "repository": {
     "type": "git",
@@ -40,7 +46,9 @@
     "intern": "^4.3.3",
     "node-fetch": "^2.3.0",
     "sinon": "^7.1.1",
-    "sinon-chai": "^3.2.0"
+    "sinon-chai": "^3.2.0",
+    "tslint": "^5.12.1",
+    "typescript": "^3.3.1"
   },
   "dependencies": {
     "@vaadin/vaadin-usage-statistics": "^2.0.0"
