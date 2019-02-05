@@ -17,7 +17,8 @@
     "prepublish": "yarn build",
     "lint": "tslint 'src/**/*.ts'",
     "test": "yarn build && intern",
-    "test:watch": "chokidar \"src/**/*.ts\" \"test/**/*.js\" -c \"yarn build && yarn test\""
+    "test:watch": "chokidar \"src/**/*.ts\" \"test/**/*.js\" -c \"yarn build && yarn test\"",
+    "version": "node scripts/version.js"
   },
   "repository": {
     "type": "git",

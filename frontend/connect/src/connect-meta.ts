@@ -11,7 +11,7 @@ window.Vaadin = window.Vaadin || {};
 window.Vaadin.registrations = window.Vaadin.registrations || [];
 window.Vaadin.registrations.push({
   is: '@vaadin/connect',
-  version: '0.4.0',
+  version: '0.5.1',
 });
 
 usageStatistics();
