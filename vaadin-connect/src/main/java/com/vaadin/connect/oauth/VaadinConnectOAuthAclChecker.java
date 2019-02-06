@@ -22,10 +22,13 @@ import javax.annotation.security.RolesAllowed;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -98,52 +101,64 @@ public class VaadinConnectOAuthAclChecker {
     return "Bad authentication, the request should use oauth2";
   }
 
+  /**
+   * Gets the entity to check for Vaadin Connect security restrictions.
+   *
+   * @param method
+   *          the method to analyze, not {@code null}
+   * @return the entity that is responsible for security settings for the method
+   *         passed
+   * @throws IllegalArgumentException
+   *           if the method is not public
+   */
+  public AnnotatedElement getSecurityTarget(Method method) {
+    if (!Modifier.isPublic(method.getModifiers())) {
+      throw new IllegalArgumentException(String.format(
+          "The method '%s' is not public hence cannot have a security target",
+          method));
+    }
+    return hasSecurityAnnotation(method) ? method : method.getDeclaringClass();
+  }
+
   private String verifyAnonymousUser(Method method) {
-    if (cannotAccessAnonymously(method)
+    if (!getSecurityTarget(method).isAnnotationPresent(AnonymousAllowed.class)
         || cannotAccessMethod(method, Collections.emptyList())) {
       return "Anonymous access is not allowed";
     }
     return null;
   }
 
-  private boolean cannotAccessAnonymously(Method method) {
-    if (hasSecurityAnnotation(method)) {
-      return !method.isAnnotationPresent(AnonymousAllowed.class);
-    }
-    Class<?> clazz = method.getDeclaringClass();
-    return !clazz.isAnnotationPresent(AnonymousAllowed.class);
-  }
-
   private String verifyAuthenticatedUser(Method method,
       OAuth2Authentication auth) {
-    if (cannotAccessMethod(method, auth.getAuthorities())) {
+    if (cannotAccessMethod(method, auth.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority).collect(Collectors.toList()))) {
       return "Unauthorized access to vaadin service";
     }
     return null;
   }
 
   private boolean cannotAccessMethod(Method method,
-      Collection<GrantedAuthority> authorities) {
-    return hasSecurityAnnotation(method) ? entityForbidden(method, authorities)
-        : entityForbidden(method.getDeclaringClass(), authorities);
+      List<String> requestedAuthorities) {
+    return entityForbidden(getSecurityTarget(method), requestedAuthorities);
   }
 
   private boolean entityForbidden(AnnotatedElement entity,
-      Collection<GrantedAuthority> authorities) {
-    return entity.isAnnotationPresent(DenyAll.class) || (!entity
-        .isAnnotationPresent(AnonymousAllowed.class)
-        && !roleAllowed(entity.getAnnotation(RolesAllowed.class), authorities));
+      List<String> requestedAuthorities) {
+    return entity.isAnnotationPresent(DenyAll.class)
+        || (!entity.isAnnotationPresent(AnonymousAllowed.class)
+            && !roleAllowed(entity.getAnnotation(RolesAllowed.class),
+                requestedAuthorities));
   }
 
-  private boolean roleAllowed(RolesAllowed roles,
-      Collection<GrantedAuthority> authorities) {
-    if (roles == null) {
+  private boolean roleAllowed(RolesAllowed rolesAllowed,
+      List<String> requestedAuthorities) {
+    if (rolesAllowed == null) {
       return true;
     }
 
-    List<String> allowedRoles = Arrays.asList(roles.value());
-    return authorities.stream().map(GrantedAuthority::getAuthority)
-        .anyMatch(allowedRoles::contains);
+    Set<String> allowedRoles = new HashSet<>(
+        Arrays.asList(rolesAllowed.value()));
+    return allowedRoles.containsAll(requestedAuthorities);
   }
 
   private boolean hasSecurityAnnotation(Method method) {

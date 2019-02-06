@@ -9,18 +9,18 @@
     "description" : "Vaadin connect backend server"
   } ],
   "tags" : [ {
+    "name" : "JsonTestService",
+    "description" : "This class is used for OpenApi generator test"
+  }, {
     "name" : "GeneratorAnonymousAllowedTestClass",
     "description" : "This nested class is also used in the OpenApi generator test"
-  }, {
-    "name" : "GeneratorTestClass",
-    "description" : "This class is used for OpenApi generator test"
   } ],
   "paths" : {
-    "/GeneratorTestClass/countUser" : {
+    "/JsonTestService/countUser" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Get number of users",
-        "operationId" : "GeneratorTestClass_countUser_POST",
+        "operationId" : "JsonTestService_countUser_POST",
         "responses" : {
           "200" : {
             "description" : "Return number of user",
@@ -38,11 +38,11 @@
         } ]
       }
     },
-    "/GeneratorTestClass/fullFQNMethod" : {
+    "/JsonTestService/fullFQNMethod" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Get instant nano",
-        "operationId" : "GeneratorTestClass_fullFQNMethod_POST",
+        "operationId" : "JsonTestService_fullFQNMethod_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -75,11 +75,11 @@
         } ]
       }
     },
-    "/GeneratorTestClass/getAllUserRolesMap" : {
+    "/JsonTestService/getAllUserRolesMap" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Get the map of user and roles",
-        "operationId" : "GeneratorTestClass_getAllUserRolesMap_POST",
+        "operationId" : "JsonTestService_getAllUserRolesMap_POST",
         "responses" : {
           "200" : {
             "description" : "Return map of user and roles",
@@ -100,11 +100,11 @@
         } ]
       }
     },
-    "/GeneratorTestClass/getAllUsers" : {
+    "/JsonTestService/getAllUsers" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Get all users",
-        "operationId" : "GeneratorTestClass_getAllUsers_POST",
+        "operationId" : "JsonTestService_getAllUsers_POST",
         "responses" : {
           "200" : {
             "description" : "Return list of users",
@@ -125,11 +125,11 @@
         } ]
       }
     },
-    "/GeneratorTestClass/getArrayInt" : {
+    "/JsonTestService/getArrayInt" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Get array int",
-        "operationId" : "GeneratorTestClass_getArrayInt_POST",
+        "operationId" : "JsonTestService_getArrayInt_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -165,11 +165,11 @@
         }
       }
     },
-    "/GeneratorTestClass/getBooleanValue" : {
+    "/JsonTestService/getBooleanValue" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Get boolean value",
-        "operationId" : "GeneratorTestClass_getBooleanValue_POST",
+        "operationId" : "JsonTestService_getBooleanValue_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -205,11 +205,11 @@
         } ]
       }
     },
-    "/GeneratorTestClass/getTwoParameters" : {
+    "/JsonTestService/getTwoParameters" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Two parameters input method",
-        "operationId" : "GeneratorTestClass_getTwoParameters_POST",
+        "operationId" : "JsonTestService_getTwoParameters_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -243,11 +243,11 @@
         }
       }
     },
-    "/GeneratorTestClass/getUserById" : {
+    "/JsonTestService/getUserById" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Get user by id",
-        "operationId" : "GeneratorTestClass_getUserById_POST",
+        "operationId" : "JsonTestService_getUserById_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -277,10 +277,10 @@
         }
       }
     },
-    "/GeneratorTestClass/reservedWordInParameter" : {
+    "/JsonTestService/reservedWordInParameter" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
-        "operationId" : "GeneratorTestClass_reservedWordInParameter_POST",
+        "tags" : [ "JsonTestService" ],
+        "operationId" : "JsonTestService_reservedWordInParameter_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -305,11 +305,11 @@
         } ]
       }
     },
-    "/GeneratorTestClass/updateUser" : {
+    "/JsonTestService/updateUser" : {
       "post" : {
-        "tags" : [ "GeneratorTestClass" ],
+        "tags" : [ "JsonTestService" ],
         "description" : "Update a user",
-        "operationId" : "GeneratorTestClass_updateUser_POST",
+        "operationId" : "JsonTestService_updateUser_POST",
         "requestBody" : {
           "content" : {
             "application/json" : {

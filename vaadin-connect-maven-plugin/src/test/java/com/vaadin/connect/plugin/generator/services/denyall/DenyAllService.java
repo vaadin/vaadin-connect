@@ -13,16 +13,32 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator.reservedwordclass;
+
+package com.vaadin.connect.plugin.generator.services.denyall;
+
+import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
 import com.vaadin.connect.VaadinService;
+import com.vaadin.connect.oauth.AnonymousAllowed;
 
-/**
- * This class is used for OpenApi generator test
- */
 @VaadinService
-public class await {
-  public void foo() {
-  }
+@DenyAll
+public class DenyAllService {
 
+    public void shouldBeDenied() {
+    }
+
+    @PermitAll
+    public void shouldBeDisplayed1() {
+    }
+
+    @RolesAllowed("test")
+    public void shouldBeDisplayed2() {
+    }
+
+    @AnonymousAllowed
+    public void shouldBeDisplayed3() {
+    }
 }

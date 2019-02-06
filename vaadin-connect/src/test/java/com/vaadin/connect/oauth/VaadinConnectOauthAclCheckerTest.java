@@ -10,7 +10,9 @@ import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,13 +22,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("unused")
 public class VaadinConnectOauthAclCheckerTest {
   private static final String ROLE_USER = "ROLE_USER";
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   private static SecurityContext securityContext;
 
@@ -48,6 +55,14 @@ public class VaadinConnectOauthAclCheckerTest {
     public SecurityContext createEmptyContext() {
       return securityContext;
     }
+  }
+
+  private static SecurityContext createAnonymousContext() {
+    SecurityContext anonymousContext = mock(SecurityContext.class);
+    when(anonymousContext.getAuthentication())
+        .thenReturn(new AnonymousAuthenticationToken("key", "principal",
+            Collections.singleton(new SimpleGrantedAuthority("ANONYMOUS"))));
+    return anonymousContext;
   }
 
   @Before
@@ -73,323 +88,346 @@ public class VaadinConnectOauthAclCheckerTest {
     checker = null;
   }
 
-  public static class MyClass1 {
-    public void myMethod() {
-    }
+  private void shouldPass(Class<?> test) throws Exception {
+    Method method = test.getMethod("test");
+    assertNull(checker.check(method));
+  }
+
+  private void shouldFail(Class<?> test) throws Exception {
+    Method method = test.getMethod("test");
+    assertNotNull(checker.check(method));
   }
 
   @Test
   public void should_Fail_When_NoOauth2Authentication() throws Exception {
-    securityContext = mock(SecurityContext.class);
-    when(securityContext.getAuthentication())
-        .thenReturn(new UsernamePasswordAuthenticationToken(null, null, null));
-
-    Method method = MyClass1.class.getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    class Test {
+      public void test() {
+      }
+    }
+    securityContext = createAnonymousContext();
+    shouldFail(Test.class);
   }
 
   @Test
   public void should_Pass_When_Oauth2Authentication() throws Exception {
-    Method method = MyClass1.class.getMethod("myMethod");
-    assertNull(checker.check(method));
-  }
-
-  @DenyAll
-  public static class MyClass2 {
-    public void myMethod() {
+    class Test {
+      public void test() {
+      }
     }
-
-    @RolesAllowed(ROLE_USER)
-    public void myMethod2() {
-    }
-
-    @PermitAll
-    public void myMethod3() {
-    }
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_Fail_When_DenyAllClass() throws Exception {
-    Method method = MyClass2.class.getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    @DenyAll
+    class Test {
+      public void test() {
+      }
+    }
+    shouldFail(Test.class);
   }
 
   @Test()
   public void should_Pass_When_DenyAllClass_ValidRoleMethod() throws Exception {
-    Method method = MyClass2.class.getMethod("myMethod2");
-    assertNull(checker.check(method));
+    @DenyAll
+    class Test {
+      @RolesAllowed(ROLE_USER)
+      public void test() {
+      }
+    }
+    shouldPass(Test.class);
   }
 
   @Test()
   public void should_Pass_When_DenyAllClass_PermitAllMethod() throws Exception {
-    Method method = MyClass2.class.getMethod("myMethod3");
-    assertNull(checker.check(method));
-  }
-
-  @RolesAllowed({ "ROLE_ADMIN" })
-  public static class MyClass3 {
-    public void myMethod() {
+    @DenyAll
+    class Test {
+      @PermitAll
+      public void test() {
+      }
     }
-
-    @RolesAllowed(ROLE_USER)
-    public void myMethod2() {
-    }
-
-    @PermitAll
-    public void myMethod3() {
-    }
+    shouldPass(Test.class);
   }
 
   @Test()
   public void should_Fail_When_InvalidRoleClass() throws Exception {
-    Method method = MyClass3.class.getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    @RolesAllowed({ "ROLE_ADMIN" })
+    class Test {
+      public void test() {
+      }
+    }
+    shouldFail(Test.class);
   }
 
   @Test()
   public void should_Pass_When_InvalidRoleClass_ValidRoleMethod()
       throws Exception {
-    Method method = MyClass3.class.getMethod("myMethod2");
-    assertNull(checker.check(method));
+    @RolesAllowed({ "ROLE_ADMIN" })
+    class Test {
+      @RolesAllowed(ROLE_USER)
+      public void test() {
+      }
+    }
+    shouldPass(Test.class);
   }
 
   @Test()
   public void should_Pass_When_InvalidRoleClass_PermitAllMethod()
       throws Exception {
-    Method method = MyClass3.class.getMethod("myMethod3");
-    assertNull(checker.check(method));
-  }
-
-  @RolesAllowed(ROLE_USER)
-  public static class MyClass4 {
-    public void myMethod() {
+    @RolesAllowed({ "ROLE_ADMIN" })
+    class Test {
+      @PermitAll
+      public void test() {
+      }
     }
+    shouldPass(Test.class);
   }
 
   @Test()
   public void should_Pass_When_ValidRoleClass() throws Exception {
-    Method method = MyClass4.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    @RolesAllowed(ROLE_USER)
+    class Test {
+      public void test() {
+      }
+    }
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_AllowAnonymousAccess_When_ClassIsAnnotated()
       throws Exception {
     @AnonymousAllowed
-    class AnonymousAccess {
-      public void myMethod() {
+    class Test {
+      public void test() {
       }
     }
-
     securityContext = createAnonymousContext();
-
-    Method method = AnonymousAccess.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_AllowAnonymousAccess_When_MethodIsAnnotated()
       throws Exception {
-    class MethodAnnotations {
+    class Test {
       @AnonymousAllowed
-      public void myMethod() {
+      public void test() {
       }
     }
-
     securityContext = createAnonymousContext();
-
-    Method method = MethodAnnotations.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_NotAllowAnonymousAccess_When_NoAnnotationsPresent()
       throws Exception {
-    class NoAnnotations {
-      public void myMethod() {
+    class Test {
+      public void test() {
       }
     }
-
     securityContext = createAnonymousContext();
-
-    Method method = NoAnnotations.class.getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    shouldFail(Test.class);
   }
 
   @Test
   public void should_AllowAnyAuthenticatedAccess_When_PermitAllAndAnonymousAllowed()
       throws Exception {
-    class OtherAnnotations {
+    class Test {
       @PermitAll
       @AnonymousAllowed
-      public void myMethod() {
+      public void test() {
       }
     }
-
-    Method method = OtherAnnotations.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_AllowAnonymousAccess_When_PermitAllAndAnonymousAllowed()
       throws Exception {
-    class PermitAllAndAnonymousAllowed {
+    class Test {
       @PermitAll
       @AnonymousAllowed
-      public void myMethod() {
+      public void test() {
       }
     }
 
     securityContext = createAnonymousContext();
-
-    Method method = PermitAllAndAnonymousAllowed.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_AllowAnyAuthenticatedAccess_When_RolesAllowedAndAnonymousAllowed()
       throws Exception {
-    class RolesAllowedAndAnonymousAllowed {
+    class Test {
       @RolesAllowed("ADMIN")
       @AnonymousAllowed
-      public void myMethod() {
+      public void test() {
       }
     }
-
-    Method method = RolesAllowedAndAnonymousAllowed.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_AllowAnonymousAccess_When_RolesAllowedAndAnonymousAllowed()
       throws Exception {
-    class RolesAllowedAndAnonymousAllowed {
+    class Test {
       @RolesAllowed("ADMIN")
       @AnonymousAllowed
-      public void myMethod() {
+      public void test() {
       }
     }
-
     securityContext = createAnonymousContext();
-
-    Method method = RolesAllowedAndAnonymousAllowed.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_DisallowAnyAuthenticatedAccess_When_DenyAllAndAnonymousAllowed()
       throws Exception {
-    class DenyAllAndAnonymousAllowed {
+    class Test {
       @DenyAll
       @AnonymousAllowed
-      public void myMethod() {
+      public void test() {
       }
     }
-
-    Method method = DenyAllAndAnonymousAllowed.class.getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    shouldFail(Test.class);
   }
 
   @Test
   public void should_DisallowNotMatchingRoleAccess_When_RolesAllowedAndPermitAll()
-          throws Exception {
-    class PermitAllAndRolesAllowed {
+      throws Exception {
+    class Test {
       @RolesAllowed("ADMIN")
       @PermitAll
-      public void myMethod() {
+      public void test() {
       }
     }
-
-    Method method = PermitAllAndRolesAllowed.class.getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    shouldFail(Test.class);
   }
 
   @Test
   public void should_AllowSpecificRoleAccess_When_RolesAllowedAndPermitAll()
-          throws Exception {
-    class PermitAllAndRolesAllowed {
+      throws Exception {
+    class Test {
       @RolesAllowed(ROLE_USER)
       @PermitAll
-      public void myMethod() {
+      public void test() {
       }
     }
-
-    Method method = PermitAllAndRolesAllowed.class.getMethod("myMethod");
-    assertNull(checker.check(method));
+    shouldPass(Test.class);
   }
 
   @Test
   public void should_DisallowAnonymousAccess_When_DenyAllAndAnonymousAllowed()
       throws Exception {
-    class DenyAllAndAnonymousAllowed {
+    class Test {
       @DenyAll
       @AnonymousAllowed
-      public void myMethod() {
+      public void test() {
       }
     }
-
     securityContext = createAnonymousContext();
-
-    Method method = DenyAllAndAnonymousAllowed.class.getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    shouldFail(Test.class);
   }
 
   @Test
   public void should_DisallowAnonymousAccess_When_AnonymousAllowedIsOverriddenWithDenyAll()
       throws Exception {
     @AnonymousAllowed
-    class AnonymousAllowedOverriddenWithDenyAll {
+    class Test {
       @DenyAll
-      public void myMethod() {
+      public void test() {
       }
     }
 
     securityContext = createAnonymousContext();
-
-    Method method = AnonymousAllowedOverriddenWithDenyAll.class
-        .getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    shouldFail(Test.class);
   }
 
   @Test
   public void should_DisallowAnonymousAccess_When_AnonymousAllowedIsOverriddenWithRolesAllowed()
       throws Exception {
     @AnonymousAllowed
-    class AnonymousAllowedOverriddenWithRolesAllowed {
+    class Test {
       @RolesAllowed(ROLE_USER)
-      public void myMethod() {
+      public void test() {
       }
     }
 
     securityContext = createAnonymousContext();
-
-    Method method = AnonymousAllowedOverriddenWithRolesAllowed.class
-        .getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    shouldFail(Test.class);
   }
 
   @Test
   public void should_DisallowAnonymousAccess_When_AnonymousAllowedIsOverriddenWithPermitAll()
       throws Exception {
     @AnonymousAllowed
-    class AnonymousAllowedOverriddenWithPermitAll {
+    class Test {
       @PermitAll
-      public void myMethod() {
+      public void test() {
       }
     }
 
     securityContext = createAnonymousContext();
-
-    Method method = AnonymousAllowedOverriddenWithPermitAll.class
-        .getMethod("myMethod");
-    assertNotNull(checker.check(method));
+    shouldFail(Test.class);
   }
 
-  private SecurityContext createAnonymousContext() {
-    SecurityContext anonymousContext = mock(SecurityContext.class);
-    when(anonymousContext.getAuthentication())
-        .thenReturn(new AnonymousAuthenticationToken("key", "principal",
-            Collections.singleton(new SimpleGrantedAuthority("ANONYMOUS"))));
-    return anonymousContext;
+  @Test
+  public void should_Throw_When_PrivateMethodIsPassed() throws Exception {
+    class Test {
+      private void test() {
+      }
+    }
+
+    Method method = Test.class.getDeclaredMethod("test");
+    exception.expect(IllegalArgumentException.class);
+    exception.expectMessage(method.toString());
+    checker.getSecurityTarget(method);
+  }
+
+  @Test
+  public void should_ReturnEnclosingClassAsSecurityTarget_When_NoSecurityAnnotationsPresent()
+      throws Exception {
+    class Test {
+      public void test() {
+      }
+    }
+    assertEquals(Test.class,
+        checker.getSecurityTarget(Test.class.getMethod("test")));
+  }
+
+  @Test
+  public void should_ReturnEnclosingClassAsSecurityTarget_When_OnlyClassHasSecurityAnnotations()
+      throws Exception {
+    @AnonymousAllowed
+    class Test {
+      public void test() {
+      }
+    }
+    assertEquals(Test.class,
+        checker.getSecurityTarget(Test.class.getMethod("test")));
+  }
+
+  @Test
+  public void should_ReturnMethodAsSecurityTarget_When_OnlyMethodHasSecurityAnnotations()
+      throws Exception {
+    class Test {
+      @AnonymousAllowed
+      public void test() {
+      }
+    }
+    Method securityMethod = Test.class.getMethod("test");
+    assertEquals(securityMethod, checker.getSecurityTarget(securityMethod));
+  }
+
+  @Test
+  public void should_ReturnMethodAsSecurityTarget_When_BothClassAndMethodHaveSecurityAnnotations()
+      throws Exception {
+    @AnonymousAllowed
+    class Test {
+      @AnonymousAllowed
+      public void test() {
+      }
+    }
+    Method securityMethod = Test.class.getMethod("test");
+    assertEquals(securityMethod, checker.getSecurityTarget(securityMethod));
   }
 }

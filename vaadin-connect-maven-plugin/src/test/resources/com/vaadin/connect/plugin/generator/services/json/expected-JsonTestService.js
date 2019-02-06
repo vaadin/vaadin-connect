@@ -1,8 +1,8 @@
 /**
  * This class is used for OpenApi generator test
  *
- * This module has been generated from GeneratorTestClass.java
- * @module GeneratorTestClass
+ * This module has been generated from JsonTestService.java
+ * @module JsonTestService
  */
 
 import client from './connect-client.default.js';
@@ -27,7 +27,7 @@ import client from './connect-client.default.js';
  * @returns {Promise<number>} Return number of user
  */
 export function countUser() {
-  return client.call('GeneratorTestClass', 'countUser', undefined, {requireCredentials: true});
+  return client.call('JsonTestService', 'countUser', undefined, {requireCredentials: true});
 }
 
 /**
@@ -37,7 +37,7 @@ export function countUser() {
  * @returns {Promise<Instant>} Return current time as an Instant
  */
 export function fullFQNMethod(input) {
-  return client.call('GeneratorTestClass', 'fullFQNMethod', {input}, {requireCredentials: true});
+  return client.call('JsonTestService', 'fullFQNMethod', {input}, {requireCredentials: true});
 }
 
 /**
@@ -46,7 +46,7 @@ export function fullFQNMethod(input) {
  * @returns {Promise<object>} Return map of user and roles
  */
 export function getAllUserRolesMap() {
-  return client.call('GeneratorTestClass', 'getAllUserRolesMap', undefined, {requireCredentials: true});
+  return client.call('JsonTestService', 'getAllUserRolesMap', undefined, {requireCredentials: true});
 }
 
 /**
@@ -55,7 +55,7 @@ export function getAllUserRolesMap() {
  * @returns {Promise<array>} Return list of users
  */
 export function getAllUsers() {
-  return client.call('GeneratorTestClass', 'getAllUsers', undefined, {requireCredentials: true});
+  return client.call('JsonTestService', 'getAllUsers', undefined, {requireCredentials: true});
 }
 
 /**
@@ -65,7 +65,7 @@ export function getAllUsers() {
  * @returns {Promise<array>} Return array of int
  */
 export function getArrayInt(input) {
-  return client.call('GeneratorTestClass', 'getArrayInt', {input}, {requireCredentials: false});
+  return client.call('JsonTestService', 'getArrayInt', {input}, {requireCredentials: false});
 }
 
 /**
@@ -75,7 +75,7 @@ export function getArrayInt(input) {
  * @returns {Promise<boolean>} Return boolean value
  */
 export function getBooleanValue(input) {
-  return client.call('GeneratorTestClass', 'getBooleanValue', {input}, {requireCredentials: true});
+  return client.call('JsonTestService', 'getBooleanValue', {input}, {requireCredentials: true});
 }
 
 /**
@@ -86,7 +86,7 @@ export function getBooleanValue(input) {
  * @returns {Promise<boolean>} Return boolean value
  */
 export function getTwoParameters(input, secondInput) {
-  return client.call('GeneratorTestClass', 'getTwoParameters', {input, secondInput}, {requireCredentials: false});
+  return client.call('JsonTestService', 'getTwoParameters', {input, secondInput}, {requireCredentials: false});
 }
 
 /**
@@ -96,7 +96,7 @@ export function getTwoParameters(input, secondInput) {
  * @returns {Promise<User>} Return user with given id
  */
 export function getUserById(id) {
-  return client.call('GeneratorTestClass', 'getUserById', {id}, {requireCredentials: false});
+  return client.call('JsonTestService', 'getUserById', {id}, {requireCredentials: false});
 }
 
 /**
@@ -104,7 +104,7 @@ export function getUserById(id) {
  *
  */
 export function reservedWordInParameter(_delete) {
-  return client.call('GeneratorTestClass', 'reservedWordInParameter', {_delete}, {requireCredentials: true});
+  return client.call('JsonTestService', 'reservedWordInParameter', {_delete}, {requireCredentials: true});
 }
 
 /**
@@ -114,5 +114,5 @@ export function reservedWordInParameter(_delete) {
  *
  */
 export function updateUser(user) {
-  return client.call('GeneratorTestClass', 'updateUser', {user}, {requireCredentials: true});
+  return client.call('JsonTestService', 'updateUser', {user}, {requireCredentials: true});
 }

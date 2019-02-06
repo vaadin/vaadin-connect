@@ -13,14 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator.collectionservice;
+package com.vaadin.connect.plugin.generator.services.collectionservice;
 
 import java.util.ArrayList;
 
 import com.vaadin.connect.VaadinService;
 
 @VaadinService
-public class CollectionTestService {
+public class CollectionService {
 
   /**
    * Get a collection by author name. The generator should not mix this type

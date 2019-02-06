@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.stream.Collectors;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -39,12 +40,15 @@ public final class TestUtils {
     return properties;
   }
 
-  public static String getExpectedJson(Class<?> resourceOwner, String name) {
+  public static String readResource(URL resourceUrl) {
+    String text;
     try (BufferedReader input = new BufferedReader(
-        new InputStreamReader(resourceOwner.getResourceAsStream(name)))) {
-      return input.lines().collect(Collectors.joining("\n"));
+        new InputStreamReader(resourceUrl.openStream()))) {
+      text = input.lines().collect(Collectors.joining("\n"));
     } catch (IOException e) {
-      return "";
+      throw new AssertionError(
+          String.format("Failed to read resource from '%s'", resourceUrl), e);
     }
+    return text;
   }
 }

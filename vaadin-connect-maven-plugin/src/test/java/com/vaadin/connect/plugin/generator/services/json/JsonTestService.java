@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator.service;
+package com.vaadin.connect.plugin.generator.services.json;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -31,7 +31,7 @@ import com.vaadin.connect.oauth.AnonymousAllowed;
  * This class is used for OpenApi generator test
  */
 @VaadinService
-public class GeneratorTestClass {
+public class JsonTestService {
   /**
    * Get all users
    *

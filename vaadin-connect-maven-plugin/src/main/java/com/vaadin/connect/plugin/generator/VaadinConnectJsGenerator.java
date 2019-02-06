@@ -269,7 +269,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static IllegalStateException getUnexpectedOpenAPIException(
       String inputFile, String errorMessage) {
     return new IllegalStateException(
-        "Unexpected error happens while generating vaadin-connect JavaScript service wrappers."
+        "Unexpected error while generating vaadin-connect JavaScript service wrappers."
             + " The input file " + inputFile
             + " might be corrupted, please try running the generating tasks again. "
             + errorMessage);
@@ -287,8 +287,9 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
           Collections.emptyList(), options);
     } catch (Exception e) {
       throw new IllegalStateException(
-          "Unexpected error happens while generating vaadin-connect JavaScript service wrappers. "
-              + "Can't read file " + configurator.getInputSpecURL(),
+          "Unexpected error while generating vaadin-connect JavaScript service wrappers. "
+              + String.format("Can't read file '%s'",
+                  configurator.getInputSpecURL()),
           e);
     }
   }
@@ -568,8 +569,8 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       return "";
     }
     Map<String, String> paramDescription = (Map<String, String>) requestSchema
-        .getExtensions()
-        .get(OpenApiParser.EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION);
+        .getExtensions().get(
+            OpenApiObjectGenerator.EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION);
     return paramDescription.getOrDefault(paramName, "");
   }
 
@@ -673,9 +674,8 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       }
 
       ParameterInformation that = (ParameterInformation) o;
-      return Objects.equals(name, that.name) &&
-              Objects.equals(type, that.type) &&
-              Objects.equals(description, that.description);
+      return Objects.equals(name, that.name) && Objects.equals(type, that.type)
+          && Objects.equals(description, that.description);
     }
 
     @Override
@@ -724,10 +724,9 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       }
 
       TypeInformation that = (TypeInformation) o;
-      return Objects.equals(name, that.name) &&
-              Objects.equals(type, that.type) &&
-              Objects.equals(description, that.description) &&
-              Objects.equals(parameterInformation, that.parameterInformation);
+      return Objects.equals(name, that.name) && Objects.equals(type, that.type)
+          && Objects.equals(description, that.description)
+          && Objects.equals(parameterInformation, that.parameterInformation);
     }
 
     @Override

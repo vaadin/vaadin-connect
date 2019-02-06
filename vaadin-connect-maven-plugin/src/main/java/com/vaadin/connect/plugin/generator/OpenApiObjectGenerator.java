@@ -48,7 +48,6 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.LiteralStringValueExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
-import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
@@ -98,7 +97,7 @@ import com.vaadin.connect.oauth.AnonymousAllowed;
  * Java parser class which scans for all {@link VaadinService} classes and
  * produces OpenApi json.
  */
-class OpenApiParser {
+public class OpenApiObjectGenerator {
   public static final String EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION = "x-vaadin-parameters-description";
 
   private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
@@ -114,13 +113,20 @@ class OpenApiParser {
   private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
   private ClassLoader typeResolverClassLoader;
 
-  void addSourcePath(Path sourcePath) {
+  /**
+   * Adds the source path to the generator to process.
+   *
+   * @param sourcePath
+   *          the source path to generate the medatata from
+   */
+  public void addSourcePath(Path sourcePath) {
     if (sourcePath == null) {
       throw new IllegalArgumentException(
           "Java source path must be a valid directory");
     }
     if (!sourcePath.toFile().exists()) {
-      throw new IllegalArgumentException("Java source path doesn't exist");
+      throw new IllegalArgumentException(
+          String.format("Java source path '%s' doesn't exist", sourcePath));
     }
     this.javaSourcePaths.add(sourcePath);
   }
@@ -136,11 +142,22 @@ class OpenApiParser {
     this.typeResolverClassLoader = typeResolverClassLoader;
   }
 
-  void setOpenApiConfiguration(OpenApiConfiguration configuration) {
+  /**
+   * Sets the configuration to be used when generating an Open API spec.
+   *
+   * @param configuration
+   *          the generator configuration
+   */
+  public void setOpenApiConfiguration(OpenApiConfiguration configuration) {
     this.configuration = configuration;
   }
 
-  OpenAPI getOpenApi() {
+  /**
+   * Gets the Open API, generates it if necessary.
+   *
+   * @return the Open API data
+   */
+  public OpenAPI getOpenApi() {
     if (openApiModel == null) {
       init();
     }
@@ -193,7 +210,8 @@ class OpenApiParser {
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiParser.class).error(e.getMessage(), e);
+      LoggerFactory.getLogger(OpenApiObjectGenerator.class)
+          .error(e.getMessage(), e);
       throw new IllegalStateException(String.format(
           "Can't parse the java files in the source root '%s'", sourceRoot), e);
     }
@@ -227,13 +245,8 @@ class OpenApiParser {
     Components components = new Components();
     SecurityScheme vaadinConnectOAuth2Scheme = new SecurityScheme()
         .type(SecurityScheme.Type.OAUTH2)
-        .flows(
-            new OAuthFlows().password(
-                new OAuthFlow()
-                    .tokenUrl(VAADIN_CONNECT_OAUTH2_TOKEN_URL)
-                    .scopes(new Scopes())
-            )
-        );
+        .flows(new OAuthFlows().password(new OAuthFlow()
+            .tokenUrl(VAADIN_CONNECT_OAUTH2_TOKEN_URL).scopes(new Scopes())));
     components.addSecuritySchemes(VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME,
         vaadinConnectOAuth2Scheme);
     openAPI.components(components);
@@ -371,17 +384,16 @@ class OpenApiParser {
       MethodDeclaration methodDeclaration) {
     if (hasSecurityAnnotation(methodDeclaration)) {
       return !methodDeclaration.isAnnotationPresent(AnonymousAllowed.class);
-    } else if (hasSecurityAnnotation(typeDeclaration)) {
+    } else {
       return !typeDeclaration.isAnnotationPresent(AnonymousAllowed.class);
     }
-    return true;
   }
 
-  private boolean hasSecurityAnnotation(NodeWithAnnotations<?> node) {
-    return node.isAnnotationPresent(AnonymousAllowed.class)
-        || node.isAnnotationPresent(PermitAll.class)
-        || node.isAnnotationPresent(DenyAll.class)
-        || node.isAnnotationPresent(RolesAllowed.class);
+  private boolean hasSecurityAnnotation(MethodDeclaration method) {
+    return method.isAnnotationPresent(AnonymousAllowed.class)
+        || method.isAnnotationPresent(PermitAll.class)
+        || method.isAnnotationPresent(DenyAll.class)
+        || method.isAnnotationPresent(RolesAllowed.class);
   }
 
   private Operation createPostOperation(MethodDeclaration methodDeclaration,
@@ -475,7 +487,7 @@ class OpenApiParser {
     try {
       return parseResolvedTypeToSchema(javaType.resolve());
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiParser.class).info(String.format(
+      LoggerFactory.getLogger(OpenApiObjectGenerator.class).info(String.format(
           "Can't resolve type '%s' for creating custom OpenAPI Schema. Using the default ObjectSchema instead.",
           javaType.asString()), e);
     }

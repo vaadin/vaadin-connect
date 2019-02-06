@@ -14,31 +14,22 @@
  * the License.
  */
 
-package com.vaadin.connect.plugin.generator.denyall;
+package com.vaadin.connect.plugin.generator.services.collectionservice;
 
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
+import java.util.Collections;
 
-import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.oauth.AnonymousAllowed;
+import org.junit.Test;
 
-@VaadinService
-@DenyAll
-public class DenyAllClass {
+import com.vaadin.connect.plugin.generator.services.AbstractServiceGenerationTest;
 
-    public void shouldBeDenied() {
-    }
+public class CollectionServiceGenerationTest extends AbstractServiceGenerationTest {
 
-    @PermitAll
-    public void shouldBeDisplayed1() {
-    }
+  public CollectionServiceGenerationTest() {
+    super(Collections.singletonList(CollectionService.class));
+  }
 
-    @RolesAllowed("test")
-    public void shouldBeDisplayed2() {
-    }
-
-    @AnonymousAllowed
-    public void shouldBeDisplayed3() {
-    }
+  @Test
+  public void should_DistinguishBetweenUserAndBuiltinTypes_When_TheyHaveSameName() {
+    verifyOpenApiObjectAndGeneratedJs();
+  }
 }
