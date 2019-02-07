@@ -425,6 +425,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       warnNoClassInformation(classname);
     }
 
+
     if ((operations.get(OPERATION) instanceof List)) {
       List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
           .get(OPERATION);
@@ -498,6 +499,15 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
         && StringUtils.isNotBlank(requestBodySchema.get$ref())) {
       Schema requestSchema = schemas
           .get(getSimpleRef(requestBodySchema.get$ref()));
+      ((Map<String, Schema>) requestSchema.getProperties()).values().stream()
+        .map(Schema::get$ref).filter(Objects::nonNull)
+        .map(this::getSimpleRef)
+        .forEach(paramSchemaName -> {
+          Schema paramSchema = schemas.get(paramSchemaName);
+          if (paramSchema != null) {
+            addUserTypesFromSchema(schemas, currentTag, paramSchemaName, paramSchema);
+          }
+        });
       List<ParameterInformation> paramsList = getParamsList(requestSchema);
       codegenParameter.getVendorExtensions()
           .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);

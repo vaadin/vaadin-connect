@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.Version;
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.oauth.AnonymousAllowed;
 
@@ -153,6 +154,14 @@ public class JsonTestService {
     // No implementation
   }
 
+  public void inputBeanTypeDependency(Version input) {
+    // No implementation
+  }
+
+  public void inputBeanTypeLocal(Status input) {
+    // No implementation
+  }
+
   public static class User {
     private String name;
     private String password;
@@ -165,6 +174,15 @@ public class JsonTestService {
    */
   public static class Role {
     private String roleName;
+  }
+
+  /**
+   * Status bean. Used only in request parameters to verify that request
+   * parameter type descriptions are generated.
+   */
+  public static class Status {
+    private java.time.Instant createdAt;
+    private String text;
   }
 
   /**

@@ -8,6 +8,15 @@
 import client from './connect-client.default.js';
 
 /**
+ * Status bean. Used only in request parameters to verify that request
+parameter type descriptions are generated.
+ *
+ * @typedef {object} Status
+ * @param {Instant} createdAt
+ * @param {string} text
+ */
+
+/**
  * @typedef {object} User
  * @param {string} name
  * @param {string} password
@@ -97,6 +106,22 @@ export function getTwoParameters(input, secondInput) {
  */
 export function getUserById(id) {
   return client.call('JsonTestService', 'getUserById', {id}, {requireCredentials: false});
+}
+
+/**
+ * @param {Version} input
+ *
+ */
+export function inputBeanTypeDependency(input) {
+  return client.call('JsonTestService', 'inputBeanTypeDependency', {input}, {requireCredentials: true});
+}
+
+/**
+ * @param {Status} input
+ *
+ */
+export function inputBeanTypeLocal(input) {
+  return client.call('JsonTestService', 'inputBeanTypeLocal', {input}, {requireCredentials: true});
 }
 
 /**

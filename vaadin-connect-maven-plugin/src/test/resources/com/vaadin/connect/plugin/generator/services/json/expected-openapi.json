@@ -277,6 +277,62 @@
         }
       }
     },
+    "/JsonTestService/inputBeanTypeDependency" : {
+      "post" : {
+        "tags" : [ "JsonTestService" ],
+        "operationId" : "JsonTestService_inputBeanTypeDependency_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "$ref" : "#/components/schemas/Version"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-oauth2" : [ ]
+        } ]
+      }
+    },
+    "/JsonTestService/inputBeanTypeLocal" : {
+      "post" : {
+        "tags" : [ "JsonTestService" ],
+        "operationId" : "JsonTestService_inputBeanTypeLocal_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "input" : {
+                    "$ref" : "#/components/schemas/Status"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-oauth2" : [ ]
+        } ]
+      }
+    },
     "/JsonTestService/reservedWordInParameter" : {
       "post" : {
         "tags" : [ "JsonTestService" ],
@@ -379,6 +435,18 @@
   },
   "components" : {
     "schemas" : {
+      "Status" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "$ref" : "#/components/schemas/Instant"
+          },
+          "text" : {
+            "type" : "string"
+          }
+        },
+        "description" : "Status bean. Used only in request parameters to verify that request\nparameter type descriptions are generated."
+      },
       "Role" : {
         "type" : "object",
         "properties" : {
