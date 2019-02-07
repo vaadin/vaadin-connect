@@ -16,6 +16,7 @@
 package com.vaadin.connect.plugin.generator.services.json;
 
 import javax.annotation.security.DenyAll;
+
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.Version;
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.oauth.AnonymousAllowed;
 
@@ -153,6 +155,14 @@ public class JsonTestService {
     // No implementation
   }
 
+  public void inputBeanTypeDependency(Version input) {
+    // No implementation
+  }
+
+  public void inputBeanTypeLocal(Status input) {
+    // No implementation
+  }
+
   public static class User {
     private String name;
     private String password;
@@ -165,6 +175,14 @@ public class JsonTestService {
    */
   public static class Role {
     private String roleName;
+  }
+
+  /**
+   * Status bean
+   */
+  public static class Status {
+    private java.time.Instant createdAt;
+    private String text;
   }
 
   /**
