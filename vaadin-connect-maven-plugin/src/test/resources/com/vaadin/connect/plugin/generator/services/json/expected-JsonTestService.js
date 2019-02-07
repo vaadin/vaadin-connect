@@ -15,6 +15,14 @@ import client from './connect-client.default.js';
  */
 
 /**
+ * Status bean
+ *
+ * @typedef {object} Status
+ * @param {Instant} createdAt
+ * @param {string} text
+ */
+
+/**
  * Role bean
  *
  * @typedef {object} Role
@@ -97,6 +105,22 @@ export function getTwoParameters(input, secondInput) {
  */
 export function getUserById(id) {
   return client.call('JsonTestService', 'getUserById', {id}, {requireCredentials: false});
+}
+
+/**
+ * @param {Version} input
+ *
+ */
+export function inputBeanTypeDependency(input) {
+  return client.call('JsonTestService', 'inputBeanTypeDependency', {input}, {requireCredentials: true});
+}
+
+/**
+ * @param {Status} input
+ *
+ */
+export function inputBeanTypeLocal(input) {
+  return client.call('JsonTestService', 'inputBeanTypeLocal', {input}, {requireCredentials: true});
 }
 
 /**
