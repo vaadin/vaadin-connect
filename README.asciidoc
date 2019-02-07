@@ -3,7 +3,7 @@
 == What is Vaadin Connect
 
 Vaadin Connect is a bridge between Java backend services and a JavaScript
-frontend. It includes a REST server and generates JavaScript REST clients to
+frontend. It includes an HTTP API server and generates JavaScript clients to
 call the Java backend in a type-checkable way. Security is built-in by default.
 
 The following two snippets show the basic code that you need to write in order to
