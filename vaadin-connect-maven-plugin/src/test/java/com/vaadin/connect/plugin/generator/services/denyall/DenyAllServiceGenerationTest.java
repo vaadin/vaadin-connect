@@ -30,6 +30,6 @@ public class DenyAllServiceGenerationTest extends AbstractServiceGenerationTest 
 
   @Test
   public void should_notGenerateServiceMethodsWithoutSecurityAnnotations_When_DenyAllOnClass() {
-    verifyOpenApiObjectAndGeneratedJs();
+    verifyOpenApiObjectAndGeneratedTs();
   }
 }

@@ -7,10 +7,11 @@
   "private": true,
   "scripts": {
     "build:frontend": "webpack",
+    "build:generated": "tsc",
     "start:backend": "node scripts/start/backend.js",
     "start:webpack": "webpack --mode development -w",
     "start:apibrowser": "node scripts/start/apibrowser.js",
-    "lint": "eslint frontend/ scripts/ e2e/",
+    "lint": "eslint frontend/ scripts/ e2e/ --ignore-path .gitignore",
     "test:e2e": "intern",
     "start": "yarn start:backend -- -- yarn start:apibrowser -- -- yarn start:webpack",
     "test": "yarn lint && yarn build:frontend && yarn bundlesize && yarn start:backend -- --nowatch -- yarn test:e2e"
@@ -35,6 +36,7 @@
     "intern": "^4.3.3",
     "regenerator-runtime": "^0.13.1",
     "swagger-ui-dist": "^3.20.2",
+    "typescript": "^3.3.1",
     "webpack": "^4.28.0",
     "webpack-babel-multi-target-plugin": "2.1.0-alpha.7",
     "webpack-cli": "^3.1.2",

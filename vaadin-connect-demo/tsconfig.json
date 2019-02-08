@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "outDir": "frontend/generated",
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+    "declarationMap": true,
+    "module": "es6",
+    "target": "es2017",
+    "moduleResolution": "node",
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": [
+    "frontend/generated/**/*.ts"
+  ],
+  "exclude": []
+}

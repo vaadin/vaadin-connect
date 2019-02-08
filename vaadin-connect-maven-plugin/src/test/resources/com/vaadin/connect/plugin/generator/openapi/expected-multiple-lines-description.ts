@@ -6,13 +6,14 @@
  * @module GeneratorTestClass
  */
 
+// @ts-ignore
 import client from './connect-client.default.js';
 
 /**
  * Get all users
  *
- * @returns {Promise<array>} Return list of users
+ * Return list of users
  */
-export function getAllUsers() {
+export function getAllUsers(): Promise<array> {
   return client.call('GeneratorTestClass', 'getAllUsers', undefined, {requireCredentials: false});
 }

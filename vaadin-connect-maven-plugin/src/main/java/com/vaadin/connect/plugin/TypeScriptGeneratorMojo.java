@@ -18,10 +18,10 @@ package com.vaadin.connect.plugin;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
-import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
+import com.vaadin.connect.plugin.generator.VaadinConnectTsGenerator;
 
 /**
- * ES modules generator for vaadin-connect.
+ * TypeScript generator for vaadin-connect.
  *
  * Uses the {@link VaadinConnectMojoBase#openApiJsonFile} file to generate the
  * OpenAPI v3 specification of the Vaadin Connect modules in
@@ -32,11 +32,11 @@ import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
  *      specification</a>
  */
 @Mojo(name = "generate-connect-modules", defaultPhase = LifecyclePhase.COMPILE)
-public class EsModuleGeneratorMojo extends VaadinConnectMojoBase {
+public class TypeScriptGeneratorMojo extends VaadinConnectMojoBase {
 
   @Override
   public void execute() {
-    VaadinConnectJsGenerator.launch(openApiJsonFile,
+    VaadinConnectTsGenerator.launch(openApiJsonFile,
         generatedFrontendDirectory, getDefaultClientPath());
   }
 }

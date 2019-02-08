@@ -5,12 +5,14 @@
  * @module FooBarService
  */
 
+// @ts-ignore
 import client from './connect-client.default.js';
 
 /**
- * @param {boolean} value
  *
  */
-export function firstMethod(value) {
+export function firstMethod(
+  value: boolean
+): Promise<void> {
   return client.call('FooBarService', 'firstMethod', {value}, {requireCredentials: false});
 }

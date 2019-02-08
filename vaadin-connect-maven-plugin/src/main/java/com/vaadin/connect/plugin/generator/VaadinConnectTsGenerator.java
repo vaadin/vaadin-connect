@@ -69,7 +69,7 @@ import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERA
  * parts of the implementation are copied from
  * {@link io.swagger.codegen.languages.JavascriptClientCodegen}
  */
-public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
+public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
 
   private static final String GENERATOR_NAME = "javascript-vaadin-connect";
   private static final String NUMBER_TYPE = "number";
@@ -79,7 +79,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static final String ARRAY_TYPE = "array";
   private static final String BOXED_ARRAY_TYPE = "Array";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
-  private static final String EXTENSION_VAADIN_CONNECT_SHOW_JSDOC = "x-vaadin-connect-show-jsdoc";
+  private static final String EXTENSION_VAADIN_CONNECT_SHOW_TSDOC = "x-vaadin-connect-show-tsdoc";
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
   private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
   private static final String VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS = "vaadinConnectUserTypes";
@@ -93,11 +93,11 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private Map<String, Set<TypeInformation>> userTypes = new HashMap<>();
   private String currentTag;
 
-  private static class VaadinConnectJSOnlyGenerator extends DefaultGenerator {
+  private static class VaadinConnectTSOnlyGenerator extends DefaultGenerator {
     @Override
     public File writeToFile(String filename, String contents)
         throws IOException {
-      if (filename.endsWith(".js")) {
+      if (filename.endsWith(".ts")) {
         return super.writeToFile(filename, contents);
       }
       return null;
@@ -105,21 +105,21 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   }
 
   /**
-   * Create vaadin connect js codegen instance.
+   * Create vaadin connect ts codegen instance.
    */
-  public VaadinConnectJsGenerator() {
+  public VaadinConnectTsGenerator() {
     super();
 
     // set the output folder here
-    outputFolder = "target/generated-resources/js";
+    outputFolder = "target/generated-resources/ts";
 
     /*
      * Api classes. You can write classes for each Api file with the
      * apiTemplateFiles map. as with models, add multiple entries with different
      * extensions for multiple files per class
      */
-    apiTemplateFiles.put("ESModuleApiTemplate.mustache", // the template to use
-        ".js"); // the extension for each file to write
+    apiTemplateFiles.put("TypeScriptApiTemplate.mustache", // the template to use
+        ".ts"); // the extension for each file to write
 
     /*
      * Template Location. This is the location which templates will be read
@@ -204,7 +204,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   public static void launch(File openApiJsonFile,
       File generatedFrontendDirectory, String defaultClientPath) {
     CodegenConfigurator configurator = new CodegenConfigurator();
-    configurator.setLang(VaadinConnectJsGenerator.class.getName());
+    configurator.setLang(VaadinConnectTsGenerator.class.getName());
     configurator.setInputSpecURL(openApiJsonFile.toString());
     configurator.setOutputDir(generatedFrontendDirectory.toString());
     configurator.addAdditionalProperty(CLIENT_PATH_TEMPLATE_PROPERTY,
@@ -220,7 +220,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
     if (parseResult != null && parseResult.getMessages().isEmpty()) {
-      Set<File> generatedFiles = new VaadinConnectJSOnlyGenerator()
+      Set<File> generatedFiles = new VaadinConnectTSOnlyGenerator()
           .opts(configurator.toClientOptInput()).generate().stream()
           .filter(Objects::nonNull).collect(Collectors.toSet());
 
@@ -295,7 +295,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
   }
 
   private static Logger getLogger() {
-    return LoggerFactory.getLogger(VaadinConnectJsGenerator.class);
+    return LoggerFactory.getLogger(VaadinConnectTsGenerator.class);
   }
 
   /**
@@ -429,7 +429,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     if ((operations.get(OPERATION) instanceof List)) {
       List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
           .get(OPERATION);
-      setShouldShowJsDoc(codegenOperations);
+      setShouldShowTsDoc(codegenOperations);
       objs.put(VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS,
           codegenOperations.stream().map(CodegenOperation::getTags)
               .flatMap(Collection::stream).map(Tag::getName).map(userTypes::get)
@@ -439,7 +439,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     return super.postProcessOperations(objs);
   }
 
-  private void setShouldShowJsDoc(List<CodegenOperation> operations) {
+  private void setShouldShowTsDoc(List<CodegenOperation> operations) {
     for (CodegenOperation coop : operations) {
       boolean hasDescription = StringUtils.isNotBlank(coop.getNotes());
       boolean hasParameter = hasParameter(coop);
@@ -447,7 +447,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
       boolean hasResponseDescription = hasResponseDescription(coop);
       if (hasDescription || hasParameter || hasReturnType
           || hasResponseDescription) {
-        coop.getVendorExtensions().put(EXTENSION_VAADIN_CONNECT_SHOW_JSDOC,
+        coop.getVendorExtensions().put(EXTENSION_VAADIN_CONNECT_SHOW_TSDOC,
             true);
       }
     }
@@ -504,9 +504,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
         .map(this::getSimpleRef)
         .forEach(paramSchemaName -> {
           Schema paramSchema = schemas.get(paramSchemaName);
-          if (paramSchema != null) {
-            addUserTypesFromSchema(schemas, currentTag, paramSchemaName, paramSchema);
-          }
+          addUserTypesFromSchema(schemas, currentTag, paramSchemaName, paramSchema);
         });
       List<ParameterInformation> paramsList = getParamsList(requestSchema);
       codegenParameter.getVendorExtensions()
@@ -514,10 +512,14 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     }
 
     for (String schemaName : imports) {
-      Schema schema = schemas.get(schemaName);
-      if (schema != null) {
-        addUserTypesFromSchema(schemas, currentTag, schemaName, schema);
+      // Skip baseType, it is a schema of the body itself with method
+      // parameters. Also skip any schemas that have existing typeMapping.
+      if (schemaName.equals(codegenParameter.baseType)
+          || typeMapping.containsKey(schemaName)) {
+        continue;
       }
+      Schema schema = schemas.get(schemaName);
+      addUserTypesFromSchema(schemas, currentTag, schemaName, schema);
     }
 
     return codegenParameter;
@@ -531,15 +533,19 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
 
   private void addUserTypesFromSchema(Map<String, Schema> schemas, String tag,
       String schemaName, Schema schema) {
+
     Set<TypeInformation> types = userTypes.computeIfAbsent(tag,
         key -> new HashSet<>());
 
-    List<ParameterInformation> schemaParams = getParamsList(schema);
-    if (!schemaParams.isEmpty() || !StringUtils.isAllBlank(schemaName,
-        schema.getType(), schema.getDescription())) {
-      types.add(new TypeInformation(schemaName, schema.getType(),
-          schema.getDescription(), schemaParams));
+    if (schema == null) {
+      types.add(new UnknownTypeInformation(schemaName,
+          "Object with unknown structure"));
+      return;
     }
+
+    List<ParameterInformation> schemaParams = getParamsList(schema);
+    types.add(new KnownTypeInformation(schemaName, schema.getDescription(),
+        schemaParams));
 
     ((Map<String, Schema>) schema.getProperties()).values().stream()
         .map(Schema::getAdditionalProperties)
@@ -548,10 +554,7 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
         .filter(Objects::nonNull).map(this::getSimpleRef)
         .forEach(nestedSchemaName -> {
           Schema nestedSchema = schemas.get(nestedSchemaName);
-          if (nestedSchema != null) {
-            addUserTypesFromSchema(schemas, tag, nestedSchemaName,
-                nestedSchema);
-          }
+          addUserTypesFromSchema(schemas, tag, nestedSchemaName, nestedSchema);
         });
   }
 
@@ -694,30 +697,52 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
     }
   }
 
-  private static class TypeInformation {
-    private final String name;
-    private final String type;
-    private final String description;
-    private final List<ParameterInformation> parameterInformation;
+  private abstract static class TypeInformation {
+    protected final String name;
+    protected final String description;
 
-    TypeInformation(String name, String type, String description,
-        List<ParameterInformation> parameterInformation) {
+    TypeInformation(String name, String description) {
       this.name = name;
-      this.type = type;
       this.description = description;
-      this.parameterInformation = parameterInformation;
     }
 
     public String getName() {
       return name;
     }
 
-    public String getType() {
-      return type;
-    }
-
     public String getDescription() {
       return description;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      TypeInformation that = (TypeInformation) o;
+      return Objects.equals(name, that.name)
+&& Objects.equals(description, that.description);
+      }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, description);
+    }
+
+    public abstract boolean getIsKnown();
+  }
+
+  private static class KnownTypeInformation extends TypeInformation {
+    private final List<ParameterInformation> parameterInformation;
+
+    KnownTypeInformation(String name, String description,
+        List<ParameterInformation> parameterInformation) {
+      super(name, description);
+      this.parameterInformation = parameterInformation;
     }
 
     public List<ParameterInformation> getParameterInformation() {
@@ -733,15 +758,28 @@ public class VaadinConnectJsGenerator extends DefaultCodegenConfig {
         return false;
       }
 
-      TypeInformation that = (TypeInformation) o;
-      return Objects.equals(name, that.name) && Objects.equals(type, that.type)
-          && Objects.equals(description, that.description)
+      KnownTypeInformation that = (KnownTypeInformation) o;
+      return super.equals(o)
           && Objects.equals(parameterInformation, that.parameterInformation);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(name, type, description, parameterInformation);
+      return Objects.hash(name, description, parameterInformation);
+    }
+
+    public boolean getIsKnown() {
+      return true;
+    }
+  }
+
+  private static class UnknownTypeInformation extends TypeInformation {
+    UnknownTypeInformation(String name, String description) {
+      super(name, description);
+    }
+
+    public boolean getIsKnown() {
+      return false;
     }
   }
 }
