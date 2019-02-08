@@ -462,7 +462,7 @@ export class ConnectClient {
     method: string,
     params?: any,
     options: CallOptions = {}
-  ) {
+  ): Promise<any> {
     if (arguments.length < 2) {
       throw new TypeError(
         `2 arguments required, but got only ${arguments.length}`

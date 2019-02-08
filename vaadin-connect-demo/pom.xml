@@ -176,6 +176,20 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <executions>
+                    <!-- Compile generated TypeScript to JavaScript -->
+                    <execution>
+                        <id>build-generated</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>yarn</executable>
+                            <arguments>
+                                <argument>build:generated</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                     <!-- Build frontend production bundle -->
                     <execution>
                         <id>build-frontend</id>
