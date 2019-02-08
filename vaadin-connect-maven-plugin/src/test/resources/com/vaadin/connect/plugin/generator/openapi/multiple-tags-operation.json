@@ -15,7 +15,7 @@
   "paths" : {
     "/GeneratorTestClass/getAllUsers" : {
       "post" : {
-        "tags": ["MyFirstJsClass", "MySecondJsClass"],
+        "tags": ["MyFirstTsClass", "MySecondTsClass"],
         "description" : "Get all users",
         "responses" : {
           "200" : {

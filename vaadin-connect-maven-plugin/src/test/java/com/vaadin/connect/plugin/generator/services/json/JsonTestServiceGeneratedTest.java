@@ -23,7 +23,7 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.junit.Test;
 
 import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
-import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
+import com.vaadin.connect.plugin.generator.VaadinConnectTsGenerator;
 import com.vaadin.connect.plugin.generator.services.AbstractServiceGenerationTest;
 
 import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH;
@@ -44,7 +44,7 @@ public class JsonTestServiceGeneratedTest
     verifyGenerationFully(null,
         getClass().getResource("expected-openapi.json"));
 
-    getJsFiles(outputDirectory.getRoot()).stream().map(File::toPath)
+    getTsFiles(outputDirectory.getRoot()).stream().map(File::toPath)
         .map(this::readFile).forEach(
             fileContents -> assertTrue(fileContents.contains(expectedImport)));
   }
@@ -70,10 +70,10 @@ public class JsonTestServiceGeneratedTest
                 .getPackage().getName().replace('.', File.separatorChar))),
         openApiJsonOutput);
 
-    VaadinConnectJsGenerator.launch(openApiJsonOutput.toFile(),
+    VaadinConnectTsGenerator.launch(openApiJsonOutput.toFile(),
         outputDirectory.getRoot(), customConnectClientPath);
 
-    getJsFiles(outputDirectory.getRoot()).stream().map(File::toPath)
+    getTsFiles(outputDirectory.getRoot()).stream().map(File::toPath)
         .map(this::readFile).forEach(
             fileContents -> assertTrue(fileContents.contains(expectedImport)));
   }
@@ -84,11 +84,11 @@ public class JsonTestServiceGeneratedTest
         "whatever");
     assertFalse(nonExistingOutputDirectory.isDirectory());
 
-    VaadinConnectJsGenerator.launch(new File(getClass()
+    VaadinConnectTsGenerator.launch(new File(getClass()
         .getResource("expected-openapi-custom-application-properties.json")
         .getPath()), nonExistingOutputDirectory);
     assertTrue(nonExistingOutputDirectory.isDirectory());
-    assertFalse(getJsFiles(nonExistingOutputDirectory).isEmpty());
+    assertFalse(getTsFiles(nonExistingOutputDirectory).isEmpty());
   }
 
 }

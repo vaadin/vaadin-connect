@@ -1,0 +1,76 @@
+{{#operations}}{{#vaadinConnectClassDescription}}
+/**
+ {{#vaadinConnectClassDescription}}
+ {{#multiplelines vaadinConnectClassDescription}}
+ * {{{@line}}}
+ {{/multiplelines}}
+ {{/vaadinConnectClassDescription}}
+ {{^vaadinConnectClassDescription}}
+ *
+ {{/vaadinConnectClassDescription}}
+ *
+ * This module has been generated from {{../classname}}.java
+ * @module {{../classname}}
+ */
+
+{{/vaadinConnectClassDescription}}{{/operations}}{{!
+}}// @ts-ignore
+import client from '{{vaadinConnectDefaultClientPath}}';
+{{#each vaadinConnectUserTypes}}
+
+{{#description}}
+/**
+ * {{description}}
+ */
+{{/description}}
+{{#name}}{{#isKnown}}export interface {{name}} {
+{{#each parameterInformation}}
+{{#description}}
+  /**
+   * {{description}}
+   */
+{{/description}}
+  {{name}}: {{type}}; 
+{{/each}}
+}{{/isKnown}}{{!
+}}{{^isKnown}}type {{name}} = object;{{/isKnown}}
+{{/name}}
+{{/each}}
+{{#operations}}
+{{#operation}}
+{{#vendorExtensions.x-vaadin-connect-show-jsdoc}}
+
+/**{{#notes}}{{#multiplelines notes}}
+ * {{{@line}}}
+ *{{/multiplelines}}{{/notes}}{{!
+ }}{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{!
+  }}{{#description}}
+ * @param {{name}} {{description}}{{/description}}{{!
+ }}{{/each}}
+ *{{#responses}}{{#message}} {{message}}{{/message}}{{/responses}}
+ */{{/vendorExtensions.x-vaadin-connect-show-jsdoc}}
+export function {{vendorExtensions.x-vaadin-connect-method-name}}({{!
+  }}{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
+  {{name}}: {{type}}{{#if @last}}{{else}},{{/if}}
+{{/each}}): Promise<{{!
+}}{{#returnType}}{{returnType}}{{/returnType}}{{!
+}}{{^returnType}}void{{/returnType}}{{!
+}}> {
+{{=<% %>=}}
+  return client.call(<%!
+    %>'<%vendorExtensions.x-vaadin-connect-service-name%>', <%!
+    %>'<%vendorExtensions.x-vaadin-connect-method-name%>'<%!
+    %><%^bodyParams%><%!
+      %><%^authMethods%>, undefined<%/authMethods%><%!
+    %><%/bodyParams%><%!
+    %><%#bodyParams%>, {<%!
+    %><%#each bodyParam.vendorExtensions.x-vaadin-connect-parameters%><%!
+      %><%name%><%#if @last%><%else%>, <%/if%><%!
+    %><%/each%><%!
+    %>}<%/bodyParams%><%!
+    %><%^authMethods%>, {requireCredentials: false}<%/authMethods%><%!
+  %>);
+<%={{ }}=%>
+}
+{{/operation}}
+{{/operations}}

@@ -36,7 +36,7 @@ public class ReservedWordMethodServiceGenerationTest extends AbstractServiceGene
   public void Should_Fail_When_UsingReservedWordInMethod() {
     expected.expect(IllegalStateException.class);
     expected.expectMessage("reserved");
-    verifyOpenApiObjectAndGeneratedJs();
+    verifyOpenApiObjectAndGeneratedTs();
   }
 
 }
