@@ -67,6 +67,11 @@ public class DemoVaadinService {
     return number + 1;
   }
 
+  @AnonymousAllowed
+  public boolean isOk() {
+    return true;
+  }
+
   /**
    * This method is to make sure that the generator won't fail the build when
    * resolving types from project's dependencies.

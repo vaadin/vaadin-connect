@@ -71,7 +71,7 @@ import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.OpenApiConfiguration;
 import com.vaadin.connect.plugin.generator.OpenApiObjectGenerator;
 import com.vaadin.connect.plugin.generator.OpenApiSpecGenerator;
-import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
+import com.vaadin.connect.plugin.generator.VaadinConnectTsGenerator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -129,9 +129,9 @@ public abstract class AbstractServiceGenerationTest {
         .get(outputDirectory.getRoot().getAbsolutePath(), "openapi.json");
   }
 
-  protected List<File> getJsFiles(File directory) {
+  protected List<File> getTsFiles(File directory) {
     return Arrays
-        .asList(directory.listFiles((dir, name) -> name.endsWith(".js")));
+        .asList(directory.listFiles((dir, name) -> name.endsWith(".ts")));
   }
 
   protected String readFile(Path file) {
@@ -145,7 +145,7 @@ public abstract class AbstractServiceGenerationTest {
     }
   }
 
-  protected void verifyOpenApiObjectAndGeneratedJs() {
+  protected void verifyOpenApiObjectAndGeneratedTs() {
     generateAndVerify(null, null);
   }
 
@@ -174,9 +174,9 @@ public abstract class AbstractServiceGenerationTest {
       verifyOpenApiJson(expectedOpenApiJsonResourceUrl);
     }
 
-    VaadinConnectJsGenerator.launch(openApiJsonOutput.toFile(),
+    VaadinConnectTsGenerator.launch(openApiJsonOutput.toFile(),
         outputDirectory.getRoot());
-    verifyJsModule();
+    verifyTsModule();
   }
 
   private void verifyOpenApiObject() {
@@ -400,28 +400,28 @@ public abstract class AbstractServiceGenerationTest {
         readFile(openApiJsonOutput));
   }
 
-  private void verifyJsModule() {
-    List<File> foundFiles = getJsFiles(outputDirectory.getRoot());
+  private void verifyTsModule() {
+    List<File> foundFiles = getTsFiles(outputDirectory.getRoot());
     assertEquals(String.format(
         "Expected to have only %s classes processed in the test '%s', but found the following files: '%s'",
         serviceClasses.size(), serviceClasses, foundFiles),
         serviceClasses.size(), foundFiles.size());
     for (Class<?> expectedClass : serviceClasses) {
-      assertClassGeneratedJs(expectedClass);
+      assertClassGeneratedTs(expectedClass);
     }
   }
 
-  private void assertClassGeneratedJs(Class<?> expectedClass) {
+  private void assertClassGeneratedTs(Class<?> expectedClass) {
     URL expectedResource = expectedClass.getResource(
-        String.format("expected-%s.js", expectedClass.getSimpleName()));
-    String expectedJs = TestUtils.readResource(expectedResource);
+        String.format("expected-%s.ts", expectedClass.getSimpleName()));
+    String expectedTs = TestUtils.readResource(expectedResource);
 
     Path outputFilePath = outputDirectory.getRoot().toPath()
-        .resolve(expectedClass.getSimpleName() + ".js");
+        .resolve(expectedClass.getSimpleName() + ".ts");
 
     Assert.assertEquals(
         String.format("Class '%s' has unexpected json produced in file '%s'",
             expectedClass, expectedResource.getPath()),
-        expectedJs, readFile(outputFilePath));
+        expectedTs, readFile(outputFilePath));
   }
 }

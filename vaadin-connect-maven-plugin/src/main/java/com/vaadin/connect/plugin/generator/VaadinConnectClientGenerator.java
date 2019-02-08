@@ -64,12 +64,12 @@ public class VaadinConnectClientGenerator {
     try (BufferedReader bufferedReader = new BufferedReader(
         new InputStreamReader(
             getClass().getClassLoader()
-                .getResourceAsStream("connect-client.default.js.template"),
+                .getResourceAsStream("connect-client.default.ts.template"),
             StandardCharsets.UTF_8))) {
       return bufferedReader.lines().collect(Collectors.joining("\n"));
     } catch (IOException e) {
       throw new IllegalStateException(
-          "Unable to read connect-client.default.js.template", e);
+          "Unable to read connect-client.default.ts.template", e);
     }
   }
 }
