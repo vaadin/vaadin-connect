@@ -42,7 +42,7 @@ Keep your terminal open and development server running for the next steps.
 
 === 2. Learn the project structure
 
-The `base-starter-connect` combines a Java backend and a JS frontend under a
+The `base-starter-connect` combines a Java backend and a TypeScript frontend under a
 single project.
 
 .Java parts:
@@ -55,21 +55,21 @@ single project.
 * `target` build directory
 ** `target/generated/resources/openapi.json` generated OpenAPI specification
 
-.Frontend JS parts:
+.Frontend parts:
 * `package.json` npm project description and dependencies list
 * `node_modules/` npm dependencies installation directory
 * `frontend/` source directory
 ** `frontend/index.html` main HTML file
-** `frontend/index.js` main JS file
-** `frontend/generated/` generated JavaScript directory
+** `frontend/index.ts` main TypeScript file
+** `frontend/generated/` generated TypeScript directory
 ** `frontend/test/` unit tests
 * `static/` static frontend resources (favicon, images, fonts, etc)
 
-.Non-frontend JS parts:
+.Non-frontend TypeScript and JavaScript parts:
+* `e2e/` End-to-end test scenarios written in TypeScript for the backend and
+  the frontend together
 * `scripts/` Node scripts starting development servers, needed for the `npm
   start` and `npm test` commands
-* `e2e/` End-to-end test scenarios written in JS for the backend and the
-  frontend together
 
 [NOTE]
 .Where is the web root directory?
@@ -78,7 +78,7 @@ Any file from the `static/` directory (e. g., `static/favicon.ico`) is served
 from the web root (`/favicon.ico`).
 
 In addition, the selected `frontend/` directory contents (namely,
-`frontend/index.html`, `frontend/index.js`, `frontend/polyfills.js` files and
+`frontend/index.html`, `frontend/index.ts`, `frontend/polyfills.ts` files and
 all their dependencies) are compiled and served from the root, and the frontend
 dependencies from `node_modules/` are included in the compiled bundle.
 
@@ -121,8 +121,8 @@ changes and reload.
 Open link:http://localhost:8082[the development API browser] and see that the
 `CounterService` and the `addOne` method are now listed there.
 
-NOTE: There is also a JavaScript module generated automatically for your new
-service, `frontend/generated/CounterService.js`.
+NOTE: There is also a TypeScript module generated automatically for your new
+service, `frontend/generated/CounterService.ts`.
 
 === 4. Use your new service in the frontend
 
@@ -143,13 +143,13 @@ Open `frontend/index.html` and add the following lines to the beginning of the
 </body>
 ----
 
-Then, add the following to the beginning of `frontend/index.js`:
+Then, add the following to the beginning of `frontend/index.ts`:
 
-[source,js]
+[source,typescript]
 ----
-import * as counterService from './generated/CounterService.js';
+import * as counterService from './generated/CounterService.ts';
 
-const counter = document.getElementById('counter');
+const counter = document.getElementById('counter') as HTMLInputElement;
 document.getElementById('addOne').onclick = async() => {
   counter.value = await counterService.addOne(counter.value);
 };
@@ -158,14 +158,14 @@ document.getElementById('addOne').onclick = async() => {
 ----
 
 [NOTE]
-.The `async` and `await` JavaScript keywords
+.The `async` and `await` keywords
 ====
-We use `async` and `await` keywords in JavaScript. This allows to write
+We use `async` and `await` keywords in TypeScript. This allows to write
 asynchronous code in a flat manner, avoiding callbacks and explicit `Promise`
 usage.
 
-The generated JavaScript is made with that in mind: the backend service methods
-are translated to `async` JavaScript methods.
+The generated TypeScript is made with that in mind: the backend service methods
+are translated to TypeScript methods, so that they are compatible with `await`.
 ====
 
 Now open http://localhost:8080 the browser.
@@ -195,7 +195,7 @@ available for anonymous users by using the `@AnonymousAllowed` annotation.
 The `base-starter-connect` project already sets up a login form using the
 `<vaadin-login-overlay>` component in order to implement the authentication with
 the Vaadin Connect server. You can see login form wiring code yourself in the
-`frontend/index.js` file.
+`frontend/index.ts` file.
 
 See the link:security.asciidoc[Vaadin Connect Security] guide to learn more on
 how the authentication works.

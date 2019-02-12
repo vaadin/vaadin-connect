@@ -1,50 +1,49 @@
 ---
-title: Vaadin Connect JavaScript Services Generator
+title: Vaadin Connect TypeScript Services Generator
 order: 801
 layout: page
 ---
 
-= JavaScript Services Generator in Vaadin Connect
+= TypeScript Services Generator in Vaadin Connect
 
-The JavaScript generator produces JavaScript files based on the information from an OpenApi document which is generated from Java files in `_src/main/java_` folder by default.
+The TypeScript generator produces TypeScript files based on the information from an OpenApi document which is generated from Java files in `_src/main/java_` folder by default.
 
 [NOTE]
 ====
-Vaadin Connect uses https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between Java services and JavaScript service wrappers. The current implementation is based on OpenAPI specification 3.0.
+Vaadin Connect uses https://github.com/OAI/OpenAPI-Specification[OpenAPI Specification] as a middle layer between Java services and TypeScript service wrappers. The current implementation is based on OpenAPI specification 3.0.
 ====
 
-A simple generated JavaScript files will look like the following snippet:
+A simple generated TypeScript files will look like the following snippet:
 
-.UserService.js
-[[UserService.js]]
-[source,javascript]
+.UserService.ts
+[[UserService.ts]]
+[source,typescript]
 ----
 /**
  * User service.
  *
  * This module has been generated from UserService.java
- * @module UserService
  */
-import client from './connect-client.default';
+import client from './connect-client.default.ts';
 
 /**
  * Check if a user is admin or not.
  *
- * @param {number} id - User id to be checked
- * @returns {Promise<boolean>} Return true if the given user is an admin, otherwise false.
+ * @param id User id to be checked
+ * @returns Return true if the given user is an admin, otherwise false.
  */
-export function isAdmin(id) {
+export function isAdmin(id: number): Promise<boolean> {
   return client.call('UserService', 'isAdmin', {id});
 }
 
 ----
 
 === Modules
-The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding JavaScript file. The tag name is used for JavaScript module name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
+The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding TypeScript file. The tag name is used for TypeScript module name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
 
 === Static code
 The `_import_` is a static part of any generated file.
-`_connect-client.default.js_` is another generated file which includes default configurations for the `_ConnectClient_` and exports its instance as `_client_`.
+`_connect-client.default.ts_` is another generated file which includes default configurations for the `_ConnectClient_` and exports its instance as `_client_`.
 
 === Methods
 Each exported method in a module is corresponding to a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[POST operation] of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathItemObject[path item] in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#pathsObject[paths object].
@@ -54,10 +53,10 @@ Each exported method in a module is corresponding to a https://github.com/OAI/Op
 Currently, the generator only supports `_POST_` operation. If a path item contains other operations than `_POST_`, the generator will stop processing.
 ====
 
-The path *must* start with `/` as described in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#patterned-fields[Patterned Fields]. It is parsed as `_/<service name>/<method name>_` which are used as parameters to call to Java services in the backend. Method name from the path is also reused as the method name in the generated JavaScript file.
+The path *must* start with `/` as described in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#patterned-fields[Patterned Fields]. It is parsed as `_/<service name>/<method name>_` which are used as parameters to call to Java services in the backend. Method name from the path is also reused as the method name in the generated TypeScript file.
 
 ==== Method's Parameters
-Parameters of the method are taken from the `_application/json_` content of https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#requestBodyObject[request body object]. To get the result as <<UserService.js>>, the request body content should be:
+Parameters of the method are taken from the `_application/json_` content of https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#requestBodyObject[request body object]. To get the result as <<UserService.ts>>, the request body content should be:
 
 .Request Body
 [source, json]
@@ -154,14 +153,14 @@ The JsDoc of the generated method is stored as `_description_` value of the `_PO
 }
 ----
 
-<1> As mentioned in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in Vaadin Connect Generator, `_tags_` are used to classify operations into JavaScript files. It means each tag will have a corresponding generated JavaScript file. The operations, which contain more than one tag, will appear in all generated files. Empty tags operations will be placed in `_Default.js_` file.
+<1> As mentioned in https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#operationObject[operation object] specification, in Vaadin Connect Generator, `_tags_` are used to classify operations into TypeScript files. It means each tag will have a corresponding generated TypeScript file. The operations, which contain more than one tag, will appear in all generated files. Empty tags operations will be placed in `_Default.ts_` file.
 
 [NOTE]
 ====
-Although multiple tags do not break the generator, it might be confusing in the development time when there are two exact same methods in different JavaScript files. It is recommended to have only one tag per operation.
+Although multiple tags do not break the generator, it might be confusing in the development time when there are two exact same methods in different TypeScript files. It is recommended to have only one tag per operation.
 ====
 
-Here is an example OpenAPI document which could generate the above <<UserService.js>>.
+Here is an example OpenAPI document which could generate the above <<UserService.ts>>.
 
 .User service OpenApi document
 [source, json]

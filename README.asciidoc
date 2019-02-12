@@ -2,12 +2,12 @@
 
 == What is Vaadin Connect
 
-Vaadin Connect is a bridge between Java backend services and a JavaScript
-frontend. It includes an HTTP API server and generates JavaScript clients to
+Vaadin Connect is a bridge between Java backend services and a TypeScript
+frontend. It includes an HTTP API server and generates TypeScript clients to
 call the Java backend in a type-checkable way. Security is built-in by default.
 
 The following two snippets show the basic code that you need to write in order to
-expose a Java service and consume it from JavaScript.
+expose a Java service and consume it from TypeScript.
 
 [source,java]
 .DateService.java
@@ -20,13 +20,13 @@ public class DateService {
 }
 ----
 
-[source,js]
-.app.js
+[source,typescript]
+.app.ts
 ----
 import * as dateService from './generated/DateService.js';
 
 showDayOfYearButton.onclick = async() => {
-  const dayOfYear = await dateService.getDayOfYear(new Date());
+  const dayOfYear: number = await dateService.getDayOfYear(new Date());
   dayOfYearLabel.textContent = dayOfYear;
 };
 
@@ -43,9 +43,9 @@ The Vaadin Connect collection of tools and libraries includes:
 
 - `vaadin-connect` Java library providing backend services based on the Servlet
   API v3.
-- `@vaadin/connect` JavaScript (ES module) client library consuming Vaadin
+- `@vaadin/connect` TypeScript (ES module) client library consuming Vaadin
   Connect services.
-- `vaadin-connect-maven-plugin` Maven plugin generating JavaScript API modules
+- `vaadin-connect-maven-plugin` Maven plugin generating TypeScript API modules
   from Java service classes.
 - `vaadin-frontend-server` An optional java package that helps to create a Single-page application (SPA).
 - `https://github.com/vaadin/base-starter-connect[base-starter-connect]` The example application project.
@@ -56,7 +56,7 @@ The current version of the `vaadin-connect` Java library is implemented using li
 == Why to use Vaadin Connect?
 
 Vaadin Connect gives a _"better than REST"_ experience for the development teams
-that use Java on the backend, and JavaScript on the frontend.
+that use Java on the backend, and TypeScript on the frontend.
 
 === Easy to expose business services
 
@@ -72,14 +72,15 @@ Vaadin Connect provides the the following features:
   and the server.
 - Backend errors and exceptions are passed to the frontend to inform the UI.
 
-=== Type-checkable API access from JavaScript
+=== Type-checkable API access from TypeScript
 
-Vaadin Connect generator produces JavaScript frontend counterparts from the annotated
+Vaadin Connect generator produces TypeScript frontend counterparts from the annotated
 Java service classes. The key benefits of this approach are:
 
 - Easy to access the API. No manual REST network requests to API endpoints needed, instead
-  there are generated async JavaScript methods to call.
-- IDEs provide auto completion and code suggestions for the generated JavaScript services.
+  there are generated async TypeScript methods to call.
+- IDEs provide auto completion and code suggestions for the generated TypeScript services.
+- Using TypeScript provides type checking for the frontend code.
 
 === Security
 
@@ -124,10 +125,10 @@ as provides support for third-party and community Web Components out-of-the-box:
 
 === Modern ES6 / ES2017 based frontend
 
-Vaadin Connect generated JavaScript uses ES modules format. ES modules is an
-established web standard, that allows static code analysis and processing, and
-is supported by all modern web browsers, as well as many existing tools and
-libraries.
+Vaadin Connect generated TypeScript is compiled to ES modules output format.
+ES modules is an established web standard, that allows static code analysis
+and processing, and is supported by all modern web browsers, as well as many
+existing tools and libraries.
 
 The generated services are build around `async` / `await`, and use the `fetch` API
 as a network layer.
