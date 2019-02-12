@@ -279,7 +279,7 @@ interface CallOptions {
  * An object with the call arguments and the related Request instance.
  * See also {@link ConnectClient.call | the call() method in ConnectClient}.
  */
-interface MiddlewareContext {
+export interface MiddlewareContext {
   /**
    * The service class name.
    */
@@ -311,7 +311,7 @@ interface MiddlewareContext {
  * or makes the actual request.
  * @param context The information about the call and request
  */
-type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
+export type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
 
 /**
  * An async callback function that can intercept the request and response
@@ -319,7 +319,7 @@ type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
  * @param context The information about the call and request
  * @param next Invokes the next in the call chain
  */
-type Middleware = (context: MiddlewareContext, next: MiddlewareNext) =>
+export type Middleware = (context: MiddlewareContext, next: MiddlewareNext) =>
   Promise<Response>;
 
 /**

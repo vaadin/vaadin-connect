@@ -6,7 +6,7 @@ layout: page
 
 = Vaadin Connect client middleware
 
-The middleware in Vaadin Connect client is a special JavaScript async callback function that is executed by the frontend client during calls to backend. It intercepts the request and the response for every call. The middleware has access to the call context information, including the service and the method names, the supplied parameters, and other client call options.
+The middleware in Vaadin Connect client is a special TypeScript async callback function that is executed by the frontend client during calls to backend. It intercepts the request and the response for every call. The middleware has access to the call context information, including the service and the method names, the supplied parameters, and other client call options.
 
 == When to use a middleware?
 
@@ -23,11 +23,16 @@ The middleware could be used for processing requests and their responses. The ty
 
 Here is an example logging middleware with the structure explained.
 
-.my-log-middleware.js
-[source, javascript]
+.my-log-middleware.ts
+[source, typescript]
 ----
+import {Middleware, MiddlewareContext, MiddlewareNext} from '@vaadin/connect';
+
 // A middleware is an async function, that receives the `context` and `next`
-export async function MyLogMiddleware(context, next) {
+export const MyLogMiddleware: Middleware = async function(
+  context: MiddlewareContext,
+  next: MiddlewareNext
+): Promise<Response> {
   // The context object contains the call arguments. See the `call` method
   // of the `ConnectClient` class for their descriptions.
   const {service, method, params, options} = context;
@@ -40,11 +45,11 @@ export async function MyLogMiddleware(context, next) {
 
   // Also, the context contains the `request`, which is a Fetch API `Request`
   // instance to be sent over the network.
-  const request = context.request;
+  const request: Request = context.request;
   console.log(`${request.method} ${request.url}`);
 
   // Call the `next` async function to send the request and get the response.
-  const response = await next(context);
+  const response: Response = await next(context);
 
   // The response is a Fetch API `Response` object.
   console.log(`Received response: ${response.status} ${response.statusText}`);
@@ -67,11 +72,11 @@ See the MDN web docs to learn more about the https://developer.mozilla.org/en-US
 
 To use a middleware, when the Vaadin Connect client is instantiated, include your middleware in the `middlewares` array option:
 
-.connect-client.js
-[source, javascript]
+.connect-client.ts
+[source, typescript]
 ----
 import {ConnectClient} from '@vaadin/connect';
-import {MyLogMiddleware} from './my-log-middleware.js';
+import {MyLogMiddleware} from './my-log-middleware.ts';
 
 const client = new ConectClient({
   endpoint: '/connect',
@@ -83,11 +88,11 @@ export default client;
 
 Alternatively, you can modify the `middlewares` array property on the existing client, for example, if you use a generated client:
 
-.index.js
-[source, javascript]
+.index.ts
+[source, typescript]
 ----
-import client from './generated/connect-client.default.js';
-import {MyLogMiddleware} from './my-log-middleware.js';
+import client from './generated/connect-client.default.ts';
+import {MyLogMiddleware} from './my-log-middleware.ts';
 
 client.middlewares = [MyLogMiddleware];
 ----
@@ -98,11 +103,16 @@ NOTE: If you modify the middlewares array, only calls initiated after the modifi
 
 To make a low-level modification on the request in a middleware, replace the `context.request` with a new Fetch API `Request` instance:
 
-.my-api-dispatcher-middleware.js
-[source, javascript]
+.my-api-dispatcher-middleware.ts
+[source, typescript]
 ----
+import {Middleware, MiddlewareContext, MiddlewareNext} from '@vaadin/connect';
+
 // An example middleware that uses a different server for selected requests
-export async function MyApiDispatcherMiddleware(context, next) {
+export const MyApiDispatcherMiddleware: Middleware = async function(
+  context: MiddlewareContext,
+  next: MiddlewareNext
+): Promise<Response> {
   if (context.service === 'ExternalService') {
     const url = context.request.url.replace(
       'https//my-app.example.com',
@@ -119,11 +129,16 @@ export async function MyApiDispatcherMiddleware(context, next) {
 
 A middleware can also replace the response by returning a custom `Response` instance:
 
-.my-stub-middleware.js
-[source, javascript]
+.my-stub-middleware.ts
+[source, typescript]
 ----
+import {Middleware, MiddlewareContext, MiddlewareNext} from '@vaadin/connect';
+
 // An example middleware that returns an empty response instead of calling the backend service
-export async function MyStubMiddleware(context, next) {
+export const MyStubMiddleware: Middleware = async function(
+  context: MiddlewareContext,
+  next: MiddlewareNext
+): Promise<Response> {
   if (context.service === 'StubService') {
     //
     return new Response('{}');

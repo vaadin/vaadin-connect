@@ -11,9 +11,9 @@ layout: page
 
 *_Vaadin Connect Authentication flow_* meets a simplified specification of the *_OAuth 2.0_* known as the *_Password Grant flow_*, which is explained in the <<appendix,appendix>>.
 
-In Vaadin Connect, the `_client application_` that consumes services, is the front-end JavaScript running in the user's browser, whereas the Java server acts as both: the `_resource server_` exposing services, and the `_authorization server_` verifying user's credentials.
+In Vaadin Connect, the `_client application_` that consumes services, is the front-end TypeScript running in the user's browser, whereas the Java server acts as both: the `_resource server_` exposing services, and the `_authorization server_` verifying user's credentials.
 
-The *_Vaadin Connect authentication flow_* is originated in the browser, when the JavaScript application accesses a service for the first time. The user's browser sends an authentication request with the password credentials, then the server validates those and emits an `_access token_` that the  JavaScript application will use in successive service requests.
+The *_Vaadin Connect authentication flow_* is originated in the browser, when the TypeScript application accesses a service for the first time. The user's browser sends an authentication request with the password credentials, then the server validates those and emits an `_access token_` that the  TypeScript application will use in successive service requests.
 
 Besides the `_access token_`, the server returns a `_refresh token_` that will be used to get a new `_access token_` when the previous one expires.
 
@@ -43,9 +43,9 @@ The function can either, return an object with the `username`, `password` and `s
 
 This demo shows how to automatically login to the app with hardcoded credentials when the user requests a service.
 
-[source,javascript]
+[source,typescript]
 ----
-import client from './generated/connect-client.default.js';
+import client from './generated/connect-client.default.ts';
 client.credentials = (options = {}) => {
   return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
 };
@@ -64,12 +64,12 @@ Username: <input id="password"type="password">
 ----
 
 
-[source,javascript]
+[source,typescript]
 ----
-import client from './generated/connect-client.default.js';
+import client from './generated/connect-client.default.ts';
 
-const username = document.getElementById('username');
-const password = document.getElementById('password');
+const username = document.getElementById('username') as HTMLInputElement;
+const password = document.getElementById('password') as HTMLInputElement;
 const login = document.getElementById('login');
 const logout = document.getElementById('logout');
 

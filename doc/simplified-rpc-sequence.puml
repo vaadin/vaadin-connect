@@ -1,13 +1,13 @@
 @startuml
 skinparam ParticipantPadding 10
 
-participant "app.js" as Frontend
-participant "generated/DateService.js" as jsService
+participant "app.ts" as Frontend
+participant "generated/DateService.ts" as tsService
 participant "DateService.java" as javaService
 
-Frontend -> jsService: await getDayOfYear(new Date());
-jsService -> javaService: POST JSON Request
+Frontend -> tsService: await getDayOfYear(new Date());
+tsService -> javaService: POST JSON Request
 ...
-jsService <-- javaService: POST JSON Response
-Frontend <-- jsService: 256
+tsService <-- javaService: POST JSON Response
+Frontend <-- tsService: 256
 @enduml

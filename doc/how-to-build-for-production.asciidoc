@@ -19,9 +19,11 @@ served to the browser.
 In both development and production modes, the bundle is always generated, though in devmode, the
 optimization is less aggressive in order to be easier to debug the application in browser.
 
-In the case of JavaScript files, they are also transpiled, hence, the code written following ES6 syntax
-can be run in older browsers.
-In devmode, source maps are generated to make possible debug by inspecting the original JavaScript source files.
+In the case of TypeScript files, they are also transpiled to JavaScript for
+both the newer browser that support ES6, and also the older ones that do not.
+
+In devmode, source maps are generated to make possible debug by inspecting the
+original TypeScript source files.
 
 == Supported browsers
 
