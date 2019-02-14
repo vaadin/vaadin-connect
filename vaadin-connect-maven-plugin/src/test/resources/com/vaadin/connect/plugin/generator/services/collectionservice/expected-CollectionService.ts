@@ -18,6 +18,6 @@ export function getCollectionByAuthor(
  *
  * Return list of user name
  */
-export function getListOfUserName(): Promise<array> {
+export function getListOfUserName(): Promise<any[]> {
   return client.call('CollectionService', 'getListOfUserName');
 }

@@ -76,7 +76,7 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
   private static final String BOOLEAN_TYPE = "boolean";
   private static final String STRING_TYPE = "string";
   private static final String OBJECT_TYPE = "object";
-  private static final String ARRAY_TYPE = "array";
+  private static final String ARRAY_TYPE = "any[]";
   private static final String BOXED_ARRAY_TYPE = "Array";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
   private static final String EXTENSION_VAADIN_CONNECT_SHOW_TSDOC = "x-vaadin-connect-show-tsdoc";
@@ -141,11 +141,11 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
         Arrays.asList("String", "Boolean", "Number", BOXED_ARRAY_TYPE, "Object",
             "Date", "File", "Blob"));
 
-    instantiationTypes.put(ARRAY_TYPE, BOXED_ARRAY_TYPE);
+    instantiationTypes.put("array", BOXED_ARRAY_TYPE);
     instantiationTypes.put("list", BOXED_ARRAY_TYPE);
     instantiationTypes.put("map", "Object");
     typeMapping.clear();
-    typeMapping.put(ARRAY_TYPE, ARRAY_TYPE);
+    typeMapping.put("array", ARRAY_TYPE);
     typeMapping.put("map", OBJECT_TYPE);
     typeMapping.put("List", ARRAY_TYPE);
     typeMapping.put(BOOLEAN_TYPE, BOOLEAN_TYPE);
