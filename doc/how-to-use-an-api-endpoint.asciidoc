@@ -16,15 +16,15 @@ image::api-browser.png[API browser]
 
 In addition, the API browser also shows all the documentation of your services and API endpoints based on the Javadocs from your service classes.
 
-== Generate ES modules from your Java services [[generate-js-wrappers]]
+== Generate ES modules from your Java services [[generate-ts-wrappers]]
 
 To easily use the API endpoints in JavaScript, the <<vaadin-connect-maven-plugin#, `vaadin-connect-maven-plugin`>> helps you to generate all the necessary files. All the plugin's goals are attached to the `compile` phase of https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html[Maven lifecycle]. So whenever you run `mvn compile`, the plugin will generate all the needed files for you. By default, `npm start` also triggers the `mvn compile`, therefore everything should be ready when running the application with `npm start`.
 
 For example, the generated ES module for the Java service defined in <<how-to-add-api-endpoint#CounterService.java,CounterService.java>> would looks like:
 
-.CounterService.js
-[source,javascript]
-[[CounterService.js]]
+.CounterService.ts
+[source,typescript]
+[[CounterService.ts]]
 ----
 /**
  * A Vaadin Connect service that counts numbers.
@@ -33,15 +33,14 @@ For example, the generated ES module for the Java service defined in <<how-to-ad
  * @module CounterService
  */
 
-import client from './connect-client.default.js';
+import client from './connect-client.default.ts';
 
 /**
  * A method that adds one to the argument.
  *
- * @param {number} number
- * @returns {Promise<number>}
+ * @param number
  */
-export function addOne(number) {
+export function addOne(number: number): Promise<number> {
   return client.call('CounterService', 'addOne', {number}, {requireCredentials: true});
 }
 ----
@@ -53,26 +52,26 @@ By default, the generated files are located under `${project.dir}/frontend/gener
 The plugin also re-generates all the files whenever you make changes to your Java files.
 ====
 
-== Import and use generated ES modules
+== Import and use generated TypeScript modules
 
-All the methods in the generated modules are exported so you can either import them separately or the whole module as a service. For instance, the <<CounterService.js>> could be used as the following snippets:
+All the methods in the generated modules are exported so you can either import them separately or the whole module as a service. For instance, the <<CounterService.ts>> could be used as the following snippets:
 
-.index.js (import the whole module)
-[[index.js]]
-[source,javascript]
+.index.ts (import the whole module)
+[[index.ts]]
+[source,typescript]
 ----
 // Other imports
-import * as counterService from './generated/CounterService.js';
+import * as counterService from './generated/CounterService.ts';
 
 // Other code
 counterService.addOne(1).then(result => console.log(result));
 ----
 
-.index.js (only import the needed method)
-[source,javascript]
+.index.ts (only import the needed method)
+[source,typescript]
 ----
 // Other imports
-import {addOne} from './generated/CounterService.js';
+import {addOne} from './generated/CounterService.ts';
 
 // Other code
 addOne(1).then(result => console.log(result));
@@ -80,17 +79,17 @@ addOne(1).then(result => console.log(result));
 
 == How is the security taken into account?
 
-With the snippet in <<index.js>>, your application might not work as you expected because all the API endpoints are secured by default. You will need to authenticate before you can call the API endpoint. See <<security#, Vaadin Connect security>> for information about authentication, authorization and example how to create <<how-to-add-login-form#,a login form>>.
+With the snippet in <<index.ts>>, your application might not work as you expected because all the API endpoints are secured by default. You will need to authenticate before you can call the API endpoint. See <<security#, Vaadin Connect security>> for information about authentication, authorization and example how to create <<how-to-add-login-form#,a login form>>.
 
 == Code-completion for JavaScript
 
-As you see in <<CounterService.js>>, the Javadoc of `@VaadinService` class is preserved the generated JavaScript file. This helps code-completion work pretty well in *Visual Studio Code* and *Intellij IDEA Ultimate Edition*.
+As you see in <<CounterService.ts>>, the Javadoc of `@VaadinService` class is preserved the generated TypeScript file, as well as the type definitions are maintained. This helps code-completion work pretty well in *Visual Studio Code* and *Intellij IDEA Ultimate Edition*.
 
 .Code-completion in Visual Studio Code
 image::codecompletion.gif[Code-completion]
 
 
 == Next steps
-- https://github.com/vaadin/base-starter-connect/blob/master/frontend/status-controller.js[Visit the status-controller.js in the Starter Project]
+- https://github.com/vaadin/base-starter-connect/blob/master/frontend/status-controller.ts[Visit the status-controller.ts in the Starter Project]
 
 - <<README#,Browse through the docs>>

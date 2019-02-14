@@ -67,7 +67,7 @@ and a method `customMethod` requiring a `number` parameter to be specified.
 
 We would like to access this method from the client part.
 Depending on how many generated files are present, one of the approaches below can be used.
-As the only prerequisite for any of the approaches below, `@vaadin/connect` JavaScript library is required to be installed in the
+As the only prerequisite for any of the approaches below, `@vaadin/connect` TypeScript library is required to be installed in the
 client side project.
 
 === Generated module using the generated client
@@ -75,11 +75,14 @@ client side project.
 When all the Vaadin Connect plugin generation goals are used, the service method can be called via the generated module method:
 
 .Using generated module
-[source, javascript]
+[source, typescript]
 [[generated-module]]
 ----
-import {* as singleService} from './src/generated/SingleService';
-await singleService.customMethod(4);
+import {* as singleService} from './generated/SingleService.ts';
+
+(async() => {
+  await singleService.customMethod(4);
+})();
 ----
 
 === Generated default client
@@ -87,11 +90,14 @@ await singleService.customMethod(4);
 If only the default client is generated, it can be used to access the Vaadin Connect service the following way:
 
 .Using generated client
-[source, javascript]
+[source, typescript]
 [[generated-client]]
 ----
-import client from './src/generated/connect-client.default';
-await client.call('SingleService', 'customMethod', {number: 4});
+import client from './generated/connect-client.default.ts';
+
+(async() => {
+  await client.call('SingleService', 'customMethod', {number: 4});
+});
 ----
 
 === Client library
@@ -99,10 +105,13 @@ await client.call('SingleService', 'customMethod', {number: 4});
 Client library usage requires an extra step where we specify the endpoint of the server to send the requests to:
 
 .Using client library
-[source, javascript]
+[source, typescript]
 [[client-library]]
 ----
 import {ConnectClient} from '@vaadin/connect';
 const client = new ConnectClient({endpoint: '/customEndpoint'});
-await client.call('SingleService', 'customMethod', {number: 4});
+
+(async() => {
+  await client.call('SingleService', 'customMethod', {number: 4});
+});
 ----

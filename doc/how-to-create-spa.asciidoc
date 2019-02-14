@@ -20,7 +20,7 @@ The main issue then, is that updates should happen without the browser requestin
 Changes to browser location were traditionally performed by changing the location hash-fragment
 which does not trigger a new network request. For example:
 
-[source,javascript]
+[source,typescript]
 ----
 // This changes http://localhost/ to http://localhost/#!user/edit
 window.location.hash = '#!user/edit';
@@ -29,7 +29,7 @@ window.location.hash = '#!user/edit';
 Though nowadays, apps do prefer to update the path-name fragment via the  modern `https://developer.mozilla.org/en-US/docs/Web/API/History_API#Adding_and_modifying_history_entries[pushState]`
 history API which modifies the history stack without sending the request. For example:
 
-[source,javascript]
+[source,typescript]
 ----
 // This changes http://localhost/ to http://localhost/user/edit
 history.pushState(null, null, 'user/edit');
@@ -86,8 +86,8 @@ npm install --save lit-element
 
 Then create the following files:
 
-.home-view.js
-[source,javascript]
+.home-view.ts
+[source,typescript]
 ----
 import { LitElement, html } from 'lit-element';
 
@@ -103,8 +103,8 @@ class HomeView extends LitElement {
 customElements.define('home-view', HomeView);
 ----
 
-.user-view.js
-[source,javascript]
+.user-view.ts
+[source,typescript]
 ----
 import { LitElement, html } from 'lit-element';
 
@@ -122,14 +122,14 @@ customElements.define('user-view', UserView);
 
 === Step 4 - Configure the router
 
-Replace the content in your `index.js` with the following code
+Replace the content in your `index.ts` with the following code
 
-.index.js
-[source,javascript]
+.index.ts
+[source,typescript]
 ----
 import {Router} from '@vaadin/router';
-import './home-view.js';
-import './user-view.js';
+import './home-view.ts';
+import './user-view.ts';
 
 const outlet = document.getElementById('outlet');
 const router = new Router(outlet);

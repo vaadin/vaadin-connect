@@ -24,12 +24,13 @@ Although you can use any HTML components for the form, in our example we use the
 
 Then, the import for the component library is needed to make it work, and eventually you can configure it by using its JavaScript API:
 
-[source,javascript]
+[source,typescript]
 ----
 
 import '@vaadin/vaadin-login/vaadin-login-overlay.js';
 
-const vaadinLoginOverlay = document.querySelector('vaadin-login-overlay');
+const vaadinLoginOverlay = document.querySelector('vaadin-login-overlay')
+   as any;
 
 vaadinLoginOverlay.i18n = {
   header: {
@@ -53,10 +54,10 @@ vaadinLoginOverlay.i18n = {
 Vaadin Connect `client` inspects service callbacks, when it realizes that there is no valid token, it executes the `credentials()` callback, thus developer must provide it as in the following example:
 
 
-[source,javascript]
+[source,typescript]
 ----
 
-import client from './generated/connect-client.default.js';
+import client from './generated/connect-client.default.ts';
 
 client.credentials = (options) => {
   vaadinLoginOverlay.opened = true;
@@ -87,13 +88,14 @@ Vaadin Connect API provides two methods for proactively login or logout to the a
 === The `login()` method
 You can check whether users are authenticated the first time they visit the application. After configuring your form and credentials just call the `login()` method, it will ask for the login credentials only in the case that the `refresh_token` is invalid.
 
-[source,javascript]
+[source,typescript]
 ----
 
 import '@vaadin/vaadin-login/vaadin-login-overlay.js';
-import client from './generated/connect-client.default.js';
+import client from './generated/connect-client.default.ts';
 
-const vaadinLoginOverlay = document.querySelector('vaadin-login-overlay');
+const vaadinLoginOverlay = document.querySelector('vaadin-login-overlay')
+  as any;
 
 client.credentials = (options) => {
   vaadinLoginOverlay.opened = true;
@@ -121,9 +123,9 @@ You might be interested to remove authentication tokens from browser in order to
 <button id="logout">Logout</button>
 ----
 
-[source,javascript]
+[source,typescript]
 ----
-import client from './generated/connect-client.default.js';
+import client from './generated/connect-client.default.ts';
 
 const logout = document.getElementById('logout');
 logout.addEventListener('click', e => client.logout());
@@ -132,6 +134,6 @@ logout.addEventListener('click', e => client.logout());
 == Next steps
 
 - <<how-to-add-api-endpoint#,How to add an API endpoint to your Application>>
-- https://github.com/vaadin/base-starter-connect/blob/master/frontend/login-controller.js[Visit the Login JavaScript code in the Starter Project]
+- https://github.com/vaadin/base-starter-connect/blob/master/frontend/login-controller.ts[Visit the Login TypeScript code in the Starter Project]
 - <<security#,Learn more about the Vaadin Connect security mechanism>>
 - <<README#,Browse through the docs>>
