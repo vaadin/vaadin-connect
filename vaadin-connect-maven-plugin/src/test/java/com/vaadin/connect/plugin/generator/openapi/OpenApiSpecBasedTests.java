@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.VaadinConnectClientGenerator;
-import com.vaadin.connect.plugin.generator.VaadinConnectJsGenerator;
+import com.vaadin.connect.plugin.generator.VaadinConnectTsGenerator;
 
 import static com.vaadin.connect.plugin.VaadinConnectMojoBase.DEFAULT_GENERATED_CONNECT_CLIENT_NAME;
 import static org.junit.Assert.assertEquals;
@@ -63,7 +63,7 @@ public class OpenApiSpecBasedTests {
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(fileName);
 
-    VaadinConnectJsGenerator.launch(new File(fileName),
+    VaadinConnectTsGenerator.launch(new File(fileName),
         outputDirectory.getRoot());
   }
 
@@ -72,7 +72,7 @@ public class OpenApiSpecBasedTests {
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage("description is missing");
 
-    VaadinConnectJsGenerator.launch(
+    VaadinConnectTsGenerator.launch(
         getResourcePath("no-description-response-openapi.json"),
         outputDirectory.getRoot());
   }
@@ -84,7 +84,7 @@ public class OpenApiSpecBasedTests {
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(fileName);
 
-    VaadinConnectJsGenerator.launch(getResourcePath(fileName),
+    VaadinConnectTsGenerator.launch(getResourcePath(fileName),
         outputDirectory.getRoot());
   }
 
@@ -95,7 +95,7 @@ public class OpenApiSpecBasedTests {
     expectedException.expect(RuntimeException.class);
     expectedException.expectMessage("Could not process operation");
 
-    VaadinConnectJsGenerator.launch(
+    VaadinConnectTsGenerator.launch(
         getResourcePath("wrong-input-path-openapi.json"),
         outputDirectory.getRoot());
   }
@@ -105,7 +105,7 @@ public class OpenApiSpecBasedTests {
     expectedException.expect(RuntimeException.class);
     expectedException.expectMessage("Could not process operation");
 
-    VaadinConnectJsGenerator.launch(
+    VaadinConnectTsGenerator.launch(
         getResourcePath("get-operation-openapi.json"),
         outputDirectory.getRoot());
   }
@@ -120,47 +120,47 @@ public class OpenApiSpecBasedTests {
     // First generating round
     vaadinConnectClientGenerator
         .generateVaadinConnectClientFile(defaultConnectClient);
-    VaadinConnectJsGenerator.launch(
+    VaadinConnectTsGenerator.launch(
         getResourcePath("esmodule-generator-TwoServicesThreeMethods.json"),
         outputDirectory.getRoot());
     assertEquals(
-        "Expect to have 2 generated JS files and a connect-client.default.js",
+        "Expect to have 2 generated TS files and a connect-client.default.ts",
         3, outputDirectory.getRoot().list().length);
     // Second generating round
-    VaadinConnectJsGenerator.launch(new File(getClass()
+    VaadinConnectTsGenerator.launch(new File(getClass()
         .getResource("esmodule-generator-OneServiceOneMethod.json").getPath()),
         outputDirectory.getRoot());
     assertEquals(
-        "Expected to have 1 generated JS files and a connect-client.default.js",
+        "Expected to have 1 generated TS files and a connect-client.default.ts",
         2, outputDirectory.getRoot().list().length);
 
-    assertClassGeneratedJs("FooBarService");
+    assertClassGeneratedTs("FooBarService");
   }
 
   @Test
-  public void should_GenerateNoJsDoc_When_JsonHasNoJsDocOperation()
+  public void should_GenerateNoTsDoc_When_JsonHasNoTsDocOperation()
       throws Exception {
-    VaadinConnectJsGenerator.launch(getResourcePath("no-jsdoc-operation.json"),
+    VaadinConnectTsGenerator.launch(getResourcePath("no-tsdoc-operation.json"),
         outputDirectory.getRoot());
 
-    String actual = readFileInTempDir("GeneratorTestClass.js");
+    String actual = readFileInTempDir("GeneratorTestClass.ts");
 
     String expected = TestUtils
-        .readResource(getClass().getResource("expected-no-jsdoc.js"));
+        .readResource(getClass().getResource("expected-no-tsdoc.ts"));
     Assert.assertEquals(expected, actual);
   }
 
   @Test
-  public void should_GeneratePartlyJsDoc_When_JsonHasParametersAndReturnType()
+  public void should_GeneratePartlyTsDoc_When_JsonHasParametersAndReturnType()
       throws Exception {
-    VaadinConnectJsGenerator.launch(
-        getResourcePath("parameters-and-return-jsdoc.json"),
+    VaadinConnectTsGenerator.launch(
+        getResourcePath("parameters-and-return-tsdoc.json"),
         outputDirectory.getRoot());
 
-    String actual = readFileInTempDir("GeneratorTestClass.js");
+    String actual = readFileInTempDir("GeneratorTestClass.ts");
 
     String expected = TestUtils
-        .readResource(getClass().getResource("expected-partly-jsdoc.js"));
+        .readResource(getClass().getResource("expected-partly-tsdoc.ts"));
 
     Assert.assertEquals(expected, actual);
   }
@@ -168,48 +168,48 @@ public class OpenApiSpecBasedTests {
   @Test
   public void should_GenerateTwoClasses_When_OperationContainsTwoTags()
       throws Exception {
-    VaadinConnectJsGenerator.launch(
+    VaadinConnectTsGenerator.launch(
         getResourcePath("multiple-tags-operation.json"),
         outputDirectory.getRoot());
     Path firstOutputFilePath = outputDirectory.getRoot().toPath()
-        .resolve("MyFirstJsClass.js");
+        .resolve("MyFirstTsClass.ts");
     Path secondOutputFilePath = outputDirectory.getRoot().toPath()
-        .resolve("MySecondJsClass.js");
-    String firstActualJs = StringUtils.toEncodedString(
+        .resolve("MySecondTsClass.ts");
+    String firstActualTs = StringUtils.toEncodedString(
         Files.readAllBytes(firstOutputFilePath), StandardCharsets.UTF_8).trim();
-    String secondActualJs = StringUtils
+    String secondActualTs = StringUtils
         .toEncodedString(Files.readAllBytes(secondOutputFilePath),
             StandardCharsets.UTF_8)
         .trim();
     String expectedFirstClass = TestUtils.readResource(
-        getClass().getResource("expected-first-class-multiple-tags.js"));
+        getClass().getResource("expected-first-class-multiple-tags.ts"));
     String expectedSecondClass = TestUtils.readResource(
-        getClass().getResource("expected-second-class-multiple-tags.js"));
-    Assert.assertEquals(expectedFirstClass, firstActualJs);
-    Assert.assertEquals(expectedSecondClass, secondActualJs);
+        getClass().getResource("expected-second-class-multiple-tags.ts"));
+    Assert.assertEquals(expectedFirstClass, firstActualTs);
+    Assert.assertEquals(expectedSecondClass, secondActualTs);
   }
 
   @Test
   public void should_GenerateDefaultClass_When_OperationHasNoTag()
       throws Exception {
-    VaadinConnectJsGenerator.launch(getResourcePath("no-tag-operation.json"),
+    VaadinConnectTsGenerator.launch(getResourcePath("no-tag-operation.json"),
         outputDirectory.getRoot());
-    String actualJs = readFileInTempDir("Default.js");
+    String actualTs = readFileInTempDir("Default.ts");
     String expectedFirstClass = TestUtils.readResource(
-        getClass().getResource("expected-default-class-no-tag.js"));
-    Assert.assertEquals(expectedFirstClass, actualJs);
+        getClass().getResource("expected-default-class-no-tag.ts"));
+    Assert.assertEquals(expectedFirstClass, actualTs);
   }
 
   @Test
   public void should_RenderMultipleLinesHTMLCorrectly_When_JavaDocHasMultipleLines()
       throws Exception {
-    VaadinConnectJsGenerator.launch(
+    VaadinConnectTsGenerator.launch(
         getResourcePath("multiplelines-description.json"),
         outputDirectory.getRoot());
-    String actualJs = readFileInTempDir("GeneratorTestClass.js");
-    String expectedJs = TestUtils.readResource(
-        getClass().getResource("expected-multiple-lines-description.js"));
-    Assert.assertEquals(expectedJs, actualJs);
+    String actualTs = readFileInTempDir("GeneratorTestClass.ts");
+    String expectedTs = TestUtils.readResource(
+        getClass().getResource("expected-multiple-lines-description.ts"));
+    Assert.assertEquals(expectedTs, actualTs);
   }
 
   private String readFileInTempDir(String fileName) throws IOException {
@@ -223,21 +223,21 @@ public class OpenApiSpecBasedTests {
     return new File(getClass().getResource(resourceName).getPath());
   }
 
-  private void assertClassGeneratedJs(String expectedClass) {
+  private void assertClassGeneratedTs(String expectedClass) {
     Path outputFilePath = outputDirectory.getRoot().toPath()
-        .resolve(expectedClass + ".js");
-    String actualJs;
+        .resolve(expectedClass + ".ts");
+    String actualTs;
     try {
-      actualJs = StringUtils.toEncodedString(Files.readAllBytes(outputFilePath),
+      actualTs = StringUtils.toEncodedString(Files.readAllBytes(outputFilePath),
           StandardCharsets.UTF_8).trim();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    String expectedJs = TestUtils.readResource(
-        getClass().getResource(String.format("expected-%s.js", expectedClass)));
+    String expectedTs = TestUtils.readResource(
+        getClass().getResource(String.format("expected-%s.ts", expectedClass)));
 
     Assert.assertEquals(
         String.format("Class '%s' has unexpected json produced", expectedClass),
-        expectedJs, actualJs);
+        expectedTs, actualTs);
   }
 }

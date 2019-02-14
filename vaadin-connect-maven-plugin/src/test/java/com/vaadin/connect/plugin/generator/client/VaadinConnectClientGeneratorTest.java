@@ -58,7 +58,7 @@ public class VaadinConnectClientGeneratorTest {
         .toEncodedString(Files.readAllBytes(outputPath), StandardCharsets.UTF_8)
         .trim();
     String expectedJson = TestUtils.readResource(
-        getClass().getResource("expected-connect-client-default.js"));
+        getClass().getResource("expected-connect-client-default.ts"));
     Assert.assertEquals(expectedJson, actualJson);
   }
 
@@ -76,7 +76,7 @@ public class VaadinConnectClientGeneratorTest {
         .toEncodedString(Files.readAllBytes(outputPath), StandardCharsets.UTF_8)
         .trim();
     String expectedJson = TestUtils.readResource(
-        getClass().getResource("expected-connect-client-custom.js"));
+        getClass().getResource("expected-connect-client-custom.ts"));
     Assert.assertEquals(expectedJson, actualJson);
   }
 }

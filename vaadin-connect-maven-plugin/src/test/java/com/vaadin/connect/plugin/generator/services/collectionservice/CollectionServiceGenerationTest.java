@@ -30,6 +30,6 @@ public class CollectionServiceGenerationTest extends AbstractServiceGenerationTe
 
   @Test
   public void should_DistinguishBetweenUserAndBuiltinTypes_When_TheyHaveSameName() {
-    verifyOpenApiObjectAndGeneratedJs();
+    verifyOpenApiObjectAndGeneratedTs();
   }
 }

@@ -27,10 +27,11 @@ import java.util.regex.Pattern;
  */
 public class VaadinServiceNameChecker {
   /**
-   * Set of reserved words in ECMAScript specification.
+   * Set of reserved words in ECMAScript specification. Also covers all the
+   * reserved identifiers in TypeScript.
    *
-   * @see <a href=
-   *      "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords">Specification</a>
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords">JavaScript Reference on MDN</a>
+   * @see <a href="https://github.com/Microsoft/TypeScript/blob/master/doc/TypeScript%20Language%20Specification.pdf">TypeScript Language Specification</a>
    */
   public static final Set<String> ECMA_SCRIPT_RESERVED_WORDS = Collections
       .unmodifiableSet(new HashSet<>(Arrays.asList("abstract", "arguments",
