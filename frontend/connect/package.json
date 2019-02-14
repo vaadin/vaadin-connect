@@ -51,7 +51,7 @@
     "typescript": "^3.3.1"
   },
   "dependencies": {
-    "@vaadin/vaadin-usage-statistics": "^2.0.0"
+    "@vaadin/vaadin-usage-statistics": "^2.0.2"
   },
   "babel": {
     "presets": [
