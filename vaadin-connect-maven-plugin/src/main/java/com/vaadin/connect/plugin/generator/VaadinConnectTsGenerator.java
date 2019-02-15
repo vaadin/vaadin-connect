@@ -212,9 +212,17 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     generate(configurator);
   }
 
+  private static String removeTsExtension(String path) {
+    if (path.endsWith(".ts")) {
+      return path.substring(0, path.length() - 3);
+    }
+    return path;
+  }
+
   private static String getDefaultClientPath(String path) {
-    return ObjectUtils.defaultIfNull(path,
-        DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
+    path = ObjectUtils
+        .defaultIfNull(path, DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
+    return removeTsExtension(path);
   }
 
   private static void generate(CodegenConfigurator configurator) {

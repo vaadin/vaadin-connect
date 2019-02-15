@@ -128,8 +128,8 @@ Replace the content in your `index.ts` with the following code
 [source,typescript]
 ----
 import {Router} from '@vaadin/router';
-import './home-view.ts';
-import './user-view.ts';
+import './home-view';
+import './user-view';
 
 const outlet = document.getElementById('outlet');
 const router = new Router(outlet);

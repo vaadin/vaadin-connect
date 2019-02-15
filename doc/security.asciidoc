@@ -45,7 +45,7 @@ This demo shows how to automatically login to the app with hardcoded credentials
 
 [source,typescript]
 ----
-import client from './generated/connect-client.default.ts';
+import client from './generated/connect-client.default';
 client.credentials = (options = {}) => {
   return {username: 'test_login', password: 'test_password', stayLoggedIn: true};
 };
@@ -66,7 +66,7 @@ Username: <input id="password"type="password">
 
 [source,typescript]
 ----
-import client from './generated/connect-client.default.ts';
+import client from './generated/connect-client.default';
 
 const username = document.getElementById('username') as HTMLInputElement;
 const password = document.getElementById('password') as HTMLInputElement;
