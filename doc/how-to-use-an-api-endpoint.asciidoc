@@ -33,7 +33,7 @@ For example, the generated ES module for the Java service defined in <<how-to-ad
  * @module CounterService
  */
 
-import client from './connect-client.default.ts';
+import client from './connect-client.default';
 
 /**
  * A method that adds one to the argument.
@@ -61,7 +61,7 @@ All the methods in the generated modules are exported so you can either import t
 [source,typescript]
 ----
 // Other imports
-import * as counterService from './generated/CounterService.ts';
+import * as counterService from './generated/CounterService';
 
 // Other code
 counterService.addOne(1).then(result => console.log(result));
@@ -71,7 +71,7 @@ counterService.addOne(1).then(result => console.log(result));
 [source,typescript]
 ----
 // Other imports
-import {addOne} from './generated/CounterService.ts';
+import {addOne} from './generated/CounterService';
 
 // Other code
 addOne(1).then(result => console.log(result));

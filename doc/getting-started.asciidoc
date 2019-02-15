@@ -147,7 +147,7 @@ Then, add the following to the beginning of `frontend/index.ts`:
 
 [source,typescript]
 ----
-import * as counterService from './generated/CounterService.ts';
+import * as counterService from './generated/CounterService';
 
 const counter = document.getElementById('counter') as HTMLInputElement;
 document.getElementById('addOne').onclick = async() => {

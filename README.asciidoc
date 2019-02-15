@@ -23,7 +23,7 @@ public class DateService {
 [source,typescript]
 .app.ts
 ----
-import * as dateService from './generated/DateService.js';
+import * as dateService from './generated/DateService';
 
 showDayOfYearButton.onclick = async() => {
   const dayOfYear: number = await dateService.getDayOfYear(new Date());

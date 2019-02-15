@@ -1,5 +1,5 @@
 // @ts-ignore
-import client from './connect-client.default.js';
+import client from './connect-client.default';
 
 /**
  * Get all users

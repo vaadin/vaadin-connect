@@ -76,7 +76,7 @@ To use a middleware, when the Vaadin Connect client is instantiated, include you
 [source, typescript]
 ----
 import {ConnectClient} from '@vaadin/connect';
-import {MyLogMiddleware} from './my-log-middleware.ts';
+import {MyLogMiddleware} from './my-log-middleware';
 
 const client = new ConectClient({
   endpoint: '/connect',
@@ -91,8 +91,8 @@ Alternatively, you can modify the `middlewares` array property on the existing c
 .index.ts
 [source, typescript]
 ----
-import client from './generated/connect-client.default.ts';
-import {MyLogMiddleware} from './my-log-middleware.ts';
+import client from './generated/connect-client.default';
+import {MyLogMiddleware} from './my-log-middleware';
 
 client.middlewares = [MyLogMiddleware];
 ----

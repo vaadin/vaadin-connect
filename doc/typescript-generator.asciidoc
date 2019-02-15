@@ -24,7 +24,7 @@ A simple generated TypeScript files will look like the following snippet:
  *
  * This module has been generated from UserService.java
  */
-import client from './connect-client.default.ts';
+import client from './connect-client.default';
 
 /**
  * Check if a user is admin or not.

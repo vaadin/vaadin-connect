@@ -57,7 +57,7 @@ Vaadin Connect `client` inspects service callbacks, when it realizes that there 
 [source,typescript]
 ----
 
-import client from './generated/connect-client.default.ts';
+import client from './generated/connect-client.default';
 
 client.credentials = (options) => {
   vaadinLoginOverlay.opened = true;
@@ -92,7 +92,7 @@ You can check whether users are authenticated the first time they visit the appl
 ----
 
 import '@vaadin/vaadin-login/vaadin-login-overlay.js';
-import client from './generated/connect-client.default.ts';
+import client from './generated/connect-client.default';
 
 const vaadinLoginOverlay = document.querySelector('vaadin-login-overlay')
   as any;
@@ -125,7 +125,7 @@ You might be interested to remove authentication tokens from browser in order to
 
 [source,typescript]
 ----
-import client from './generated/connect-client.default.ts';
+import client from './generated/connect-client.default';
 
 const logout = document.getElementById('logout');
 logout.addEventListener('click', e => client.logout());
