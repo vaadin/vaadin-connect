@@ -78,7 +78,7 @@ When all the Vaadin Connect plugin generation goals are used, the service method
 [source, typescript]
 [[generated-module]]
 ----
-import {* as singleService} from './generated/SingleService.ts';
+import * as singleService from './generated/SingleService';
 
 (async() => {
   await singleService.customMethod(4);
@@ -93,7 +93,7 @@ If only the default client is generated, it can be used to access the Vaadin Con
 [source, typescript]
 [[generated-client]]
 ----
-import client from './generated/connect-client.default.ts';
+import client from './generated/connect-client.default';
 
 (async() => {
   await client.call('SingleService', 'customMethod', {number: 4});

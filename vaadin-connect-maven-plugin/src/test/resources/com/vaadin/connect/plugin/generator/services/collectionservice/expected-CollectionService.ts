@@ -1,5 +1,5 @@
 // @ts-ignore
-import client from './connect-client.default.js';
+import client from './connect-client.default';
 
 /**
  * Get a collection by author name. The generator should not mix this type with the Java's Collection type.
