@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.vaadin.connect.oauth;
+package com.vaadin.connect.auth;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -35,7 +35,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.stereotype.Component;
 
 /**
  * Component used for checking role-based ACL in Vaadin Services.
@@ -78,8 +77,7 @@ import org.springframework.stereotype.Component;
  * </pre>
  *
  */
-@Component
-public class VaadinConnectOAuthAclChecker {
+public class VaadinConnectAccessChecker {
 
   /**
    * Check that the service is accessible for the current user.

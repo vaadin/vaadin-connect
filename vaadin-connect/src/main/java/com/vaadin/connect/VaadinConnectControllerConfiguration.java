@@ -18,6 +18,7 @@ package com.vaadin.connect;
 
 import java.lang.reflect.Method;
 
+import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -90,5 +91,15 @@ public class VaadinConnectControllerConfiguration {
   @Bean
   public VaadinServiceNameChecker serviceNameChecker() {
     return new VaadinServiceNameChecker();
+  }
+
+  /**
+   * Registers a default {@link VaadinConnectAccessChecker} bean instance.
+   *
+   * @return the default Vaadin Connect access checker bean
+   */
+  @Bean
+  public VaadinConnectAccessChecker accessChecker() {
+    return new VaadinConnectAccessChecker();
   }
 }

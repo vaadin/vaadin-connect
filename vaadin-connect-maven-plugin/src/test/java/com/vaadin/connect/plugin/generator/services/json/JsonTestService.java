@@ -26,7 +26,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.Version;
 import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.oauth.AnonymousAllowed;
+import com.vaadin.connect.auth.AnonymousAllowed;
 
 /**
  * This class is used for OpenApi generator test

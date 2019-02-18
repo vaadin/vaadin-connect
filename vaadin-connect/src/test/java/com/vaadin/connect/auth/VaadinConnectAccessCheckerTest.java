@@ -1,4 +1,4 @@
-package com.vaadin.connect.oauth;
+package com.vaadin.connect.auth;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -14,7 +14,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unused")
-public class VaadinConnectOauthAclCheckerTest {
+public class VaadinConnectAccessCheckerTest {
   private static final String ROLE_USER = "ROLE_USER";
 
   @Rule
@@ -37,7 +36,7 @@ public class VaadinConnectOauthAclCheckerTest {
 
   private static SecurityContext securityContext;
 
-  private VaadinConnectOAuthAclChecker checker;
+  private VaadinConnectAccessChecker checker;
 
   public static class MockSecurityContextHolderStrategy
       implements SecurityContextHolderStrategy {
@@ -67,7 +66,7 @@ public class VaadinConnectOauthAclCheckerTest {
 
   @Before
   public void before() {
-    checker = new VaadinConnectOAuthAclChecker();
+    checker = new VaadinConnectAccessChecker();
 
     SecurityContextHolder
         .setStrategyName(MockSecurityContextHolderStrategy.class.getName());

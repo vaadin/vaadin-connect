@@ -65,8 +65,8 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.oauth.AnonymousAllowed;
-import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
+import com.vaadin.connect.auth.AnonymousAllowed;
+import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 import com.vaadin.connect.plugin.TestUtils;
 import com.vaadin.connect.plugin.generator.OpenApiConfiguration;
 import com.vaadin.connect.plugin.generator.OpenApiObjectGenerator;
@@ -86,7 +86,7 @@ public abstract class AbstractServiceGenerationTest {
       Number.class, byte.class, char.class, short.class, int.class, long.class,
       float.class, double.class);
 
-  private static final VaadinConnectOAuthAclChecker securityChecker = new VaadinConnectOAuthAclChecker();
+  private static final VaadinConnectAccessChecker accessChecker = new VaadinConnectAccessChecker();
 
   @Rule
   public TemporaryFolder outputDirectory = new TemporaryFolder();
@@ -218,7 +218,7 @@ public abstract class AbstractServiceGenerationTest {
       for (Method expectedServiceMethod : testServiceClass
           .getDeclaredMethods()) {
         if (!Modifier.isPublic(expectedServiceMethod.getModifiers())
-            || securityChecker.getSecurityTarget(expectedServiceMethod)
+            || accessChecker.getSecurityTarget(expectedServiceMethod)
                 .isAnnotationPresent(DenyAll.class)) {
           continue;
         }
@@ -287,7 +287,7 @@ public abstract class AbstractServiceGenerationTest {
           expectedServiceMethod), apiResponse.getContent());
     }
 
-    if (securityChecker.getSecurityTarget(expectedServiceMethod)
+    if (accessChecker.getSecurityTarget(expectedServiceMethod)
         .isAnnotationPresent(AnonymousAllowed.class)) {
       assertNull(
           "Expected to have no security data for anonymous service method",

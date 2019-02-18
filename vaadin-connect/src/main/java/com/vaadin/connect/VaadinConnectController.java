@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +50,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
 
 /**
  * The controller that is responsible for processing Vaadin Connect requests.
@@ -76,13 +75,13 @@ public class VaadinConnectController {
   /**
    * A qualifier to override the request and response default json mapper.
    *
-   * @see #VaadinConnectController(ObjectMapper, VaadinConnectOAuthAclChecker,
+   * @see #VaadinConnectController(ObjectMapper, VaadinConnectAccessChecker,
    *      VaadinServiceNameChecker, ApplicationContext)
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
   private final ObjectMapper vaadinServiceMapper;
-  private final VaadinConnectOAuthAclChecker oauthChecker;
+  private final VaadinConnectAccessChecker accessChecker;
   final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
 
   static class VaadinServiceData {
@@ -117,7 +116,7 @@ public class VaadinConnectController {
    *          Use
    *          {@link VaadinConnectController#VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER}
    *          qualifier to override the mapper.
-   * @param oauthChecker
+   * @param accessChecker
    *          the ACL checker to verify the service method access permissions
    * @param serviceNameChecker
    *          the service name checker to verify custom Vaadin Connect service
@@ -127,12 +126,12 @@ public class VaadinConnectController {
    *          {@link VaadinService} from
    */
   public VaadinConnectController(
-      @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
-      VaadinConnectOAuthAclChecker oauthChecker,
-      VaadinServiceNameChecker serviceNameChecker, ApplicationContext context) {
+    @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
+    VaadinConnectAccessChecker accessChecker,
+    VaadinServiceNameChecker serviceNameChecker, ApplicationContext context) {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : getDefaultObjectMapper(context);
-    this.oauthChecker = oauthChecker;
+    this.accessChecker = accessChecker;
 
     context.getBeansWithAnnotation(VaadinService.class)
         .forEach((name, serviceBean) -> {
@@ -259,7 +258,7 @@ public class VaadinConnectController {
   private ResponseEntity<String> invokeVaadinServiceMethod(String serviceName,
       String methodName, Method methodToInvoke, ObjectNode body,
       VaadinServiceData vaadinServiceData) throws JsonProcessingException {
-    String checkError = oauthChecker.check(methodToInvoke);
+    String checkError = accessChecker.check(methodToInvoke);
     if (checkError != null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(createResponseErrorObject(String.format(
