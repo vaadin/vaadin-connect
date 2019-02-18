@@ -202,7 +202,7 @@ export class VaadinConnectException extends Error {
 /**
  * The Access Token structure returned by the authentication server.
  */
-interface AccessToken {
+export interface AccessToken {
   /**
    * The user used in credentials.
    */
@@ -222,13 +222,13 @@ interface AccessToken {
 /**
  * An object to provide user credentials for authorization grants.
  */
-interface Credentials {
+export interface Credentials {
   username: string;
   password: string;
   stayLoggedIn?: boolean;
 }
 
-interface CredentialsCallbackOptions {
+export interface CredentialsCallbackOptions {
   /**
    * When credentials are asked again, contains
    * the error description from last token response.
@@ -240,13 +240,13 @@ interface CredentialsCallbackOptions {
  * An async callback function providing credentials for authorization.
  * @param options
  */
-type CredentialsCallback = (options?: CredentialsCallbackOptions) =>
+export type CredentialsCallback = (options?: CredentialsCallbackOptions) =>
   Promise<Credentials>;
 
 /**
  * The `ConnectClient` constructor options.
  */
-interface ConnectClientOptions {
+export interface ConnectClientOptions {
   /**
    * The `endpoint` property value.
    */
@@ -268,7 +268,7 @@ interface ConnectClientOptions {
   middlewares?: Middleware[];
 }
 
-interface CallOptions {
+export interface CallOptions {
   /**
    * Require authentication.
    */
