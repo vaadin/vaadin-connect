@@ -91,7 +91,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.VaadinServiceNameChecker;
-import com.vaadin.connect.oauth.AnonymousAllowed;
+import com.vaadin.connect.auth.AnonymousAllowed;
 
 /**
  * Java parser class which scans for all {@link VaadinService} classes and

@@ -24,7 +24,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
+import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 import com.vaadin.connect.testservice.BridgeMethodTestService;
 
 import static org.junit.Assert.assertEquals;
@@ -148,8 +148,8 @@ public class VaadinConnectControllerTest {
   public void should_Return404_When_IllegalAccessToMethodIsPerformed() {
     String accessErrorMessage = "Access error";
 
-    VaadinConnectOAuthAclChecker restrictingCheckerMock = mock(
-        VaadinConnectOAuthAclChecker.class);
+    VaadinConnectAccessChecker restrictingCheckerMock = mock(
+        VaadinConnectAccessChecker.class);
     when(restrictingCheckerMock.check(TEST_METHOD))
         .thenReturn(accessErrorMessage);
 
@@ -502,7 +502,7 @@ public class VaadinConnectControllerTest {
             new TestClassWithCustomServiceName()));
 
     VaadinConnectController vaadinConnectController = new VaadinConnectController(
-        new ObjectMapper(), mock(VaadinConnectOAuthAclChecker.class),
+        new ObjectMapper(), mock(VaadinConnectAccessChecker.class),
         mock(VaadinServiceNameChecker.class), contextMock);
     ResponseEntity<String> response = vaadinConnectController
         .serveVaadinService("CustomService", "testMethod",
@@ -522,7 +522,7 @@ public class VaadinConnectControllerTest {
         .thenReturn(mockJacksonProperties);
     when(mockJacksonProperties.getVisibility())
         .thenReturn(Collections.emptyMap());
-    new VaadinConnectController(null, mock(VaadinConnectOAuthAclChecker.class),
+    new VaadinConnectController(null, mock(VaadinConnectAccessChecker.class),
         mock(VaadinServiceNameChecker.class), contextMock);
 
     verify(contextMock, times(1)).getBean(ObjectMapper.class);
@@ -543,7 +543,7 @@ public class VaadinConnectControllerTest {
     when(mockJacksonProperties.getVisibility())
         .thenReturn(Collections.singletonMap(PropertyAccessor.ALL,
             JsonAutoDetect.Visibility.PUBLIC_ONLY));
-    new VaadinConnectController(null, mock(VaadinConnectOAuthAclChecker.class),
+    new VaadinConnectController(null, mock(VaadinConnectAccessChecker.class),
         mock(VaadinServiceNameChecker.class), contextMock);
 
     verify(contextMock, times(1)).getBean(ObjectMapper.class);
@@ -561,7 +561,7 @@ public class VaadinConnectControllerTest {
     exception.expect(IllegalStateException.class);
     exception.expectMessage("object mapper");
 
-    new VaadinConnectController(null, mock(VaadinConnectOAuthAclChecker.class),
+    new VaadinConnectController(null, mock(VaadinConnectAccessChecker.class),
         mock(VaadinServiceNameChecker.class), contextMock);
   }
 
@@ -584,35 +584,35 @@ public class VaadinConnectControllerTest {
   }
 
   private <T> VaadinConnectController createVaadinController(T service) {
-    VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
-        VaadinConnectOAuthAclChecker.class);
-    when(oAuthAclCheckerMock.check(TEST_METHOD)).thenReturn(null);
+    VaadinConnectAccessChecker accessCheckerMock = mock(
+        VaadinConnectAccessChecker.class);
+    when(accessCheckerMock.check(TEST_METHOD)).thenReturn(null);
 
     VaadinServiceNameChecker nameCheckerMock = mock(
         VaadinServiceNameChecker.class);
     when(nameCheckerMock.check(TEST_SERVICE_NAME)).thenReturn(null);
 
     return createVaadinController(service, new ObjectMapper(),
-        oAuthAclCheckerMock, nameCheckerMock);
+        accessCheckerMock, nameCheckerMock);
   }
 
   private <T> VaadinConnectController createVaadinController(T service,
       ObjectMapper vaadinServiceMapper) {
-    VaadinConnectOAuthAclChecker oAuthAclCheckerMock = mock(
-        VaadinConnectOAuthAclChecker.class);
-    when(oAuthAclCheckerMock.check(TEST_METHOD)).thenReturn(null);
+    VaadinConnectAccessChecker accessCheckerMock = mock(
+        VaadinConnectAccessChecker.class);
+    when(accessCheckerMock.check(TEST_METHOD)).thenReturn(null);
 
     VaadinServiceNameChecker nameCheckerMock = mock(
         VaadinServiceNameChecker.class);
     when(nameCheckerMock.check(TEST_SERVICE_NAME)).thenReturn(null);
 
     return createVaadinController(service, vaadinServiceMapper,
-        oAuthAclCheckerMock, nameCheckerMock);
+        accessCheckerMock, nameCheckerMock);
   }
 
   private <T> VaadinConnectController createVaadinController(T service,
       ObjectMapper vaadinServiceMapper,
-      VaadinConnectOAuthAclChecker oAuthAclChecker,
+      VaadinConnectAccessChecker accessChecker,
       VaadinServiceNameChecker serviceNameChecker) {
     Class<?> serviceClass = service.getClass();
     ApplicationContext contextMock = mock(ApplicationContext.class);
@@ -620,7 +620,7 @@ public class VaadinConnectControllerTest {
         .thenReturn(Collections.singletonMap(serviceClass.getName(), service));
     when(contextMock.getType(serviceClass.getName()))
         .thenReturn((Class) serviceClass);
-    return new VaadinConnectController(vaadinServiceMapper, oAuthAclChecker,
+    return new VaadinConnectController(vaadinServiceMapper, accessChecker,
         serviceNameChecker, contextMock);
   }
 }

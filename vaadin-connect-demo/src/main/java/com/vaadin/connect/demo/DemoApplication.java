@@ -19,7 +19,7 @@ import com.vaadin.frontend.server.EnableVaadinFrontendServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import com.vaadin.connect.oauth.EnableVaadinConnectOAuthServer;
+import com.vaadin.connect.auth.server.EnableVaadinConnectOAuthServer;
 
 /**
  * Main class of the Vaadin connect demo module.

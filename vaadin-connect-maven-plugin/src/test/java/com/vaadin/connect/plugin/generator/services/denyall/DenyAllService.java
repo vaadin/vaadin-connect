@@ -21,7 +21,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.oauth.AnonymousAllowed;
+import com.vaadin.connect.auth.AnonymousAllowed;
 
 @VaadinService
 @DenyAll
