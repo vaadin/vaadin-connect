@@ -6,7 +6,7 @@
  */
 
 // @ts-ignore
-import client from './connect-client.default.js';
+import client from './connect-client.default';
 
 export function anonymousAllowed(): Promise<void> {
   return client.call('customName', 'anonymousAllowed', undefined, {requireCredentials: false});

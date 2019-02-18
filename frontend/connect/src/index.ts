@@ -1,2 +1,2 @@
-import './connect-meta.js';
-export * from './connect-client.js';
+import './connect-meta';
+export * from './connect-client';

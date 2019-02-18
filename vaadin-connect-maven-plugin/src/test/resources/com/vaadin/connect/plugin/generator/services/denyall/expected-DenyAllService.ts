@@ -1,5 +1,5 @@
 // @ts-ignore
-import client from './connect-client.default.js';
+import client from './connect-client.default';
 
 export function shouldBeDisplayed1(): Promise<void> {
   return client.call('DenyAllService', 'shouldBeDisplayed1');
