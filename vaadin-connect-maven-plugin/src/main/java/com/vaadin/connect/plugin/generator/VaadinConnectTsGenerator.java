@@ -46,6 +46,7 @@ import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
@@ -572,7 +573,7 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     for (Map.Entry<String, Schema> entry : properties.entrySet()) {
       String name = entry.getKey();
       name = isReservedWord(name) ? escapeReservedWord(name) : name;
-      String type = getTypeFromSchema(entry.getValue());
+      String type = getTypeDeclaration(entry.getValue());
       String description = entry.getValue().getDescription();
       if (StringUtils.isBlank(description)) {
         description = getDescriptionFromParameterExtension(name, requestSchema);
@@ -595,14 +596,17 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     return paramDescription.getOrDefault(paramName, "");
   }
 
-  private String getTypeFromSchema(Schema schema) {
-    if (StringUtils.isNotBlank(schema.getType())) {
-      return schema.getType();
-    }
-    if (StringUtils.isNotBlank(schema.get$ref())) {
+  @Override
+  public String getTypeDeclaration(Schema schema) {
+    if (schema instanceof ArraySchema) {
+      ArraySchema arraySchema = (ArraySchema) schema;
+      Schema inner = arraySchema.getItems();
+      return this.getTypeDeclaration(inner) + "[]";
+    } else if (StringUtils.isNotBlank(schema.get$ref())) {
       return getSimpleRef(schema.get$ref());
+    } else {
+      return super.getTypeDeclaration(schema);
     }
-    return OBJECT_TYPE;
   }
 
   private Schema getRequestBodySchema(RequestBody body) {
@@ -733,8 +737,8 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
 
       TypeInformation that = (TypeInformation) o;
       return Objects.equals(name, that.name)
-&& Objects.equals(description, that.description);
-      }
+          && Objects.equals(description, that.description);
+    }
 
     @Override
     public int hashCode() {
