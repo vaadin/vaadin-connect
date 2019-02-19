@@ -18,7 +18,6 @@ package com.vaadin.connect.plugin.generator;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +41,7 @@ import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
 import io.swagger.codegen.v3.config.CodegenConfigurator;
-import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
+import io.swagger.codegen.v3.generators.typescript.AbstractTypeScriptClientCodegen;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -70,15 +69,9 @@ import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERA
  * parts of the implementation are copied from
  * {@link io.swagger.codegen.languages.JavascriptClientCodegen}
  */
-public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
+public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   private static final String GENERATOR_NAME = "javascript-vaadin-connect";
-  private static final String NUMBER_TYPE = "number";
-  private static final String BOOLEAN_TYPE = "boolean";
-  private static final String STRING_TYPE = "string";
-  private static final String OBJECT_TYPE = "object";
-  private static final String ARRAY_TYPE = "any[]";
-  private static final String BOXED_ARRAY_TYPE = "Array";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
   private static final String EXTENSION_VAADIN_CONNECT_SHOW_TSDOC = "x-vaadin-connect-show-tsdoc";
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
@@ -119,8 +112,7 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
      * apiTemplateFiles map. as with models, add multiple entries with different
      * extensions for multiple files per class
      */
-    apiTemplateFiles.put("TypeScriptApiTemplate.mustache", // the template to use
-        ".ts"); // the extension for each file to write
+    apiTemplateFiles.put("TypeScriptApiTemplate.mustache", ".ts");
 
     /*
      * Template Location. This is the location which templates will be read
@@ -133,40 +125,7 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
      * Reserved words copied from https://www.w3schools.com/js/js_reserved.asp
      */
     reservedWords = VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS;
-
-    /*
-     * Language Specific Primitives. These types will not trigger imports by the
-     * client generator
-     */
-    languageSpecificPrimitives = new HashSet<>(
-        Arrays.asList("String", "Boolean", "Number", BOXED_ARRAY_TYPE, "Object",
-            "Date", "File", "Blob"));
-
-    instantiationTypes.put("array", BOXED_ARRAY_TYPE);
-    instantiationTypes.put("list", BOXED_ARRAY_TYPE);
-    instantiationTypes.put("map", "Object");
-    typeMapping.clear();
-    typeMapping.put("array", ARRAY_TYPE);
-    typeMapping.put("map", OBJECT_TYPE);
-    typeMapping.put("List", ARRAY_TYPE);
-    typeMapping.put(BOOLEAN_TYPE, BOOLEAN_TYPE);
-    typeMapping.put(STRING_TYPE, STRING_TYPE);
-    typeMapping.put("int", NUMBER_TYPE);
-    typeMapping.put("float", NUMBER_TYPE);
-    typeMapping.put(NUMBER_TYPE, NUMBER_TYPE);
-    typeMapping.put("DateTime", "Date");
-    typeMapping.put("date", "Date");
-    typeMapping.put("long", NUMBER_TYPE);
-    typeMapping.put("short", NUMBER_TYPE);
-    typeMapping.put("char", STRING_TYPE);
-    typeMapping.put("double", NUMBER_TYPE);
-    typeMapping.put(OBJECT_TYPE, OBJECT_TYPE);
-    typeMapping.put("integer", NUMBER_TYPE);
-    typeMapping.put("ByteArray", "blob");
-    typeMapping.put("binary", "blob");
-    typeMapping.put("file", "blob");
-    typeMapping.put("UUID", STRING_TYPE);
-    typeMapping.put("BigDecimal", NUMBER_TYPE);
+    typeMapping.put("BigDecimal", "number");
   }
 
   /**
@@ -210,6 +169,8 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     configurator.setOutputDir(generatedFrontendDirectory.toString());
     configurator.addAdditionalProperty(CLIENT_PATH_TEMPLATE_PROPERTY,
         getDefaultClientPath(defaultClientPath));
+    configurator.addSystemProperty("debugOperations", "true");
+    configurator.addSystemProperty("debugModels", "true");
     generate(configurator);
   }
 
@@ -221,8 +182,8 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
   }
 
   private static String getDefaultClientPath(String path) {
-    path = ObjectUtils
-        .defaultIfNull(path, DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
+    path = ObjectUtils.defaultIfNull(path,
+        DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
     return removeTsExtension(path);
   }
 
@@ -434,7 +395,6 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
       warnNoClassInformation(classname);
     }
 
-
     if ((operations.get(OPERATION) instanceof List)) {
       List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
           .get(OPERATION);
@@ -509,12 +469,12 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
       Schema requestSchema = schemas
           .get(getSimpleRef(requestBodySchema.get$ref()));
       ((Map<String, Schema>) requestSchema.getProperties()).values().stream()
-        .map(Schema::get$ref).filter(Objects::nonNull)
-        .map(this::getSimpleRef)
-        .forEach(paramSchemaName -> {
-          Schema paramSchema = schemas.get(paramSchemaName);
-          addUserTypesFromSchema(schemas, currentTag, paramSchemaName, paramSchema);
-        });
+          .map(Schema::get$ref).filter(Objects::nonNull).map(this::getSimpleRef)
+          .forEach(paramSchemaName -> {
+            Schema paramSchema = schemas.get(paramSchemaName);
+            addUserTypesFromSchema(schemas, currentTag, paramSchemaName,
+                paramSchema);
+          });
       List<ParameterInformation> paramsList = getParamsList(requestSchema);
       codegenParameter.getVendorExtensions()
           .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);
