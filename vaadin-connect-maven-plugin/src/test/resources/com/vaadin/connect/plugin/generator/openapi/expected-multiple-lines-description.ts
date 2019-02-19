@@ -14,6 +14,6 @@ import client from './connect-client.default';
  *
  * Return list of users
  */
-export function getAllUsers(): Promise<any[]> {
+export function getAllUsers(): Promise<User[]> {
   return client.call('GeneratorTestClass', 'getAllUsers', undefined, {requireCredentials: false});
 }

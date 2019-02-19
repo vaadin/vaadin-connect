@@ -75,7 +75,7 @@ export function getAllUserRolesMap(): Promise<object> {
  *
  * Return list of users
  */
-export function getAllUsers(): Promise<any[]> {
+export function getAllUsers(): Promise<User[]> {
   return client.call('JsonTestService', 'getAllUsers');
 }
 
@@ -86,8 +86,8 @@ export function getAllUsers(): Promise<any[]> {
  * Return array of int
  */
 export function getArrayInt(
-  input: array
-): Promise<any[]> {
+  input: string[]
+): Promise<number[]> {
   return client.call('JsonTestService', 'getArrayInt', {input}, {requireCredentials: false});
 }
 
