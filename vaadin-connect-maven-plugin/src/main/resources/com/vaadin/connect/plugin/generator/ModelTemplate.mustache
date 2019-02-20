@@ -1,0 +1,13 @@
+{{#each imports}}
+import {{className}} from '{{importPath}}';
+{{/each}}
+
+{{#models}}
+{{#model}}
+export interface {{classname}} {
+{{#allVars}}
+    {{name}}: {{datatype}};
+{{/allVars}}
+}
+{{/model}}
+{{/models}}

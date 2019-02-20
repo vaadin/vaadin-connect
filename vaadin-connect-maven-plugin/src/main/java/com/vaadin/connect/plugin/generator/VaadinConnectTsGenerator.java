@@ -37,6 +37,7 @@ import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
+import io.swagger.codegen.v3.CodegenProperty;
 import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
@@ -54,6 +55,8 @@ import io.swagger.v3.oas.models.tags.Tag;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -113,6 +116,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
      * extensions for multiple files per class
      */
     apiTemplateFiles.put("TypeScriptApiTemplate.mustache", ".ts");
+    modelTemplateFiles.put("ModelTemplate.mustache", ".ts");
 
     /*
      * Template Location. This is the location which templates will be read
@@ -210,15 +214,23 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     if (!outputDirFile.exists()) {
       return;
     }
-    File[] filesToDelete = outputDirFile
-        .listFiles(pathname -> shouldDelete(generatedFiles, pathname));
-    if (filesToDelete != null) {
-      for (File file : filesToDelete) {
-        getLogger().info("Removing stale generated file '{}'.",
-            file.getAbsolutePath());
-        deleteFile(file);
-      }
+    Collection<File> filesToDelete = getFilesToDelete(generatedFiles,
+        outputDirFile);
+    for (File file : filesToDelete) {
+      getLogger().info("Removing stale generated file '{}'.",
+          file.getAbsolutePath());
+      deleteFile(file);
     }
+  }
+
+  private static Collection<File> getFilesToDelete(Set<File> generatedFiles,
+      File outputDirFile) {
+    return FileUtils.listFiles(outputDirFile, new AbstractFileFilter() {
+      @Override
+      public boolean accept(File file) {
+        return shouldDelete(generatedFiles, file);
+      }
+    }, TrueFileFilter.INSTANCE);
   }
 
   private static void deleteFile(File file) {
@@ -319,6 +331,39 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     return outputFolder;
   }
 
+  @Override
+  public String toModelFilename(String name) {
+    if (!name.contains(".")) {
+      return super.toModelName(name);
+    }
+    String packageName = StringUtils.substringBeforeLast(name, ".");
+    packageName = packageName.replaceAll("\\.", "/");
+    String modelName = StringUtils.substringAfterLast(name, ".");
+    modelName = super.toModelFilename(modelName);
+    return packageName + "/" + modelName;
+  }
+
+  @Override
+  public CodegenProperty fromProperty(String name, Schema propertySchema) {
+    CodegenProperty codegenProperty = super.fromProperty(name, propertySchema);
+    // codegenProperty.baseType
+    return codegenProperty;
+  }
+
+  @Override
+  public Map<String, Object> postProcessModels(Map<String, Object> objs) {
+    Map<String, Object> processedModels = super.postProcessModels(objs);
+    List<Map<String, Object>> imports = (List<Map<String, Object>>) processedModels
+        .get("imports");
+    adjustImportInformation(imports);
+    return processedModels;
+  }
+
+  @Override
+  public String toModelName(String name) {
+    return name;
+  }
+
   /**
    * Location to write api files. You can use the apiPackage() as defined when
    * the class is instantiated
@@ -361,7 +406,28 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     codegenOperation.getVendorExtensions()
         .put(EXTENSION_VAADIN_CONNECT_SERVICE_NAME, serviceName);
     validateOperationTags(path, httpMethod, operation);
+    codegenOperation.returnType = getSimpleNameFromQualifiedName(
+        codegenOperation.returnType);
     return codegenOperation;
+  }
+
+  private String getSimpleNameFromQualifiedName(String qualifiedName) {
+    if (StringUtils.contains(qualifiedName, ".")) {
+      return StringUtils.substringAfterLast(qualifiedName, ".");
+    }
+    return qualifiedName;
+  }
+
+  private String convertQualifiedNameToPath(String qualifiedName) {
+    if (StringUtils.contains(qualifiedName, ".")) {
+      return "./" + StringUtils.replaceChars(qualifiedName, '.', '/');
+    }
+    return "./" + qualifiedName;
+  }
+
+  @Override
+  protected boolean needToImport(String type) {
+    return super.needToImport(type) && type.contains(".");
   }
 
   private void validateOperationTags(String path, String httpMethod,
@@ -405,7 +471,19 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
               .filter(Objects::nonNull).flatMap(Collection::stream)
               .collect(Collectors.toSet()));
     }
+    List<Map<String, Object>> imports = (List<Map<String, Object>>) objs
+        .get("imports");
+    adjustImportInformation(imports);
+
     return super.postProcessOperations(objs);
+  }
+
+  private void adjustImportInformation(List<Map<String, Object>> imports) {
+    for (Map<String, Object> anImport : imports) {
+      String importName = (String) anImport.get("import");
+      anImport.put("className", getSimpleNameFromQualifiedName(importName));
+      anImport.put("importPath", convertQualifiedNameToPath(importName));
+    }
   }
 
   private void setShouldShowTsDoc(List<CodegenOperation> operations) {
@@ -474,6 +552,9 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
             Schema paramSchema = schemas.get(paramSchemaName);
             addUserTypesFromSchema(schemas, currentTag, paramSchemaName,
                 paramSchema);
+            if (needToImport(paramSchemaName)) {
+              imports.add(paramSchemaName);
+            }
           });
       List<ParameterInformation> paramsList = getParamsList(requestSchema);
       codegenParameter.getVendorExtensions()
@@ -517,11 +598,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
         schemaParams));
 
     ((Map<String, Schema>) schema.getProperties()).values().stream()
-        .map(Schema::getAdditionalProperties)
-        .filter(property -> property instanceof Schema)
-        .map(property -> ((Schema) property)).map(Schema::get$ref)
-        .filter(Objects::nonNull).map(this::getSimpleRef)
-        .forEach(nestedSchemaName -> {
+        .filter(Objects::nonNull).map(Schema::get$ref).filter(Objects::nonNull)
+        .map(this::getSimpleRef).forEach(nestedSchemaName -> {
           Schema nestedSchema = schemas.get(nestedSchemaName);
           addUserTypesFromSchema(schemas, tag, nestedSchemaName, nestedSchema);
         });
@@ -534,6 +612,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       String name = entry.getKey();
       name = isReservedWord(name) ? escapeReservedWord(name) : name;
       String type = getTypeDeclaration(entry.getValue());
+      type = getSimpleNameFromQualifiedName(type);
       String description = entry.getValue().getDescription();
       if (StringUtils.isBlank(description)) {
         description = getDescriptionFromParameterExtension(name, requestSchema);

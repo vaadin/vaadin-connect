@@ -37,6 +37,9 @@ So `// @ts-ignore` is used for now to mute this error. The consequences are:
  
 }}// @ts-ignore
 import client from '{{vaadinConnectDefaultClientPath}}';
+{{#each imports}}
+import {{className}} from '{{importPath}}';
+{{/each}}
 {{#each vaadinConnectUserTypes}}
 
 {{#description}}
