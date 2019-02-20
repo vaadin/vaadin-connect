@@ -176,32 +176,6 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <executions>
-                    <!-- Compile generated TypeScript to JavaScript -->
-                    <!--
-                      NOTE: ulike the rest of the build-frontend, this is done
-                      in the compile phase. The same phase when the TypeScript
-                      generator runs, so that the TypeScript generator output
-                      is compiled to JavaScript right away. That allows for
-                      better compatiblity with existing JavaScript code that
-                      imports JavaScript API generated code.
-                    -->
-                    <!--
-                      TODO: remove this extra step when rewriting the base
-                      starter and the demo app in TypeScript.
-                    -->
-                    <execution>
-                        <id>build-generated</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>yarn</executable>
-                            <arguments>
-                                <argument>build:generated</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
                     <!-- Build frontend production bundle -->
                     <execution>
                         <id>build-frontend</id>
