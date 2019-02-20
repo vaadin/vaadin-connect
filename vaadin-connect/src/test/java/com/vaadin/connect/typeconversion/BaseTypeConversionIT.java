@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.vaadin.connect.VaadinConnectController;
 import com.vaadin.connect.VaadinServiceNameChecker;
-import com.vaadin.connect.oauth.VaadinConnectOAuthAclChecker;
+import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 
 import static org.mockito.Mockito.mock;
 
@@ -49,7 +49,7 @@ public abstract class BaseTypeConversionIT {
   @Before
   public void setUp() {
     mockMvc = MockMvcBuilders.standaloneSetup(new VaadinConnectController(null,
-        mock(VaadinConnectOAuthAclChecker.class),
+        mock(VaadinConnectAccessChecker.class),
         mock(VaadinServiceNameChecker.class), applicationContext)).build();
     Assert.assertNotEquals(null, applicationContext);
   }

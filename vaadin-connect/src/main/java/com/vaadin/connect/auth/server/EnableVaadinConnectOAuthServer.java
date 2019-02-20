@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.oauth;
+package com.vaadin.connect.auth.server;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -43,7 +43,6 @@ import org.springframework.stereotype.Component;
 @EnableAuthorizationServer
 @EnableResourceServer
 @Import({
-    VaadinConnectOAuthConfiguration.class,
-    VaadinConnectOAuthAclChecker.class })
+    VaadinConnectOAuthConfiguration.class })
 public @interface EnableVaadinConnectOAuthServer {
 }
