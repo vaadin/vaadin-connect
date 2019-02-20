@@ -1,4 +1,4 @@
-package com.vaadin.connect.oauth;
+package com.vaadin.connect.auth.server;
 
 import java.util.ArrayList;
 import java.util.Arrays;

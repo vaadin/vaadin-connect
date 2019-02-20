@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.vaadin.connect.oauth;
+package com.vaadin.connect.auth.server;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
