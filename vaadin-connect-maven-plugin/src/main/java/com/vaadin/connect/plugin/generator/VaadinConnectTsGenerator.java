@@ -17,6 +17,8 @@ package com.vaadin.connect.plugin.generator;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,9 +37,9 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
+import io.swagger.codegen.v3.CodegenModel;
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
-import io.swagger.codegen.v3.CodegenProperty;
 import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
@@ -80,13 +82,14 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static final String EXTENSION_VAADIN_CONNECT_SHOW_TSDOC = "x-vaadin-connect-show-tsdoc";
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
   private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
+  private static final String EXTENSION_VAADIN_CONNECT_SIMPLE_CLASS_NAME = "x-vaadin-connect-simple-class-name";
   private static final String VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS = "vaadinConnectUserTypes";
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
   private static final String CLIENT_PATH_TEMPLATE_PROPERTY = "vaadinConnectDefaultClientPath";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
   private static final String OPERATION = "operation";
-  private static final boolean DEBUG = true;
+
   private List<Tag> tags;
   private Map<String, Set<TypeInformation>> userTypes = new HashMap<>();
   private String currentTag;
@@ -279,6 +282,10 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     return LoggerFactory.getLogger(VaadinConnectTsGenerator.class);
   }
 
+  private static boolean isDebugConnectMavenPlugin() {
+    return System.getProperty("debugConnectMavenPlugin") != null;
+  }
+
   /**
    * Configures the type of generator.
    *
@@ -343,22 +350,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   @Override
-  public CodegenProperty fromProperty(String name, Schema propertySchema) {
-    CodegenProperty codegenProperty = super.fromProperty(name, propertySchema);
-    // codegenProperty.baseType
-    return codegenProperty;
-  }
-
-  @Override
-  public Map<String, Object> postProcessModels(Map<String, Object> objs) {
-    Map<String, Object> processedModels = super.postProcessModels(objs);
-    List<Map<String, Object>> imports = (List<Map<String, Object>>) processedModels
-        .get("imports");
-    adjustImportInformation(imports);
-    return processedModels;
-  }
-
-  @Override
   public String toModelName(String name) {
     return name;
   }
@@ -410,6 +401,16 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     return codegenOperation;
   }
 
+  @Override
+  public CodegenModel fromModel(String name, Schema schema,
+      Map<String, Schema> allDefinitions) {
+    CodegenModel codegenModel = super.fromModel(name, schema, allDefinitions);
+    codegenModel.getVendorExtensions().put(
+        EXTENSION_VAADIN_CONNECT_SIMPLE_CLASS_NAME,
+        getSimpleNameFromQualifiedName(name));
+    return codegenModel;
+  }
+
   private String getSimpleNameFromQualifiedName(String qualifiedName) {
     if (StringUtils.contains(qualifiedName, ".")) {
       return StringUtils.substringAfterLast(qualifiedName, ".");
@@ -421,7 +422,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     if (StringUtils.contains(qualifiedName, ".")) {
       return "./" + StringUtils.replaceChars(qualifiedName, '.', '/');
     }
-    return "./" + qualifiedName;
+    return StringUtils.isNotBlank(qualifiedName) ? "./" + qualifiedName : "";
   }
 
   @Override
@@ -485,22 +486,40 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       Map<String, Object> processedModels) {
     Map<String, Object> postProcessAllModels = super.postProcessAllModels(
         processedModels);
+    for (Map.Entry<String, Object> modelEntry : postProcessAllModels
+        .entrySet()) {
+      Map<String, Object> model = (Map<String, Object>) modelEntry.getValue();
+      List<Map<String, Object>> imports = (List<Map<String, Object>>) model
+          .get("imports");
+      adjustImportInformation(imports, (String) model.get("classname"));
+    }
+
     printDebugMessage(processedModels, "=== All models data ===");
+
     return postProcessAllModels;
   }
 
-  private void printDebugMessage(Map<String, Object> data, String message) {
-    if (DEBUG) {
-      getLogger().debug(message);
-      Json.pretty(data);
+  private void printDebugMessage(Object data, String message) {
+    if (isDebugConnectMavenPlugin()) {
+      getLogger().info(message);
+      Json.prettyPrint(data);
     }
   }
 
   private void adjustImportInformation(List<Map<String, Object>> imports) {
+    adjustImportInformation(imports, "");
+  }
+
+  private void adjustImportInformation(List<Map<String, Object>> imports,
+      String qualifiedNameForRelative) {
+    String modelFilePath = convertQualifiedNameToPath(qualifiedNameForRelative);
     for (Map<String, Object> anImport : imports) {
       String importName = (String) anImport.get("import");
       anImport.put("className", getSimpleNameFromQualifiedName(importName));
-      anImport.put("importPath", convertQualifiedNameToPath(importName));
+      String importPath = convertQualifiedNameToPath(importName);
+      Path relativizedPath = Paths.get(modelFilePath)
+          .relativize(Paths.get(importPath));
+      anImport.put("importPath", relativizedPath.toString());
     }
   }
 
@@ -704,6 +723,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   public void addHandlebarHelpers(Handlebars handlebars) {
     super.addHandlebarHelpers(handlebars);
     handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
+    handlebars.registerHelper("getSimpleName", getSimpleNameFromQualifiedNameHelper());
   }
 
   private Helper<String> getMultipleLinesHelper() {
@@ -717,6 +737,10 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       }
       return buffer;
     };
+  }
+
+  private Helper<String> getSimpleNameFromQualifiedNameHelper() {
+    return (s, options) -> getSimpleNameFromQualifiedName(s);
   }
 
   /**
