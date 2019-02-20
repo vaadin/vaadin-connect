@@ -44,6 +44,7 @@ import io.swagger.codegen.v3.DefaultGenerator;
 import io.swagger.codegen.v3.config.CodegenConfigurator;
 import io.swagger.codegen.v3.generators.typescript.AbstractTypeScriptClientCodegen;
 import io.swagger.parser.OpenAPIParser;
+import io.swagger.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.ArraySchema;
@@ -85,7 +86,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
   private static final String OPERATION = "operation";
-
+  private static final boolean DEBUG = true;
   private List<Tag> tags;
   private Map<String, Set<TypeInformation>> userTypes = new HashMap<>();
   private String currentTag;
@@ -173,8 +174,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     configurator.setOutputDir(generatedFrontendDirectory.toString());
     configurator.addAdditionalProperty(CLIENT_PATH_TEMPLATE_PROPERTY,
         getDefaultClientPath(defaultClientPath));
-    configurator.addSystemProperty("debugOperations", "true");
-    configurator.addSystemProperty("debugModels", "true");
     generate(configurator);
   }
 
@@ -471,11 +470,30 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
               .filter(Objects::nonNull).flatMap(Collection::stream)
               .collect(Collectors.toSet()));
     }
+    Map<String, Object> postProcessOperations = super.postProcessOperations(
+        objs);
     List<Map<String, Object>> imports = (List<Map<String, Object>>) objs
         .get("imports");
     adjustImportInformation(imports);
 
-    return super.postProcessOperations(objs);
+    printDebugMessage(postProcessOperations, "=== All operations data ===");
+    return postProcessOperations;
+  }
+
+  @Override
+  public Map<String, Object> postProcessAllModels(
+      Map<String, Object> processedModels) {
+    Map<String, Object> postProcessAllModels = super.postProcessAllModels(
+        processedModels);
+    printDebugMessage(processedModels, "=== All models data ===");
+    return postProcessAllModels;
+  }
+
+  private void printDebugMessage(Map<String, Object> data, String message) {
+    if (DEBUG) {
+      getLogger().debug(message);
+      Json.pretty(data);
+    }
   }
 
   private void adjustImportInformation(List<Map<String, Object>> imports) {
