@@ -284,8 +284,7 @@ public class OpenApiObjectGenerator {
     Optional<AnnotationExpr> serviceAnnotation = classDeclaration
         .getAnnotationByClass(VaadinService.class);
     if (!serviceAnnotation.isPresent()) {
-      nonServiceSchemas.put(
-          ensureQualifiedName(classDeclaration.resolve().getQualifiedName()),
+      nonServiceSchemas.put(classDeclaration.resolve().getQualifiedName(),
           parseClassAsSchema(classDeclaration));
     } else {
       classDeclaration.getJavadoc().ifPresent(
@@ -295,14 +294,6 @@ public class OpenApiObjectGenerator {
       pathItems.putAll(createPathItems(
           getServiceName(classDeclaration, serviceAnnotation.get()),
           classDeclaration));
-    }
-  }
-
-  private String ensureQualifiedName(String qualifiedName) {
-    if (!qualifiedName.contains(".")) {
-      return "defaultPackage." + qualifiedName;
-    } else {
-      return qualifiedName;
     }
   }
 
@@ -569,8 +560,7 @@ public class OpenApiObjectGenerator {
 
   private Schema createUserBeanSchema(ResolvedType resolvedType) {
     if (resolvedType.isReferenceType()) {
-      String qualifiedName = ensureQualifiedName(
-          resolvedType.asReferenceType().getQualifiedName());
+      String qualifiedName = resolvedType.asReferenceType().getQualifiedName();
       usedSchemas.put(qualifiedName, resolvedType.asReferenceType());
 
       String ref = "#/components/schemas/" + qualifiedName;
