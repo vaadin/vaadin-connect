@@ -15,7 +15,7 @@
   "scripts": {
     "build": "yarn lint && tsc",
     "prepublish": "yarn build",
-    "lint": "tslint 'src/**/*.ts'",
+    "lint": "eslint 'test/**/*.js' 'scripts/**/*.js' && tslint 'src/**/*.ts'",
     "test": "yarn build && intern",
     "test:watch": "chokidar \"src/**/*.ts\" \"test/**/*.js\" -c \"yarn build && yarn test\"",
     "version": "node scripts/version.js"

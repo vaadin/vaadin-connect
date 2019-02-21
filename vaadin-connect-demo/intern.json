@@ -1,5 +1,5 @@
 {
-  "functionalSuites": "e2e/**/*.spec.js",
+  "functionalSuites": "e2e/**/*.spec.*",
   "serverUrl": "http://localhost:8080",
   "serverPort": 9002,
   "socketPort": 9003,
@@ -12,7 +12,7 @@
     ]
   },
   "node": {
-    "plugins": ["@babel/register"]
+    "plugins": ["./scripts/ts-node-register.js"]
   },
   "configs": {
     "sauce": {

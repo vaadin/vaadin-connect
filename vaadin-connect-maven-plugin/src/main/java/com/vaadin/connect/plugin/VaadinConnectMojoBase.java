@@ -43,7 +43,7 @@ public abstract class VaadinConnectMojoBase extends AbstractMojo {
   public static final String DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH = "./connect-client.default";
   public static final String DEFAULT_GENERATED_CONNECT_CLIENT_NAME = "connect-client.default.ts";
   public static final String DEFAULT_CONNECT_CLIENT_PATH_PROPERTY = "vaadin.connect.connect-client.path";
-  public static final String DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH = "frontend/connect-client.js";
+  public static final String DEFAULT_CONVENTIONAL_CONNECT_CLIENT_PATH = "frontend/connect-client.ts";
 
   @Parameter(defaultValue = "${project.basedir}/src/main/resources/application.properties")
   protected File applicationProperties;

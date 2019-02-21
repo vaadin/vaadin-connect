@@ -1,11 +1,23 @@
-const {describe, it, before, beforeEach, after} = intern.getPlugin('interface.bdd');
+/// <reference types="intern"/>
+
+declare global {
+  interface Window {Vaadin: any;}
+}
+
+const {
+  after,
+  before,
+  beforeEach,
+  describe,
+  it
+} = intern.getPlugin('interface.bdd');
 const {expect} = intern.getPlugin('chai');
 
-import {pollUntilTruthy} from '@theintern/leadfoot';
+import {Command, pollUntilTruthy} from '@theintern/leadfoot';
 
 describe('demo application', () => {
   describe('index page', () => {
-    let page;
+    let page: Command<void>;
 
     before(async context => {
       await context.remote.session.setExecuteAsyncTimeout(30000);
@@ -14,8 +26,8 @@ describe('demo application', () => {
     });
 
     it('should have number', async() => {
-      const number = await page.findById('number').getVisibleText();
-      expect(number).to.equal('1');
+      const num = await page.findById('number').getVisibleText();
+      expect(num).to.equal('1');
     });
 
     it('should not have logged in', async() => {
@@ -25,15 +37,19 @@ describe('demo application', () => {
 
     it('should say hello after logging in', async() => {
       await page.findById('login').click();
+      // tslint:disable-next-line:only-arrow-functions
       await pollUntilTruthy(function(text) {
-        return document.getElementById('loginMessage').textContent === text;
+        return (document.getElementById('loginMessage') as HTMLLabelElement)
+          .textContent === text;
       }, ['Hello, test_login!']).call(page);
     });
 
     it('should increment number on button click', async() => {
       await page.findById('addOne').click();
+      // tslint:disable-next-line:only-arrow-functions
       await pollUntilTruthy(function(text) {
-        return document.getElementById('number').textContent === text;
+        return (document.getElementById('number') as HTMLLabelElement)
+          .textContent === text;
       }, ['2']).call(page);
     });
 
@@ -50,8 +66,10 @@ describe('demo application', () => {
         const access = await page.findById('access').getVisibleText();
         expect(access).to.equal('');
         await page.findById('checkAnonymousAccess').click();
+        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return document.getElementById('access').textContent === text;
+          return (document.getElementById('access') as HTMLLabelElement)
+            .textContent === text;
         }, ['anonymous success']).call(page);
       });
 
@@ -63,8 +81,10 @@ describe('demo application', () => {
         const access = await page.findById('access').getVisibleText();
         await page.findById('checkAnonymousAccess').click();
         expect(access).to.equal('');
+        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return document.getElementById('access').textContent === text;
+          return (document.getElementById('access') as HTMLLabelElement)
+            .textContent === text;
         }, ['anonymous success']).call(page);
       });
 
@@ -72,45 +92,56 @@ describe('demo application', () => {
         // Get back to working credentials and login
         page = page.get('');
         await page.findById('login').click();
+        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return document.getElementById('loginMessage').textContent === text;
+          return (document.getElementById('loginMessage') as HTMLLabelElement)
+            .textContent === text;
         }, ['Hello, test_login!']).call(page);
       });
     });
 
     describe('exception handling', () => {
-      before(async() => {
-      });
-
-      it('should throw when backend server throws a generic exception', async() => {
+      it('should throw generic exception', async() => {
         await page.findById('exceptionButton').click();
+        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return document.getElementById('exceptionMessage').textContent === text;
+          return (
+            document.getElementById('exceptionMessage') as HTMLLabelElement
+          ).textContent === text;
         }, [
-          'Service \'DemoVaadinService\' method \'throwsException\' execution failure'
+          'Service \'DemoVaadinService\' method \'throwsException\''
+            + ' execution failure'
         ]).call(page);
-        const exceptionType = await page.findById('exceptionType').getVisibleText();
+        const exceptionType = await page.findById('exceptionType')
+          .getVisibleText();
         expect(exceptionType).to.be.empty;
-        const exceptionDetail = await page.findById('exceptionDetail').getVisibleText();
+        const exceptionDetail = await page.findById('exceptionDetail')
+          .getVisibleText();
         expect(exceptionDetail).to.be.empty;
       });
 
-      it('should throw when backend server throws VaadinConnect exception', async() => {
+      it('should throw VaadinConnect exception', async() => {
         await page.findById('submitButton').click();
+        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return document.getElementById('exceptionMessage').textContent === text;
+          return (
+            document.getElementById('exceptionMessage') as HTMLLabelElement
+          ).textContent === text;
         }, [
           'You had one job to do!'
         ]).call(page);
-        const exceptionType = await page.findById('exceptionType').getVisibleText();
+        const exceptionType = await page.findById('exceptionType')
+          .getVisibleText();
         expect(exceptionType).to.equal('java.lang.ArithmeticException');
-        const exceptionDetail = await page.findById('exceptionDetail').getVisibleText();
+        const exceptionDetail = await page.findById('exceptionDetail')
+          .getVisibleText();
         expect(exceptionDetail).to.equal('{"wrong_parameter":0}');
       });
     });
 
     describe('statistics', () => {
       it('should be registered in Vaadin namespace', async() => {
+        // tslint:disable-next-line:no-var-keyword only-arrow-functions
         var registrations = await page.execute(function() {
           return window.Vaadin.registrations;
         });
