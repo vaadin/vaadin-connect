@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -222,6 +223,11 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
           file.getAbsolutePath());
       deleteFile(file);
     }
+    Collection<File> emptyFolders = getEmptyFolders(outputDirFile);
+    for (File file : emptyFolders) {
+      getLogger().info("Removing empty folder '{}'.", file.getAbsolutePath());
+      deleteFile(file);
+    }
   }
 
   private static Collection<File> getFilesToDelete(Set<File> generatedFiles,
@@ -232,6 +238,22 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
         return shouldDelete(generatedFiles, file);
       }
     }, TrueFileFilter.INSTANCE);
+  }
+
+  private static Collection<File> getEmptyFolders(File file) {
+    if (file == null || !file.isDirectory()) {
+      return Collections.emptyList();
+    }
+    Set<File> emptyFolders = new HashSet<>();
+    File[] children = file.listFiles();
+    if (children == null || children.length == 0) {
+      emptyFolders.add(file);
+    } else {
+      for (File child : children) {
+        emptyFolders.addAll(getEmptyFolders(child));
+      }
+    }
+    return emptyFolders;
   }
 
   private static void deleteFile(File file) {
@@ -290,6 +312,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
    * @return the CodegenType for this generator
    * @see io.swagger.codegen.CodegenType
    */
+  @Override
   public CodegenType getTag() {
     return CodegenType.CLIENT;
   }
@@ -459,13 +482,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   @Override
-  public CodegenModel fromModel(String name, Schema schema,
-      Map<String, Schema> allDefinitions) {
-    CodegenModel codegenModel = super.fromModel(name, schema, allDefinitions);
-    return codegenModel;
-  }
-
-  @Override
   protected void addImport(CodegenModel m, String type) {
     if (!StringUtils.equals(m.getName(), type)) {
       super.addImport(m, type);
@@ -513,7 +529,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   /**
    * Adjust the import paths.
-   * 
+   *
    * @param imports
    *          import paths list.
    * @param relativePathFromGeneratedFolderToCurrentFile
@@ -749,92 +765,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     @Override
     public int hashCode() {
       return Objects.hash(name, type, description);
-    }
-  }
-
-  private abstract static class TypeInformation {
-    protected final String name;
-    protected final String description;
-
-    TypeInformation(String name, String description) {
-      this.name = name;
-      this.description = description;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public String getDescription() {
-      return description;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      TypeInformation that = (TypeInformation) o;
-      return Objects.equals(name, that.name)
-          && Objects.equals(description, that.description);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, description);
-    }
-
-    public abstract boolean getIsKnown();
-  }
-
-  private static class KnownTypeInformation extends TypeInformation {
-    private final List<ParameterInformation> parameterInformation;
-
-    KnownTypeInformation(String name, String description,
-        List<ParameterInformation> parameterInformation) {
-      super(name, description);
-      this.parameterInformation = parameterInformation;
-    }
-
-    public List<ParameterInformation> getParameterInformation() {
-      return parameterInformation;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      KnownTypeInformation that = (KnownTypeInformation) o;
-      return super.equals(o)
-          && Objects.equals(parameterInformation, that.parameterInformation);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, description, parameterInformation);
-    }
-
-    public boolean getIsKnown() {
-      return true;
-    }
-  }
-
-  private static class UnknownTypeInformation extends TypeInformation {
-    UnknownTypeInformation(String name, String description) {
-      super(name, description);
-    }
-
-    public boolean getIsKnown() {
-      return false;
     }
   }
 }
