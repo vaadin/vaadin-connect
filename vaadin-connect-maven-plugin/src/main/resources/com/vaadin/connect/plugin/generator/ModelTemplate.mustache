@@ -4,9 +4,16 @@ import {{className}} from '{{importPath}}';
 
 {{#models}}
 {{#model}}
+{{#unescapedDescription}}
+/**
+{{#multiplelines unescapedDescription}}
+ * {{{@line}}}
+{{/multiplelines}}
+ */
+{{/unescapedDescription}}
 export default interface {{{getSimpleName classname}}} {
 {{#allVars}}
-    {{name}}: {{{getSimpleName datatype}}};
+  {{name}}: {{{getSimpleName datatype}}};
 {{/allVars}}
 }
 {{/model}}

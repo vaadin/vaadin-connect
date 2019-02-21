@@ -23,6 +23,12 @@ import com.fasterxml.jackson.core.Version;
  * types from project's dependencies.
  */
 public class BeanWithTypeFromDependencies {
+  /**
+   * Version description.
+   */
   Version version;
+  /**
+   * Account description.
+   */
   Account account;
 }

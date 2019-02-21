@@ -21,8 +21,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,8 +87,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static final String OPERATION = "operation";
 
   private List<Tag> tags;
-  private Set<String> userTypes = new HashSet<>();
-  private String currentTag;
 
   private static class VaadinConnectTSOnlyGenerator extends DefaultGenerator {
     @Override
@@ -132,6 +128,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
      */
     reservedWords = VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS;
     typeMapping.put("BigDecimal", "number");
+    typeMapping.put("map", "Map");
+    typeMapping.put("Map", "Map");
     modelPackage = "connectModels";
   }
 
@@ -195,10 +193,11 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
     if (parseResult != null && parseResult.getMessages().isEmpty()) {
-      ClientOptInput clientOptInput = configurator.toClientOptInput().openAPI(parseResult.getOpenAPI());
+      ClientOptInput clientOptInput = configurator.toClientOptInput()
+          .openAPI(parseResult.getOpenAPI());
       Set<File> generatedFiles = new VaadinConnectTSOnlyGenerator()
-          .opts(clientOptInput).generate().stream()
-          .filter(Objects::nonNull).collect(Collectors.toSet());
+          .opts(clientOptInput).generate().stream().filter(Objects::nonNull)
+          .collect(Collectors.toSet());
 
       cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
@@ -462,17 +461,23 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   @Override
+  public CodegenModel fromModel(String name, Schema schema,
+      Map<String, Schema> allDefinitions) {
+    CodegenModel codegenModel = super.fromModel(name, schema, allDefinitions);
+    return codegenModel;
+  }
+
+  @Override
   public Map<String, Object> postProcessAllModels(
       Map<String, Object> processedModels) {
     Map<String, Object> postProcessAllModels = super.postProcessAllModels(
         processedModels);
     for (Map.Entry<String, Object> modelEntry : postProcessAllModels
         .entrySet()) {
-        Map<String, Object> model = (Map<String, Object>) modelEntry.getValue();
-        List<Map<String, Object>> imports = (List<Map<String, Object>>) model
-            .get("imports");
-        adjustImportInformationForModel(imports,
-            (String) model.get("classname"));
+      Map<String, Object> model = (Map<String, Object>) modelEntry.getValue();
+      List<Map<String, Object>> imports = (List<Map<String, Object>>) model
+          .get("imports");
+      adjustImportInformationForModel(imports, (String) model.get("classname"));
     }
 
     printDebugMessage(processedModels, "=== All models data ===");
@@ -562,8 +567,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   public void preprocessOpenAPI(OpenAPI openAPI) {
     super.processOpenAPI(openAPI);
     List<Tag> openAPITags = openAPI.getTags();
-    userTypes.clear();
-    currentTag = null;
     this.tags = openAPITags != null ? openAPITags : Collections.emptyList();
   }
 
@@ -581,38 +584,15 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     CodegenParameter codegenParameter = super.fromRequestBody(body, schemas,
         imports);
     Schema requestBodySchema = getRequestBodySchema(body);
-    if (requestBodySchema != null
-        && StringUtils.isNotBlank(requestBodySchema.get$ref())) {
-      Schema requestSchema = schemas
-          .get(getSimpleRef(requestBodySchema.get$ref()));
-      ((Map<String, Schema>) requestSchema.getProperties()).values().stream()
-          .map(Schema::get$ref).filter(Objects::nonNull).map(this::getSimpleRef)
-          .forEach(paramSchemaName -> {
-            userTypes.add(paramSchemaName);
-            imports.add(paramSchemaName);
-          });
-      List<ParameterInformation> paramsList = getParamsList(requestSchema);
+    if (requestBodySchema != null) {
+      ((Map<String, Schema>) requestBodySchema.getProperties()).values()
+          .stream().map(Schema::get$ref).filter(Objects::nonNull)
+          .map(this::getSimpleRef).forEach(imports::add);
+      List<ParameterInformation> paramsList = getParamsList(requestBodySchema);
       codegenParameter.getVendorExtensions()
           .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);
     }
-
-    for (String schemaName : imports) {
-      // Skip baseType, it is a schema of the body itself with method
-      // parameters. Also skip any schemas that have existing typeMapping.
-      if (schemaName.equals(codegenParameter.baseType)
-          || typeMapping.containsKey(schemaName)) {
-        continue;
-      }
-      userTypes.add(schemaName);
-    }
-
     return codegenParameter;
-  }
-
-  @Override
-  public String sanitizeTag(String tag) {
-    this.currentTag = tag;
-    return super.sanitizeTag(tag);
   }
 
   private List<ParameterInformation> getParamsList(Schema requestSchema) {
