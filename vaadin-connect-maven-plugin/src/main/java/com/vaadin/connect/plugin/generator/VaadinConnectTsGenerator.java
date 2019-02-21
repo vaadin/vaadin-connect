@@ -126,7 +126,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     /*
      * Reserved words copied from https://www.w3schools.com/js/js_reserved.asp
      */
-    reservedWords = VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS;
+    reservedWords.addAll(VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS);
+    reservedWords.addAll(languageSpecificPrimitives);
     typeMapping.put("BigDecimal", "number");
     typeMapping.put("map", "Map");
     typeMapping.put("Map", "Map");
