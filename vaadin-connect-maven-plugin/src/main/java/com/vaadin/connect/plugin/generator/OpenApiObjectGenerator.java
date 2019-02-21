@@ -322,7 +322,7 @@ public class OpenApiObjectGenerator {
     typeDeclaration.getJavadoc().ifPresent(
         javadoc -> schema.description(javadoc.getDescription().toText()));
     for (FieldDeclaration field : typeDeclaration.getFields()) {
-      if (field.isTransient()) {
+      if (field.isTransient() || field.isStatic()) {
         continue;
       }
       field.getVariables()
