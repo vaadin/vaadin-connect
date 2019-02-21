@@ -40,26 +40,7 @@ import client from '{{vaadinConnectDefaultClientPath}}';
 {{#each imports}}
 import {{className}} from '{{importPath}}';
 {{/each}}
-{{#each vaadinConnectUserTypes}}
 
-{{#description}}
-/**
- * {{description}}
- */
-{{/description}}
-{{#name}}{{#isKnown}}export interface {{name}} {
-{{#each parameterInformation}}
-{{#description}}
-  /**
-   * {{description}}
-   */
-{{/description}}
-  {{name}}: {{type}}; 
-{{/each}}
-}{{/isKnown}}{{!
-}}{{^isKnown}}type {{name}} = object;{{/isKnown}}
-{{/name}}
-{{/each}}
 {{#operations}}
 {{#operation}}
 {{#vendorExtensions.x-vaadin-connect-show-tsdoc}}

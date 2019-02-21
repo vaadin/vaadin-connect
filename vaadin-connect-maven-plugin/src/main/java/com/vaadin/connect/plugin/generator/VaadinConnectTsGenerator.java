@@ -17,7 +17,6 @@ package com.vaadin.connect.plugin.generator;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,6 +50,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
@@ -486,17 +486,22 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       Map<String, Object> processedModels) {
     Map<String, Object> postProcessAllModels = super.postProcessAllModels(
         processedModels);
+    Map<String, Object> filteredModel = new HashMap<>();
     for (Map.Entry<String, Object> modelEntry : postProcessAllModels
         .entrySet()) {
-      Map<String, Object> model = (Map<String, Object>) modelEntry.getValue();
-      List<Map<String, Object>> imports = (List<Map<String, Object>>) model
-          .get("imports");
-      adjustImportInformation(imports, (String) model.get("classname"));
+      if (modelEntry.getKey().contains(".")) {
+        Map<String, Object> model = (Map<String, Object>) modelEntry.getValue();
+        List<Map<String, Object>> imports = (List<Map<String, Object>>) model
+            .get("imports");
+
+        adjustImportInformation(imports, (String) model.get("classname"));
+        filteredModel.put(modelEntry.getKey(), modelEntry.getValue());
+      }
     }
 
     printDebugMessage(processedModels, "=== All models data ===");
 
-    return postProcessAllModels;
+    return filteredModel;
   }
 
   private void printDebugMessage(Object data, String message) {
@@ -513,13 +518,17 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private void adjustImportInformation(List<Map<String, Object>> imports,
       String qualifiedNameForRelative) {
     String modelFilePath = convertQualifiedNameToPath(qualifiedNameForRelative);
+    // Remove the class name, only consider the parent folder
+    modelFilePath = StringUtils.substringBeforeLast(modelFilePath, "/");
     for (Map<String, Object> anImport : imports) {
       String importName = (String) anImport.get("import");
       anImport.put("className", getSimpleNameFromQualifiedName(importName));
       String importPath = convertQualifiedNameToPath(importName);
-      Path relativizedPath = Paths.get(modelFilePath)
-          .relativize(Paths.get(importPath));
-      anImport.put("importPath", relativizedPath.toString());
+      String relativizedPath = Paths.get(modelFilePath)
+          .relativize(Paths.get(importPath)).toString();
+      relativizedPath = StringUtils.prependIfMissing(relativizedPath, "./", ".",
+          "/");
+      anImport.put("importPath", relativizedPath);
     }
   }
 
@@ -680,6 +689,9 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       return this.getTypeDeclaration(inner) + "[]";
     } else if (StringUtils.isNotBlank(schema.get$ref())) {
       return getSimpleRef(schema.get$ref());
+    } else if (schema.getAdditionalProperties() != null) {
+      Schema inner = (Schema) schema.getAdditionalProperties();
+      return String.format("Map<string, %s>", getTypeDeclaration(inner));
     } else {
       return super.getTypeDeclaration(schema);
     }
@@ -723,7 +735,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   public void addHandlebarHelpers(Handlebars handlebars) {
     super.addHandlebarHelpers(handlebars);
     handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
-    handlebars.registerHelper("getSimpleName", getSimpleNameFromQualifiedNameHelper());
+    handlebars.registerHelper("getSimpleName",
+        getSimpleNameFromQualifiedNameHelper());
   }
 
   private Helper<String> getMultipleLinesHelper() {

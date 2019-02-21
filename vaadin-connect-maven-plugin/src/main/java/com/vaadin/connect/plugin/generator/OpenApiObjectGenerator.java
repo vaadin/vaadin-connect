@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +50,7 @@ import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
+import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration;
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
@@ -105,7 +105,7 @@ public class OpenApiObjectGenerator {
 
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
-  private Set<String> usedSchemas;
+  private Map<String, ResolvedReferenceType> usedSchemas;
   private Map<String, String> servicesJavadoc;
   private Map<String, Schema> nonServiceSchemas;
   private Map<String, PathItem> pathItems;
@@ -177,7 +177,7 @@ public class OpenApiObjectGenerator {
     openApiModel = createBasicModel();
     nonServiceSchemas = new HashMap<>();
     pathItems = new TreeMap<>();
-    usedSchemas = new HashSet<>();
+    usedSchemas = new HashMap<>();
     servicesJavadoc = new HashMap<>();
 
     ParserConfiguration parserConfiguration = createParserConfiguration();
@@ -186,12 +186,15 @@ public class OpenApiObjectGenerator {
         .map(path -> new SourceRoot(path, parserConfiguration))
         .forEach(this::parseSourceRoot);
 
-    for (String s : usedSchemas) {
-      Schema schema = nonServiceSchemas.get(s);
-      if (schema != null) {
-        openApiModel.getComponents().addSchemas(s, schema);
+    for (Map.Entry<String, ResolvedReferenceType> entry : usedSchemas
+        .entrySet()) {
+      Schema schema = nonServiceSchemas.get(entry.getKey());
+      if (schema == null) {
+        schema = parseReferencedTypeAsSchema(entry.getValue());
       }
+      openApiModel.getComponents().addSchemas(entry.getKey(), schema);
     }
+
     addTagsInformation();
   }
 
@@ -568,11 +571,30 @@ public class OpenApiObjectGenerator {
     if (resolvedType.isReferenceType()) {
       String qualifiedName = ensureQualifiedName(
           resolvedType.asReferenceType().getQualifiedName());
-      usedSchemas.add(qualifiedName);
+      usedSchemas.put(qualifiedName, resolvedType.asReferenceType());
+
       String ref = "#/components/schemas/" + qualifiedName;
       return new ObjectSchema().$ref(ref);
     }
     return new ObjectSchema();
+  }
+
+  private Schema parseReferencedTypeAsSchema(
+      ResolvedReferenceType resolvedType) {
+    Schema schema = new ObjectSchema();
+    List<ResolvedFieldDeclaration> declaredFields = resolvedType
+        .getDeclaredFields().stream()
+        .filter(
+            resolvedFieldDeclaration -> !resolvedFieldDeclaration.isStatic())
+        .collect(Collectors.toList());
+    for (ResolvedFieldDeclaration resolvedFieldDeclaration : declaredFields) {
+      ResolvedFieldDeclaration fieldDeclaration = resolvedFieldDeclaration
+          .asField();
+      String name = fieldDeclaration.getName();
+      Schema type = parseResolvedTypeToSchema(fieldDeclaration.getType());
+      schema.addProperties(name, type);
+    }
+    return schema;
   }
 
   private Schema createMapSchema(ResolvedType type) {

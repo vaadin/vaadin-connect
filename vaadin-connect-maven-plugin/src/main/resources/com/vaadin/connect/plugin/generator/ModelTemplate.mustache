@@ -4,9 +4,9 @@ import {{className}} from '{{importPath}}';
 
 {{#models}}
 {{#model}}
-export interface {{getSimpleName classname}} {
+export default interface {{{getSimpleName classname}}} {
 {{#allVars}}
-    {{name}}: {{getSimpleName datatype}};
+    {{name}}: {{{getSimpleName datatype}}};
 {{/allVars}}
 }
 {{/model}}
