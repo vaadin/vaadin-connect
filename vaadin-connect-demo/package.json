@@ -7,11 +7,10 @@
   "private": true,
   "scripts": {
     "build:frontend": "webpack",
-    "build:generated": "tsc",
     "start:backend": "node scripts/start/backend.js",
     "start:webpack": "webpack --mode development -w",
     "start:apibrowser": "node scripts/start/apibrowser.js",
-    "lint": "eslint frontend/ scripts/ e2e/ --ignore-path .gitignore",
+    "lint": "eslint scripts/ webpack.config.js && tslint 'frontend/**/*.ts' 'e2e/**.*.ts' -e 'frontend/generated/**/*.ts'",
     "test:e2e": "intern",
     "start": "yarn start:backend -- -- yarn start:apibrowser -- -- yarn start:webpack",
     "test": "yarn lint && yarn build:frontend && yarn bundlesize && yarn start:backend -- --nowatch -- yarn test:e2e"
@@ -26,7 +25,7 @@
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.3",
-    "@babel/register": "^7.0.0",
+    "awesome-typescript-loader": "^5.2.1",
     "bundlesize": "^0.17.0",
     "copy-webpack-plugin": "^4.6.0",
     "eslint": "^5.9.0",
@@ -36,7 +35,9 @@
     "intern": "^4.3.3",
     "regenerator-runtime": "^0.13.1",
     "swagger-ui-dist": "^3.20.2",
-    "typescript": "^3.3.1",
+    "ts-node": "^8.0.2",
+    "tslint": "^5.12.1",
+    "typescript": "^3.3.3",
     "webpack": "^4.28.0",
     "webpack-babel-multi-target-plugin": "2.1.0-alpha.7",
     "webpack-cli": "^3.1.2",

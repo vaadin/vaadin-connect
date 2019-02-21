@@ -3,7 +3,7 @@
  * @param response The response to assert.
  * @ignore
  */
-const assertResponseIsOk = async (response: Response): Promise<void> => {
+const assertResponseIsOk = async(response: Response): Promise<void> => {
   if (!response.ok) {
     const responseText = await response.text();
     let responseJson;
@@ -35,7 +35,7 @@ const assertResponseIsOk = async (response: Response): Promise<void> => {
  * @param client the connect client instance
  * @ignore
  */
-const authenticateClient = async (client: ConnectClient): Promise<void> => {
+const authenticateClient = async(client: ConnectClient): Promise<void> => {
   let message;
   const _private = privates.get(client);
   let tokens = _private.tokens;
@@ -241,7 +241,7 @@ export interface CredentialsCallbackOptions {
  * @param options
  */
 export type CredentialsCallback = (options?: CredentialsCallbackOptions) =>
-  Promise<Credentials>;
+  Promise<Credentials> | Credentials;
 
 /**
  * The `ConnectClient` constructor options.
@@ -311,7 +311,8 @@ export interface MiddlewareContext {
  * or makes the actual request.
  * @param context The information about the call and request
  */
-export type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
+export type MiddlewareNext = (context: MiddlewareContext) =>
+  Promise<Response> | Response;
 
 /**
  * An async callback function that can intercept the request and response
@@ -320,7 +321,7 @@ export type MiddlewareNext = (context: MiddlewareContext) => Promise<Response>;
  * @param next Invokes the next in the call chain
  */
 export type Middleware = (context: MiddlewareContext, next: MiddlewareNext) =>
-  Promise<Response>;
+  Promise<Response> | Response;
 
 /**
  * Vaadin Connect client class is a low-level network calling utility. It stores
@@ -509,7 +510,7 @@ export class ConnectClient {
     // with processing the response. That is why this middleware is first
     // in the final middlewares array.
     const responseHandlerMiddleware: Middleware =
-      async (
+      async(
         context: MiddlewareContext,
         next: MiddlewareNext
       ): Promise<Response> => {
@@ -522,7 +523,7 @@ export class ConnectClient {
     // chain item for our convenience. Always having an ending of the chain
     // this way makes the folding down below more concise.
     const fetchNext: MiddlewareNext =
-      async (context: MiddlewareContext): Promise<Response> => {
+      async(context: MiddlewareContext): Promise<Response> => {
         return await fetch(context.request);
       };
 
