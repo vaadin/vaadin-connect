@@ -131,7 +131,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     typeMapping.put("BigDecimal", "number");
     typeMapping.put("map", "Map");
     typeMapping.put("Map", "Map");
-    modelPackage = "connectModels";
   }
 
   /**
@@ -339,7 +338,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   @Override
   public String toModelFilename(String name) {
     if (!StringUtils.contains(name, ".")) {
-      return modelPackage() + "/" + super.toModelFilename(name);
+      return super.toModelFilename(name);
     }
     String packageName = StringUtils.substringBeforeLast(name, ".");
     packageName = packageName.replaceAll("\\.", "/");
@@ -347,7 +346,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     String modelName = StringUtils.substringAfterLast(name, ".");
     modelName = super.toModelFilename(modelName);
 
-    return modelPackage() + "/" + packageName + "/" + modelName;
+    return packageName + "/" + modelName;
   }
 
   @Override
@@ -410,9 +409,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   private String convertQualifiedNameToModelPath(String qualifiedName) {
-    String namWithModelPackage = StringUtils.prependIfMissing(qualifiedName,
-        modelPackage() + ".");
-    return "./" + StringUtils.replaceChars(namWithModelPackage, '.', '/');
+    return "./" + StringUtils.replaceChars(qualifiedName, '.', '/');
   }
 
   private void validateOperationTags(String path, String httpMethod,
