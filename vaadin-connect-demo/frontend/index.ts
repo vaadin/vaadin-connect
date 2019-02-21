@@ -45,7 +45,7 @@ const numberLabel = document.getElementById('number') as HTMLLabelElement;
 (document.getElementById('addOne') as HTMLButtonElement)
   .addEventListener('click', async() => {
     numberLabel.textContent = (await demoService.addOne(
-      Number.parseInt(numberLabel.textContent || '0', 10)
+      parseInt(numberLabel.textContent || '0', 10)
     )).toString();
     updateLoginStatus(client);
   });
