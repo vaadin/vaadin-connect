@@ -39,7 +39,7 @@ describe('demo application', () => {
       await page.findById('login').click();
       // tslint:disable-next-line:only-arrow-functions
       await pollUntilTruthy(function(text) {
-        return (document.getElementById('loginMessage') as HTMLLabelElement)
+        return (document.getElementById('loginMessage') as HTMLOutputElement)
           .textContent === text;
       }, ['Hello, test_login!']).call(page);
     });
@@ -48,7 +48,7 @@ describe('demo application', () => {
       await page.findById('addOne').click();
       // tslint:disable-next-line:only-arrow-functions
       await pollUntilTruthy(function(text) {
-        return (document.getElementById('number') as HTMLLabelElement)
+        return (document.getElementById('number') as HTMLOutputElement)
           .textContent === text;
       }, ['2']).call(page);
     });
@@ -68,7 +68,7 @@ describe('demo application', () => {
         await page.findById('checkAnonymousAccess').click();
         // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return (document.getElementById('access') as HTMLLabelElement)
+          return (document.getElementById('access') as HTMLOutputElement)
             .textContent === text;
         }, ['anonymous success']).call(page);
       });
@@ -83,7 +83,7 @@ describe('demo application', () => {
         expect(access).to.equal('');
         // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return (document.getElementById('access') as HTMLLabelElement)
+          return (document.getElementById('access') as HTMLOutputElement)
             .textContent === text;
         }, ['anonymous success']).call(page);
       });
@@ -94,7 +94,7 @@ describe('demo application', () => {
         await page.findById('login').click();
         // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return (document.getElementById('loginMessage') as HTMLLabelElement)
+          return (document.getElementById('loginMessage') as HTMLOutputElement)
             .textContent === text;
         }, ['Hello, test_login!']).call(page);
       });
@@ -106,7 +106,7 @@ describe('demo application', () => {
         // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           return (
-            document.getElementById('exceptionMessage') as HTMLLabelElement
+            document.getElementById('exceptionMessage') as HTMLOutputElement
           ).textContent === text;
         }, [
           'Service \'DemoVaadinService\' method \'throwsException\''
@@ -125,7 +125,7 @@ describe('demo application', () => {
         // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           return (
-            document.getElementById('exceptionMessage') as HTMLLabelElement
+            document.getElementById('exceptionMessage') as HTMLOutputElement
           ).textContent === text;
         }, [
           'You had one job to do!'
