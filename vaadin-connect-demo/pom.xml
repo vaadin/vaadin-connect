@@ -152,6 +152,9 @@
                         <goals>
                             <goal>start</goal>
                         </goals>
+                        <configuration>
+                            <skip>${skipTests}</skip>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>stop-backend-server</id>
@@ -159,6 +162,9 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                        <configuration>
+                            <skip>${skipTests}</skip>
+                        </configuration>
                     </execution>
                     <!-- We need this since our parent is not `spring-boot-starter-parent`
                          otherwise artifact is not executable -->
