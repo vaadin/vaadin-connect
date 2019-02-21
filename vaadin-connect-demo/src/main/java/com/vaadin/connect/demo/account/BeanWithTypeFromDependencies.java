@@ -31,4 +31,8 @@ public class BeanWithTypeFromDependencies {
    * Account description.
    */
   Account account;
+  /**
+   * Make sure that recursive type works.
+   */
+  BeanWithTypeFromDependencies children;
 }

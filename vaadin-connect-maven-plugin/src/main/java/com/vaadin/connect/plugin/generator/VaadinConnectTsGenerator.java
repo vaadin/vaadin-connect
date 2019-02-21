@@ -468,6 +468,13 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   @Override
+  protected void addImport(CodegenModel m, String type) {
+    if (!StringUtils.equals(m.getName(), type)) {
+      super.addImport(m, type);
+    }
+  }
+
+  @Override
   public Map<String, Object> postProcessAllModels(
       Map<String, Object> processedModels) {
     Map<String, Object> postProcessAllModels = super.postProcessAllModels(
