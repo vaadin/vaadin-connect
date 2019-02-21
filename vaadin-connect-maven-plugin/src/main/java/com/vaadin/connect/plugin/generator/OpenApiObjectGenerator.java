@@ -20,11 +20,14 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,6 +73,8 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.DateSchema;
+import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.NumberSchema;
@@ -511,8 +516,29 @@ public class OpenApiObjectGenerator {
       return new BooleanSchema();
     } else if (isMapType(resolvedType)) {
       return createMapSchema(resolvedType);
+    } else if (isDateType(resolvedType)) {
+      return new DateSchema();
+    } else if (isDateTimeType(resolvedType)) {
+      return new DateTimeSchema();
+    } else if (isUnhandledJavaType(resolvedType)) {
+      return new ObjectSchema();
     }
     return createUserBeanSchema(resolvedType);
+  }
+
+  private boolean isUnhandledJavaType(ResolvedType resolvedType) {
+    return resolvedType.isReferenceType() && resolvedType.asReferenceType()
+        .getQualifiedName().startsWith("java.");
+  }
+
+  private boolean isDateTimeType(ResolvedType resolvedType) {
+    return resolvedType.isReferenceType() && isTypeOf(
+        resolvedType.asReferenceType(), LocalDate.class, Instant.class);
+  }
+
+  private boolean isDateType(ResolvedType resolvedType) {
+    return resolvedType.isReferenceType() && isTypeOf(
+        resolvedType.asReferenceType(), Date.class, LocalDate.class);
   }
 
   private boolean isNumberType(ResolvedType type) {
@@ -572,11 +598,12 @@ public class OpenApiObjectGenerator {
   private Schema parseReferencedTypeAsSchema(
       ResolvedReferenceType resolvedType) {
     Schema schema = new ObjectSchema();
-    List<ResolvedFieldDeclaration> declaredFields = resolvedType
+    Set<ResolvedFieldDeclaration> declaredFields = resolvedType
         .getDeclaredFields().stream()
         .filter(
             resolvedFieldDeclaration -> !resolvedFieldDeclaration.isStatic())
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
+    schema.setProperties(new TreeMap<>());
     for (ResolvedFieldDeclaration resolvedFieldDeclaration : declaredFields) {
       ResolvedFieldDeclaration fieldDeclaration = resolvedFieldDeclaration
           .asField();

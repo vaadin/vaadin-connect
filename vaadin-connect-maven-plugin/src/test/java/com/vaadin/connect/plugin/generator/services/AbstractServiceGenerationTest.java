@@ -27,10 +27,14 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +52,8 @@ import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.DateSchema;
+import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
@@ -324,7 +330,7 @@ public abstract class AbstractServiceGenerationTest {
     for (Class<?> expectedSchemaClass : testServiceClasses) {
       schemasCount++;
       Schema actualSchema = actualSchemas
-          .get(expectedSchemaClass.getSimpleName());
+          .get(expectedSchemaClass.getCanonicalName());
       assertNotNull(
           String.format("Expected to have a schema defined for a class '%s'",
               expectedSchemaClass),
@@ -358,6 +364,12 @@ public abstract class AbstractServiceGenerationTest {
         }
       } else if (actualSchema instanceof MapSchema) {
         assertTrue(Map.class.isAssignableFrom(expectedSchemaClass));
+      } else if (actualSchema instanceof DateTimeSchema) {
+        assertTrue(Instant.class.isAssignableFrom(expectedSchemaClass)
+            || LocalDateTime.class.isAssignableFrom(expectedSchemaClass));
+      } else if (actualSchema instanceof DateSchema) {
+        assertTrue(Date.class.isAssignableFrom(expectedSchemaClass)
+            || LocalDate.class.isAssignableFrom(expectedSchemaClass));
       } else if (actualSchema instanceof ObjectSchema) {
         Map<String, Schema> properties = actualSchema.getProperties();
         assertNotNull(properties);
@@ -366,7 +378,8 @@ public abstract class AbstractServiceGenerationTest {
         int expectedFieldsCount = 0;
         for (Field expectedSchemaField : expectedSchemaClass
             .getDeclaredFields()) {
-          if (Modifier.isTransient(expectedSchemaField.getModifiers())) {
+          if (Modifier.isTransient(expectedSchemaField.getModifiers())
+              || Modifier.isStatic(expectedSchemaField.getModifiers())) {
             continue;
           }
 
@@ -384,7 +397,7 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private void verifySchemaReferences() {
-    nonServiceClasses.stream().map(Class::getSimpleName)
+    nonServiceClasses.stream().map(Class::getCanonicalName)
         .forEach(schemaClass -> schemaReferences
             .removeIf(ref -> ref.endsWith(String.format("/%s", schemaClass))));
     // TODO add assertion later, when the types are processed

@@ -42,10 +42,12 @@ import io.swagger.codegen.v3.CodegenParameter;
 import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
+import io.swagger.codegen.v3.auth.AuthParser;
 import io.swagger.codegen.v3.config.CodegenConfigurator;
 import io.swagger.codegen.v3.generators.typescript.AbstractTypeScriptClientCodegen;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.util.Json;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.ArraySchema;
@@ -53,7 +55,9 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.tags.Tag;
+import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.apache.commons.io.FileUtils;
@@ -194,12 +198,15 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
     if (parseResult != null && parseResult.getMessages().isEmpty()) {
+      OpenAPI openAPI = parseResult.getOpenAPI();
+      if (openAPI.getComponents() == null) {
+        openAPI.setComponents(new Components());
+      }
       ClientOptInput clientOptInput = configurator.toClientOptInput()
-          .openAPI(parseResult.getOpenAPI());
+          .openAPI(openAPI);
       Set<File> generatedFiles = new VaadinConnectTSOnlyGenerator()
           .opts(clientOptInput).generate().stream().filter(Objects::nonNull)
           .collect(Collectors.toSet());
-
       cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
       String error = parseResult == null ? ""
@@ -283,15 +290,17 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static SwaggerParseResult getParseResult(
       CodegenConfigurator configurator) {
     try {
-      String inputSpec = configurator.loadSpecContent(
-          configurator.getInputSpecURL(), Collections.emptyList());
+      List<AuthorizationValue> authorizationValues = AuthParser
+          .parse(configurator.getAuth());
+      String inputSpec = configurator
+          .loadSpecContent(configurator.getInputSpecURL(), authorizationValues);
       ParseOptions options = new ParseOptions();
       options.setResolve(true);
-      return new OpenAPIParser().readContents(inputSpec,
-          Collections.emptyList(), options);
+      return new OpenAPIParser().readContents(inputSpec, authorizationValues,
+          options);
     } catch (Exception e) {
       throw new IllegalStateException(
-          "Unexpected error while generating vaadin-connect JavaScript service wrappers. "
+          "Unexpected error while generating vaadin-connect TypeScripts service wrappers. "
               + String.format("Can't read file '%s'",
                   configurator.getInputSpecURL()),
           e);
@@ -303,7 +312,13 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   private static boolean isDebugConnectMavenPlugin() {
-    return System.getProperty("debugConnectMavenPlugin") != null;
+     return System.getProperty("debugConnectMavenPlugin") != null;
+  }
+
+  @Override
+  public CodegenResponse fromResponse(String responseCode,
+      ApiResponse response) {
+    return super.fromResponse(responseCode, response);
   }
 
   /**
@@ -656,7 +671,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       return getSimpleRef(schema.get$ref());
     } else if (schema.getAdditionalProperties() != null) {
       Schema inner = (Schema) schema.getAdditionalProperties();
-      return String.format("Map<string, %s>", getTypeDeclaration(inner));
+      return String.format("Map<string, %s>",
+          getSimpleNameFromQualifiedName(getTypeDeclaration(inner)));
     } else {
       return super.getTypeDeclaration(schema);
     }

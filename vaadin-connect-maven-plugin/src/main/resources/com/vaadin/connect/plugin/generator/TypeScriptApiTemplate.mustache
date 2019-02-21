@@ -40,7 +40,6 @@ import client from '{{vaadinConnectDefaultClientPath}}';
 {{#each imports}}
 import {{className}} from '{{importPath}}';
 {{/each}}
-
 {{#operations}}
 {{#operation}}
 {{#vendorExtensions.x-vaadin-connect-show-tsdoc}}
@@ -56,10 +55,9 @@ import {{className}} from '{{importPath}}';
  */{{/vendorExtensions.x-vaadin-connect-show-tsdoc}}
 export function {{vendorExtensions.x-vaadin-connect-method-name}}({{!
   }}{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
-  {{name}}: {{type}}{{#if @last}}{{else}},{{/if}}
+  {{name}}: {{{type}}}{{#if @last}}{{else}},{{/if}}
 {{/each}}): Promise<{{!
-}}{{#returnType}}{{returnType}}{{/returnType}}{{!
-}}{{^returnType}}void{{/returnType}}{{!
+}}{{#responses}}{{#dataType}}{{{getSimpleName dataType}}}{{/dataType}}{{^dataType}}void{{/dataType}}{{/responses}}{{!
 }}> {
 {{=<% %>=}}
   return client.call(<%!

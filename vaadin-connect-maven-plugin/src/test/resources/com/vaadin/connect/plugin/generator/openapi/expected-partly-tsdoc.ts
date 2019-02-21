@@ -7,6 +7,8 @@
 
 // @ts-ignore
 import client from './connect-client.default';
+import ComplexRequest from './ComplexRequest';
+import ComplexResponse from './ComplexResponse';
 
 /**
  *
