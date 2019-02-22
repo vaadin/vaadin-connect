@@ -373,6 +373,11 @@ public abstract class AbstractServiceGenerationTest {
         assertTrue(Date.class.isAssignableFrom(expectedSchemaClass)
             || LocalDate.class.isAssignableFrom(expectedSchemaClass));
       } else if (actualSchema instanceof ObjectSchema) {
+        if (StringUtils.startsWith(expectedSchemaClass.getPackage().getName(),
+            "java.")) {
+          // skip the validation for unhandled java types, e.g. Optional
+          return;
+        }
         Map<String, Schema> properties = actualSchema.getProperties();
         assertNotNull(properties);
         assertTrue(properties.size() > 0);
@@ -432,8 +437,12 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private void assertClassGeneratedTs(Class<?> expectedClass) {
-    URL expectedResource = expectedClass.getResource(
-        String.format("expected-%s.ts", expectedClass.getSimpleName()));
+    String classResourceUrl = String.format("expected-%s.ts", expectedClass.getSimpleName());
+    URL expectedResource = this.getClass().getResource(
+      classResourceUrl);
+    Assert.assertNotNull(
+      String.format("Expected file is not found at %s", classResourceUrl),
+      expectedResource);
     String expectedTs = TestUtils.readResource(expectedResource);
 
     Path outputFilePath = outputDirectory.getRoot().toPath()

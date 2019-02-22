@@ -13,11 +13,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.vaadin.connect.plugin.generator.services.modelpackage.subpackage;
+package com.vaadin.connect.plugin.generator.services.model.subpackage;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-public class Account {
-  String id;
-  String firstName;
+public class ModelFromDifferentPackage {
+  String foo;
+  String bar;
 }
