@@ -55,7 +55,6 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
-import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.tags.Tag;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
@@ -223,16 +222,25 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     if (!outputDirFile.exists()) {
       return;
     }
+    deleteStaleFiles(generatedFiles, outputDirFile);
+    deleteEmptyFolders(outputDirFile);
+  }
+
+  private static void deleteEmptyFolders(File outputDirFile) {
+    Collection<File> emptyFolders = getEmptyFolders(outputDirFile);
+    for (File file : emptyFolders) {
+      getLogger().info("Removing empty folder '{}'.", file.getAbsolutePath());
+      deleteFile(file);
+    }
+  }
+
+  private static void deleteStaleFiles(Set<File> generatedFiles,
+      File outputDirFile) {
     Collection<File> filesToDelete = getFilesToDelete(generatedFiles,
         outputDirFile);
     for (File file : filesToDelete) {
       getLogger().info("Removing stale generated file '{}'.",
           file.getAbsolutePath());
-      deleteFile(file);
-    }
-    Collection<File> emptyFolders = getEmptyFolders(outputDirFile);
-    for (File file : emptyFolders) {
-      getLogger().info("Removing empty folder '{}'.", file.getAbsolutePath());
       deleteFile(file);
     }
   }
@@ -313,12 +321,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   private static boolean isDebugConnectMavenPlugin() {
     return System.getProperty("debugConnectMavenPlugin") != null;
-  }
-
-  @Override
-  public CodegenResponse fromResponse(String responseCode,
-      ApiResponse response) {
-    return super.fromResponse(responseCode, response);
   }
 
   /**
