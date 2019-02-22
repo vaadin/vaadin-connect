@@ -19,6 +19,8 @@ import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -38,6 +40,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
@@ -92,6 +95,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.connect.VaadinService;
@@ -218,8 +222,7 @@ public class OpenApiObjectGenerator {
     try {
       sourceRoot.parse("", this::process);
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiObjectGenerator.class)
-          .error(e.getMessage(), e);
+      getLogger().error(e.getMessage(), e);
       throw new IllegalStateException(String.format(
           "Can't parse the java files in the source root '%s'", sourceRoot), e);
     }
@@ -327,7 +330,8 @@ public class OpenApiObjectGenerator {
     typeDeclaration.getJavadoc().ifPresent(
         javadoc -> schema.description(javadoc.getDescription().toText()));
     for (FieldDeclaration field : typeDeclaration.getFields()) {
-      if (field.isTransient() || field.isStatic()) {
+      if (field.isTransient() || field.isStatic()
+          || field.isAnnotationPresent(JsonIgnore.class)) {
         continue;
       }
       field.getVariables()
@@ -495,11 +499,15 @@ public class OpenApiObjectGenerator {
     try {
       return parseResolvedTypeToSchema(javaType.resolve());
     } catch (Exception e) {
-      LoggerFactory.getLogger(OpenApiObjectGenerator.class).info(String.format(
+      getLogger().info(String.format(
           "Can't resolve type '%s' for creating custom OpenAPI Schema. Using the default ObjectSchema instead.",
           javaType.asString()), e);
     }
     return new ObjectSchema();
+  }
+
+  private static Logger getLogger() {
+    return LoggerFactory.getLogger(OpenApiObjectGenerator.class);
   }
 
   private Schema parseResolvedTypeToSchema(ResolvedType resolvedType) {
@@ -598,11 +606,13 @@ public class OpenApiObjectGenerator {
   private Schema parseReferencedTypeAsSchema(
       ResolvedReferenceType resolvedType) {
     Schema schema = new ObjectSchema();
+    Set<String> validFields = getValidFields(resolvedType);
     Set<ResolvedFieldDeclaration> declaredFields = resolvedType
         .getDeclaredFields().stream()
-        .filter(
-            resolvedFieldDeclaration -> !resolvedFieldDeclaration.isStatic())
+        .filter(resolvedFieldDeclaration -> validFields
+            .contains(resolvedFieldDeclaration.getName()))
         .collect(Collectors.toSet());
+    // Make sure the order is consistent in properties map
     schema.setProperties(new TreeMap<>());
     for (ResolvedFieldDeclaration resolvedFieldDeclaration : declaredFields) {
       ResolvedFieldDeclaration fieldDeclaration = resolvedFieldDeclaration
@@ -612,6 +622,23 @@ public class OpenApiObjectGenerator {
       schema.addProperties(name, type);
     }
     return schema;
+  }
+
+  private Set<String> getValidFields(ResolvedReferenceType resolvedType) {
+    Set<String> fields;
+    try {
+      Class<?> aClass = Class.forName(resolvedType.getQualifiedName());
+      fields = Arrays.stream(aClass.getDeclaredFields()).filter(field -> {
+        int modifiers = field.getModifiers();
+        return !Modifier.isStatic(modifiers) && !Modifier.isTransient(modifiers)
+            && !field.isAnnotationPresent(JsonIgnore.class);
+      }).map(Field::getName).collect(Collectors.toSet());
+    } catch (ClassNotFoundException e) {
+      getLogger().info(String.format("Can't get list of field from class %s",
+          resolvedType.getQualifiedName()), e);
+      fields = Collections.emptySet();
+    }
+    return fields;
   }
 
   private Schema createMapSchema(ResolvedType type) {

@@ -44,6 +44,7 @@ import java.util.Set;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -183,6 +184,7 @@ public abstract class AbstractServiceGenerationTest {
     VaadinConnectTsGenerator.launch(openApiJsonOutput.toFile(),
         outputDirectory.getRoot());
     verifyTsModule();
+    verifyModelTsModule();
   }
 
   private void verifyOpenApiObject() {
@@ -379,12 +381,15 @@ public abstract class AbstractServiceGenerationTest {
         for (Field expectedSchemaField : expectedSchemaClass
             .getDeclaredFields()) {
           if (Modifier.isTransient(expectedSchemaField.getModifiers())
-              || Modifier.isStatic(expectedSchemaField.getModifiers())) {
+              || Modifier.isStatic(expectedSchemaField.getModifiers())
+              || expectedSchemaField.isAnnotationPresent(JsonIgnore.class)) {
             continue;
           }
 
           expectedFieldsCount++;
           Schema propertySchema = properties.get(expectedSchemaField.getName());
+          assertNotNull(String.format("Property schema is not found %s",
+              expectedSchemaField.getName()), propertySchema);
           assertSchema(propertySchema, expectedSchemaField.getType());
         }
         assertEquals(expectedFieldsCount, properties.size());
@@ -400,12 +405,10 @@ public abstract class AbstractServiceGenerationTest {
     nonServiceClasses.stream().map(Class::getCanonicalName)
         .forEach(schemaClass -> schemaReferences
             .removeIf(ref -> ref.endsWith(String.format("/%s", schemaClass))));
-    // TODO add assertion later, when the types are processed
-    if (!schemaReferences.isEmpty()) {
-      log.warn(String.format(
-          "Got schema references that are not in the OpenAPI schemas: '%s'",
-          schemaReferences));
-    }
+    String errorMessage = String.format(
+        "Got schema references that are not in the OpenAPI schemas: '%s'",
+        StringUtils.join(schemaReferences, ","));
+    Assert.assertTrue(errorMessage, schemaReferences.isEmpty());
   }
 
   private void verifyOpenApiJson(URL expectedOpenApiJsonResourceUrl) {
@@ -424,6 +427,10 @@ public abstract class AbstractServiceGenerationTest {
     }
   }
 
+  private void verifyModelTsModule() {
+    nonServiceClasses.forEach(this::assertModelClassGeneratedTs);
+  }
+
   private void assertClassGeneratedTs(Class<?> expectedClass) {
     URL expectedResource = expectedClass.getResource(
         String.format("expected-%s.ts", expectedClass.getSimpleName()));
@@ -434,6 +441,26 @@ public abstract class AbstractServiceGenerationTest {
 
     Assert.assertEquals(
         String.format("Class '%s' has unexpected json produced in file '%s'",
+            expectedClass, expectedResource.getPath()),
+        expectedTs, readFile(outputFilePath));
+  }
+
+  private void assertModelClassGeneratedTs(Class<?> expectedClass) {
+    String canonicalName = expectedClass.getCanonicalName();
+    String modelResourceUrl = String.format("expected-model-%s.ts",
+        canonicalName);
+    URL expectedResource = this.getClass().getResource(modelResourceUrl);
+    Assert.assertNotNull(
+        String.format("Expected file is not found at %s", modelResourceUrl),
+        expectedResource);
+    String expectedTs = TestUtils.readResource(expectedResource);
+
+    Path outputFilePath = outputDirectory.getRoot().toPath()
+        .resolve(StringUtils.replaceChars(canonicalName, '.', '/') + ".ts");
+
+    Assert.assertEquals(
+        String.format(
+            "Model class '%s' has unexpected typescript produced in file '%s'",
             expectedClass, expectedResource.getPath()),
         expectedTs, readFile(outputFilePath));
   }
