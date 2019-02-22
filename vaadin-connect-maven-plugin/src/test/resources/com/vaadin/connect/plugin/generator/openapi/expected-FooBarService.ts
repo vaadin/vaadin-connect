@@ -8,9 +8,6 @@
 // @ts-ignore
 import client from './connect-client.default';
 
-/**
- *
- */
 export function firstMethod(
   value: boolean
 ): Promise<void> {

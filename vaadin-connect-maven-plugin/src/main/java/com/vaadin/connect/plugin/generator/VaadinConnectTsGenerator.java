@@ -312,7 +312,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   private static boolean isDebugConnectMavenPlugin() {
-     return System.getProperty("debugConnectMavenPlugin") != null;
+    return System.getProperty("debugConnectMavenPlugin") != null;
   }
 
   @Override
@@ -569,11 +569,9 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private void setShouldShowTsDoc(List<CodegenOperation> operations) {
     for (CodegenOperation coop : operations) {
       boolean hasDescription = StringUtils.isNotBlank(coop.getNotes());
-      boolean hasParameter = hasParameter(coop);
-      boolean hasReturnType = StringUtils.isNotBlank(coop.getReturnType());
+      boolean hasParameter = hasParameterDescription(coop);
       boolean hasResponseDescription = hasResponseDescription(coop);
-      if (hasDescription || hasParameter || hasReturnType
-          || hasResponseDescription) {
+      if (hasDescription || hasParameter || hasResponseDescription) {
         coop.getVendorExtensions().put(EXTENSION_VAADIN_CONNECT_SHOW_TSDOC,
             true);
       }
@@ -589,10 +587,13 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     return false;
   }
 
-  private boolean hasParameter(CodegenOperation coop) {
+  private boolean hasParameterDescription(CodegenOperation coop) {
     for (CodegenParameter bodyParam : coop.getBodyParams()) {
-      if (bodyParam.getVendorExtensions()
-          .get(EXTENSION_VAADIN_CONNECT_PARAMETERS) != null) {
+      List<ParameterInformation> parametersList = (List<ParameterInformation>) bodyParam
+          .getVendorExtensions().get(EXTENSION_VAADIN_CONNECT_PARAMETERS);
+      if (parametersList != null && parametersList.stream()
+          .anyMatch(parameterInformation -> StringUtils
+              .isNotBlank(parameterInformation.getDescription()))) {
         return true;
       }
     }

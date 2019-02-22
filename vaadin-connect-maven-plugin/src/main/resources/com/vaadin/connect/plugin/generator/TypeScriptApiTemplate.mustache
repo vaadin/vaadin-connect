@@ -47,9 +47,8 @@ import {{className}} from '{{importPath}}';
 /**{{#notes}}{{#multiplelines notes}}
  * {{{@line}}}
  *{{/multiplelines}}{{/notes}}{{!
- }}{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}{{!
-  }}{{#description}}
- * @param {{name}} {{description}}{{/description}}{{!
+ }}{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
+ * @param {{name}}{{#description}} {{description}}{{/description}}{{!
  }}{{/each}}
  *{{#responses}}{{#message}} {{message}}{{/message}}{{/responses}}
  */{{/vendorExtensions.x-vaadin-connect-show-tsdoc}}

@@ -101,27 +101,18 @@ export function getUserById(
   return client.call('JsonTestService', 'getUserById', {id}, {requireCredentials: false});
 }
 
-/**
- *
- */
 export function inputBeanTypeDependency(
   input: Version
 ): Promise<void> {
   return client.call('JsonTestService', 'inputBeanTypeDependency', {input});
 }
 
-/**
- *
- */
 export function inputBeanTypeLocal(
   input: Status
 ): Promise<void> {
   return client.call('JsonTestService', 'inputBeanTypeLocal', {input});
 }
 
-/**
- *
- */
 export function reservedWordInParameter(
   _delete: boolean
 ): Promise<void> {
