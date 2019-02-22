@@ -10,7 +10,7 @@ window.Vaadin = window.Vaadin || {};
 window.Vaadin.registrations = window.Vaadin.registrations || [];
 window.Vaadin.registrations.push({
   is: '@vaadin/connect',
-  version: '0.6.4',
+  version: '0.7.0',
 });
 
 usageStatistics();
