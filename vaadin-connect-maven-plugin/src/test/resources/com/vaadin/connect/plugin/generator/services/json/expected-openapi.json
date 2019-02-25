@@ -461,7 +461,8 @@
             "format" : "date-time"
           },
           "text" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Multiple line description should work.This is very very very very very\nvery very very long."
           }
         },
         "description" : "Status bean. Used only in request parameters to verify that request\nparameter type descriptions are generated."
@@ -470,7 +471,8 @@
         "type" : "object",
         "properties" : {
           "roleName" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Description for roleName."
           }
         },
         "description" : "Role bean"

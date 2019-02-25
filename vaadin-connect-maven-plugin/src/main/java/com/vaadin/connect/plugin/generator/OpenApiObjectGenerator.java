@@ -334,10 +334,12 @@ public class OpenApiObjectGenerator {
           || field.isAnnotationPresent(JsonIgnore.class)) {
         continue;
       }
+      Optional<String> fieldDescription = field.getJavadoc()
+          .map(javadoc -> javadoc.getDescription().toText());
       field.getVariables()
           .forEach(variableDeclarator -> schema.addProperties(
-              variableDeclarator.getNameAsString(),
-              parseTypeToSchema(variableDeclarator.getType())));
+              variableDeclarator.getNameAsString(), parseTypeToSchema(
+                  variableDeclarator.getType(), fieldDescription.orElse(""))));
     }
     return schema;
   }
@@ -454,7 +456,7 @@ public class OpenApiObjectGenerator {
   private MediaType createReturnMediaType(MethodDeclaration methodDeclaration) {
     MediaType mediaItem = new MediaType();
     Type methodReturnType = methodDeclaration.getType();
-    mediaItem.schema(parseTypeToSchema(methodReturnType));
+    mediaItem.schema(parseTypeToSchema(methodReturnType, ""));
     return mediaItem;
   }
 
@@ -477,8 +479,7 @@ public class OpenApiObjectGenerator {
     Schema requestSchema = new ObjectSchema();
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
-      Schema paramSchema = parseTypeToSchema(parameter.getType());
-
+      Schema paramSchema = parseTypeToSchema(parameter.getType(), "");
       String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
           .concat(parameter.getNameAsString());
       if (StringUtils.isBlank(paramSchema.get$ref())) {
@@ -495,9 +496,13 @@ public class OpenApiObjectGenerator {
     return requestBody;
   }
 
-  private Schema parseTypeToSchema(Type javaType) {
+  private Schema parseTypeToSchema(Type javaType, String description) {
     try {
-      return parseResolvedTypeToSchema(javaType.resolve());
+      Schema schema = parseResolvedTypeToSchema(javaType.resolve());
+      if (StringUtils.isNotBlank(description)) {
+        schema.setDescription(description);
+      }
+      return schema;
     } catch (Exception e) {
       getLogger().info(String.format(
           "Can't resolve type '%s' for creating custom OpenAPI Schema. Using the default ObjectSchema instead.",

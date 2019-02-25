@@ -13,6 +13,11 @@ import {{className}} from '{{importPath}}';
 {{/unescapedDescription}}
 export default interface {{{getSimpleName classname}}} {
 {{#allVars}}
+{{#unescapedDescription}}
+  /**{{#multiplelines unescapedDescription}}
+   * {{{@line}}}{{/multiplelines}}
+   */
+{{/unescapedDescription}}
   {{name}}: {{{getSimpleName datatype}}};
 {{/allVars}}
 }
