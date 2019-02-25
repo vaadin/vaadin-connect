@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.Version;
+
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.auth.AnonymousAllowed;
 
@@ -173,6 +174,9 @@ public class JsonTestService {
    * Role bean
    */
   public static class Role {
+    /**
+     * Description for roleName.
+     */
     private String roleName;
   }
 
@@ -182,6 +186,10 @@ public class JsonTestService {
    */
   public static class Status {
     private java.time.Instant createdAt;
+    /**
+     * Multiple line description should work.This is very very very very very
+     * very very very long.
+     */
     private String text;
   }
 

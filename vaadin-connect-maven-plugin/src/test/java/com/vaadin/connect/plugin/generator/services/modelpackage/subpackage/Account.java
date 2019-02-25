@@ -15,8 +15,6 @@
  */
 package com.vaadin.connect.plugin.generator.services.modelpackage.subpackage;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public class Account {
   String id;
   String firstName;

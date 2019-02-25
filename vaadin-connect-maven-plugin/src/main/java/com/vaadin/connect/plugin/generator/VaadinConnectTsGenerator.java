@@ -308,7 +308,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
           options);
     } catch (Exception e) {
       throw new IllegalStateException(
-          "Unexpected error while generating vaadin-connect TypeScripts service wrappers. "
+          "Unexpected error while generating vaadin-connect TypeScript service wrappers. "
               + String.format("Can't read file '%s'",
                   configurator.getInputSpecURL()),
           e);

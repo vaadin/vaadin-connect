@@ -63,10 +63,17 @@ public class ModelService {
   }
 
   public static class Account {
+    /**
+     * Javadoc for username.
+     */
     String username;
     // make sure that recursive type works
     Account children;
     // cross reference
+    /**
+     * Multiple line description should work.This is very very very very very
+     * very very very long.
+     */
     List<Group> groups;
     ModelFromDifferentPackage modelFromDifferentPackage;
     @JsonIgnore
