@@ -27,10 +27,14 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,7 @@ import java.util.Set;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -48,6 +53,8 @@ import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.DateSchema;
+import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
@@ -177,6 +184,7 @@ public abstract class AbstractServiceGenerationTest {
     VaadinConnectTsGenerator.launch(openApiJsonOutput.toFile(),
         outputDirectory.getRoot());
     verifyTsModule();
+    verifyModelTsModule();
   }
 
   private void verifyOpenApiObject() {
@@ -324,7 +332,7 @@ public abstract class AbstractServiceGenerationTest {
     for (Class<?> expectedSchemaClass : testServiceClasses) {
       schemasCount++;
       Schema actualSchema = actualSchemas
-          .get(expectedSchemaClass.getSimpleName());
+          .get(expectedSchemaClass.getCanonicalName());
       assertNotNull(
           String.format("Expected to have a schema defined for a class '%s'",
               expectedSchemaClass),
@@ -358,7 +366,18 @@ public abstract class AbstractServiceGenerationTest {
         }
       } else if (actualSchema instanceof MapSchema) {
         assertTrue(Map.class.isAssignableFrom(expectedSchemaClass));
+      } else if (actualSchema instanceof DateTimeSchema) {
+        assertTrue(Instant.class.isAssignableFrom(expectedSchemaClass)
+            || LocalDateTime.class.isAssignableFrom(expectedSchemaClass));
+      } else if (actualSchema instanceof DateSchema) {
+        assertTrue(Date.class.isAssignableFrom(expectedSchemaClass)
+            || LocalDate.class.isAssignableFrom(expectedSchemaClass));
       } else if (actualSchema instanceof ObjectSchema) {
+        if (StringUtils.startsWith(expectedSchemaClass.getPackage().getName(),
+            "java.")) {
+          // skip the validation for unhandled java types, e.g. Optional
+          return;
+        }
         Map<String, Schema> properties = actualSchema.getProperties();
         assertNotNull(properties);
         assertTrue(properties.size() > 0);
@@ -366,12 +385,16 @@ public abstract class AbstractServiceGenerationTest {
         int expectedFieldsCount = 0;
         for (Field expectedSchemaField : expectedSchemaClass
             .getDeclaredFields()) {
-          if (Modifier.isTransient(expectedSchemaField.getModifiers())) {
+          if (Modifier.isTransient(expectedSchemaField.getModifiers())
+              || Modifier.isStatic(expectedSchemaField.getModifiers())
+              || expectedSchemaField.isAnnotationPresent(JsonIgnore.class)) {
             continue;
           }
 
           expectedFieldsCount++;
           Schema propertySchema = properties.get(expectedSchemaField.getName());
+          assertNotNull(String.format("Property schema is not found %s",
+              expectedSchemaField.getName()), propertySchema);
           assertSchema(propertySchema, expectedSchemaField.getType());
         }
         assertEquals(expectedFieldsCount, properties.size());
@@ -384,15 +407,13 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private void verifySchemaReferences() {
-    nonServiceClasses.stream().map(Class::getSimpleName)
+    nonServiceClasses.stream().map(Class::getCanonicalName)
         .forEach(schemaClass -> schemaReferences
             .removeIf(ref -> ref.endsWith(String.format("/%s", schemaClass))));
-    // TODO add assertion later, when the types are processed
-    if (!schemaReferences.isEmpty()) {
-      log.warn(String.format(
-          "Got schema references that are not in the OpenAPI schemas: '%s'",
-          schemaReferences));
-    }
+    String errorMessage = String.format(
+        "Got schema references that are not in the OpenAPI schemas: '%s'",
+        StringUtils.join(schemaReferences, ","));
+    Assert.assertTrue(errorMessage, schemaReferences.isEmpty());
   }
 
   private void verifyOpenApiJson(URL expectedOpenApiJsonResourceUrl) {
@@ -411,9 +432,17 @@ public abstract class AbstractServiceGenerationTest {
     }
   }
 
+  private void verifyModelTsModule() {
+    nonServiceClasses.forEach(this::assertModelClassGeneratedTs);
+  }
+
   private void assertClassGeneratedTs(Class<?> expectedClass) {
-    URL expectedResource = expectedClass.getResource(
-        String.format("expected-%s.ts", expectedClass.getSimpleName()));
+    String classResourceUrl = String.format("expected-%s.ts", expectedClass.getSimpleName());
+    URL expectedResource = this.getClass().getResource(
+      classResourceUrl);
+    Assert.assertNotNull(
+      String.format("Expected file is not found at %s", classResourceUrl),
+      expectedResource);
     String expectedTs = TestUtils.readResource(expectedResource);
 
     Path outputFilePath = outputDirectory.getRoot().toPath()
@@ -421,6 +450,26 @@ public abstract class AbstractServiceGenerationTest {
 
     Assert.assertEquals(
         String.format("Class '%s' has unexpected json produced in file '%s'",
+            expectedClass, expectedResource.getPath()),
+        expectedTs, readFile(outputFilePath));
+  }
+
+  private void assertModelClassGeneratedTs(Class<?> expectedClass) {
+    String canonicalName = expectedClass.getCanonicalName();
+    String modelResourceUrl = String.format("expected-model-%s.ts",
+        canonicalName);
+    URL expectedResource = this.getClass().getResource(modelResourceUrl);
+    Assert.assertNotNull(
+        String.format("Expected file is not found at %s", modelResourceUrl),
+        expectedResource);
+    String expectedTs = TestUtils.readResource(expectedResource);
+
+    Path outputFilePath = outputDirectory.getRoot().toPath()
+        .resolve(StringUtils.replaceChars(canonicalName, '.', '/') + ".ts");
+
+    Assert.assertEquals(
+        String.format(
+            "Model class '%s' has unexpected typescript produced in file '%s'",
             expectedClass, expectedResource.getPath()),
         expectedTs, readFile(outputFilePath));
   }

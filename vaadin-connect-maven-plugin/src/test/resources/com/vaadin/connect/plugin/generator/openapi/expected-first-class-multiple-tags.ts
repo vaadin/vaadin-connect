@@ -1,5 +1,6 @@
 // @ts-ignore
 import client from './connect-client.default';
+import User from './User';
 
 /**
  * Get all users

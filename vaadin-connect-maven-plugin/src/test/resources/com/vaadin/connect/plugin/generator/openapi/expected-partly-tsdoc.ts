@@ -7,10 +7,9 @@
 
 // @ts-ignore
 import client from './connect-client.default';
+import ComplexRequest from './ComplexRequest';
+import ComplexResponse from './ComplexResponse';
 
-/**
- *
- */
 export function complexEntitiesTest(
   request: ComplexRequest
 ): Promise<ComplexResponse> {

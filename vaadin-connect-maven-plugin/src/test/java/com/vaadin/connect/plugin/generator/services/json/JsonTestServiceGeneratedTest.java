@@ -17,8 +17,10 @@
 package com.vaadin.connect.plugin.generator.services.json;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 
+import com.fasterxml.jackson.core.Version;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.junit.Test;
 
@@ -34,7 +36,7 @@ public class JsonTestServiceGeneratedTest
     extends AbstractServiceGenerationTest {
 
   public JsonTestServiceGeneratedTest() {
-    super(Collections.singletonList(JsonTestService.class));
+    super(Arrays.asList(JsonTestService.class, Version.class));
   }
 
   @Test

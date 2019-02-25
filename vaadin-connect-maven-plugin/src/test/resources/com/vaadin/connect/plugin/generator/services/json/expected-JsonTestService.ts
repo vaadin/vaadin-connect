@@ -7,38 +7,9 @@
 
 // @ts-ignore
 import client from './connect-client.default';
-
-/**
- * Object with unknown structure
- */
-type Instant = object;
-
-export interface User {
-  name: string; 
-  password: string; 
-  roles: object; 
-}
-
-/**
- * Object with unknown structure
- */
-type Version = object;
-
-/**
- * Status bean. Used only in request parameters to verify that request
-parameter type descriptions are generated.
- */
-export interface Status {
-  createdAt: Instant; 
-  text: string; 
-}
-
-/**
- * Role bean
- */
-export interface Role {
-  roleName: string; 
-}
+import Version from './com/fasterxml/jackson/core/Version';
+import Status from './com/vaadin/connect/plugin/generator/services/json/JsonTestService/Status';
+import User from './com/vaadin/connect/plugin/generator/services/json/JsonTestService/User';
 
 /**
  * Get number of users
@@ -57,7 +28,7 @@ export function countUser(): Promise<number> {
  */
 export function fullFQNMethod(
   input: number
-): Promise<Instant> {
+): Promise<Date> {
   return client.call('JsonTestService', 'fullFQNMethod', {input});
 }
 
@@ -66,7 +37,7 @@ export function fullFQNMethod(
  *
  * Return map of user and roles
  */
-export function getAllUserRolesMap(): Promise<object> {
+export function getAllUserRolesMap(): Promise<Map<string, User>> {
   return client.call('JsonTestService', 'getAllUserRolesMap');
 }
 
@@ -98,7 +69,7 @@ export function getArrayInt(
  * Return boolean value
  */
 export function getBooleanValue(
-  input: object
+  input: Map<string, User>
 ): Promise<boolean> {
   return client.call('JsonTestService', 'getBooleanValue', {input});
 }
@@ -130,27 +101,18 @@ export function getUserById(
   return client.call('JsonTestService', 'getUserById', {id}, {requireCredentials: false});
 }
 
-/**
- *
- */
 export function inputBeanTypeDependency(
   input: Version
 ): Promise<void> {
   return client.call('JsonTestService', 'inputBeanTypeDependency', {input});
 }
 
-/**
- *
- */
 export function inputBeanTypeLocal(
   input: Status
 ): Promise<void> {
   return client.call('JsonTestService', 'inputBeanTypeLocal', {input});
 }
 
-/**
- *
- */
 export function reservedWordInParameter(
   _delete: boolean
 ): Promise<void> {

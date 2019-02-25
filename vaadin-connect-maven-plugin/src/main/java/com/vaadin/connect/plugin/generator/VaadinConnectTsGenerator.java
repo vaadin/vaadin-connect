@@ -17,11 +17,10 @@ package com.vaadin.connect.plugin.generator;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,14 +35,19 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
+import io.swagger.codegen.v3.ClientOptInput;
+import io.swagger.codegen.v3.CodegenModel;
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
 import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
+import io.swagger.codegen.v3.auth.AuthParser;
 import io.swagger.codegen.v3.config.CodegenConfigurator;
-import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
+import io.swagger.codegen.v3.generators.typescript.AbstractTypeScriptClientCodegen;
 import io.swagger.parser.OpenAPIParser;
+import io.swagger.util.Json;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.ArraySchema;
@@ -52,9 +56,12 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.tags.Tag;
+import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -70,20 +77,13 @@ import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERA
  * parts of the implementation are copied from
  * {@link io.swagger.codegen.languages.JavascriptClientCodegen}
  */
-public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
+public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   private static final String GENERATOR_NAME = "javascript-vaadin-connect";
-  private static final String NUMBER_TYPE = "number";
-  private static final String BOOLEAN_TYPE = "boolean";
-  private static final String STRING_TYPE = "string";
-  private static final String OBJECT_TYPE = "object";
-  private static final String ARRAY_TYPE = "any[]";
-  private static final String BOXED_ARRAY_TYPE = "Array";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
   private static final String EXTENSION_VAADIN_CONNECT_SHOW_TSDOC = "x-vaadin-connect-show-tsdoc";
   private static final String EXTENSION_VAADIN_CONNECT_METHOD_NAME = "x-vaadin-connect-method-name";
   private static final String EXTENSION_VAADIN_CONNECT_SERVICE_NAME = "x-vaadin-connect-service-name";
-  private static final String VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS = "vaadinConnectUserTypes";
   private static final String VAADIN_CONNECT_CLASS_DESCRIPTION = "vaadinConnectClassDescription";
   private static final String CLIENT_PATH_TEMPLATE_PROPERTY = "vaadinConnectDefaultClientPath";
   private static final Pattern PATH_REGEX = Pattern
@@ -91,8 +91,6 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
   private static final String OPERATION = "operation";
 
   private List<Tag> tags;
-  private Map<String, Set<TypeInformation>> userTypes = new HashMap<>();
-  private String currentTag;
 
   private static class VaadinConnectTSOnlyGenerator extends DefaultGenerator {
     @Override
@@ -119,8 +117,8 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
      * apiTemplateFiles map. as with models, add multiple entries with different
      * extensions for multiple files per class
      */
-    apiTemplateFiles.put("TypeScriptApiTemplate.mustache", // the template to use
-        ".ts"); // the extension for each file to write
+    apiTemplateFiles.put("TypeScriptApiTemplate.mustache", ".ts");
+    modelTemplateFiles.put("ModelTemplate.mustache", ".ts");
 
     /*
      * Template Location. This is the location which templates will be read
@@ -132,41 +130,11 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     /*
      * Reserved words copied from https://www.w3schools.com/js/js_reserved.asp
      */
-    reservedWords = VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS;
-
-    /*
-     * Language Specific Primitives. These types will not trigger imports by the
-     * client generator
-     */
-    languageSpecificPrimitives = new HashSet<>(
-        Arrays.asList("String", "Boolean", "Number", BOXED_ARRAY_TYPE, "Object",
-            "Date", "File", "Blob"));
-
-    instantiationTypes.put("array", BOXED_ARRAY_TYPE);
-    instantiationTypes.put("list", BOXED_ARRAY_TYPE);
-    instantiationTypes.put("map", "Object");
-    typeMapping.clear();
-    typeMapping.put("array", ARRAY_TYPE);
-    typeMapping.put("map", OBJECT_TYPE);
-    typeMapping.put("List", ARRAY_TYPE);
-    typeMapping.put(BOOLEAN_TYPE, BOOLEAN_TYPE);
-    typeMapping.put(STRING_TYPE, STRING_TYPE);
-    typeMapping.put("int", NUMBER_TYPE);
-    typeMapping.put("float", NUMBER_TYPE);
-    typeMapping.put(NUMBER_TYPE, NUMBER_TYPE);
-    typeMapping.put("DateTime", "Date");
-    typeMapping.put("date", "Date");
-    typeMapping.put("long", NUMBER_TYPE);
-    typeMapping.put("short", NUMBER_TYPE);
-    typeMapping.put("char", STRING_TYPE);
-    typeMapping.put("double", NUMBER_TYPE);
-    typeMapping.put(OBJECT_TYPE, OBJECT_TYPE);
-    typeMapping.put("integer", NUMBER_TYPE);
-    typeMapping.put("ByteArray", "blob");
-    typeMapping.put("binary", "blob");
-    typeMapping.put("file", "blob");
-    typeMapping.put("UUID", STRING_TYPE);
-    typeMapping.put("BigDecimal", NUMBER_TYPE);
+    reservedWords.addAll(VaadinServiceNameChecker.ECMA_SCRIPT_RESERVED_WORDS);
+    reservedWords.addAll(languageSpecificPrimitives);
+    typeMapping.put("BigDecimal", "number");
+    typeMapping.put("map", "Map");
+    typeMapping.put("Map", "Map");
   }
 
   /**
@@ -221,18 +189,23 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
   }
 
   private static String getDefaultClientPath(String path) {
-    path = ObjectUtils
-        .defaultIfNull(path, DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
+    path = ObjectUtils.defaultIfNull(path,
+        DEFAULT_GENERATED_CONNECT_CLIENT_IMPORT_PATH);
     return removeTsExtension(path);
   }
 
   private static void generate(CodegenConfigurator configurator) {
     SwaggerParseResult parseResult = getParseResult(configurator);
     if (parseResult != null && parseResult.getMessages().isEmpty()) {
+      OpenAPI openAPI = parseResult.getOpenAPI();
+      if (openAPI.getComponents() == null) {
+        openAPI.setComponents(new Components());
+      }
+      ClientOptInput clientOptInput = configurator.toClientOptInput()
+          .openAPI(openAPI);
       Set<File> generatedFiles = new VaadinConnectTSOnlyGenerator()
-          .opts(configurator.toClientOptInput()).generate().stream()
-          .filter(Objects::nonNull).collect(Collectors.toSet());
-
+          .opts(clientOptInput).generate().stream().filter(Objects::nonNull)
+          .collect(Collectors.toSet());
       cleanGeneratedFolder(configurator.getOutputDir(), generatedFiles);
     } else {
       String error = parseResult == null ? ""
@@ -249,15 +222,53 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     if (!outputDirFile.exists()) {
       return;
     }
-    File[] filesToDelete = outputDirFile
-        .listFiles(pathname -> shouldDelete(generatedFiles, pathname));
-    if (filesToDelete != null) {
-      for (File file : filesToDelete) {
-        getLogger().info("Removing stale generated file '{}'.",
-            file.getAbsolutePath());
-        deleteFile(file);
+    deleteStaleFiles(generatedFiles, outputDirFile);
+    deleteEmptyFolders(outputDirFile);
+  }
+
+  private static void deleteEmptyFolders(File outputDirFile) {
+    Collection<File> emptyFolders = getEmptyFolders(outputDirFile);
+    for (File file : emptyFolders) {
+      getLogger().info("Removing empty folder '{}'.", file.getAbsolutePath());
+      deleteFile(file);
+    }
+  }
+
+  private static void deleteStaleFiles(Set<File> generatedFiles,
+      File outputDirFile) {
+    Collection<File> filesToDelete = getFilesToDelete(generatedFiles,
+        outputDirFile);
+    for (File file : filesToDelete) {
+      getLogger().info("Removing stale generated file '{}'.",
+          file.getAbsolutePath());
+      deleteFile(file);
+    }
+  }
+
+  private static Collection<File> getFilesToDelete(Set<File> generatedFiles,
+      File outputDirFile) {
+    return FileUtils.listFiles(outputDirFile, new AbstractFileFilter() {
+      @Override
+      public boolean accept(File file) {
+        return shouldDelete(generatedFiles, file);
+      }
+    }, TrueFileFilter.INSTANCE);
+  }
+
+  private static Collection<File> getEmptyFolders(File file) {
+    if (file == null || !file.isDirectory()) {
+      return Collections.emptyList();
+    }
+    Set<File> emptyFolders = new HashSet<>();
+    File[] children = file.listFiles();
+    if (children == null || children.length == 0) {
+      emptyFolders.add(file);
+    } else {
+      for (File child : children) {
+        emptyFolders.addAll(getEmptyFolders(child));
       }
     }
+    return emptyFolders;
   }
 
   private static void deleteFile(File file) {
@@ -287,16 +298,17 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
   private static SwaggerParseResult getParseResult(
       CodegenConfigurator configurator) {
     try {
-      String inputSpec = configurator.loadSpecContent(
-          configurator.getInputSpecURL(), Collections.emptyList());
+      List<AuthorizationValue> authorizationValues = AuthParser
+          .parse(configurator.getAuth());
+      String inputSpec = configurator
+          .loadSpecContent(configurator.getInputSpecURL(), authorizationValues);
       ParseOptions options = new ParseOptions();
       options.setResolve(true);
-      options.setFlatten(true);
-      return new OpenAPIParser().readContents(inputSpec,
-          Collections.emptyList(), options);
+      return new OpenAPIParser().readContents(inputSpec, authorizationValues,
+          options);
     } catch (Exception e) {
       throw new IllegalStateException(
-          "Unexpected error while generating vaadin-connect JavaScript service wrappers. "
+          "Unexpected error while generating vaadin-connect TypeScript service wrappers. "
               + String.format("Can't read file '%s'",
                   configurator.getInputSpecURL()),
           e);
@@ -307,12 +319,17 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     return LoggerFactory.getLogger(VaadinConnectTsGenerator.class);
   }
 
+  private static boolean isDebugConnectMavenPlugin() {
+    return System.getProperty("debugConnectMavenPlugin") != null;
+  }
+
   /**
    * Configures the type of generator.
    *
    * @return the CodegenType for this generator
    * @see io.swagger.codegen.CodegenType
    */
+  @Override
   public CodegenType getTag() {
     return CodegenType.CLIENT;
   }
@@ -358,6 +375,25 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     return outputFolder;
   }
 
+  @Override
+  public String toModelFilename(String name) {
+    if (!StringUtils.contains(name, ".")) {
+      return super.toModelFilename(name);
+    }
+    String packageName = StringUtils.substringBeforeLast(name, ".");
+    packageName = packageName.replaceAll("\\.", "/");
+
+    String modelName = StringUtils.substringAfterLast(name, ".");
+    modelName = super.toModelFilename(modelName);
+
+    return packageName + "/" + modelName;
+  }
+
+  @Override
+  public String toModelName(String name) {
+    return name;
+  }
+
   /**
    * Location to write api files. You can use the apiPackage() as defined when
    * the class is instantiated
@@ -400,7 +436,20 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     codegenOperation.getVendorExtensions()
         .put(EXTENSION_VAADIN_CONNECT_SERVICE_NAME, serviceName);
     validateOperationTags(path, httpMethod, operation);
+    codegenOperation.returnType = getSimpleNameFromQualifiedName(
+        codegenOperation.returnType);
     return codegenOperation;
+  }
+
+  private String getSimpleNameFromQualifiedName(String qualifiedName) {
+    if (StringUtils.contains(qualifiedName, ".")) {
+      return StringUtils.substringAfterLast(qualifiedName, ".");
+    }
+    return qualifiedName;
+  }
+
+  private String convertQualifiedNameToModelPath(String qualifiedName) {
+    return "./" + StringUtils.replaceChars(qualifiedName, '.', '/');
   }
 
   private void validateOperationTags(String path, String httpMethod,
@@ -434,28 +483,97 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
       warnNoClassInformation(classname);
     }
 
-
     if ((operations.get(OPERATION) instanceof List)) {
       List<CodegenOperation> codegenOperations = (List<CodegenOperation>) operations
           .get(OPERATION);
       setShouldShowTsDoc(codegenOperations);
-      objs.put(VAADIN_CONNECT_USER_TYPE_DESCRIPTIONS,
-          codegenOperations.stream().map(CodegenOperation::getTags)
-              .flatMap(Collection::stream).map(Tag::getName).map(userTypes::get)
-              .filter(Objects::nonNull).flatMap(Collection::stream)
-              .collect(Collectors.toSet()));
     }
-    return super.postProcessOperations(objs);
+    Map<String, Object> postProcessOperations = super.postProcessOperations(
+        objs);
+    List<Map<String, Object>> imports = (List<Map<String, Object>>) objs
+        .get("imports");
+    adjustImportInformationForServices(imports);
+
+    printDebugMessage(postProcessOperations, "=== All operations data ===");
+    return postProcessOperations;
+  }
+
+  @Override
+  protected void addImport(CodegenModel m, String type) {
+    if (!StringUtils.equals(m.getName(), type)) {
+      super.addImport(m, type);
+    }
+  }
+
+  @Override
+  public Map<String, Object> postProcessAllModels(
+      Map<String, Object> processedModels) {
+    Map<String, Object> postProcessAllModels = super.postProcessAllModels(
+        processedModels);
+    for (Map.Entry<String, Object> modelEntry : postProcessAllModels
+        .entrySet()) {
+      Map<String, Object> model = (Map<String, Object>) modelEntry.getValue();
+      List<Map<String, Object>> imports = (List<Map<String, Object>>) model
+          .get("imports");
+      adjustImportInformationForModel(imports, (String) model.get("classname"));
+    }
+
+    printDebugMessage(processedModels, "=== All models data ===");
+
+    return postProcessAllModels;
+  }
+
+  private void printDebugMessage(Object data, String message) {
+    if (isDebugConnectMavenPlugin()) {
+      getLogger().info(message);
+      Json.prettyPrint(data);
+    }
+  }
+
+  private void adjustImportInformationForServices(
+      List<Map<String, Object>> imports) {
+    adjustImportInformation(imports, "");
+  }
+
+  private void adjustImportInformationForModel(
+      List<Map<String, Object>> imports, String qualifiedNameForRelative) {
+    String modelFilePath = convertQualifiedNameToModelPath(
+        qualifiedNameForRelative);
+    // Remove the class name, only consider the parent folder
+    modelFilePath = StringUtils.substringBeforeLast(modelFilePath, "/");
+    adjustImportInformation(imports, modelFilePath);
+  }
+
+  /**
+   * Adjust the import paths.
+   *
+   * @param imports
+   *          import paths list.
+   * @param relativePathFromGeneratedFolderToCurrentFile
+   *          relative path from the generated folder to the folder of the file
+   *          where import paths will be written.
+   */
+  private void adjustImportInformation(List<Map<String, Object>> imports,
+      String relativePathFromGeneratedFolderToCurrentFile) {
+    for (Map<String, Object> anImport : imports) {
+      String importName = (String) anImport.get("import");
+      anImport.put("className", getSimpleNameFromQualifiedName(importName));
+      String importPath = convertQualifiedNameToModelPath(importName);
+      String relativizedPath = Paths
+          .get(relativePathFromGeneratedFolderToCurrentFile)
+          .relativize(Paths.get(importPath)).toString();
+      relativizedPath = StringUtils.prependIfMissing(relativizedPath, "./", ".",
+          "/");
+      anImport.put("importPath", relativizedPath);
+    }
   }
 
   private void setShouldShowTsDoc(List<CodegenOperation> operations) {
     for (CodegenOperation coop : operations) {
       boolean hasDescription = StringUtils.isNotBlank(coop.getNotes());
-      boolean hasParameter = hasParameter(coop);
-      boolean hasReturnType = StringUtils.isNotBlank(coop.getReturnType());
+      boolean hasParameter = hasParameterDescription(coop);
       boolean hasResponseDescription = hasResponseDescription(coop);
-      if (hasDescription || hasParameter || hasReturnType
-          || hasResponseDescription) {
+      if (hasDescription || hasParameter || hasResponseDescription) {
         coop.getVendorExtensions().put(EXTENSION_VAADIN_CONNECT_SHOW_TSDOC,
             true);
       }
@@ -471,10 +589,13 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     return false;
   }
 
-  private boolean hasParameter(CodegenOperation coop) {
+  private boolean hasParameterDescription(CodegenOperation coop) {
     for (CodegenParameter bodyParam : coop.getBodyParams()) {
-      if (bodyParam.getVendorExtensions()
-          .get(EXTENSION_VAADIN_CONNECT_PARAMETERS) != null) {
+      List<ParameterInformation> parametersList = (List<ParameterInformation>) bodyParam
+          .getVendorExtensions().get(EXTENSION_VAADIN_CONNECT_PARAMETERS);
+      if (parametersList != null && parametersList.stream()
+          .anyMatch(parameterInformation -> StringUtils
+              .isNotBlank(parameterInformation.getDescription()))) {
         return true;
       }
     }
@@ -485,8 +606,6 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
   public void preprocessOpenAPI(OpenAPI openAPI) {
     super.processOpenAPI(openAPI);
     List<Tag> openAPITags = openAPI.getTags();
-    userTypes.clear();
-    currentTag = null;
     this.tags = openAPITags != null ? openAPITags : Collections.emptyList();
   }
 
@@ -504,67 +623,15 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     CodegenParameter codegenParameter = super.fromRequestBody(body, schemas,
         imports);
     Schema requestBodySchema = getRequestBodySchema(body);
-    if (requestBodySchema != null
-        && StringUtils.isNotBlank(requestBodySchema.get$ref())) {
-      Schema requestSchema = schemas
-          .get(getSimpleRef(requestBodySchema.get$ref()));
-      ((Map<String, Schema>) requestSchema.getProperties()).values().stream()
-        .map(Schema::get$ref).filter(Objects::nonNull)
-        .map(this::getSimpleRef)
-        .forEach(paramSchemaName -> {
-          Schema paramSchema = schemas.get(paramSchemaName);
-          addUserTypesFromSchema(schemas, currentTag, paramSchemaName, paramSchema);
-        });
-      List<ParameterInformation> paramsList = getParamsList(requestSchema);
+    if (requestBodySchema != null) {
+      ((Map<String, Schema>) requestBodySchema.getProperties()).values()
+          .stream().map(Schema::get$ref).filter(Objects::nonNull)
+          .map(this::getSimpleRef).forEach(imports::add);
+      List<ParameterInformation> paramsList = getParamsList(requestBodySchema);
       codegenParameter.getVendorExtensions()
           .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);
     }
-
-    for (String schemaName : imports) {
-      // Skip baseType, it is a schema of the body itself with method
-      // parameters. Also skip any schemas that have existing typeMapping.
-      if (schemaName.equals(codegenParameter.baseType)
-          || typeMapping.containsKey(schemaName)) {
-        continue;
-      }
-      Schema schema = schemas.get(schemaName);
-      addUserTypesFromSchema(schemas, currentTag, schemaName, schema);
-    }
-
     return codegenParameter;
-  }
-
-  @Override
-  public String sanitizeTag(String tag) {
-    this.currentTag = tag;
-    return super.sanitizeTag(tag);
-  }
-
-  private void addUserTypesFromSchema(Map<String, Schema> schemas, String tag,
-      String schemaName, Schema schema) {
-
-    Set<TypeInformation> types = userTypes.computeIfAbsent(tag,
-        key -> new HashSet<>());
-
-    if (schema == null) {
-      types.add(new UnknownTypeInformation(schemaName,
-          "Object with unknown structure"));
-      return;
-    }
-
-    List<ParameterInformation> schemaParams = getParamsList(schema);
-    types.add(new KnownTypeInformation(schemaName, schema.getDescription(),
-        schemaParams));
-
-    ((Map<String, Schema>) schema.getProperties()).values().stream()
-        .map(Schema::getAdditionalProperties)
-        .filter(property -> property instanceof Schema)
-        .map(property -> ((Schema) property)).map(Schema::get$ref)
-        .filter(Objects::nonNull).map(this::getSimpleRef)
-        .forEach(nestedSchemaName -> {
-          Schema nestedSchema = schemas.get(nestedSchemaName);
-          addUserTypesFromSchema(schemas, tag, nestedSchemaName, nestedSchema);
-        });
   }
 
   private List<ParameterInformation> getParamsList(Schema requestSchema) {
@@ -574,6 +641,7 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
       String name = entry.getKey();
       name = isReservedWord(name) ? escapeReservedWord(name) : name;
       String type = getTypeDeclaration(entry.getValue());
+      type = getSimpleNameFromQualifiedName(type);
       String description = entry.getValue().getDescription();
       if (StringUtils.isBlank(description)) {
         description = getDescriptionFromParameterExtension(name, requestSchema);
@@ -604,6 +672,10 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
       return this.getTypeDeclaration(inner) + "[]";
     } else if (StringUtils.isNotBlank(schema.get$ref())) {
       return getSimpleRef(schema.get$ref());
+    } else if (schema.getAdditionalProperties() != null) {
+      Schema inner = (Schema) schema.getAdditionalProperties();
+      return String.format("Map<string, %s>",
+          getSimpleNameFromQualifiedName(getTypeDeclaration(inner)));
     } else {
       return super.getTypeDeclaration(schema);
     }
@@ -647,6 +719,8 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
   public void addHandlebarHelpers(Handlebars handlebars) {
     super.addHandlebarHelpers(handlebars);
     handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
+    handlebars.registerHelper("getSimpleName",
+        getSimpleNameFromQualifiedNameHelper());
   }
 
   private Helper<String> getMultipleLinesHelper() {
@@ -660,6 +734,10 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
       }
       return buffer;
     };
+  }
+
+  private Helper<String> getSimpleNameFromQualifiedNameHelper() {
+    return (s, options) -> getSimpleNameFromQualifiedName(s);
   }
 
   /**
@@ -706,92 +784,6 @@ public class VaadinConnectTsGenerator extends DefaultCodegenConfig {
     @Override
     public int hashCode() {
       return Objects.hash(name, type, description);
-    }
-  }
-
-  private abstract static class TypeInformation {
-    protected final String name;
-    protected final String description;
-
-    TypeInformation(String name, String description) {
-      this.name = name;
-      this.description = description;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public String getDescription() {
-      return description;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      TypeInformation that = (TypeInformation) o;
-      return Objects.equals(name, that.name)
-          && Objects.equals(description, that.description);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, description);
-    }
-
-    public abstract boolean getIsKnown();
-  }
-
-  private static class KnownTypeInformation extends TypeInformation {
-    private final List<ParameterInformation> parameterInformation;
-
-    KnownTypeInformation(String name, String description,
-        List<ParameterInformation> parameterInformation) {
-      super(name, description);
-      this.parameterInformation = parameterInformation;
-    }
-
-    public List<ParameterInformation> getParameterInformation() {
-      return parameterInformation;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      KnownTypeInformation that = (KnownTypeInformation) o;
-      return super.equals(o)
-          && Objects.equals(parameterInformation, that.parameterInformation);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, description, parameterInformation);
-    }
-
-    public boolean getIsKnown() {
-      return true;
-    }
-  }
-
-  private static class UnknownTypeInformation extends TypeInformation {
-    UnknownTypeInformation(String name, String description) {
-      super(name, description);
-    }
-
-    public boolean getIsKnown() {
-      return false;
     }
   }
 }

@@ -1,0 +1,25 @@
+{{#each imports}}
+import {{className}} from '{{importPath}}';
+{{/each}}
+
+{{#models}}
+{{#model}}
+{{#unescapedDescription}}
+/**
+{{#multiplelines unescapedDescription}}
+ * {{{@line}}}
+{{/multiplelines}}
+ */
+{{/unescapedDescription}}
+export default interface {{{getSimpleName classname}}} {
+{{#allVars}}
+{{#unescapedDescription}}
+  /**{{#multiplelines unescapedDescription}}
+   * {{{@line}}}{{/multiplelines}}
+   */
+{{/unescapedDescription}}
+  {{name}}: {{{getSimpleName datatype}}};
+{{/allVars}}
+}
+{{/model}}
+{{/models}}

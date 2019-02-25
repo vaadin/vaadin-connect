@@ -1,5 +1,6 @@
 // @ts-ignore
 import client from './connect-client.default';
+import Collection from './com/vaadin/connect/plugin/generator/services/collectionservice/CollectionService/Collection';
 
 /**
  * Get a collection by author name. The generator should not mix this type with the Java's Collection type.

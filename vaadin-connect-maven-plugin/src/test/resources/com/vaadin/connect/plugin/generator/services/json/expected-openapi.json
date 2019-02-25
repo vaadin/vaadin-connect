@@ -64,7 +64,8 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Instant"
+                  "type" : "string",
+                  "format" : "date-time"
                 }
               }
             }
@@ -88,7 +89,7 @@
                 "schema" : {
                   "type" : "object",
                   "additionalProperties" : {
-                    "$ref" : "#/components/schemas/User"
+                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
                   }
                 }
               }
@@ -113,7 +114,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/User"
+                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
                   }
                 }
               }
@@ -179,7 +180,7 @@
                   "input" : {
                     "type" : "object",
                     "additionalProperties" : {
-                      "$ref" : "#/components/schemas/User"
+                      "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
                     },
                     "description" : "input map"
                   }
@@ -269,7 +270,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/User"
+                  "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
                 }
               }
             }
@@ -288,7 +289,7 @@
                 "type" : "object",
                 "properties" : {
                   "input" : {
-                    "$ref" : "#/components/schemas/Version"
+                    "$ref" : "#/components/schemas/com.fasterxml.jackson.core.Version"
                   }
                 }
               }
@@ -316,7 +317,7 @@
                 "type" : "object",
                 "properties" : {
                   "input" : {
-                    "$ref" : "#/components/schemas/Status"
+                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.Status"
                   }
                 }
               }
@@ -373,7 +374,7 @@
                 "type" : "object",
                 "properties" : {
                   "user" : {
-                    "$ref" : "#/components/schemas/User"
+                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
                   }
                 },
                 "x-vaadin-parameters-description" : {
@@ -435,28 +436,7 @@
   },
   "components" : {
     "schemas" : {
-      "Status" : {
-        "type" : "object",
-        "properties" : {
-          "createdAt" : {
-            "$ref" : "#/components/schemas/Instant"
-          },
-          "text" : {
-            "type" : "string"
-          }
-        },
-        "description" : "Status bean. Used only in request parameters to verify that request\nparameter type descriptions are generated."
-      },
-      "Role" : {
-        "type" : "object",
-        "properties" : {
-          "roleName" : {
-            "type" : "string"
-          }
-        },
-        "description" : "Role bean"
-      },
-      "User" : {
+      "com.vaadin.connect.plugin.generator.services.json.JsonTestService.User" : {
         "type" : "object",
         "properties" : {
           "name" : {
@@ -468,8 +448,55 @@
           "roles" : {
             "type" : "object",
             "additionalProperties" : {
-              "$ref" : "#/components/schemas/Role"
+              "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.Role"
             }
+          }
+        }
+      },
+      "com.vaadin.connect.plugin.generator.services.json.JsonTestService.Status" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "text" : {
+            "type" : "string",
+            "description" : "Multiple line description should work.This is very very very very very\nvery very very long."
+          }
+        },
+        "description" : "Status bean. Used only in request parameters to verify that request\nparameter type descriptions are generated."
+      },
+      "com.vaadin.connect.plugin.generator.services.json.JsonTestService.Role" : {
+        "type" : "object",
+        "properties" : {
+          "roleName" : {
+            "type" : "string",
+            "description" : "Description for roleName."
+          }
+        },
+        "description" : "Role bean"
+      },
+      "com.fasterxml.jackson.core.Version" : {
+        "type" : "object",
+        "properties" : {
+          "_artifactId" : {
+            "type" : "string"
+          },
+          "_groupId" : {
+            "type" : "string"
+          },
+          "_majorVersion" : {
+            "type" : "number"
+          },
+          "_minorVersion" : {
+            "type" : "number"
+          },
+          "_patchLevel" : {
+            "type" : "number"
+          },
+          "_snapshotInfo" : {
+            "type" : "string"
           }
         }
       }
