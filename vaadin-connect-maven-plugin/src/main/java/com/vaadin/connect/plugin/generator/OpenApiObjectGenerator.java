@@ -44,6 +44,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
@@ -54,6 +55,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.LiteralStringValueExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
@@ -75,6 +77,7 @@ import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.BooleanSchema;
+import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.DateSchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
@@ -292,8 +295,8 @@ public class OpenApiObjectGenerator {
     Optional<AnnotationExpr> serviceAnnotation = classDeclaration
         .getAnnotationByClass(VaadinService.class);
     if (!serviceAnnotation.isPresent()) {
-      nonServiceSchemas.put(classDeclaration.resolve().getQualifiedName(),
-          parseClassAsSchema(classDeclaration));
+      parseClassAsSchema(classDeclaration).ifPresent(schema -> nonServiceSchemas
+          .put(classDeclaration.resolve().getQualifiedName(), schema));
     } else {
       classDeclaration.getJavadoc().ifPresent(
           javadoc -> servicesJavadoc.put(classDeclaration.getNameAsString(),
@@ -324,11 +327,42 @@ public class OpenApiObjectGenerator {
     return serviceName;
   }
 
-  private Schema parseClassAsSchema(
+  private Optional<Schema> parseClassAsSchema(
       TypeDeclaration<ClassOrInterfaceDeclaration> typeDeclaration) {
+    if (typeDeclaration.asClassOrInterfaceDeclaration().isInterface()) {
+      return Optional.empty();
+    }
+    Optional<String> description = typeDeclaration.getJavadoc()
+        .map(javadoc -> javadoc.getDescription().toText());
     Schema schema = new ObjectSchema();
-    typeDeclaration.getJavadoc().ifPresent(
-        javadoc -> schema.description(javadoc.getDescription().toText()));
+    description.ifPresent(schema::setDescription);
+    schema.setProperties(getPropertiesFromClassDeclaration(typeDeclaration));
+    NodeList<ClassOrInterfaceType> extendedTypes = typeDeclaration
+        .asClassOrInterfaceDeclaration().getExtendedTypes();
+    if (extendedTypes.isEmpty()) {
+      return Optional.of(schema);
+    } else {
+      ComposedSchema parentSchema = new ComposedSchema();
+      extendedTypes.forEach(classOrInterfaceType -> {
+        ResolvedReferenceType resolvedReferenceType = classOrInterfaceType
+            .resolve();
+        String qualifiedName = resolvedReferenceType.getQualifiedName();
+        String ref = getFullQualifiedNameRef(qualifiedName);
+        usedSchemas.put(qualifiedName, resolvedReferenceType);
+        parentSchema.addAllOfItem(new ObjectSchema().$ref(ref));
+      });
+      parentSchema.addAllOfItem(schema);
+      return Optional.of(parentSchema);
+    }
+  }
+
+  private String getFullQualifiedNameRef(String qualifiedName) {
+    return "#/components/schemas/" + qualifiedName;
+  }
+
+  private Map<String, Schema> getPropertiesFromClassDeclaration(
+      TypeDeclaration<ClassOrInterfaceDeclaration> typeDeclaration) {
+    Map<String, Schema> properties = new TreeMap<>();
     for (FieldDeclaration field : typeDeclaration.getFields()) {
       if (field.isTransient() || field.isStatic()
           || field.isAnnotationPresent(JsonIgnore.class)) {
@@ -337,11 +371,11 @@ public class OpenApiObjectGenerator {
       Optional<String> fieldDescription = field.getJavadoc()
           .map(javadoc -> javadoc.getDescription().toText());
       field.getVariables()
-          .forEach(variableDeclarator -> schema.addProperties(
-              variableDeclarator.getNameAsString(), parseTypeToSchema(
+          .forEach(variableDeclarator -> properties
+              .put(variableDeclarator.getNameAsString(), parseTypeToSchema(
                   variableDeclarator.getType(), fieldDescription.orElse(""))));
     }
-    return schema;
+    return properties;
   }
 
   private boolean isReservedWord(String word) {
@@ -601,9 +635,7 @@ public class OpenApiObjectGenerator {
     if (resolvedType.isReferenceType()) {
       String qualifiedName = resolvedType.asReferenceType().getQualifiedName();
       usedSchemas.put(qualifiedName, resolvedType.asReferenceType());
-
-      String ref = "#/components/schemas/" + qualifiedName;
-      return new ObjectSchema().$ref(ref);
+      return new ObjectSchema().$ref(getFullQualifiedNameRef(qualifiedName));
     }
     return new ObjectSchema();
   }
