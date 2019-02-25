@@ -11,15 +11,15 @@ import {{className}} from '{{importPath}}';
 {{/multiplelines}}
  */
 {{/unescapedDescription}}
-export default interface {{{getSimpleName classname}}} {
-{{#allVars}}
+export default interface {{{getSimpleName classname}}} {{#parentSchema}}extends {{{getSimpleName parentSchema}}}{{/parentSchema}} {
+{{#vars}}
 {{#unescapedDescription}}
   /**{{#multiplelines unescapedDescription}}
    * {{{@line}}}{{/multiplelines}}
    */
 {{/unescapedDescription}}
   {{name}}: {{{getSimpleName datatype}}};
-{{/allVars}}
+{{/vars}}
 }
 {{/model}}
 {{/models}}
