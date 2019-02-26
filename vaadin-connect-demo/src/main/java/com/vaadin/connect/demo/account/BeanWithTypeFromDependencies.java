@@ -15,14 +15,25 @@
  */
 package com.vaadin.connect.demo.account;
 
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.Version;
+
+import com.vaadin.connect.demo.DemoVaadinService;
 
 /**
  * A test bean which has a field with type from project's dependencies. This
  * class is to make sure that the generator won't fail the build when resolving
  * types from project's dependencies.
  */
-public class BeanWithTypeFromDependencies {
+public class BeanWithTypeFromDependencies
+    extends DemoVaadinService.ComplexResponse {
   Version version;
   Account account;
+
+  public BeanWithTypeFromDependencies(String name,
+      Map<Integer, List<String>> generatedResponse) {
+    super(name, generatedResponse);
+  }
 }
