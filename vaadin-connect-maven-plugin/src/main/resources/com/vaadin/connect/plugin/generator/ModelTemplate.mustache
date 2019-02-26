@@ -11,7 +11,7 @@ import {{className}} from '{{importPath}}';
 {{/multiplelines}}
  */
 {{/unescapedDescription}}
-export default interface {{{getSimpleName classname}}} {{#parentSchema}}extends {{{getSimpleName parentSchema}}}{{/parentSchema}} {
+export default interface {{{getSimpleName classname}}} {{~#parentSchema}} extends {{{getSimpleName parentSchema}}}{{/parentSchema}} {
 {{#vars}}
 {{#unescapedDescription}}
   /**{{#multiplelines unescapedDescription}}
