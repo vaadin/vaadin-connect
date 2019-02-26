@@ -1,9 +1,8 @@
-import ExternalDocumentation from '../ExternalDocumentation';
-import Discriminator from './Discriminator';
-import Schema from './Schema';
-import XML from './XML';
+import ParentModel from './ParentModel';
+import ArraySchema from '../../../../../../../../io/swagger/v3/oas/models/media/ArraySchema';
 
-export default interface ArraySchema extends Schema {
-  items: Schema;
-  type: string;
+export default interface ChildModel extends ParentModel {
+  abc: Map<string, Version>[];
+  name: string;
+  testObject: ArraySchema;
 }
