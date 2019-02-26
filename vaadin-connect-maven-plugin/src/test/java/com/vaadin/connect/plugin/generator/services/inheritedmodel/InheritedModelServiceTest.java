@@ -17,6 +17,7 @@ package com.vaadin.connect.plugin.generator.services.inheritedmodel;
 
 import java.util.Arrays;
 
+import com.fasterxml.jackson.core.Version;
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Discriminator;
@@ -30,7 +31,7 @@ public class InheritedModelServiceTest extends AbstractServiceGenerationTest {
   public InheritedModelServiceTest() {
     super(Arrays.asList(InheritedModelService.class, Discriminator.class,
         Schema.class, ArraySchema.class, ExternalDocumentation.class,
-        XML.class));
+        XML.class, Version.class));
   }
 
   @Test

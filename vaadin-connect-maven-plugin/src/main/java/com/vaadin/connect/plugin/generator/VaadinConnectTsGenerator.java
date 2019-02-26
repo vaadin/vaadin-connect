@@ -39,6 +39,7 @@ import io.swagger.codegen.v3.ClientOptInput;
 import io.swagger.codegen.v3.CodegenModel;
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
+import io.swagger.codegen.v3.CodegenProperty;
 import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
@@ -521,6 +522,25 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     printDebugMessage(processedModels, "=== All models data ===");
 
     return postProcessAllModels;
+  }
+
+  @Override
+  public CodegenModel fromModel(String name, Schema schema,
+      Map<String, Schema> allDefinitions) {
+    CodegenModel codegenModel = super.fromModel(name, schema, allDefinitions);
+    if (StringUtils.isBlank(codegenModel.parent)) {
+      return codegenModel;
+    }
+    codegenModel.getImports().removeIf(s -> {
+      for (CodegenProperty cp : codegenModel.getVars()) {
+        if (StringUtils.contains(cp.datatype, s)
+            || codegenModel.parent.equals(s)) {
+          return false;
+        }
+      }
+      return true;
+    });
+    return codegenModel;
   }
 
   private void printDebugMessage(Object data, String message) {
