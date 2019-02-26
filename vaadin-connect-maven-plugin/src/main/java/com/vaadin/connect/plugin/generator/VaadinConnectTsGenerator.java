@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -437,12 +438,29 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     codegenOperation.getVendorExtensions()
         .put(EXTENSION_VAADIN_CONNECT_SERVICE_NAME, serviceName);
     validateOperationTags(path, httpMethod, operation);
-    codegenOperation.returnType = getSimpleNameFromQualifiedName(
-        codegenOperation.returnType);
     return codegenOperation;
   }
 
   private String getSimpleNameFromQualifiedName(String qualifiedName) {
+    if (StringUtils.contains(qualifiedName, "<")) {
+      String mainType = getSimpleNameFromQualifiedName(
+          StringUtils.substringBefore(qualifiedName, "<"));
+      String[] split = StringUtils.split(StringUtils.substring(qualifiedName,
+          qualifiedName.indexOf('<') + 1, qualifiedName.lastIndexOf('>')), ',');
+      String suffix = StringUtils.substringAfterLast(qualifiedName, ">");
+      if (split != null && split.length == 2) {
+        String firstTypeParameter = getSimpleNameFromQualifiedName(split[0])
+            .trim();
+        String secondTypeParameter = getSimpleNameFromQualifiedName(split[1])
+            .trim();
+        return String.format("%s<%s, %s>%s", mainType, firstTypeParameter,
+            secondTypeParameter, suffix);
+      } else {
+        getLogger().info("Can't get simple name from type '{}'.",
+            qualifiedName);
+        return qualifiedName;
+      }
+    }
     if (StringUtils.contains(qualifiedName, ".")) {
       return StringUtils.substringAfterLast(qualifiedName, ".");
     }
@@ -575,9 +593,18 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
    */
   private void adjustImportInformation(List<Map<String, Object>> imports,
       String relativePathFromGeneratedFolderToCurrentFile) {
+    Set<String> usedNames = new HashSet<>();
     for (Map<String, Object> anImport : imports) {
       String importName = (String) anImport.get("import");
-      anImport.put("className", getSimpleNameFromQualifiedName(importName));
+      String className = getSimpleNameFromQualifiedName(importName);
+      if (usedNames.contains(className)) {
+        String importAs = getUniqueNameFromQualifiedName(usedNames, className);
+        anImport.put("importAs", importAs);
+        usedNames.add(importAs);
+      } else {
+        usedNames.add(className);
+      }
+      anImport.put("className", className);
       String importPath = convertQualifiedNameToModelPath(importName);
       String relativizedPath = Paths
           .get(relativePathFromGeneratedFolderToCurrentFile)
@@ -586,6 +613,19 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
           "/");
       anImport.put("importPath", relativizedPath);
     }
+  }
+
+  private String getUniqueNameFromQualifiedName(Set<String> usedNames,
+      String className) {
+    String newClassName = className;
+    int counter = 0;
+    while (usedNames.contains(newClassName)) {
+      newClassName = className + ++counter;
+      if (counter >= 10) {
+        newClassName = className + UUID.randomUUID().toString().substring(0, 4);
+      }
+    }
+    return newClassName;
   }
 
   private void setShouldShowTsDoc(List<CodegenOperation> operations) {
@@ -661,7 +701,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       String name = entry.getKey();
       name = isReservedWord(name) ? escapeReservedWord(name) : name;
       String type = getTypeDeclaration(entry.getValue());
-      type = getSimpleNameFromQualifiedName(type);
       String description = entry.getValue().getDescription();
       if (StringUtils.isBlank(description)) {
         description = getDescriptionFromParameterExtension(name, requestSchema);
@@ -694,8 +733,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       return getSimpleRef(schema.get$ref());
     } else if (schema.getAdditionalProperties() != null) {
       Schema inner = (Schema) schema.getAdditionalProperties();
-      return String.format("Map<string, %s>",
-          getSimpleNameFromQualifiedName(getTypeDeclaration(inner)));
+      return String.format("Map<string, %s>", getTypeDeclaration(inner));
     } else {
       return super.getTypeDeclaration(schema);
     }
@@ -739,8 +777,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   public void addHandlebarHelpers(Handlebars handlebars) {
     super.addHandlebarHelpers(handlebars);
     handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
-    handlebars.registerHelper("getSimpleName",
-        getSimpleNameFromQualifiedNameHelper());
+    handlebars.registerHelper("getClassNameFromImports",
+        getClassNameFromImportsHelper());
   }
 
   private Helper<String> getMultipleLinesHelper() {
@@ -756,8 +794,20 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     };
   }
 
-  private Helper<String> getSimpleNameFromQualifiedNameHelper() {
-    return (s, options) -> getSimpleNameFromQualifiedName(s);
+  private Helper<String> getClassNameFromImportsHelper() {
+    return (className, options) -> getClassNameFromImports(className,
+        options.param(0));
+  }
+
+  private String getClassNameFromImports(String className, Object importsList) {
+    List<Map<String, String>> imports = (List<Map<String, String>>) importsList;
+    for (Map<String, String> anImport : imports) {
+      if (StringUtils.equals(className, anImport.get("import"))) {
+        return StringUtils.firstNonBlank(anImport.get("importAs"),
+            anImport.get("className"));
+      }
+    }
+    return getSimpleNameFromQualifiedName(className);
   }
 
   /**
