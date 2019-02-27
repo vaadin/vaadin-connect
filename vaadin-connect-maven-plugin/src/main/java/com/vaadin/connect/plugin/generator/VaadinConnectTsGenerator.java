@@ -785,14 +785,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
     handlebars.registerHelper("getClassNameFromImports",
         getClassNameFromImportsHelper());
-    handlebars.registerHelper("curlyBrace", getCurlyBraceHelper());
-  }
-
-  private Helper<Boolean> getCurlyBraceHelper() {
-    return (isOpen, options) -> {
-      Context context = options.context;
-      return isOpen ? '{' : '}';
-    };
   }
 
   private Helper<String> getMultipleLinesHelper() {
