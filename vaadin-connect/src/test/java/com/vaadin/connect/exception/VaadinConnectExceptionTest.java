@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.vaadin.connect;
+package com.vaadin.connect.exception;
 
 import java.util.Arrays;
 import java.util.Collections;
