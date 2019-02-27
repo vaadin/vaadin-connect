@@ -15,13 +15,13 @@
  */
 package com.vaadin.connect.plugin.generator.services.inheritedmodel;
 
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.Version;
 import io.swagger.v3.oas.models.media.ArraySchema;
 
 import com.vaadin.connect.VaadinService;
-
-import java.util.List;
-import java.util.Map;
 
 @VaadinService
 public class InheritedModelService {
@@ -35,6 +35,7 @@ public class InheritedModelService {
     // This is to make sure that inherited types from dependencies work well.
     ArraySchema testObject;
     List<Map<String, Version>> abc;
+    List<Map<String, Map<String, Version>>> def;
   }
 
   public static class ParentModel {

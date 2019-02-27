@@ -443,23 +443,27 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   private String getSimpleNameFromQualifiedName(String qualifiedName) {
     if (StringUtils.contains(qualifiedName, "<")) {
+      // E.g: Map<string, Map<string, com.fasterxml.jackson.core.Version>>[]
+      // mainType = Map
       String mainType = getSimpleNameFromQualifiedName(
           StringUtils.substringBefore(qualifiedName, "<"));
-      String[] split = StringUtils.split(StringUtils.substring(qualifiedName,
-          qualifiedName.indexOf('<') + 1, qualifiedName.lastIndexOf('>')), ',');
+      // typeParameters = string, Map<string,
+      // com.fasterxml.jackson.core.Version>
+      String typeParameters = StringUtils.substring(qualifiedName,
+          qualifiedName.indexOf('<') + 1, qualifiedName.lastIndexOf('>'));
+      // firstPart = string
+      String firstPart = StringUtils.substringBefore(typeParameters, ",");
+      // secondPart = Map<string, com.fasterxml.jackson.core.Version>
+      String secondPart = StringUtils.substringAfter(typeParameters, ",");
+      // suffix = []
       String suffix = StringUtils.substringAfterLast(qualifiedName, ">");
-      if (split != null && split.length == 2) {
-        String firstTypeParameter = getSimpleNameFromQualifiedName(split[0])
-            .trim();
-        String secondTypeParameter = getSimpleNameFromQualifiedName(split[1])
-            .trim();
-        return String.format("%s<%s, %s>%s", mainType, firstTypeParameter,
-            secondTypeParameter, suffix);
-      } else {
-        getLogger().info("Can't get simple name from type '{}'.",
-            qualifiedName);
-        return qualifiedName;
-      }
+
+      String firstTypeParameter = getSimpleNameFromQualifiedName(firstPart)
+          .trim();
+      String secondTypeParameter = getSimpleNameFromQualifiedName(secondPart)
+          .trim();
+      return String.format("%s<%s, %s>%s", mainType, firstTypeParameter,
+          secondTypeParameter, suffix);
     }
     if (StringUtils.contains(qualifiedName, ".")) {
       return StringUtils.substringAfterLast(qualifiedName, ".");
@@ -549,6 +553,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     if (StringUtils.isBlank(codegenModel.parent)) {
       return codegenModel;
     }
+    // The import list contains all the import of the child and parent classes.
+    // We only need import for the parent class and the child field's types.
     codegenModel.getImports().removeIf(s -> {
       for (CodegenProperty cp : codegenModel.getVars()) {
         if (StringUtils.contains(cp.datatype, s)
