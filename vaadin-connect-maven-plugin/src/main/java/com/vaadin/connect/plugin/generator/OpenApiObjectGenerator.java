@@ -701,6 +701,7 @@ public class OpenApiObjectGenerator {
     return new ObjectSchema();
   }
 
+  @SuppressWarnings("squid:S1872")
   private List<Schema> parseReferencedTypeAsSchema(
       ResolvedReferenceType resolvedType) {
     List<Schema> results = new ArrayList<>();
