@@ -53,7 +53,7 @@ single project.
 * `src/main/resources/application.properties` application properties
 * `src/test/java/` tests
 * `target` build directory
-** `target/generated/resources/openapi.json` generated OpenAPI specification
+** `target/generated-resources/openapi.json` generated OpenAPI specification
 
 .Frontend parts:
 * `package.json` npm project description and dependencies list
