@@ -374,40 +374,49 @@ public abstract class AbstractServiceGenerationTest {
         assertTrue(Date.class.isAssignableFrom(expectedSchemaClass)
             || LocalDate.class.isAssignableFrom(expectedSchemaClass));
       } else if (actualSchema instanceof ComposedSchema) {
-        // FIXME: do proper validation
-        assertTrue(true);
+        List<Schema> allOf = ((ComposedSchema) actualSchema).getAllOf();
+        assertTrue(allOf.size() > 1);
+        for (Schema schema : allOf) {
+          if (expectedSchemaClass.getCanonicalName().equals(schema.getName())) {
+            assertSchemaProperties(expectedSchemaClass, schema);
+            break;
+          }
+        }
       } else if (actualSchema instanceof ObjectSchema) {
         if (StringUtils.startsWith(expectedSchemaClass.getPackage().getName(),
             "java.")) {
           // skip the validation for unhandled java types, e.g. Optional
           return;
         }
-        Map<String, Schema> properties = actualSchema.getProperties();
-        assertNotNull(properties);
-        assertTrue(properties.size() > 0);
-
-        int expectedFieldsCount = 0;
-        for (Field expectedSchemaField : expectedSchemaClass
-            .getDeclaredFields()) {
-          if (Modifier.isTransient(expectedSchemaField.getModifiers())
-              || Modifier.isStatic(expectedSchemaField.getModifiers())
-              || expectedSchemaField.isAnnotationPresent(JsonIgnore.class)) {
-            continue;
-          }
-
-          expectedFieldsCount++;
-          Schema propertySchema = properties.get(expectedSchemaField.getName());
-          assertNotNull(String.format("Property schema is not found %s",
-              expectedSchemaField.getName()), propertySchema);
-          assertSchema(propertySchema, expectedSchemaField.getType());
-        }
-        assertEquals(expectedFieldsCount, properties.size());
+        assertSchemaProperties(expectedSchemaClass, actualSchema);
       } else {
         throw new AssertionError(
             String.format("Unknown schema '%s' for class '%s'",
                 actualSchema.getClass(), expectedSchemaClass));
       }
     }
+  }
+
+  private void assertSchemaProperties(Class<?> expectedSchemaClass,
+      Schema schema) {
+    int expectedFieldsCount = 0;
+    Map<String, Schema> properties = schema.getProperties();
+    assertNotNull(properties);
+    assertTrue(properties.size() > 0);
+    for (Field expectedSchemaField : expectedSchemaClass.getDeclaredFields()) {
+      if (Modifier.isTransient(expectedSchemaField.getModifiers())
+          || Modifier.isStatic(expectedSchemaField.getModifiers())
+          || expectedSchemaField.isAnnotationPresent(JsonIgnore.class)) {
+        continue;
+      }
+
+      expectedFieldsCount++;
+      Schema propertySchema = properties.get(expectedSchemaField.getName());
+      assertNotNull(String.format("Property schema is not found %s",
+          expectedSchemaField.getName()), propertySchema);
+      assertSchema(propertySchema, expectedSchemaField.getType());
+    }
+    assertEquals(expectedFieldsCount, properties.size());
   }
 
   private void verifySchemaReferences() {
