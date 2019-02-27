@@ -118,12 +118,12 @@ public class OpenApiObjectGenerator {
 
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
-  private Map<String, ResolvedReferenceType> usedSchemas;
-  private Map<String, ResolvedReferenceType> allUsedTypes;
+  private Map<String, ResolvedReferenceType> usedTypes;
+  private Map<String, ResolvedReferenceType> foundTypes;
   private Map<String, String> servicesJavadoc;
   private Map<String, ClassOrInterfaceDeclaration> nonServiceMap;
   private Map<String, PathItem> pathItems;
-  private Set<String> solvedTypes;
+  private Set<String> generatedSchema;
   private OpenAPI openApiModel;
   private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
   private ClassLoader typeResolverClassLoader;
@@ -192,9 +192,9 @@ public class OpenApiObjectGenerator {
     openApiModel = createBasicModel();
     nonServiceMap = new HashMap<>();
     pathItems = new TreeMap<>();
-    usedSchemas = new HashMap<>();
-    solvedTypes = new HashSet<>();
-    allUsedTypes = new HashMap<>();
+    usedTypes = new HashMap<>();
+    generatedSchema = new HashSet<>();
+    foundTypes = new HashMap<>();
     servicesJavadoc = new HashMap<>();
 
     ParserConfiguration parserConfiguration = createParserConfiguration();
@@ -203,12 +203,10 @@ public class OpenApiObjectGenerator {
         .map(path -> new SourceRoot(path, parserConfiguration))
         .forEach(this::parseSourceRoot);
 
-    for (Map.Entry<String, ResolvedReferenceType> entry : usedSchemas
+    for (Map.Entry<String, ResolvedReferenceType> entry : usedTypes
         .entrySet()) {
-      List<Schema> schemas = parseNonServiceClassAsSchema(entry.getKey());
-      if (schemas.isEmpty()) {
-        schemas = parseReferencedTypeAsSchema(entry.getValue());
-      }
+      List<Schema> schemas = createSchemasFromQualifiedNameAndType(
+          entry.getKey(), entry.getValue());
       schemas.forEach(schema -> openApiModel.getComponents()
           .addSchemas(schema.getName(), schema));
     }
@@ -341,22 +339,11 @@ public class OpenApiObjectGenerator {
       return Collections.emptyList();
     }
     List<Schema> result = new ArrayList<>();
-    Optional<String> description = typeDeclaration.getJavadoc()
-        .map(javadoc -> javadoc.getDescription().toText());
-    Schema schema = new ObjectSchema();
-    schema.setName(fullQualifiedName);
-    solvedTypes.add(fullQualifiedName);
-    description.ifPresent(schema::setDescription);
-    schema.setProperties(getPropertiesFromClassDeclaration(typeDeclaration));
-    collectUsedSchema(schema).entrySet().stream()
-        .filter(s -> !solvedTypes.contains(s.getKey()))
-        .collect(Collectors.toSet()).forEach(s -> {
-          List<Schema> c = parseNonServiceClassAsSchema(s.getKey());
-          if (c.isEmpty()) {
-            c = parseReferencedTypeAsSchema(s.getValue());
-          }
-          result.addAll(c);
-        });
+
+    Schema schema = createSingleSchema(fullQualifiedName, typeDeclaration);
+    generatedSchema.add(fullQualifiedName);
+    result.addAll(generatedRelatedSchemas(schema));
+
     NodeList<ClassOrInterfaceType> extendedTypes = typeDeclaration
         .getExtendedTypes();
     if (extendedTypes.isEmpty()) {
@@ -365,22 +352,39 @@ public class OpenApiObjectGenerator {
       ComposedSchema parentSchema = new ComposedSchema();
       parentSchema.setName(fullQualifiedName);
       result.add(parentSchema);
-      extendedTypes.forEach(classOrInterfaceType -> {
-        ResolvedReferenceType resolvedReferenceType = classOrInterfaceType
-            .resolve();
-        String qualifiedName = resolvedReferenceType.getQualifiedName();
-        String ref = getFullQualifiedNameRef(qualifiedName);
+      extendedTypes.forEach(parentType -> {
+        ResolvedReferenceType resolvedParentType = parentType.resolve();
+        String parentQualifiedName = resolvedParentType.getQualifiedName();
+        String ref = getFullQualifiedNameRef(parentQualifiedName);
         parentSchema.addAllOfItem(new ObjectSchema().$ref(ref));
-        List<Schema> list = parseNonServiceClassAsSchema(qualifiedName);
-        if (list.isEmpty()) {
-          result.addAll(parseReferencedTypeAsSchema(resolvedReferenceType));
-        } else {
-          result.addAll(list);
-        }
+        result.addAll(createSchemasFromQualifiedNameAndType(parentQualifiedName,
+            resolvedParentType));
       });
+      // The inserting order matters for `allof` property.
       parentSchema.addAllOfItem(schema);
     }
     return result;
+  }
+
+  private Schema createSingleSchema(String fullQualifiedName,
+      ClassOrInterfaceDeclaration typeDeclaration) {
+    Optional<String> description = typeDeclaration.getJavadoc()
+        .map(javadoc -> javadoc.getDescription().toText());
+    Schema schema = new ObjectSchema();
+    schema.setName(fullQualifiedName);
+    description.ifPresent(schema::setDescription);
+    schema.setProperties(getPropertiesFromClassDeclaration(typeDeclaration));
+    return schema;
+  }
+
+  private List<Schema> createSchemasFromQualifiedNameAndType(
+      String qualifiedName, ResolvedReferenceType resolvedReferenceType) {
+    List<Schema> list = parseNonServiceClassAsSchema(qualifiedName);
+    if (list.isEmpty()) {
+      return parseReferencedTypeAsSchema(resolvedReferenceType);
+    } else {
+      return list;
+    }
   }
 
   private String getFullQualifiedNameRef(String qualifiedName) {
@@ -405,23 +409,25 @@ public class OpenApiObjectGenerator {
     return properties;
   }
 
-  private Map<String, ResolvedReferenceType> collectUsedSchema(Schema schema) {
+  private Map<String, ResolvedReferenceType> collectUsedTypesFromSchema(
+      Schema schema) {
     Map<String, ResolvedReferenceType> map = new HashMap<>();
     if (StringUtils.isNotBlank(schema.getName())) {
-      ResolvedReferenceType resolvedReferenceType = allUsedTypes
+      ResolvedReferenceType resolvedReferenceType = foundTypes
           .get(schema.getName());
-      map.put(schema.getName(), resolvedReferenceType);
+      if (resolvedReferenceType != null) {
+        map.put(schema.getName(), resolvedReferenceType);
+      }
     } else if (schema instanceof ArraySchema) {
-      map.putAll(collectUsedSchema(((ArraySchema) schema).getItems()));
+      map.putAll(collectUsedTypesFromSchema(((ArraySchema) schema).getItems()));
     } else if (schema instanceof MapSchema
         && schema.getAdditionalProperties() != null) {
-      map.putAll(collectUsedSchema((Schema) schema.getAdditionalProperties()));
+      map.putAll(collectUsedTypesFromSchema(
+          (Schema) schema.getAdditionalProperties()));
     }
     if (schema.getProperties() != null) {
-      for (Map.Entry<String, Schema> o : (Set<Map.Entry<String, Schema>>) schema
-          .getProperties().entrySet()) {
-        map.putAll(collectUsedSchema(o.getValue()));
-      }
+      schema.getProperties().values()
+          .forEach(o -> map.putAll(collectUsedTypesFromSchema((Schema) o)));
     }
     return map;
   }
@@ -539,7 +545,7 @@ public class OpenApiObjectGenerator {
     MediaType mediaItem = new MediaType();
     Type methodReturnType = methodDeclaration.getType();
     Schema schema = parseTypeToSchema(methodReturnType, "");
-    usedSchemas.putAll(collectUsedSchema(schema));
+    usedTypes.putAll(collectUsedTypesFromSchema(schema));
     mediaItem.schema(schema);
     return mediaItem;
   }
@@ -564,7 +570,7 @@ public class OpenApiObjectGenerator {
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
       Schema paramSchema = parseTypeToSchema(parameter.getType(), "");
-      usedSchemas.putAll(collectUsedSchema(paramSchema));
+      usedTypes.putAll(collectUsedTypesFromSchema(paramSchema));
       String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
           .concat(parameter.getNameAsString());
       if (StringUtils.isBlank(paramSchema.get$ref())) {
@@ -688,7 +694,7 @@ public class OpenApiObjectGenerator {
   private Schema createUserBeanSchema(ResolvedType resolvedType) {
     if (resolvedType.isReferenceType()) {
       String qualifiedName = resolvedType.asReferenceType().getQualifiedName();
-      allUsedTypes.put(qualifiedName, resolvedType.asReferenceType());
+      foundTypes.put(qualifiedName, resolvedType.asReferenceType());
       return new ObjectSchema().name(qualifiedName)
           .$ref(getFullQualifiedNameRef(qualifiedName));
     }
@@ -698,9 +704,47 @@ public class OpenApiObjectGenerator {
   private List<Schema> parseReferencedTypeAsSchema(
       ResolvedReferenceType resolvedType) {
     List<Schema> results = new ArrayList<>();
-    Schema schema = new ObjectSchema();
+
+    Schema schema = createSingleSchemaFromResolvedType(resolvedType);
+
     String qualifiedName = resolvedType.getQualifiedName();
-    solvedTypes.add(qualifiedName);
+    generatedSchema.add(qualifiedName);
+    results.addAll(generatedRelatedSchemas(schema));
+
+    List<ResolvedReferenceType> directAncestors = resolvedType
+        .getAllClassesAncestors().stream()
+        .filter(
+            parent -> !Object.class.getName().equals(parent.getQualifiedName()))
+        .collect(Collectors.toList());
+
+    if (directAncestors.isEmpty()) {
+      results.add(schema);
+    } else {
+      ComposedSchema parentSchema = new ComposedSchema();
+      parentSchema.name(qualifiedName);
+      results.add(parentSchema);
+      for (ResolvedReferenceType directAncestor : directAncestors) {
+        parentSchema.addAllOfItem(new ObjectSchema()
+            .$ref(getFullQualifiedNameRef(directAncestor.getQualifiedName())));
+        results.addAll(parseReferencedTypeAsSchema(directAncestor));
+      }
+      parentSchema.addAllOfItem(schema);
+    }
+    return results;
+  }
+
+  private List<Schema> generatedRelatedSchemas(Schema schema) {
+    List<Schema> result = new ArrayList<>();
+    collectUsedTypesFromSchema(schema).entrySet().stream()
+        .filter(s -> !generatedSchema.contains(s.getKey()))
+        .collect(Collectors.toSet()).forEach(s -> result.addAll(
+            createSchemasFromQualifiedNameAndType(s.getKey(), s.getValue())));
+    return result;
+  }
+
+  private Schema createSingleSchemaFromResolvedType(
+      ResolvedReferenceType resolvedType) {
+    Schema schema = new ObjectSchema().name(resolvedType.getQualifiedName());
     Set<String> validFields = getValidFields(resolvedType);
     Set<ResolvedFieldDeclaration> declaredFields = resolvedType
         .getDeclaredFields().stream()
@@ -715,31 +759,8 @@ public class OpenApiObjectGenerator {
       String name = fieldDeclaration.getName();
       Schema type = parseResolvedTypeToSchema(fieldDeclaration.getType());
       schema.addProperties(name, type);
-      collectUsedSchema(schema).entrySet().stream()
-          .filter(s -> !solvedTypes.contains(s.getKey()))
-          .collect(Collectors.toSet()).forEach(
-              s -> results.addAll(parseReferencedTypeAsSchema(s.getValue())));
     }
-    List<ResolvedReferenceType> directAncestors = resolvedType
-        .getAllClassesAncestors().stream()
-        .filter(resolvedReferenceType -> !resolvedReferenceType
-            .getQualifiedName().equals(Object.class.getName()))
-        .collect(Collectors.toList());
-    if (directAncestors.isEmpty()) {
-      schema.setName(qualifiedName);
-      results.add(schema);
-    } else {
-      ComposedSchema parentSchema = new ComposedSchema();
-      parentSchema.name(qualifiedName);
-      results.add(parentSchema);
-      for (ResolvedReferenceType directAncestor : directAncestors) {
-        parentSchema.addAllOfItem(new ObjectSchema()
-            .$ref(getFullQualifiedNameRef(directAncestor.getQualifiedName())));
-        results.addAll(parseReferencedTypeAsSchema(directAncestor));
-      }
-      parentSchema.addAllOfItem(schema);
-    }
-    return results;
+    return schema;
   }
 
   private Set<String> getValidFields(ResolvedReferenceType resolvedType) {
