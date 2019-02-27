@@ -14,15 +14,15 @@ const assertResponseIsOk = async(response: Response): Promise<void> => {
     }
 
     if (responseJson !== undefined) {
-      throw new VaadinConnectException(
+      throw new VaadinConnectError(
         responseJson.message,
         responseJson.type,
         responseJson.detail
       );
     } else if (responseText !== null && responseText.length > 0) {
-      throw new VaadinConnectException(responseText);
+      throw new VaadinConnectError(responseText);
     } else {
-      throw new VaadinConnectException(
+      throw new VaadinConnectError(
         'expected "200 OK" response, but got ' +
           `${response.status} ${response.statusText}`
       );
@@ -169,7 +169,7 @@ class AuthTokens {
  * An exception that gets thrown when the Vaadin Connect backend responds
  * with not ok status.
  */
-export class VaadinConnectException extends Error {
+export class VaadinConnectError extends Error {
   /**
    * The error message
    */
