@@ -12,11 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.Version;
 
 import com.vaadin.connect.VaadinConnectException;
 import com.vaadin.connect.VaadinService;
-import com.vaadin.connect.demo.account.BeanWithTypeFromDependencies;
 import com.vaadin.connect.auth.AnonymousAllowed;
 
 @VaadinService
@@ -31,6 +29,13 @@ public class DemoVaadinService {
       this.name = name;
       this.count = count;
     }
+  }
+
+  /**
+   * Same name class to check the alias work correctly.
+   */
+  public static class BeanWithTypeFromDependencies {
+    String foo;
   }
 
   public static class ComplexResponse {
@@ -82,7 +87,8 @@ public class DemoVaadinService {
    * @return {@code null}
    */
   @PermitAll
-  public BeanWithTypeFromDependencies testTypeResolverMethod(Version version) {
+  public BeanWithTypeFromDependencies testTypeResolverMethod(
+      com.vaadin.connect.demo.account.BeanWithTypeFromDependencies version) {
     return null;
   }
 

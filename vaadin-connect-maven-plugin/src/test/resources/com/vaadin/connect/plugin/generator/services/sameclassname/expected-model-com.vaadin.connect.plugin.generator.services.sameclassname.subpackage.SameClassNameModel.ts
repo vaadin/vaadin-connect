@@ -1,5 +1,5 @@
 import SubProperty from './SameClassNameModel/SubProperty';
-import SubProperty as SubProperty1 from './SubProperty';
+import SubProperty1 from './SubProperty';
 
 export default interface SameClassNameModel {
   bar: string;
