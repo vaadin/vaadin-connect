@@ -1,5 +1,5 @@
 {{#each imports}}
-import {{className}}{{~#importAs}} as {{{importAs}}}{{/importAs}} from '{{importPath}}';
+import {{~#importAs}} {{importAs}}{{/importAs}}{{~^importAs}} {{className}}{{/importAs}} from '{{importPath}}';
 {{/each}}
 
 {{#models}}
