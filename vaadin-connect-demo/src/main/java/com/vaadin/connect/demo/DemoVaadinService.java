@@ -18,7 +18,7 @@ import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.auth.AnonymousAllowed;
 import com.vaadin.connect.demo.account.BeanWithTypeFromDependencies;
 import com.vaadin.connect.exception.VaadinConnectException;
-import com.vaadin.connect.exception.ValidationException;
+import com.vaadin.connect.exception.VaadinConnectValidationException;
 
 @VaadinService
 @DenyAll
@@ -139,8 +139,8 @@ public class DemoVaadinService {
   @PermitAll
   public int doNotSubmitEmptyStrings(String input) {
     if (input == null || input.isEmpty()) {
-      throw new ValidationException(new ValidationException.ValidationResult(
-          "input", "Input cannot be an empty or blank string"));
+      throw new VaadinConnectValidationException(new VaadinConnectValidationException.ValidationErrorData(
+              "Input cannot be an empty or blank string", "input"));
     }
     return input.length();
   }

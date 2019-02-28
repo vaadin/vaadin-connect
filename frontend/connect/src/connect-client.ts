@@ -2,14 +2,14 @@ interface ConnectExceptionData {
   message: string;
   type: string;
   detail?: any;
-  validationResults?: ValidationResult[];
+  errorData?: ValidationErrorData[];
 }
 
 const throwConnectException = (errorJson: ConnectExceptionData) => {
-  if (errorJson.validationResults) {
-    throw new ValidationError(
+  if (errorJson.errorData) {
+    throw new VaadinConnectValidationError(
       errorJson.message,
-      errorJson.validationResults,
+      errorJson.errorData,
       errorJson.type
     );
   } else {
@@ -26,7 +26,7 @@ const throwConnectException = (errorJson: ConnectExceptionData) => {
  * @param response The response to assert.
  * @ignore
  */
-const assertResponseIsOk = async(response: Response): Promise<void> => {
+const assertResponseIsOk = async (response: Response): Promise<void> => {
   if (!response.ok) {
     const errorText = await response.text();
     let errorJson: ConnectExceptionData | null;
@@ -44,7 +44,7 @@ const assertResponseIsOk = async(response: Response): Promise<void> => {
     } else {
       throw new VaadinConnectError(
         'expected "200 OK" response, but got ' +
-          `${response.status} ${response.statusText}`
+        `${response.status} ${response.statusText}`
       );
     }
   }
@@ -55,7 +55,7 @@ const assertResponseIsOk = async(response: Response): Promise<void> => {
  * @param client the connect client instance
  * @ignore
  */
-const authenticateClient = async(client: ConnectClient): Promise<void> => {
+const authenticateClient = async (client: ConnectClient): Promise<void> => {
   let message;
   const _private = privates.get(client);
   let tokens = _private.tokens;
@@ -73,7 +73,7 @@ const authenticateClient = async(client: ConnectClient): Promise<void> => {
       body.append('refresh_token', tokens.refreshToken.token);
     } else if (client.credentials) {
       const creds = message !== undefined
-        ? await client.credentials({ message })
+        ? await client.credentials({message})
         : await client.credentials();
       if (!creds) {
         // No credentials returned, skip the token request
@@ -220,19 +220,34 @@ export class VaadinConnectError extends Error {
   }
 }
 
-// TODO kb tsdocs + better naming
-export class ValidationError extends VaadinConnectError {
-  validationResults: ValidationResult[];
+/**
+ * An exception that gets thrown if Vaadin Connect backend responds with non-ok status and provides additional info
+ * on the validation errors occurred.
+ */
+export class VaadinConnectValidationError extends VaadinConnectError {
+  /**
+   * An array of the validation errors.
+   */
+  errorData: ValidationErrorData[];
 
-  constructor(message: string, validationResults: ValidationResult[],
+  constructor(message: string, errorData: ValidationErrorData[],
               type?: string) {
-    super(message, type, validationResults);
-    this.validationResults = validationResults;
+    super(message, type, errorData);
+    this.errorData = errorData;
   }
 }
 
-export class ValidationResult {
+/**
+ *
+ */
+export class ValidationErrorData {
+  /**
+   *
+   */
   message: string;
+  /**
+   *
+   */
   parameterName?: string;
 
   constructor(message: string, parameterName?: string) {
