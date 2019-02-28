@@ -1,3 +1,26 @@
+interface ConnectExceptionData {
+  message: string;
+  type: string;
+  detail?: any;
+  validationResults?: ValidationResult[];
+}
+
+const throwConnectException = (errorJson: ConnectExceptionData) => {
+  if (errorJson.validationResults) {
+    throw new ValidationError(
+      errorJson.message,
+      errorJson.validationResults,
+      errorJson.type
+    );
+  } else {
+    throw new VaadinConnectError(
+      errorJson.message,
+      errorJson.type,
+      errorJson.detail
+    );
+  }
+};
+
 /**
  * Throws a TypeError if the response is not 200 OK.
  * @param response The response to assert.
@@ -5,22 +28,19 @@
  */
 const assertResponseIsOk = async(response: Response): Promise<void> => {
   if (!response.ok) {
-    const responseText = await response.text();
-    let responseJson;
+    const errorText = await response.text();
+    let errorJson: ConnectExceptionData | null;
     try {
-      responseJson = JSON.parse(responseText);
+      errorJson = JSON.parse(errorText);
     } catch (ignored) {
       // not a json
+      errorJson = null;
     }
 
-    if (responseJson !== undefined) {
-      throw new VaadinConnectError(
-        responseJson.message,
-        responseJson.type,
-        responseJson.detail
-      );
-    } else if (responseText !== null && responseText.length > 0) {
-      throw new VaadinConnectError(responseText);
+    if (errorJson !== null) {
+      throwConnectException(errorJson);
+    } else if (errorText !== null && errorText.length > 0) {
+      throw new VaadinConnectError(errorText);
     } else {
       throw new VaadinConnectError(
         'expected "200 OK" response, but got ' +
@@ -173,7 +193,7 @@ export class VaadinConnectError extends Error {
   /**
    * The error message
    */
-  message: string;
+  errorMessage: string;
 
   /**
    * The optional name of the exception that was thrown on a backend
@@ -192,10 +212,32 @@ export class VaadinConnectError extends Error {
    * @param detail the `detail` property value
    */
   constructor(message: string, type?: string, detail?: any) {
-    super(message);
+    super(
+      `Message: '${message}', additional details: '${JSON.stringify(detail)}'`);
     this.type = type;
-    this.message = message;
+    this.errorMessage = message;
     this.detail = detail;
+  }
+}
+
+// TODO kb tsdocs + better naming
+export class ValidationError extends VaadinConnectError {
+  validationResults: ValidationResult[];
+
+  constructor(message: string, validationResults: ValidationResult[],
+              type?: string) {
+    super(message, type, validationResults);
+    this.validationResults = validationResults;
+  }
+}
+
+export class ValidationResult {
+  message: string;
+  parameterName?: string;
+
+  constructor(message: string, parameterName?: string) {
+    this.message = message;
+    this.parameterName = parameterName;
   }
 }
 
