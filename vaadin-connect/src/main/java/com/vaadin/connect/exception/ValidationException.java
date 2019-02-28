@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-// TODO kb tests, javadocs
+// TODO kb tests, javadocs, rename it since there's already a validation exception class
 public class ValidationException extends VaadinConnectException {
 
   public static class ValidationResult {
