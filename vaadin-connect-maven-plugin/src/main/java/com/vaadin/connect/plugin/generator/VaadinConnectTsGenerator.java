@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -91,6 +90,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
   private static final String OPERATION = "operation";
+  private static final String IMPORT = "import";
 
   private List<Tag> tags;
 
@@ -441,30 +441,47 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     return codegenOperation;
   }
 
-  private String getSimpleNameFromQualifiedName(String qualifiedName) {
-    if (StringUtils.contains(qualifiedName, "<")) {
-      // E.g: Map<string, Map<string, com.fasterxml.jackson.core.Version>>[]
-      // mainType = Map
-      String mainType = getSimpleNameFromQualifiedName(
-          StringUtils.substringBefore(qualifiedName, "<"));
-      // typeParameters = string, Map<string,
-      // com.fasterxml.jackson.core.Version>
-      String typeParameters = StringUtils.substring(qualifiedName,
-          qualifiedName.indexOf('<') + 1, qualifiedName.lastIndexOf('>'));
-      // firstPart = string
-      String firstPart = StringUtils.substringBefore(typeParameters, ",");
-      // secondPart = Map<string, com.fasterxml.jackson.core.Version>
-      String secondPart = StringUtils.substringAfter(typeParameters, ",");
-      // suffix = []
-      String suffix = StringUtils.substringAfterLast(qualifiedName, ">");
-
-      String firstTypeParameter = getSimpleNameFromQualifiedName(firstPart)
-          .trim();
-      String secondTypeParameter = getSimpleNameFromQualifiedName(secondPart)
-          .trim();
-      return String.format("%s<%s, %s>%s", mainType, firstTypeParameter,
-          secondTypeParameter, suffix);
+  private String getSimpleNameFromImports(String dataType,
+      List<Map<String, String>> imports) {
+    for (Map<String, String> anImport : imports) {
+      if (StringUtils.equals(dataType, anImport.get(IMPORT))) {
+        return StringUtils.firstNonBlank(anImport.get("importAs"),
+            anImport.get("className"));
+      }
     }
+    if (StringUtils.contains(dataType, "<")) {
+      return getSimpleMapTypeFromImports(dataType, imports);
+    } else if (StringUtils.contains(dataType, "[]")) {
+      String mainType = StringUtils.substringBeforeLast(dataType, "[]");
+      return getSimpleNameFromImports(mainType, imports) + "[]";
+    }
+    return getSimpleNameFromQualifiedName(dataType);
+  }
+
+  private String getSimpleMapTypeFromImports(String dataType,
+      List<Map<String, String>> imports) {
+    // E.g: Map<string, Map<string, com.fasterxml.jackson.core.Version>>[]
+    // mainType = Map
+    String mainType = getSimpleNameFromImports(
+        StringUtils.substringBefore(dataType, "<"), imports);
+    // typeParameters =
+    // string, Map<string, com.fasterxml.jackson.core.Version>
+    String typeParameters = StringUtils.substring(dataType,
+        dataType.indexOf('<') + 1, dataType.lastIndexOf('>'));
+    // firstPart = string
+    String firstPart = StringUtils.substringBefore(typeParameters, ",").trim();
+    // secondPart = Map<string, com.fasterxml.jackson.core.Version>
+    String secondPart = StringUtils.substringAfter(typeParameters, ",").trim();
+    // suffix = []
+    String suffix = StringUtils.substringAfterLast(dataType, ">");
+
+    String firstTypeParameter = getSimpleNameFromImports(firstPart, imports);
+    String secondTypeParameter = getSimpleNameFromImports(secondPart, imports);
+    return String.format("%s<%s, %s>%s", mainType, firstTypeParameter,
+        secondTypeParameter, suffix);
+  }
+
+  private String getSimpleNameFromQualifiedName(String qualifiedName) {
     if (StringUtils.contains(qualifiedName, ".")) {
       return StringUtils.substringAfterLast(qualifiedName, ".");
     }
@@ -600,18 +617,24 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private void adjustImportInformation(List<Map<String, Object>> imports,
       String relativePathFromGeneratedFolderToCurrentFile) {
     Set<String> usedNames = new HashSet<>();
+    // Make sure the import list are always in the same orders in when
+    // generating different times.
+    imports.sort((o1, o2) -> StringUtils.compare((String) o1.get(IMPORT),
+        (String) o2.get(IMPORT)));
     for (Map<String, Object> anImport : imports) {
-      String importName = (String) anImport.get("import");
-      String className = getSimpleNameFromQualifiedName(importName);
+      String importQualifiedName = (String) anImport.get(IMPORT);
+      String className = getSimpleNameFromQualifiedName(importQualifiedName);
       if (usedNames.contains(className)) {
-        String importAs = getUniqueNameFromQualifiedName(usedNames, className);
+        String importAs = getUniqueNameFromQualifiedName(usedNames,
+            importQualifiedName);
         anImport.put("importAs", importAs);
         usedNames.add(importAs);
       } else {
         usedNames.add(className);
       }
       anImport.put("className", className);
-      String importPath = convertQualifiedNameToModelPath(importName);
+
+      String importPath = convertQualifiedNameToModelPath(importQualifiedName);
       String relativizedPath = Paths
           .get(relativePathFromGeneratedFolderToCurrentFile)
           .relativize(Paths.get(importPath)).toString();
@@ -622,14 +645,22 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   private String getUniqueNameFromQualifiedName(Set<String> usedNames,
-      String className) {
-    String newClassName = className;
-    int counter = 0;
-    while (usedNames.contains(newClassName)) {
-      newClassName = className + ++counter;
-      if (counter >= 10) {
-        newClassName = className + UUID.randomUUID().toString().substring(0, 4);
+      String qualifiedName) {
+    String[] packageSegments = StringUtils.split(qualifiedName, '.');
+    String newClassName = "";
+    if (packageSegments != null && packageSegments.length > 1) {
+      for (int i = packageSegments.length - 1; i >= 0; i--) {
+        newClassName = StringUtils.capitalize(packageSegments[i])
+            + newClassName;
+        if (!usedNames.contains(newClassName)) {
+          return newClassName;
+        }
       }
+    }
+    int counter = 1;
+    while (usedNames.contains(newClassName)) {
+      newClassName = qualifiedName + counter;
+      counter++;
     }
     return newClassName;
   }
@@ -801,19 +832,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   private Helper<String> getClassNameFromImportsHelper() {
-    return (className, options) -> getClassNameFromImports(className,
-        options.param(0));
-  }
-
-  private String getClassNameFromImports(String className, Object importsList) {
-    List<Map<String, String>> imports = (List<Map<String, String>>) importsList;
-    for (Map<String, String> anImport : imports) {
-      if (StringUtils.equals(className, anImport.get("import"))) {
-        return StringUtils.firstNonBlank(anImport.get("importAs"),
-            anImport.get("className"));
-      }
-    }
-    return getSimpleNameFromQualifiedName(className);
+    return (className, options) -> getSimpleNameFromImports(className,
+        (List<Map<String, String>>) options.param(0));
   }
 
   /**

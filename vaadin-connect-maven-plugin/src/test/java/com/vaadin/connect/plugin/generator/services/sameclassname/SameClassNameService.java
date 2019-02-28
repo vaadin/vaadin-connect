@@ -15,13 +15,34 @@
  */
 package com.vaadin.connect.plugin.generator.services.sameclassname;
 
+import java.util.List;
+import java.util.Map;
+
 import com.vaadin.connect.VaadinService;
 
 @VaadinService
 public class SameClassNameService {
   public SameClassNameModel getMyClass(
-      com.vaadin.connect.plugin.generator.services.sameclassname.subpackage.SameClassNameModel sameClassNameModel) {
+      List<com.vaadin.connect.plugin.generator.services.sameclassname.subpackage.SameClassNameModel> sameClassNameModel) {
     return null;
+  }
+
+  public List<com.vaadin.connect.plugin.generator.services.sameclassname.subpackage.SameClassNameModel> getSubpackageModelList(
+      Map<String, com.vaadin.connect.plugin.generator.services.sameclassname.subpackage.SameClassNameModel> sameClassNameModel) {
+    return null;
+  }
+
+  public Map<String, com.vaadin.connect.plugin.generator.services.sameclassname.subpackage.SameClassNameModel> getSubpackageModelMap(
+      Map<String, SameClassNameModel> sameClassNameModel) {
+    return null;
+  }
+
+  public com.vaadin.connect.plugin.generator.services.sameclassname.subpackage.SameClassNameModel getSubpackageModel() {
+    return null;
+  }
+
+  public void setSubpackageModel(
+      com.vaadin.connect.plugin.generator.services.sameclassname.subpackage.SameClassNameModel model) {
   }
 
   public static class SameClassNameModel {
