@@ -77,12 +77,6 @@ const input = document.getElementById('inputText') as HTMLInputElement;
     }
   });
 
-(document.getElementById('submitValidationButton') as HTMLButtonElement)
-  .addEventListener('click', async() => {
-      const zz: number = await demoService.doNotSubmitEmptyStrings(input.value);
-      console.log(zz);
-  });
-
 (document.getElementById('exceptionButton') as HTMLButtonElement)
   .addEventListener('click', async() => {
     updateExceptionData({} as VaadinConnectError);
