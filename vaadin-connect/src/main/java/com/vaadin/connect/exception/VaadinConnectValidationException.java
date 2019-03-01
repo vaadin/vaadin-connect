@@ -18,12 +18,12 @@ package com.vaadin.connect.exception;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-// TODO kb tests
 /**
  * A validation exception class that is intended to be thrown when any service
  * method receives invalid parameter(s).
@@ -69,9 +69,27 @@ public class VaadinConnectValidationException extends VaadinConnectException {
     public ValidationErrorData(String message) {
       this(message, null);
     }
+
+    /**
+     * Gets the parameter name that caused the validation error.
+     *
+     * @return the parameter name, may be {@code null}
+     */
+    public String getParameterName() {
+      return parameterName;
+    }
+
+    /**
+     * Gets the validation error message.
+     *
+     * @return the validation error message
+     */
+    public String getMessage() {
+      return message;
+    }
   }
 
-  private final List<ValidationErrorData> errorData = new ArrayList<>();
+  private final List<ValidationErrorData> errorData;
 
   /**
    * Creates a validation exception from the error data.
@@ -85,9 +103,20 @@ public class VaadinConnectValidationException extends VaadinConnectException {
       ValidationErrorData... errorData) {
     super("Validation failed");
 
-    this.errorData.add(Objects.requireNonNull(data,
+    List<ValidationErrorData> allErrors = new ArrayList<>(errorData.length + 1);
+    allErrors.add(Objects.requireNonNull(data,
         "At least one validation error is required"));
-    this.errorData.addAll(Arrays.asList(errorData));
+    allErrors.addAll(Arrays.asList(errorData));
+    this.errorData = Collections.unmodifiableList(allErrors);
+  }
+
+  /**
+   * Gets the collection of the data on the validation errors.
+   *
+   * @return the error data
+   */
+  public List<ValidationErrorData> getErrorData() {
+    return errorData;
   }
 
   @Override

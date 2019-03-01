@@ -132,6 +132,16 @@ public class VaadinConnectException extends RuntimeException {
   }
 
   /**
+   * Gets the detail of the exception, if provided by user, {@code null}
+   * otherwise.
+   *
+   * @return the detail of the exception
+   */
+  public Object getDetail() {
+    return detail;
+  }
+
+  /**
    * Creates a map with the serialization data to be sent to the client when the
    * exception thrown is processed by {@link VaadinConnectController}. The
    * following data will be sent to the client:
