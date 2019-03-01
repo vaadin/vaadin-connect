@@ -26,7 +26,7 @@ const throwConnectException = (errorJson: ConnectExceptionData) => {
  * @param response The response to assert.
  * @ignore
  */
-const assertResponseIsOk = async (response: Response): Promise<void> => {
+const assertResponseIsOk = async(response: Response): Promise<void> => {
   if (!response.ok) {
     const errorText = await response.text();
     let errorJson: ConnectExceptionData | null;
@@ -55,7 +55,7 @@ const assertResponseIsOk = async (response: Response): Promise<void> => {
  * @param client the connect client instance
  * @ignore
  */
-const authenticateClient = async (client: ConnectClient): Promise<void> => {
+const authenticateClient = async(client: ConnectClient): Promise<void> => {
   let message;
   const _private = privates.get(client);
   let tokens = _private.tokens;
@@ -221,7 +221,8 @@ export class VaadinConnectError extends Error {
 }
 
 /**
- * An exception that gets thrown if Vaadin Connect backend responds with non-ok status and provides additional info
+ * An exception that gets thrown if Vaadin Connect backend responds
+ * with non-ok status and provides additional info
  * on the validation errors occurred.
  */
 export class VaadinConnectValidationError extends VaadinConnectError {

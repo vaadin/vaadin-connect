@@ -123,7 +123,7 @@ public class VaadinConnectValidationException extends VaadinConnectException {
   public Map<String, Object> getSerializationData() {
     Map<String, Object> serializationData = new HashMap<>(
         super.getSerializationData());
-    serializationData.put("validationErrors", errorData);
+    serializationData.put("errorData", errorData);
     return serializationData;
   }
 }
