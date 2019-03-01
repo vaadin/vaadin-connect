@@ -2,7 +2,12 @@ import client from './connect-client';
 
 import * as demoService from './generated/DemoVaadinService';
 
-import {AccessToken, ConnectClient, CredentialsCallback, VaadinConnectError} from '@vaadin/connect';
+import {
+  AccessToken,
+  ConnectClient,
+  CredentialsCallback,
+  VaadinConnectError
+} from '@vaadin/connect';
 
 const credentials: CredentialsCallback = () => {
   return {
