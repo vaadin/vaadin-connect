@@ -647,15 +647,18 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private String getUniqueNameFromQualifiedName(Set<String> usedNames,
       String qualifiedName) {
     String[] packageSegments = StringUtils.split(qualifiedName, '.');
+    StringBuilder classNameBuilder = new StringBuilder();
     String newClassName = "";
     if (packageSegments != null && packageSegments.length > 1) {
       for (int i = packageSegments.length - 1; i >= 0; i--) {
-        newClassName = StringUtils.capitalize(packageSegments[i])
-            + newClassName;
+        classNameBuilder.insert(0, StringUtils.capitalize(packageSegments[i]));
+        newClassName = classNameBuilder.toString();
         if (!usedNames.contains(newClassName)) {
           return newClassName;
         }
       }
+    } else {
+      newClassName = qualifiedName;
     }
     int counter = 1;
     while (usedNames.contains(newClassName)) {
