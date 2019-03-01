@@ -89,7 +89,7 @@ public class VaadinConnectValidationException extends VaadinConnectException {
     }
   }
 
-  private final List<ValidationErrorData> errorData;
+  private final transient List<ValidationErrorData> errorData;
 
   /**
    * Creates a validation exception from the error data.
