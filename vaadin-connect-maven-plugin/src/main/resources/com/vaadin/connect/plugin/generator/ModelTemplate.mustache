@@ -1,5 +1,5 @@
 {{#each imports}}
-import {{className}} from '{{importPath}}';
+import {{~#importAs}} {{importAs}}{{/importAs}}{{~^importAs}} {{className}}{{/importAs}} from '{{importPath}}';
 {{/each}}
 
 {{#models}}
@@ -11,15 +11,15 @@ import {{className}} from '{{importPath}}';
 {{/multiplelines}}
  */
 {{/unescapedDescription}}
-export default interface {{{getSimpleName classname}}} {
-{{#allVars}}
+export default interface {{{getClassNameFromImports classname ../../imports}}} {{~#parentSchema}} extends {{{getClassNameFromImports parentSchema ../../imports}}}{{/parentSchema}} {
+{{#vars}}
 {{#unescapedDescription}}
   /**{{#multiplelines unescapedDescription}}
    * {{{@line}}}{{/multiplelines}}
    */
 {{/unescapedDescription}}
-  {{name}}: {{{getSimpleName datatype}}};
-{{/allVars}}
+  {{name}}: {{{getClassNameFromImports datatype ../../../imports}}};
+{{/vars}}
 }
 {{/model}}
 {{/models}}

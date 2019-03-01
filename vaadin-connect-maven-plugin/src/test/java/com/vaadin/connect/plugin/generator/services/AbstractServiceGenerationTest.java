@@ -52,6 +52,7 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.BooleanSchema;
+import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.DateSchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
@@ -372,38 +373,50 @@ public abstract class AbstractServiceGenerationTest {
       } else if (actualSchema instanceof DateSchema) {
         assertTrue(Date.class.isAssignableFrom(expectedSchemaClass)
             || LocalDate.class.isAssignableFrom(expectedSchemaClass));
+      } else if (actualSchema instanceof ComposedSchema) {
+        List<Schema> allOf = ((ComposedSchema) actualSchema).getAllOf();
+        assertTrue(allOf.size() > 1);
+        for (Schema schema : allOf) {
+          if (expectedSchemaClass.getCanonicalName().equals(schema.getName())) {
+            assertSchemaProperties(expectedSchemaClass, schema);
+            break;
+          }
+        }
       } else if (actualSchema instanceof ObjectSchema) {
         if (StringUtils.startsWith(expectedSchemaClass.getPackage().getName(),
             "java.")) {
           // skip the validation for unhandled java types, e.g. Optional
           return;
         }
-        Map<String, Schema> properties = actualSchema.getProperties();
-        assertNotNull(properties);
-        assertTrue(properties.size() > 0);
-
-        int expectedFieldsCount = 0;
-        for (Field expectedSchemaField : expectedSchemaClass
-            .getDeclaredFields()) {
-          if (Modifier.isTransient(expectedSchemaField.getModifiers())
-              || Modifier.isStatic(expectedSchemaField.getModifiers())
-              || expectedSchemaField.isAnnotationPresent(JsonIgnore.class)) {
-            continue;
-          }
-
-          expectedFieldsCount++;
-          Schema propertySchema = properties.get(expectedSchemaField.getName());
-          assertNotNull(String.format("Property schema is not found %s",
-              expectedSchemaField.getName()), propertySchema);
-          assertSchema(propertySchema, expectedSchemaField.getType());
-        }
-        assertEquals(expectedFieldsCount, properties.size());
+        assertSchemaProperties(expectedSchemaClass, actualSchema);
       } else {
         throw new AssertionError(
             String.format("Unknown schema '%s' for class '%s'",
                 actualSchema.getClass(), expectedSchemaClass));
       }
     }
+  }
+
+  private void assertSchemaProperties(Class<?> expectedSchemaClass,
+      Schema schema) {
+    int expectedFieldsCount = 0;
+    Map<String, Schema> properties = schema.getProperties();
+    assertNotNull(properties);
+    assertTrue(properties.size() > 0);
+    for (Field expectedSchemaField : expectedSchemaClass.getDeclaredFields()) {
+      if (Modifier.isTransient(expectedSchemaField.getModifiers())
+          || Modifier.isStatic(expectedSchemaField.getModifiers())
+          || expectedSchemaField.isAnnotationPresent(JsonIgnore.class)) {
+        continue;
+      }
+
+      expectedFieldsCount++;
+      Schema propertySchema = properties.get(expectedSchemaField.getName());
+      assertNotNull(String.format("Property schema is not found %s",
+          expectedSchemaField.getName()), propertySchema);
+      assertSchema(propertySchema, expectedSchemaField.getType());
+    }
+    assertEquals(expectedFieldsCount, properties.size());
   }
 
   private void verifySchemaReferences() {
@@ -437,12 +450,12 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private void assertClassGeneratedTs(Class<?> expectedClass) {
-    String classResourceUrl = String.format("expected-%s.ts", expectedClass.getSimpleName());
-    URL expectedResource = this.getClass().getResource(
-      classResourceUrl);
+    String classResourceUrl = String.format("expected-%s.ts",
+        expectedClass.getSimpleName());
+    URL expectedResource = this.getClass().getResource(classResourceUrl);
     Assert.assertNotNull(
-      String.format("Expected file is not found at %s", classResourceUrl),
-      expectedResource);
+        String.format("Expected file is not found at %s", classResourceUrl),
+        expectedResource);
     String expectedTs = TestUtils.readResource(expectedResource);
 
     Path outputFilePath = outputDirectory.getRoot().toPath()

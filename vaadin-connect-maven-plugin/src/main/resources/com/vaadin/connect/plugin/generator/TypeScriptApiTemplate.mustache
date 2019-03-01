@@ -38,7 +38,7 @@ So `// @ts-ignore` is used for now to mute this error. The consequences are:
 }}// @ts-ignore
 import client from '{{vaadinConnectDefaultClientPath}}';
 {{#each imports}}
-import {{className}} from '{{importPath}}';
+import {{~#importAs}} {{importAs}}{{/importAs}}{{~^importAs}} {{className}}{{/importAs}} from '{{importPath}}';
 {{/each}}
 {{#operations}}
 {{#operation}}
@@ -54,9 +54,9 @@ import {{className}} from '{{importPath}}';
  */{{/vendorExtensions.x-vaadin-connect-show-tsdoc}}
 export function {{vendorExtensions.x-vaadin-connect-method-name}}({{!
   }}{{#each bodyParam.vendorExtensions.x-vaadin-connect-parameters}}
-  {{name}}: {{{type}}}{{#if @last}}{{else}},{{/if}}
+  {{name}}: {{{getClassNameFromImports type ../../imports}}}{{#if @last}}{{else}},{{/if}}
 {{/each}}): Promise<{{!
-}}{{#responses}}{{#dataType}}{{{getSimpleName dataType}}}{{/dataType}}{{^dataType}}void{{/dataType}}{{/responses}}{{!
+}}{{#responses}}{{#dataType}}{{{getClassNameFromImports dataType ../../../imports}}}{{/dataType}}{{^dataType}}void{{/dataType}}{{/responses}}{{!
 }}> {
 {{=<% %>=}}
   return client.call(<%!
