@@ -10,14 +10,14 @@ export function getMyClass(
 }
 
 export function getSubpackageModelList(
-  sameClassNameModel: Map<string, SubpackageSameClassNameModel>
+  sameClassNameModel: { [key: string]: SubpackageSameClassNameModel; }
 ): Promise<SubpackageSameClassNameModel[]> {
   return client.call('SameClassNameService', 'getSubpackageModelList', {sameClassNameModel});
 }
 
 export function getSubpackageModelMap(
-  sameClassNameModel: Map<string, SameClassNameModel>
-): Promise<Map<string, SubpackageSameClassNameModel>> {
+  sameClassNameModel: { [key: string]: SameClassNameModel; }
+): Promise<{ [key: string]: SubpackageSameClassNameModel; }> {
   return client.call('SameClassNameService', 'getSubpackageModelMap', {sameClassNameModel});
 }
 

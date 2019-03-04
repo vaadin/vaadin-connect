@@ -37,7 +37,7 @@ export function fullFQNMethod(
  *
  * Return map of user and roles
  */
-export function getAllUserRolesMap(): Promise<Map<string, User>> {
+export function getAllUserRolesMap(): Promise<{ [key: string]: User; }> {
   return client.call('JsonTestService', 'getAllUserRolesMap');
 }
 
@@ -69,7 +69,7 @@ export function getArrayInt(
  * Return boolean value
  */
 export function getBooleanValue(
-  input: Map<string, User>
+  input: { [key: string]: User; }
 ): Promise<boolean> {
   return client.call('JsonTestService', 'getBooleanValue', {input});
 }
