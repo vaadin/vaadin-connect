@@ -121,7 +121,7 @@ public class VaadinConnectValidationExceptionTest {
 
     assertNotNull(exception.getMessage());
     assertNull(exception.getDetail());
-    List<ValidationErrorData> actualData = exception.getErrorData();
+    List<ValidationErrorData> actualData = exception.getValidationErrorData();
     assertEquals(1, actualData.size());
     assertEquals(Collections.singletonList(errorData), actualData);
 
@@ -144,7 +144,7 @@ public class VaadinConnectValidationExceptionTest {
 
     assertNotNull(exception.getMessage());
     assertNull(exception.getDetail());
-    List<ValidationErrorData> actualData = exception.getErrorData();
+    List<ValidationErrorData> actualData = exception.getValidationErrorData();
     assertEquals(2, actualData.size());
     assertEquals(Arrays.asList(errorData1, errorData2), actualData);
 

@@ -182,7 +182,7 @@ describe('ConnectClient', () => {
       const expectedObject = {
         type: 'com.vaadin.connect.exception.VaadinConnectValidationException',
         message: 'Validation failed',
-        errorData: [
+        validationErrorData: [
           {
             parameterName: 'input',
             message: 'Input cannot be an empty or blank string'
@@ -200,7 +200,7 @@ describe('ConnectClient', () => {
         expect(err).to.have.property('message').that.is.string(expectedObject.message);
         expect(err).to.have.property('type').that.is.string(expectedObject.type);
         expect(err).to.have.property('detail');
-        expect(err).to.have.deep.property('errorData', expectedObject.errorData);
+        expect(err).to.have.deep.property('validationErrorData', expectedObject.validationErrorData);
       }
     });
 

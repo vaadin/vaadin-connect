@@ -2,14 +2,14 @@ interface ConnectExceptionData {
   message: string;
   type: string;
   detail?: any;
-  errorData?: ValidationErrorData[];
+  validationErrorData?: ValidationErrorData[];
 }
 
 const throwConnectException = (errorJson: ConnectExceptionData) => {
-  if (errorJson.errorData) {
+  if (errorJson.validationErrorData) {
     throw new VaadinConnectValidationError(
       errorJson.message,
-      errorJson.errorData,
+      errorJson.validationErrorData,
       errorJson.type
     );
   } else {
@@ -229,12 +229,12 @@ export class VaadinConnectValidationError extends VaadinConnectError {
   /**
    * An array of the validation errors.
    */
-  errorData: ValidationErrorData[];
+  validationErrorData: ValidationErrorData[];
 
-  constructor(message: string, errorData: ValidationErrorData[],
+  constructor(message: string, validationErrorData: ValidationErrorData[],
               type?: string) {
-    super(message, type, errorData);
-    this.errorData = errorData;
+    super(message, type, validationErrorData);
+    this.validationErrorData = validationErrorData;
   }
 }
 
@@ -528,7 +528,7 @@ export class ConnectClient {
       );
     }
 
-    options = Object.assign({ requireCredentials: true }, options);
+    options = Object.assign({requireCredentials: true}, options);
     if (options.requireCredentials) {
       await this.login();
     }

@@ -89,25 +89,26 @@ public class VaadinConnectValidationException extends VaadinConnectException {
     }
   }
 
-  private final transient List<ValidationErrorData> errorData;
+  private final transient List<ValidationErrorData> validationErrorData;
 
   /**
    * Creates a validation exception from the error data.
    *
    * @param data
    *          validation error data, mandatory (cannot be {@code null})
-   * @param errorData
+   * @param validationErrorData
    *          the rest of the validation data, optional
    */
   public VaadinConnectValidationException(ValidationErrorData data,
-      ValidationErrorData... errorData) {
+      ValidationErrorData... validationErrorData) {
     super("Validation failed");
 
-    List<ValidationErrorData> allErrors = new ArrayList<>(errorData.length + 1);
+    List<ValidationErrorData> allErrors = new ArrayList<>(
+        validationErrorData.length + 1);
     allErrors.add(Objects.requireNonNull(data,
         "At least one validation error is required"));
-    allErrors.addAll(Arrays.asList(errorData));
-    this.errorData = Collections.unmodifiableList(allErrors);
+    allErrors.addAll(Arrays.asList(validationErrorData));
+    this.validationErrorData = Collections.unmodifiableList(allErrors);
   }
 
   /**
@@ -115,15 +116,15 @@ public class VaadinConnectValidationException extends VaadinConnectException {
    *
    * @return the error data
    */
-  public List<ValidationErrorData> getErrorData() {
-    return errorData;
+  public List<ValidationErrorData> getValidationErrorData() {
+    return validationErrorData;
   }
 
   @Override
   public Map<String, Object> getSerializationData() {
     Map<String, Object> serializationData = new HashMap<>(
         super.getSerializationData());
-    serializationData.put("errorData", errorData);
+    serializationData.put("validationErrorData", validationErrorData);
     return serializationData;
   }
 }

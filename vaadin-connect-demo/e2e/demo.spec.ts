@@ -108,7 +108,7 @@ describe('demo application', () => {
           const exceptionMessage = (
             document.getElementById('exceptionMessage') as HTMLOutputElement
           ).textContent;
-          return exceptionMessage && exceptionMessage.indexOf(text) > 0;
+          return exceptionMessage && exceptionMessage.indexOf(text) > -1;
         }, [
           'Service \'DemoVaadinService\' method \'throwsException\''
             + ' execution failure'
@@ -128,7 +128,7 @@ describe('demo application', () => {
           const exceptionMessage = (
             document.getElementById('exceptionMessage') as HTMLOutputElement
           ).textContent;
-          return exceptionMessage && exceptionMessage.indexOf(text) > 0;
+          return exceptionMessage && exceptionMessage.indexOf(text) > -1;
         }, [
           'You had one job to do!'
         ]).call(page);
