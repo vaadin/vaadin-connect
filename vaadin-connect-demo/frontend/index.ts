@@ -101,6 +101,13 @@ const updateExceptionData = (exception: VaadinConnectException) => {
     .textContent = exception.detail ? JSON.stringify(exception.detail) : null;
 };
 
+(document.getElementById('echoMapObject') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    const mapObject = await demoService.echoMapObject({foo: 'bar'});
+    (document.getElementById('mapObject') as HTMLLabelElement)
+        .textContent = JSON.stringify(mapObject);
+  });
+
 const customClient = new ConnectClient({endpoint: '/connect', credentials});
 
 (document.getElementById('addAnotherOne') as HTMLButtonElement)

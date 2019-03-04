@@ -140,4 +140,9 @@ public class DemoVaadinService {
           Collections.singletonMap("wrong_parameter", number));
     }
   }
+
+  @PermitAll
+  public Map<String, String> echoMapObject(Map<String, String> param) {
+    return param;
+  }
 }
