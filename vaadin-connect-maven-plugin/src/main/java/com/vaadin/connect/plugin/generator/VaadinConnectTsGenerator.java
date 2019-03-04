@@ -90,7 +90,10 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
   private static final String JAVA_NAME_PATTERN = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
-  private static final Pattern FULL_QUALIFIED_NAME_PATTERN = Pattern
+  // Pattern for matching fully qualified name in a complex type
+  // e.g. 'com.example.mypackage.Bean' will be extracted in the type
+  // `Map<String, Map<String, com.example.mypackage.Bean>>`
+  private static final Pattern FULLY_QUALIFIED_NAME_PATTERN = Pattern
       .compile("(" + JAVA_NAME_PATTERN + "(\\." + JAVA_NAME_PATTERN + ")*)");
   private static final String OPERATION = "operation";
   private static final String IMPORT = "import";
@@ -461,7 +464,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   private String getSimpleNameFromComplexType(String dataType,
       List<Map<String, String>> imports) {
-    Matcher matcher = FULL_QUALIFIED_NAME_PATTERN.matcher(dataType);
+    Matcher matcher = FULLY_QUALIFIED_NAME_PATTERN.matcher(dataType);
     StringBuffer builder = new StringBuffer();
     while (matcher.find()) {
       String fqnName = matcher.group(1);
