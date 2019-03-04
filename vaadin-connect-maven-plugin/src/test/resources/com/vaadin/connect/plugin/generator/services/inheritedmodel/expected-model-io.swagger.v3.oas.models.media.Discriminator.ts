@@ -1,4 +1,4 @@
 export default interface Discriminator {
-  mapping: Map<string, string>;
+  mapping: { [key: string]: string; };
   propertyName: string;
 }

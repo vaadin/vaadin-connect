@@ -26,7 +26,7 @@ export function getArrayOfAccount(): Promise<Account[]> {
   return client.call('ModelService', 'getArrayOfAccount');
 }
 
-export function getMapGroups(): Promise<Map<string, Group>> {
+export function getMapGroups(): Promise<{ [key: string]: Group; }> {
   return client.call('ModelService', 'getMapGroups');
 }
 
