@@ -3,7 +3,7 @@ const {expect} = intern.getPlugin('chai');
 const {fetchMock} = intern.getPlugin('fetchMock');
 const {sinon} = intern.getPlugin('sinon');
 
-import {ConnectClient, VaadinConnectException} from '../connect-client.js';
+import {ConnectClient, VaadinConnectError, VaadinConnectValidationError} from '../connect-client.js';
 
 /* global btoa localStorage setTimeout URLSearchParams Request Response */
 describe('ConnectClient', () => {
@@ -153,7 +153,7 @@ describe('ConnectClient', () => {
       try {
         await client.call('FooService', 'notFound');
       } catch (err) {
-        expect(err).to.be.instanceOf(VaadinConnectException)
+        expect(err).to.be.instanceOf(VaadinConnectError)
           .and.have.property('message').that.has.string('404 Not Found');
       }
     });
@@ -171,10 +171,36 @@ describe('ConnectClient', () => {
       try {
         await client.call('FooService', 'vaadinException');
       } catch (err) {
-        expect(err).to.be.instanceOf(VaadinConnectException);
+        expect(err).to.be.instanceOf(VaadinConnectError);
         expect(err).to.have.property('message').that.is.string(expectedObject.message);
         expect(err).to.have.property('type').that.is.string(expectedObject.type);
         expect(err).to.have.deep.property('detail', expectedObject.detail);
+      }
+    });
+
+    it('should reject with extra validation parameters in the exception if response body has the data', async() => {
+      const expectedObject = {
+        type: 'com.vaadin.connect.exception.VaadinConnectValidationException',
+        message: 'Validation failed',
+        validationErrorData: [
+          {
+            parameterName: 'input',
+            message: 'Input cannot be an empty or blank string'
+          }
+        ]
+      };
+      fetchMock.post('/connect/FooService/validationException', {
+        body: expectedObject, status: 400
+      });
+
+      try {
+        await client.call('FooService', 'validationException');
+      } catch (err) {
+        expect(err).to.be.instanceOf(VaadinConnectValidationError);
+        expect(err).to.have.property('message').that.is.string(expectedObject.message);
+        expect(err).to.have.property('type').that.is.string(expectedObject.type);
+        expect(err).to.have.property('detail');
+        expect(err).to.have.deep.property('validationErrorData', expectedObject.validationErrorData);
       }
     });
 
@@ -531,7 +557,7 @@ describe('ConnectClient', () => {
         try {
           await client.call('FooService', 'fooMethod');
         } catch (err) {
-          expect(err).to.be.instanceOf(VaadinConnectException)
+          expect(err).to.be.instanceOf(VaadinConnectError)
             .and.have.property('message')
             .that.has.string(expectedBody);
           expect(client.credentials).to.be.calledOnce;

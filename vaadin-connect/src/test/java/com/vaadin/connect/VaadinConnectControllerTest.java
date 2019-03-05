@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.vaadin.connect.auth.VaadinConnectAccessChecker;
+import com.vaadin.connect.exception.VaadinConnectException;
 import com.vaadin.connect.testservice.BridgeMethodTestService;
 
 import static org.junit.Assert.assertEquals;

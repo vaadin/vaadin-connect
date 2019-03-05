@@ -14,11 +14,13 @@
  * the License.
  */
 
-package com.vaadin.connect;
+package com.vaadin.connect.exception;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import com.vaadin.connect.VaadinConnectController;
 
 /**
  * An exception that is intended to be thrown by any Vaadin Connect service
@@ -41,7 +43,11 @@ import java.util.Optional;
  * information about the client side of the implementation.
  */
 public class VaadinConnectException extends RuntimeException {
-  static final String ERROR_MESSAGE_FIELD = "message";
+  /**
+   * A message field to be used in the exception's serialization data in
+   * {@link VaadinConnectException#getSerializationData()}.
+   */
+  public static final String ERROR_MESSAGE_FIELD = "message";
 
   private final transient Object detail;
 
@@ -123,6 +129,16 @@ public class VaadinConnectException extends RuntimeException {
       Object detail) {
     super(message, cause);
     this.detail = detail;
+  }
+
+  /**
+   * Gets the detail of the exception, if provided by user, {@code null}
+   * otherwise.
+   *
+   * @return the detail of the exception
+   */
+  public Object getDetail() {
+    return detail;
   }
 
   /**

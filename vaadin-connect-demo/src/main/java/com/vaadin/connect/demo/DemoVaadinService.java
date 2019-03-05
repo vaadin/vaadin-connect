@@ -13,9 +13,10 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.vaadin.connect.VaadinConnectException;
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.auth.AnonymousAllowed;
+import com.vaadin.connect.demo.account.BeanWithTypeFromDependencies;
+import com.vaadin.connect.exception.VaadinConnectException;
 
 @VaadinService
 @DenyAll

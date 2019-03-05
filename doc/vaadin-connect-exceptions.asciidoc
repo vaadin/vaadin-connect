@@ -20,7 +20,7 @@ If anything goes wrong during this process, the responses will have the followin
 the method body: their number or types do not map the request method json,
 see <<type-conversion#,Type conversion between JavaScript and Java>> for more details about the type conversion rules.
 
-** When a Java method call throws a `com.vaadin.connect.VaadinConnectException` or its subclass.
+** When a Java method call throws a `com.vaadin.connect.exception.VaadinConnectException` or its subclass.
 This kind of exceptions is a special use case that allows to raise the exception on a client side part from
 a backend side with the particular exception message and the details.
 

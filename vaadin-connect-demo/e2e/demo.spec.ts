@@ -105,9 +105,10 @@ describe('demo application', () => {
         await page.findById('exceptionButton').click();
         // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return (
+          const exceptionMessage = (
             document.getElementById('exceptionMessage') as HTMLOutputElement
-          ).textContent === text;
+          ).textContent;
+          return exceptionMessage && exceptionMessage.indexOf(text) > -1;
         }, [
           'Service \'DemoVaadinService\' method \'throwsException\''
             + ' execution failure'
@@ -124,9 +125,10 @@ describe('demo application', () => {
         await page.findById('submitButton').click();
         // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
-          return (
+          const exceptionMessage = (
             document.getElementById('exceptionMessage') as HTMLOutputElement
-          ).textContent === text;
+          ).textContent;
+          return exceptionMessage && exceptionMessage.indexOf(text) > -1;
         }, [
           'You had one job to do!'
         ]).call(page);

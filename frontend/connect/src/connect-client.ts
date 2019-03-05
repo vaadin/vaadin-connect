@@ -1,3 +1,26 @@
+interface ConnectExceptionData {
+  message: string;
+  type: string;
+  detail?: any;
+  validationErrorData?: ValidationErrorData[];
+}
+
+const throwConnectException = (errorJson: ConnectExceptionData) => {
+  if (errorJson.validationErrorData) {
+    throw new VaadinConnectValidationError(
+      errorJson.message,
+      errorJson.validationErrorData,
+      errorJson.type
+    );
+  } else {
+    throw new VaadinConnectError(
+      errorJson.message,
+      errorJson.type,
+      errorJson.detail
+    );
+  }
+};
+
 /**
  * Throws a TypeError if the response is not 200 OK.
  * @param response The response to assert.
@@ -5,26 +28,23 @@
  */
 const assertResponseIsOk = async(response: Response): Promise<void> => {
   if (!response.ok) {
-    const responseText = await response.text();
-    let responseJson;
+    const errorText = await response.text();
+    let errorJson: ConnectExceptionData | null;
     try {
-      responseJson = JSON.parse(responseText);
+      errorJson = JSON.parse(errorText);
     } catch (ignored) {
       // not a json
+      errorJson = null;
     }
 
-    if (responseJson !== undefined) {
-      throw new VaadinConnectException(
-        responseJson.message,
-        responseJson.type,
-        responseJson.detail
-      );
-    } else if (responseText !== null && responseText.length > 0) {
-      throw new VaadinConnectException(responseText);
+    if (errorJson !== null) {
+      throwConnectException(errorJson);
+    } else if (errorText !== null && errorText.length > 0) {
+      throw new VaadinConnectError(errorText);
     } else {
-      throw new VaadinConnectException(
+      throw new VaadinConnectError(
         'expected "200 OK" response, but got ' +
-          `${response.status} ${response.statusText}`
+        `${response.status} ${response.statusText}`
       );
     }
   }
@@ -53,7 +73,7 @@ const authenticateClient = async(client: ConnectClient): Promise<void> => {
       body.append('refresh_token', tokens.refreshToken.token);
     } else if (client.credentials) {
       const creds = message !== undefined
-        ? await client.credentials({ message })
+        ? await client.credentials({message})
         : await client.credentials();
       if (!creds) {
         // No credentials returned, skip the token request
@@ -169,12 +189,7 @@ class AuthTokens {
  * An exception that gets thrown when the Vaadin Connect backend responds
  * with not ok status.
  */
-export class VaadinConnectException extends Error {
-  /**
-   * The error message
-   */
-  message: string;
-
+export class VaadinConnectError extends Error {
   /**
    * The optional name of the exception that was thrown on a backend
    */
@@ -192,10 +207,48 @@ export class VaadinConnectException extends Error {
    * @param detail the `detail` property value
    */
   constructor(message: string, type?: string, detail?: any) {
-    super(message);
+    super(
+      `Message: '${message}', additional details: '${JSON.stringify(detail)}'`);
     this.type = type;
-    this.message = message;
     this.detail = detail;
+  }
+}
+
+/**
+ * An exception that gets thrown if Vaadin Connect backend responds
+ * with non-ok status and provides additional info
+ * on the validation errors occurred.
+ */
+export class VaadinConnectValidationError extends VaadinConnectError {
+  /**
+   * An array of the validation errors.
+   */
+  validationErrorData: ValidationErrorData[];
+
+  constructor(message: string, validationErrorData: ValidationErrorData[],
+              type?: string) {
+    super(message, type, validationErrorData);
+    this.detail = null;
+    this.validationErrorData = validationErrorData;
+  }
+}
+
+/**
+ *
+ */
+export class ValidationErrorData {
+  /**
+   *
+   */
+  message: string;
+  /**
+   *
+   */
+  parameterName?: string;
+
+  constructor(message: string, parameterName?: string) {
+    this.message = message;
+    this.parameterName = parameterName;
   }
 }
 
@@ -470,7 +523,7 @@ export class ConnectClient {
       );
     }
 
-    options = Object.assign({ requireCredentials: true }, options);
+    options = Object.assign({requireCredentials: true}, options);
     if (options.requireCredentials) {
       await this.login();
     }

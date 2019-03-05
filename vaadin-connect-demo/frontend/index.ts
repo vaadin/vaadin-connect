@@ -6,7 +6,7 @@ import {
   AccessToken,
   ConnectClient,
   CredentialsCallback,
-  VaadinConnectException
+  VaadinConnectError
 } from '@vaadin/connect';
 
 const credentials: CredentialsCallback = () => {
@@ -72,7 +72,7 @@ function updateLoginStatus(currentClient: ConnectClient) {
 const input = document.getElementById('inputText') as HTMLInputElement;
 (document.getElementById('submitButton') as HTMLButtonElement)
   .addEventListener('click', async() => {
-    updateExceptionData({} as VaadinConnectException);
+    updateExceptionData({} as VaadinConnectError);
     try {
       await demoService.doNotSubmitZeroes(
         input.valueAsNumber ? input.valueAsNumber : 0
@@ -84,7 +84,7 @@ const input = document.getElementById('inputText') as HTMLInputElement;
 
 (document.getElementById('exceptionButton') as HTMLButtonElement)
   .addEventListener('click', async() => {
-    updateExceptionData({} as VaadinConnectException);
+    updateExceptionData({} as VaadinConnectError);
     try {
       await demoService.throwsException();
     } catch (e) {
@@ -92,7 +92,7 @@ const input = document.getElementById('inputText') as HTMLInputElement;
     }
   });
 
-const updateExceptionData = (exception: VaadinConnectException) => {
+const updateExceptionData = (exception: VaadinConnectError) => {
   (document.getElementById('exceptionMessage') as HTMLLabelElement)
     .textContent = exception.message;
   (document.getElementById('exceptionType') as HTMLLabelElement)

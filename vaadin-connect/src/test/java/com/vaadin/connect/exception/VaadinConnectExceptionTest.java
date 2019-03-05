@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.vaadin.connect;
+package com.vaadin.connect.exception;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class VaadinConnectExceptionTest {
@@ -38,9 +39,10 @@ public class VaadinConnectExceptionTest {
 
   @Test
   public void when_ExceptionWithMessageOnlyCreated_VaadinConnectExceptionTypeAndMessageInTheData() {
-    Map<String, Object> data = new VaadinConnectException(TEST_MESSAGE)
-        .getSerializationData();
+    VaadinConnectException exception = new VaadinConnectException(TEST_MESSAGE);
+    Map<String, Object> data = exception.getSerializationData();
 
+    assertNull(exception.getDetail());
     assertEquals(2, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
@@ -54,6 +56,7 @@ public class VaadinConnectExceptionTest {
         TEST_EXCEPTION);
     Map<String, Object> data = exception.getSerializationData();
 
+    assertNull(exception.getDetail());
     assertEquals(2, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
@@ -63,9 +66,11 @@ public class VaadinConnectExceptionTest {
 
   @Test
   public void when_ExceptionWithCauseOnlyCreated_AndCauseIsWithoutMessage_CauseTypeInTheData() {
-    Map<String, Object> data = new VaadinConnectException(new Exception())
-        .getSerializationData();
+    VaadinConnectException exception = new VaadinConnectException(
+        new Exception());
+    Map<String, Object> data = exception.getSerializationData();
 
+    assertNull(exception.getDetail());
     assertEquals(2, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
@@ -76,9 +81,11 @@ public class VaadinConnectExceptionTest {
 
   @Test
   public void when_ExceptionWithMessageAndDetailCreated_BothAreInTheDataAlongWithConnectExceptionType() {
-    Map<String, Object> data = new VaadinConnectException(TEST_MESSAGE,
-        TEST_DETAIL).getSerializationData();
+    VaadinConnectException exception = new VaadinConnectException(TEST_MESSAGE,
+        TEST_DETAIL);
+    Map<String, Object> data = exception.getSerializationData();
 
+    assertEquals(TEST_DETAIL, exception.getDetail());
     assertEquals(3, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
@@ -89,9 +96,11 @@ public class VaadinConnectExceptionTest {
 
   @Test
   public void when_ExceptionWithMessageAndNullDetailCreated_BothAreInTheDataAlongWithConnectExceptionType() {
-    Map<String, Object> data = new VaadinConnectException(TEST_MESSAGE,
-        (Object) null).getSerializationData();
+    VaadinConnectException exception = new VaadinConnectException(TEST_MESSAGE,
+        (Object) null);
+    Map<String, Object> data = exception.getSerializationData();
 
+    assertNull(exception.getDetail());
     assertEquals(2, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
@@ -101,9 +110,11 @@ public class VaadinConnectExceptionTest {
 
   @Test
   public void when_ExceptionWithMessageAndCauseCreated_BothAreInTheData() {
-    Map<String, Object> data = new VaadinConnectException(TEST_MESSAGE,
-        TEST_EXCEPTION).getSerializationData();
+    VaadinConnectException exception = new VaadinConnectException(TEST_MESSAGE,
+        TEST_EXCEPTION);
+    Map<String, Object> data = exception.getSerializationData();
 
+    assertNull(exception.getDetail());
     assertEquals(2, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
@@ -113,9 +124,11 @@ public class VaadinConnectExceptionTest {
 
   @Test
   public void when_ExceptionWithNullMessageAndCauseCreated_BothAreInTheData() {
-    Map<String, Object> data = new VaadinConnectException(null, TEST_EXCEPTION)
-        .getSerializationData();
+    VaadinConnectException exception = new VaadinConnectException(null,
+        TEST_EXCEPTION);
+    Map<String, Object> data = exception.getSerializationData();
 
+    assertNull(exception.getDetail());
     assertEquals(2, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
@@ -125,9 +138,11 @@ public class VaadinConnectExceptionTest {
 
   @Test
   public void when_ExceptionWithAllArgsCreated_AllAreInTheData() {
-    Map<String, Object> data = new VaadinConnectException(TEST_MESSAGE,
-        TEST_EXCEPTION, TEST_DETAIL).getSerializationData();
+    VaadinConnectException exception = new VaadinConnectException(TEST_MESSAGE,
+        TEST_EXCEPTION, TEST_DETAIL);
+    Map<String, Object> data = exception.getSerializationData();
 
+    assertEquals(TEST_DETAIL, exception.getDetail());
     assertEquals(3, data.size());
     List<String> values = data.values().stream().map(Objects::toString)
         .collect(Collectors.toList());
