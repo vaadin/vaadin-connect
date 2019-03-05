@@ -35,7 +35,7 @@ public class ModelService {
 
   /**
    * Get account by username.
-   * 
+   *
    * @param userName
    *          username of the account
    * @return the account with given userName
@@ -56,8 +56,11 @@ public class ModelService {
     return null;
   }
 
-  public Optional<Integer> makeSureUnhandledJavaTypeWorks() {
+  public Optional<Integer> optionalReturn() {
     return Optional.empty();
+  }
+
+  public void optionalParameter(Optional<String> parameter) {
   }
 
   /**
@@ -81,6 +84,7 @@ public class ModelService {
      */
     List<Group> groups;
     ModelFromDifferentPackage modelFromDifferentPackage;
+    Optional<String> optionalField;
     @JsonIgnore
     String passwordShouldBeIgnore;
     transient Object nonSerializableField;
