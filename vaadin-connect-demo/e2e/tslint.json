@@ -1,4 +1,6 @@
 {
-  "extends": "../../tslint",
-  "no-unused-expressions": false
+  "extends": "../../tslint.json",
+  "rules": {
+    "no-unused-expression": false
+  }
 }
