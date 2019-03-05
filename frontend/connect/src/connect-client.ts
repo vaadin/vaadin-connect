@@ -234,6 +234,7 @@ export class VaadinConnectValidationError extends VaadinConnectError {
   constructor(message: string, validationErrorData: ValidationErrorData[],
               type?: string) {
     super(message, type, validationErrorData);
+    this.detail = null;
     this.validationErrorData = validationErrorData;
   }
 }
