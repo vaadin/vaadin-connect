@@ -392,7 +392,7 @@ public class OpenApiObjectGenerator {
   /**
    * This method is needed because the {@link Schema#set$ref(String)} method
    * won't append "#/components/schemas/" if the ref contains `.`.
-   * 
+   *
    * @param qualifiedName
    *          full qualified name of the class
    * @return the ref in format of "#/components/schemas/com.my.example.Model"
@@ -652,10 +652,17 @@ public class OpenApiObjectGenerator {
       return new DateSchema();
     } else if (isDateTimeType(resolvedType)) {
       return new DateTimeSchema();
+    } else if (isOptionalType(resolvedType)) {
+      return createOptionalSchema(resolvedType.asReferenceType());
     } else if (isUnhandledJavaType(resolvedType)) {
       return new ObjectSchema();
     }
     return createUserBeanSchema(resolvedType);
+  }
+
+  private boolean isOptionalType(ResolvedType resolvedType) {
+    return resolvedType.isReferenceType()
+        && isTypeOf(resolvedType.asReferenceType(), Optional.class);
   }
 
   private boolean isUnhandledJavaType(ResolvedType resolvedType) {
@@ -894,5 +901,13 @@ public class OpenApiObjectGenerator {
       array.items(parseResolvedTypeToSchema(collectionParameterType));
     }
     return array;
+  }
+
+  private Schema createOptionalSchema(ResolvedReferenceType type) {
+    ResolvedType typeInOptional = type.getTypeParametersMap().get(0).b;
+    Schema nestedTypeSchema = parseResolvedTypeToSchema(typeInOptional);
+    ObjectSchema optionalSchema = new ObjectSchema();
+    optionalSchema.addProperties("value", nestedTypeSchema);
+    return optionalSchema;
   }
 }
