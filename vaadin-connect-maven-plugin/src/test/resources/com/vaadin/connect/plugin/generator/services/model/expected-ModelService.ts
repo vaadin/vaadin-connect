@@ -39,6 +39,10 @@ export function getModelFromDifferentPackage(): Promise<ModelFromDifferentPackag
   return client.call('ModelService', 'getModelFromDifferentPackage');
 }
 
-export function makeSureUnhandledJavaTypeWorks(): Promise<any> {
-  return client.call('ModelService', 'makeSureUnhandledJavaTypeWorks');
+export function optionalParameter(parameter?: string): Promise<void> {
+  return client.call('ModelService', 'optionalParameter', {parameter});
+}
+
+export function optionalReturn(): Promise<null | number> {
+  return client.call('ModelService', 'optionalReturn');
 }
