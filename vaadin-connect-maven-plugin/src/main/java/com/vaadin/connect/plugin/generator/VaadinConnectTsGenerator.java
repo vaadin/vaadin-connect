@@ -89,6 +89,12 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static final String CLIENT_PATH_TEMPLATE_PROPERTY = "vaadinConnectDefaultClientPath";
   private static final Pattern PATH_REGEX = Pattern
       .compile("^/([^/{}\n\t]+)/([^/{}\n\t]+)$");
+  private static final String JAVA_NAME_PATTERN = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
+  // Pattern for matching fully qualified name in a complex type
+  // e.g. 'com.example.mypackage.Bean' will be extracted in the type
+  // `Map<String, Map<String, com.example.mypackage.Bean>>`
+  private static final Pattern FULLY_QUALIFIED_NAME_PATTERN = Pattern
+      .compile("(" + JAVA_NAME_PATTERN + "(\\." + JAVA_NAME_PATTERN + ")*)");
   private static final String OPERATION = "operation";
   private static final String IMPORT = "import";
 
@@ -449,36 +455,24 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
             anImport.get("className"));
       }
     }
-    if (StringUtils.contains(dataType, "<")) {
-      return getSimpleMapTypeFromImports(dataType, imports);
-    } else if (StringUtils.contains(dataType, "[]")) {
-      String mainType = StringUtils.substringBeforeLast(dataType, "[]");
-      return getSimpleNameFromImports(mainType, imports) + "[]";
+    if (StringUtils.contains(dataType, "<")
+        || StringUtils.contains(dataType, "[")) {
+      return getSimpleNameFromComplexType(dataType, imports);
     }
     return getSimpleNameFromQualifiedName(dataType);
   }
 
-  private String getSimpleMapTypeFromImports(String dataType,
+  private String getSimpleNameFromComplexType(String dataType,
       List<Map<String, String>> imports) {
-    // E.g: Map<string, Map<string, com.fasterxml.jackson.core.Version>>[]
-    // mainType = Map
-    String mainType = getSimpleNameFromImports(
-        StringUtils.substringBefore(dataType, "<"), imports);
-    // typeParameters =
-    // string, Map<string, com.fasterxml.jackson.core.Version>
-    String typeParameters = StringUtils.substring(dataType,
-        dataType.indexOf('<') + 1, dataType.lastIndexOf('>'));
-    // firstPart = string
-    String firstPart = StringUtils.substringBefore(typeParameters, ",").trim();
-    // secondPart = Map<string, com.fasterxml.jackson.core.Version>
-    String secondPart = StringUtils.substringAfter(typeParameters, ",").trim();
-    // suffix = []
-    String suffix = StringUtils.substringAfterLast(dataType, ">");
-
-    String firstTypeParameter = getSimpleNameFromImports(firstPart, imports);
-    String secondTypeParameter = getSimpleNameFromImports(secondPart, imports);
-    return String.format("%s<%s, %s>%s", mainType, firstTypeParameter,
-        secondTypeParameter, suffix);
+    Matcher matcher = FULLY_QUALIFIED_NAME_PATTERN.matcher(dataType);
+    StringBuffer builder = new StringBuffer();
+    while (matcher.find()) {
+      String fqnName = matcher.group(1);
+      matcher.appendReplacement(builder,
+          getSimpleNameFromImports(fqnName, imports));
+    }
+    matcher.appendTail(builder);
+    return builder.toString();
   }
 
   private String getSimpleNameFromQualifiedName(String qualifiedName) {
@@ -773,7 +767,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       return getSimpleRef(schema.get$ref());
     } else if (schema.getAdditionalProperties() != null) {
       Schema inner = (Schema) schema.getAdditionalProperties();
-      return String.format("Map<string, %s>", getTypeDeclaration(inner));
+      return String.format("{ [key: string]: %s; }", getTypeDeclaration(inner));
     } else {
       return super.getTypeDeclaration(schema);
     }

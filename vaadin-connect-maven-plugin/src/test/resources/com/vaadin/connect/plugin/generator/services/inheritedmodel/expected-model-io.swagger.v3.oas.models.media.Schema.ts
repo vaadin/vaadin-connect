@@ -13,7 +13,7 @@ export default interface Schema {
   example: any;
   exclusiveMaximum: boolean;
   exclusiveMinimum: boolean;
-  extensions: Map<string, any>;
+  extensions: { [key: string]: any; };
   externalDocs: ExternalDocumentation;
   format: string;
   maxItems: number;
@@ -29,7 +29,7 @@ export default interface Schema {
   not: Schema;
   nullable: boolean;
   pattern: string;
-  properties: Map<string, Schema>;
+  properties: { [key: string]: Schema; };
   readOnly: boolean;
   required: string[];
   title: string;

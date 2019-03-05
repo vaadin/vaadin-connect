@@ -189,7 +189,7 @@ public enum TestEnum {
 === To receive a map in Java
 
 * TypeScript compliant value:
-** A `Map` instance in TypeScript with string keys and values with the expected type in Java.
+** A TypeScript object with `string` key and value in expected type in Java. For example: the expected type in Java is `Map<String, Integer>`, the compliant object in TypeScript should be in type of `{ [key: string]: number; }`, e.g. `{one: 1, two: 2}`.
 
 * Noncompliant values:
 ** Any value from other types.
@@ -264,7 +264,7 @@ Any kinds of objects in Java are converted to corresponding defined types in Typ
 
 === Map
 
-All types which inherit from `java.lang.Map` becomes TypeScript `Map`.
+All types which inherit from `java.lang.Map` becomes objects in TypeScript with `string` keys and values in corresponding type. For instance: `Map<String, Integer>` => `{ [key: string]: number; }`.
 
 === Datetime
 

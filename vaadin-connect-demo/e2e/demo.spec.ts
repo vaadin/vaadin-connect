@@ -148,6 +148,18 @@ describe('demo application', () => {
         expect(registrations[0].is).to.equal('@vaadin/connect');
       });
     });
+
+    describe('serialization', () => {
+      it('should serialize/deserialize map object', async() => {
+        await page.findById('echoMapObject').click();
+        // tslint:disable-next-line:only-arrow-functions
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('mapObject') as HTMLOutputElement
+          ).textContent === text;
+        }, ['{"foo":"bar"}']).call(page);
+      });
+    });
   });
 
   describe('single page application', () => {

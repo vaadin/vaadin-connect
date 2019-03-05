@@ -1,5 +1,5 @@
 export default interface ExternalDocumentation {
   description: string;
-  extensions: Map<string, any>;
+  extensions: { [key: string]: any; };
   url: string;
 }
