@@ -15,6 +15,7 @@
     ]
   },
   "scripts": {
+    "prepublish": "yarn workspace @vaadin/connect run prepublish && yarn workspace @vaadin/connect-scripts run prepublish",
     "test": "yarn workspaces run test",
     "lint": "yarn workspaces run lint",
     "e2e": "yarn workspaces run e2e",
