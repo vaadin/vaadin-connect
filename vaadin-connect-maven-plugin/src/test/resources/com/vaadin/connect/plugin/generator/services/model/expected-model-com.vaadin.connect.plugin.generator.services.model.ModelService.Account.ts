@@ -13,4 +13,6 @@ export default interface Account {
    * Javadoc for username.
    */
   username: string;
+
+  optionalField?: string;
 }
