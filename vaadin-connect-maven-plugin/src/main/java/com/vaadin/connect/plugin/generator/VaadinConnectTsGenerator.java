@@ -52,7 +52,9 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
@@ -718,14 +720,36 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
         imports);
     Schema requestBodySchema = getRequestBodySchema(body);
     if (requestBodySchema != null) {
-      ((Map<String, Schema>) requestBodySchema.getProperties()).values()
-          .stream().map(Schema::get$ref).filter(Objects::nonNull)
-          .map(this::getSimpleRef).forEach(imports::add);
+      imports.addAll(collectImportsFromSchema(requestBodySchema));
       List<ParameterInformation> paramsList = getParamsList(requestBodySchema);
       codegenParameter.getVendorExtensions()
           .put(EXTENSION_VAADIN_CONNECT_PARAMETERS, paramsList);
     }
     return codegenParameter;
+  }
+
+  private Set<String> collectImportsFromSchema(Schema schema) {
+    Set<String> imports = new HashSet<>();
+    if (StringUtils.isNotBlank(schema.get$ref())) {
+      imports.add(getSimpleRef(schema.get$ref()));
+    }
+    if (schema instanceof ArraySchema) {
+      imports
+          .addAll(collectImportsFromSchema(((ArraySchema) schema).getItems()));
+    } else if (schema instanceof MapSchema
+        || schema.getAdditionalProperties() instanceof Schema) {
+      imports.addAll(
+          collectImportsFromSchema((Schema) schema.getAdditionalProperties()));
+    } else if (schema instanceof ComposedSchema) {
+      for (Schema child : ((ComposedSchema) schema).getAllOf()) {
+        imports.addAll(collectImportsFromSchema(child));
+      }
+    }
+    if (schema.getProperties() != null) {
+      schema.getProperties().values()
+          .forEach(o -> imports.addAll(collectImportsFromSchema((Schema) o)));
+    }
+    return imports;
   }
 
   private List<ParameterInformation> getParamsList(Schema requestSchema) {

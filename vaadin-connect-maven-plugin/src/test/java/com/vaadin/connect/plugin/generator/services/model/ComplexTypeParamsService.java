@@ -15,21 +15,14 @@
  */
 package com.vaadin.connect.plugin.generator.services.model;
 
-import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-import org.junit.Test;
+import com.vaadin.connect.VaadinService;
 
-import com.vaadin.connect.plugin.generator.services.AbstractServiceGenerationTest;
-import com.vaadin.connect.plugin.generator.services.model.subpackage.ModelFromDifferentPackage;
-
-public class ModelServiceTest extends AbstractServiceGenerationTest {
-  public ModelServiceTest() {
-    super(Arrays.asList(ModelService.class, ModelFromDifferentPackage.class,
-        ComplexTypeParamsService.class, ComplexReturnTypeService.class));
-  }
-
-  @Test
-  public void should_GenerateCorrectModels_When_ModelsHaveComplexStructure() {
-    verifyOpenApiObjectAndGeneratedTs();
+@VaadinService
+public class ComplexTypeParamsService {
+  public void getComplexTypeParams(List<ModelService.Account> accounts,
+      Map<String, ModelService.Group> groups) {
   }
 }
