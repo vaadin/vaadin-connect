@@ -191,11 +191,6 @@ class AuthTokens {
  */
 export class VaadinConnectError extends Error {
   /**
-   * The error message
-   */
-  errorMessage: string;
-
-  /**
    * The optional name of the exception that was thrown on a backend
    */
   type?: string;
@@ -215,7 +210,6 @@ export class VaadinConnectError extends Error {
     super(
       `Message: '${message}', additional details: '${JSON.stringify(detail)}'`);
     this.type = type;
-    this.errorMessage = message;
     this.detail = detail;
   }
 }
