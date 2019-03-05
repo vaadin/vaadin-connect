@@ -375,7 +375,10 @@ public class OpenApiObjectGenerator {
     Schema schema = new ObjectSchema();
     schema.setName(fullQualifiedName);
     description.ifPresent(schema::setDescription);
-    schema.setProperties(getPropertiesFromClassDeclaration(typeDeclaration));
+    Map<String, Schema> properties = getPropertiesFromClassDeclaration(typeDeclaration);
+    schema.setProperties(properties);
+    // TODO kb verify required items in schemas
+    schema.required(new ArrayList<>(properties.keySet()));
     return schema;
   }
 
@@ -606,6 +609,7 @@ public class OpenApiObjectGenerator {
             .description(paramsDescription.remove(parameter.getNameAsString()));
       }
       requestSchema.addProperties(name, paramSchema);
+      requestSchema.addRequiredItem(name);
     });
     if (!paramsDescription.isEmpty()) {
       requestSchema.addExtension(
@@ -797,6 +801,7 @@ public class OpenApiObjectGenerator {
       String name = fieldDeclaration.getName();
       Schema type = parseResolvedTypeToSchema(fieldDeclaration.getType());
       schema.addProperties(name, type);
+      schema.addRequiredItem(name);
     }
     return schema;
   }

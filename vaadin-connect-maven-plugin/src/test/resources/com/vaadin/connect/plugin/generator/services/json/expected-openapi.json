@@ -47,6 +47,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
@@ -135,6 +136,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
@@ -175,6 +177,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
@@ -215,6 +218,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input", "secondInput" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
@@ -253,6 +257,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "id" ],
                 "type" : "object",
                 "properties" : {
                   "id" : {
@@ -286,6 +291,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
@@ -314,6 +320,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
@@ -342,6 +349,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "_delete" ],
                 "type" : "object",
                 "properties" : {
                   "_delete" : {
@@ -371,6 +379,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "user" ],
                 "type" : "object",
                 "properties" : {
                   "user" : {
@@ -437,6 +446,7 @@
   "components" : {
     "schemas" : {
       "com.vaadin.connect.plugin.generator.services.json.JsonTestService.User" : {
+        "required" : [ "name", "password", "roles" ],
         "type" : "object",
         "properties" : {
           "name" : {
@@ -454,6 +464,7 @@
         }
       },
       "com.vaadin.connect.plugin.generator.services.json.JsonTestService.Status" : {
+        "required" : [ "createdAt", "text" ],
         "type" : "object",
         "properties" : {
           "createdAt" : {
@@ -468,6 +479,7 @@
         "description" : "Status bean. Used only in request parameters to verify that request\nparameter type descriptions are generated."
       },
       "com.vaadin.connect.plugin.generator.services.json.JsonTestService.Role" : {
+        "required" : [ "roleName" ],
         "type" : "object",
         "properties" : {
           "roleName" : {
@@ -478,6 +490,7 @@
         "description" : "Role bean"
       },
       "com.fasterxml.jackson.core.Version" : {
+        "required" : [ "_artifactId", "_groupId", "_majorVersion", "_minorVersion", "_patchLevel", "_snapshotInfo" ],
         "type" : "object",
         "properties" : {
           "_artifactId" : {
