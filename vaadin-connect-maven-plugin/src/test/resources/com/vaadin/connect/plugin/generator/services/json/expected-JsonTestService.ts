@@ -83,7 +83,6 @@ export function getBooleanValue(
  */
 export function getTwoParameters(
   input: string,
-
   secondInput: number
 ): Promise<boolean> {
   return client.call('JsonTestService', 'getTwoParameters', {input, secondInput}, {requireCredentials: false});
