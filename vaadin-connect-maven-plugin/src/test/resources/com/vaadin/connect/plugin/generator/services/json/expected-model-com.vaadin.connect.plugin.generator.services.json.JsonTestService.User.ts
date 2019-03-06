@@ -1,8 +1,8 @@
 import Role from './Role';
 
 export default interface User {
-  optionalField: string | null;
   name: string;
+  optionalField: string | null;
   password: string;
   roles: { [key: string]: Role; };
 }
