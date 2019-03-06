@@ -129,3 +129,13 @@ export function updateUser(
 ): Promise<void> {
   return client.call('JsonTestService', 'updateUser', {user});
 }
+
+export function optionalParameter(
+  parameter: string | null
+): Promise<void> {
+  return client.call('ModelService', 'optionalParameter', {parameter});
+}
+
+export function optionalReturn(): Promise<number | null> {
+  return client.call('ModelService', 'optionalReturn');
+}
