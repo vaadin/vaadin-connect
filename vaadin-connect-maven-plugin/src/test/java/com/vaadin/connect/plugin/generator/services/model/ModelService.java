@@ -60,7 +60,7 @@ public class ModelService {
     return Optional.empty();
   }
 
-  public void optionalParameter(Optional<String> parameter) {
+  public void optionalParameter(Optional<String> parameter, String requiredParameter) {
   }
 
   /**
