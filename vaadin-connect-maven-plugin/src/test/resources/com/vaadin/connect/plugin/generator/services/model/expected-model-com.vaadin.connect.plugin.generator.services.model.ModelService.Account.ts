@@ -9,7 +9,6 @@ export default interface Account {
    */
   groups: Group[];
   modelFromDifferentPackage: ModelFromDifferentPackage;
-  optionalField: string | null;
   /**
    * Javadoc for username.
    */

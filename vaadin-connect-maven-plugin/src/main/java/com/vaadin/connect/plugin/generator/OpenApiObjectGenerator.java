@@ -117,6 +117,8 @@ public class OpenApiObjectGenerator {
   private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
   private static final String VAADIN_CONNECT_OAUTH2_TOKEN_URL = "/oauth/token";
   private static final String SCHEMA_REF_PREFIX = "#/components/schemas/";
+  private static final String OPTIONAL_VALUE_PROPERTY = "optional-value-property";
+
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Map<String, ResolvedReferenceType> usedTypes;
@@ -374,20 +376,28 @@ public class OpenApiObjectGenerator {
     Schema schema = new ObjectSchema();
     schema.setName(fullQualifiedName);
     description.ifPresent(schema::setDescription);
-    Map<String, Schema> properties = getPropertiesFromClassDeclaration(
-        typeDeclaration);
-    Map<String, Schema> optionalSchemas = properties.entrySet().stream()
-        .filter(stringSchemaEntry -> stringSchemaEntry
-            .getValue() instanceof OptionalSchema)
-        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    schema.setProperties(properties);
-    optionalSchemas.forEach((key, value) -> schema.addProperties(key,
-        ((OptionalSchema) value).mainSchema));
-    List<String> requiredProperties = properties.keySet().stream()
-        .filter(s -> !optionalSchemas.keySet().contains(s))
-        .collect(Collectors.toList());
-    schema.required(requiredProperties);
+    getPropertiesFromClassDeclaration(typeDeclaration)
+        .forEach((propertyName, propertySchema) -> {
+          if (isOptionalSchema(propertySchema)) {
+            schema.addProperties(propertyName, (Schema) propertySchema
+                .getProperties().get(OPTIONAL_VALUE_PROPERTY));
+          } else {
+            schema.addProperties(propertyName, propertySchema);
+            schema.addRequiredItem(propertyName);
+          }
+        });
     return schema;
+  }
+
+  static boolean isOptionalSchema(Schema schema) {
+    return schema instanceof ObjectSchema
+        && Optional.ofNullable(schema.getRequired()).map(List::isEmpty)
+            .orElse(true)
+        && Optional.ofNullable(schema.getProperties())
+            .filter(properties -> properties.size() == 1)
+            .filter(
+                properties -> properties.containsKey(OPTIONAL_VALUE_PROPERTY))
+            .isPresent();
   }
 
   private List<Schema> createSchemasFromQualifiedNameAndType(
@@ -435,14 +445,6 @@ public class OpenApiObjectGenerator {
                   variableDeclarator.getType(), fieldDescription.orElse(""))));
     }
     return properties;
-  }
-
-  private class OptionalSchema extends ObjectSchema {
-    Schema mainSchema;
-
-    OptionalSchema(Schema mainSchema) {
-      this.mainSchema = mainSchema;
-    }
   }
 
   private Map<String, ResolvedReferenceType> collectUsedTypesFromSchema(
@@ -873,8 +875,8 @@ public class OpenApiObjectGenerator {
   private Schema createOptionalSchema(ResolvedReferenceType type) {
     ResolvedType typeInOptional = type.getTypeParametersMap().get(0).b;
     Schema nestedTypeSchema = parseResolvedTypeToSchema(typeInOptional);
-    // optionalSchema.addProperties("optional-value-property",
-    // nestedTypeSchema);
-    return new OptionalSchema(nestedTypeSchema);
+    ObjectSchema optionalSchema = new ObjectSchema();
+    optionalSchema.addProperties(OPTIONAL_VALUE_PROPERTY, nestedTypeSchema);
+    return optionalSchema;
   }
 }
