@@ -377,8 +377,17 @@ public class OpenApiObjectGenerator {
     description.ifPresent(schema::setDescription);
     Map<String, Schema> properties = getPropertiesFromClassDeclaration(
         typeDeclaration);
+    Map<String, Schema> optionalSchemas = properties.entrySet().stream()
+        .filter(stringSchemaEntry -> stringSchemaEntry
+            .getValue() instanceof OptionalSchema)
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     schema.setProperties(properties);
-    schema.required(new ArrayList<>(properties.keySet()));
+    optionalSchemas.forEach((key, value) -> schema.addProperties(key,
+        ((OptionalSchema) value).mainSchema));
+    List<String> requiredProperties = properties.keySet().stream()
+        .filter(s -> !optionalSchemas.keySet().contains(s))
+        .collect(Collectors.toList());
+    schema.required(requiredProperties);
     return schema;
   }
 
@@ -427,6 +436,14 @@ public class OpenApiObjectGenerator {
                   variableDeclarator.getType(), fieldDescription.orElse(""))));
     }
     return properties;
+  }
+
+  private class OptionalSchema extends ObjectSchema {
+    Schema mainSchema;
+
+    OptionalSchema(Schema mainSchema) {
+      this.mainSchema = mainSchema;
+    }
   }
 
   private Map<String, ResolvedReferenceType> collectUsedTypesFromSchema(
@@ -911,8 +928,8 @@ public class OpenApiObjectGenerator {
   private Schema createOptionalSchema(ResolvedReferenceType type) {
     ResolvedType typeInOptional = type.getTypeParametersMap().get(0).b;
     Schema nestedTypeSchema = parseResolvedTypeToSchema(typeInOptional);
-    ObjectSchema optionalSchema = new ObjectSchema();
-    optionalSchema.addProperties("optional-value-property", nestedTypeSchema);
-    return optionalSchema;
+    // optionalSchema.addProperties("optional-value-property",
+    // nestedTypeSchema);
+    return new OptionalSchema(nestedTypeSchema);
   }
 }
