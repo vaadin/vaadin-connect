@@ -341,6 +341,69 @@
         } ]
       }
     },
+    "/JsonTestService/optionalParameter" : {
+      "post" : {
+        "tags" : [ "JsonTestService" ],
+        "operationId" : "JsonTestService_optionalParameter_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "required" : [ "parameter", "requiredParameter" ],
+                "type" : "object",
+                "properties" : {
+                  "parameter" : {
+                    "type" : "object",
+                    "properties" : {
+                      "optional-value-property" : {
+                        "type" : "string"
+                      }
+                    }
+                  },
+                  "requiredParameter" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-oauth2" : [ ]
+        } ]
+      }
+    },
+    "/JsonTestService/optionalReturn" : {
+      "post" : {
+        "tags" : [ "JsonTestService" ],
+        "operationId" : "JsonTestService_optionalReturn_POST",
+        "responses" : {
+          "200" : {
+            "description" : "",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "properties" : {
+                    "optional-value-property" : {
+                      "type" : "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-oauth2" : [ ]
+        } ]
+      }
+    },
     "/JsonTestService/reservedWordInParameter" : {
       "post" : {
         "tags" : [ "JsonTestService" ],
@@ -450,6 +513,9 @@
         "type" : "object",
         "properties" : {
           "name" : {
+            "type" : "string"
+          },
+          "optionalField" : {
             "type" : "string"
           },
           "password" : {
