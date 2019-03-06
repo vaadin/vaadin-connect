@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -101,6 +103,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private static final String IMPORT = "import";
 
   private List<Tag> tags;
+  private Map<Schema, Object> optionalPropertiesSchemas;
 
   private static class VaadinConnectTSOnlyGenerator extends DefaultGenerator {
     @Override
@@ -564,6 +567,20 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   @Override
   public CodegenModel fromModel(String name, Schema schema,
       Map<String, Schema> allDefinitions) {
+    optionalPropertiesSchemas.clear();
+    Set<String> requiredProperties = new HashSet<>(
+        Optional.ofNullable((List<String>) schema.getRequired())
+            .orElse(Collections.emptyList()));
+    if (!requiredProperties.isEmpty()) {
+      Optional.ofNullable((Map<String, Schema>) schema.getProperties())
+          .orElse(Collections.emptyMap()).entrySet().stream()
+          .filter(propertyData -> !requiredProperties
+              .contains(propertyData.getKey()))
+          .map(Map.Entry::getValue)
+          .forEach(optionalPropertySchema -> optionalPropertiesSchemas
+              .put(optionalPropertySchema, null));
+    }
+
     CodegenModel codegenModel = super.fromModel(name, schema, allDefinitions);
     if (StringUtils.isBlank(codegenModel.parent)) {
       return codegenModel;
@@ -705,6 +722,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     super.processOpenAPI(openAPI);
     List<Tag> openAPITags = openAPI.getTags();
     this.tags = openAPITags != null ? openAPITags : Collections.emptyList();
+    optionalPropertiesSchemas = new IdentityHashMap<>();
   }
 
   private void warnNoClassInformation(String classname) {
@@ -797,6 +815,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       return String.format("%s | null",
           getTypeDeclaration(((Map<String, Schema>) schema.getProperties())
               .values().iterator().next()));
+    } else if (optionalPropertiesSchemas.containsKey(schema)) {
+      return String.format("%s | null", super.getTypeDeclaration(schema));
     } else {
       return super.getTypeDeclaration(schema);
     }
