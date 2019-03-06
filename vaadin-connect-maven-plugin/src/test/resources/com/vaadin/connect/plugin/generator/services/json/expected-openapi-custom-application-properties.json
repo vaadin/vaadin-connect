@@ -446,9 +446,17 @@
   "components" : {
     "schemas" : {
       "com.vaadin.connect.plugin.generator.services.json.JsonTestService.User" : {
-        "required" : [ "name", "password", "roles" ],
+        "required" : [ "a", "name", "password", "roles" ],
         "type" : "object",
         "properties" : {
+          "a" : {
+            "type" : "object",
+            "properties" : {
+              "optional-value-property" : {
+                "type" : "string"
+              }
+            }
+          },
           "name" : {
             "type" : "string"
           },
