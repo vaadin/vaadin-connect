@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.core.Version;
 
@@ -168,6 +169,7 @@ public class JsonTestService {
     private String password;
     private transient int hiddenField;
     private Map<String, Role> roles;
+    private Optional<String> a;
   }
 
   /**
