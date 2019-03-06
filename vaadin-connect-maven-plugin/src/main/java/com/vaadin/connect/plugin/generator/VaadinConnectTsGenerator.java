@@ -796,9 +796,9 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       Schema inner = (Schema) schema.getAdditionalProperties();
       return String.format("{ [key: string]: %s; }", getTypeDeclaration(inner));
     } else if (isOptionalSchema(schema)) {
-      Map<String, Schema> properties = schema.getProperties();
-      return String.format("%s | null", getTypeDeclaration(
-          properties.get(OpenApiObjectGenerator.OPTIONAL_VALUE_PROPERTY)));
+      return String.format("%s | null",
+          getTypeDeclaration(((Map<String, Schema>) schema.getProperties())
+              .values().iterator().next()));
     } else {
       return super.getTypeDeclaration(schema);
     }
@@ -809,10 +809,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
         && Optional.ofNullable(schema.getRequired()).map(List::isEmpty)
             .orElse(true)
         && Optional.ofNullable(schema.getProperties())
-            .filter(properties -> properties.size() == 1)
-            .filter(properties -> properties
-                .containsKey(OpenApiObjectGenerator.OPTIONAL_VALUE_PROPERTY))
-            .isPresent();
+            .filter(properties -> properties.size() == 1).isPresent();
   }
 
   private Schema getRequestBodySchema(RequestBody body) {

@@ -321,12 +321,7 @@ public abstract class AbstractServiceGenerationTest {
       index++;
     }
 
-    if (properties.isEmpty()) {
-      assertNull(requestSchema.getRequired());
-    } else {
-      assertEquals(new HashSet<>(requestSchema.getRequired()),
-          properties.keySet());
-    }
+    verifyThatAllPropertiesAreRequired(requestSchema, properties);
   }
 
   private Schema extractSchema(Content content) {
@@ -409,8 +404,6 @@ public abstract class AbstractServiceGenerationTest {
       Schema actualSchema) {
     if (expectedSchemaClass == Optional.class) {
       assertEquals(actualSchema.getProperties().size(), 1);
-      assertTrue(actualSchema.getProperties()
-          .containsKey(OpenApiObjectGenerator.OPTIONAL_VALUE_PROPERTY));
       assertNull(actualSchema.getRequired());
     } else if (expectedSchemaClass == Object.class) {
       assertNull(actualSchema.getProperties());
@@ -445,6 +438,11 @@ public abstract class AbstractServiceGenerationTest {
     }
     assertEquals(expectedFieldsCount, properties.size());
 
+    verifyThatAllPropertiesAreRequired(schema, properties);
+  }
+
+  private void verifyThatAllPropertiesAreRequired(Schema schema,
+      Map<String, Schema> properties) {
     if (properties.isEmpty()) {
       assertNull(schema.getRequired());
     } else {
