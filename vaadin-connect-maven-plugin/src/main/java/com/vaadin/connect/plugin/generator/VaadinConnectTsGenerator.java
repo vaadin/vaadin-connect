@@ -143,6 +143,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     typeMapping.put("BigDecimal", "number");
     typeMapping.put("map", "Map");
     typeMapping.put("Map", "Map");
+    typeMapping.put("DateTime", "string");
+    typeMapping.put("Date", "string");
   }
 
   /**

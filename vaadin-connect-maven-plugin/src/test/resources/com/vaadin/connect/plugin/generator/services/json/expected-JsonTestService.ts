@@ -28,7 +28,7 @@ export function countUser(): Promise<number> {
  */
 export function fullFQNMethod(
   input: number
-): Promise<Date> {
+): Promise<string> {
   return client.call('JsonTestService', 'fullFQNMethod', {input});
 }
 
