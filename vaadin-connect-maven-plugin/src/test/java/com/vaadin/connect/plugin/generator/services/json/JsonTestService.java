@@ -164,12 +164,20 @@ public class JsonTestService {
     // No implementation
   }
 
+  public Optional<Integer> optionalReturn() {
+    return Optional.empty();
+  }
+
+  public void optionalParameter(Optional<String> parameter, String requiredParameter) {
+    // No implementation
+  }
+
   public static class User {
     private String name;
     private String password;
     private transient int hiddenField;
     private Map<String, Role> roles;
-    private Optional<String> a;
+    Optional<String> optionalField;
   }
 
   /**

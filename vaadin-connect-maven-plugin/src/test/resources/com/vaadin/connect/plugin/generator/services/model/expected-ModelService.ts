@@ -38,13 +38,3 @@ export function getMapGroups(): Promise<{ [key: string]: Group; }> {
 export function getModelFromDifferentPackage(): Promise<ModelFromDifferentPackage> {
   return client.call('ModelService', 'getModelFromDifferentPackage');
 }
-
-export function optionalParameter(
-  parameter: string | null
-): Promise<void> {
-  return client.call('ModelService', 'optionalParameter', {parameter});
-}
-
-export function optionalReturn(): Promise<number | null> {
-  return client.call('ModelService', 'optionalReturn');
-}

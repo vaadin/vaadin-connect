@@ -18,7 +18,6 @@ package com.vaadin.connect.plugin.generator.services.model;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -51,13 +50,6 @@ public class ModelService {
     return null;
   }
 
-  public Optional<Integer> optionalReturn() {
-    return Optional.empty();
-  }
-
-  public void optionalParameter(Optional<String> parameter, String requiredParameter) {
-  }
-
   /**
    * The import path of this model should be correct.
    */
@@ -79,7 +71,6 @@ public class ModelService {
      */
     List<Group> groups;
     ModelFromDifferentPackage modelFromDifferentPackage;
-    Optional<String> optionalField;
     @JsonIgnore
     String passwordShouldBeIgnore;
     transient Object nonSerializableField;
