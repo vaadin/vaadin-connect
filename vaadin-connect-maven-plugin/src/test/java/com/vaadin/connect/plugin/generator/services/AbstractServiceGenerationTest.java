@@ -85,7 +85,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public abstract class AbstractServiceGenerationTest {
   private static final org.slf4j.Logger log = LoggerFactory
@@ -321,7 +320,12 @@ public abstract class AbstractServiceGenerationTest {
       index++;
     }
 
-    verifyThatAllPropertiesAreRequired(requestSchema, properties);
+    if (properties.isEmpty()) {
+      assertNull(requestSchema.getRequired());
+    } else {
+      assertEquals(new HashSet<>(requestSchema.getRequired()),
+          properties.keySet());
+    }
   }
 
   private Schema extractSchema(Content content) {
@@ -348,6 +352,10 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private void assertSchema(Schema actualSchema, Class<?> expectedSchemaClass) {
+    if (assertSpecificJavaClassSchema(actualSchema, expectedSchemaClass)) {
+      return;
+    }
+
     if (actualSchema.get$ref() != null) {
       assertNull(actualSchema.getProperties());
       schemaReferences.add(actualSchema.get$ref());
@@ -386,12 +394,7 @@ public abstract class AbstractServiceGenerationTest {
           }
         }
       } else if (actualSchema instanceof ObjectSchema) {
-        if (StringUtils.startsWith(expectedSchemaClass.getPackage().getName(),
-            "java.")) {
-          assertJavaClassSchema(expectedSchemaClass, actualSchema);
-        } else {
-          assertSchemaProperties(expectedSchemaClass, actualSchema);
-        }
+        assertSchemaProperties(expectedSchemaClass, actualSchema);
       } else {
         throw new AssertionError(
             String.format("Unknown schema '%s' for class '%s'",
@@ -400,9 +403,10 @@ public abstract class AbstractServiceGenerationTest {
     }
   }
 
-  private void assertJavaClassSchema(Class<?> expectedSchemaClass,
-      Schema actualSchema) {
+  private boolean assertSpecificJavaClassSchema(Schema actualSchema,
+      Class<?> expectedSchemaClass) {
     if (expectedSchemaClass == Optional.class) {
+      assertTrue(actualSchema instanceof ObjectSchema);
       assertEquals(actualSchema.getProperties().size(), 1);
       assertNull(actualSchema.getRequired());
     } else if (expectedSchemaClass == Object.class) {
@@ -411,10 +415,9 @@ public abstract class AbstractServiceGenerationTest {
       assertNull(actualSchema.get$ref());
       assertNull(actualSchema.getRequired());
     } else {
-      fail(String.format(
-          "Unexpected Java class '%s', add an assertion branch here",
-          expectedSchemaClass));
+      return false;
     }
+    return true;
   }
 
   private void assertSchemaProperties(Class<?> expectedSchemaClass,
@@ -423,6 +426,11 @@ public abstract class AbstractServiceGenerationTest {
     Map<String, Schema> properties = schema.getProperties();
     assertNotNull(properties);
     assertTrue(properties.size() > 0);
+
+    List<String> requiredProperties = schema.getRequired() == null
+        ? Collections.emptyList()
+        : schema.getRequired();
+
     for (Field expectedSchemaField : expectedSchemaClass.getDeclaredFields()) {
       if (Modifier.isTransient(expectedSchemaField.getModifiers())
           || Modifier.isStatic(expectedSchemaField.getModifiers())
@@ -434,19 +442,18 @@ public abstract class AbstractServiceGenerationTest {
       Schema propertySchema = properties.get(expectedSchemaField.getName());
       assertNotNull(String.format("Property schema is not found %s",
           expectedSchemaField.getName()), propertySchema);
-      assertSchema(propertySchema, expectedSchemaField.getType());
+      assertProperty(propertySchema, expectedSchemaField.getType(),
+          requiredProperties.contains(expectedSchemaField.getName()));
     }
     assertEquals(expectedFieldsCount, properties.size());
-
-    verifyThatAllPropertiesAreRequired(schema, properties);
   }
 
-  private void verifyThatAllPropertiesAreRequired(Schema schema,
-      Map<String, Schema> properties) {
-    if (properties.isEmpty()) {
-      assertNull(schema.getRequired());
+  private void assertProperty(Schema propertySchema,
+      Class<?> expectedPropertyClass, boolean required) {
+    if (required) {
+      assertSchema(propertySchema, expectedPropertyClass);
     } else {
-      assertEquals(new HashSet<>(schema.getRequired()), properties.keySet());
+      assertEquals(expectedPropertyClass, Optional.class);
     }
   }
 
