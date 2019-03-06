@@ -85,6 +85,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public abstract class AbstractServiceGenerationTest {
   private static final org.slf4j.Logger log = LoggerFactory
@@ -177,8 +178,7 @@ public abstract class AbstractServiceGenerationTest {
     Assert.assertTrue(String.format("No generated json found at path '%s'",
         openApiJsonOutput), openApiJsonOutput.toFile().exists());
 
-    // TODO kb uncomment and fix
-//    verifyOpenApiObject();
+    verifyOpenApiObject();
     if (expectedOpenApiJsonResourceUrl != null) {
       verifyOpenApiJson(expectedOpenApiJsonResourceUrl);
     }
@@ -320,6 +320,13 @@ public abstract class AbstractServiceGenerationTest {
       assertSchema(propertySchema, parameterTypes[index]);
       index++;
     }
+
+    if (properties.isEmpty()) {
+      assertNull(requestSchema.getRequired());
+    } else {
+      assertEquals(new HashSet<>(requestSchema.getRequired()),
+          properties.keySet());
+    }
   }
 
   private Schema extractSchema(Content content) {
@@ -386,15 +393,34 @@ public abstract class AbstractServiceGenerationTest {
       } else if (actualSchema instanceof ObjectSchema) {
         if (StringUtils.startsWith(expectedSchemaClass.getPackage().getName(),
             "java.")) {
-          // skip the validation for unhandled java types, e.g. Optional
-          return;
+          assertJavaClassSchema(expectedSchemaClass, actualSchema);
+        } else {
+          assertSchemaProperties(expectedSchemaClass, actualSchema);
         }
-        assertSchemaProperties(expectedSchemaClass, actualSchema);
       } else {
         throw new AssertionError(
             String.format("Unknown schema '%s' for class '%s'",
                 actualSchema.getClass(), expectedSchemaClass));
       }
+    }
+  }
+
+  private void assertJavaClassSchema(Class<?> expectedSchemaClass,
+      Schema actualSchema) {
+    if (expectedSchemaClass == Optional.class) {
+      assertEquals(actualSchema.getProperties().size(), 1);
+      assertTrue(actualSchema.getProperties()
+          .containsKey(OpenApiObjectGenerator.OPTIONAL_VALUE_PROPERTY));
+      assertNull(actualSchema.getRequired());
+    } else if (expectedSchemaClass == Object.class) {
+      assertNull(actualSchema.getProperties());
+      assertNull(actualSchema.getAdditionalProperties());
+      assertNull(actualSchema.get$ref());
+      assertNull(actualSchema.getRequired());
+    } else {
+      fail(String.format(
+          "Unexpected Java class '%s', add an assertion branch here",
+          expectedSchemaClass));
     }
   }
 
@@ -418,6 +444,12 @@ public abstract class AbstractServiceGenerationTest {
       assertSchema(propertySchema, expectedSchemaField.getType());
     }
     assertEquals(expectedFieldsCount, properties.size());
+
+    if (properties.isEmpty()) {
+      assertNull(schema.getRequired());
+    } else {
+      assertEquals(new HashSet<>(schema.getRequired()), properties.keySet());
+    }
   }
 
   private void verifySchemaReferences() {
