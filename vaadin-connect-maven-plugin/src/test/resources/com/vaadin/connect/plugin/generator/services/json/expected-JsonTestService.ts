@@ -112,6 +112,17 @@ export function inputBeanTypeLocal(
   return client.call('JsonTestService', 'inputBeanTypeLocal', {input});
 }
 
+export function optionalParameter(
+  parameter: string | null,
+  requiredParameter: string
+): Promise<void> {
+  return client.call('JsonTestService', 'optionalParameter', {parameter, requiredParameter});
+}
+
+export function optionalReturn(): Promise<number | null> {
+  return client.call('JsonTestService', 'optionalReturn');
+}
+
 export function reservedWordInParameter(
   _delete: boolean
 ): Promise<void> {
@@ -128,14 +139,4 @@ export function updateUser(
   user: User
 ): Promise<void> {
   return client.call('JsonTestService', 'updateUser', {user});
-}
-
-export function optionalParameter(
-  parameter: string | null
-): Promise<void> {
-  return client.call('ModelService', 'optionalParameter', {parameter});
-}
-
-export function optionalReturn(): Promise<number | null> {
-  return client.call('ModelService', 'optionalReturn');
 }
