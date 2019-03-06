@@ -39,10 +39,12 @@ export function getModelFromDifferentPackage(): Promise<ModelFromDifferentPackag
   return client.call('ModelService', 'getModelFromDifferentPackage');
 }
 
-export function optionalParameter(parameter?: string): Promise<void> {
+export function optionalParameter(
+  parameter: string | null
+): Promise<void> {
   return client.call('ModelService', 'optionalParameter', {parameter});
 }
 
-export function optionalReturn(): Promise<null | number> {
+export function optionalReturn(): Promise<number | null> {
   return client.call('ModelService', 'optionalReturn');
 }
