@@ -114,6 +114,7 @@ import com.vaadin.connect.auth.AnonymousAllowed;
  */
 public class OpenApiObjectGenerator {
   public static final String EXTENSION_VAADIN_CONNECT_PARAMETERS_DESCRIPTION = "x-vaadin-parameters-description";
+  public static final String OPTIONAL_VALUE_PROPERTY = "optional-value-property";
 
   private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
   private static final String VAADIN_CONNECT_OAUTH2_TOKEN_URL = "/oauth/token";
@@ -377,7 +378,6 @@ public class OpenApiObjectGenerator {
     description.ifPresent(schema::setDescription);
     Map<String, Schema> properties = getPropertiesFromClassDeclaration(typeDeclaration);
     schema.setProperties(properties);
-    // TODO kb verify required items in schemas
     schema.required(new ArrayList<>(properties.keySet()));
     return schema;
   }
@@ -912,7 +912,7 @@ public class OpenApiObjectGenerator {
     ResolvedType typeInOptional = type.getTypeParametersMap().get(0).b;
     Schema nestedTypeSchema = parseResolvedTypeToSchema(typeInOptional);
     ObjectSchema optionalSchema = new ObjectSchema();
-    optionalSchema.addProperties("value", nestedTypeSchema);
+    optionalSchema.addProperties(OPTIONAL_VALUE_PROPERTY, nestedTypeSchema);
     return optionalSchema;
   }
 }

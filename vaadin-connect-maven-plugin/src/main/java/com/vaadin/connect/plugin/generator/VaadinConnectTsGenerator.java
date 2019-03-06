@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,6 +57,7 @@ import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.tags.Tag;
@@ -793,9 +795,24 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     } else if (schema.getAdditionalProperties() != null) {
       Schema inner = (Schema) schema.getAdditionalProperties();
       return String.format("{ [key: string]: %s; }", getTypeDeclaration(inner));
+    } else if (isOptionalSchema(schema)) {
+      Map<String, Schema> properties = schema.getProperties();
+      return String.format("%s | null", getTypeDeclaration(
+          properties.get(OpenApiObjectGenerator.OPTIONAL_VALUE_PROPERTY)));
     } else {
       return super.getTypeDeclaration(schema);
     }
+  }
+
+  private boolean isOptionalSchema(Schema schema) {
+    return schema instanceof ObjectSchema
+        && Optional.ofNullable(schema.getRequired()).map(List::isEmpty)
+            .orElse(true)
+        && Optional.ofNullable(schema.getProperties())
+            .filter(properties -> properties.size() == 1)
+            .filter(properties -> properties
+                .containsKey(OpenApiObjectGenerator.OPTIONAL_VALUE_PROPERTY))
+            .isPresent();
   }
 
   private Schema getRequestBodySchema(RequestBody body) {
