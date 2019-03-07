@@ -353,12 +353,8 @@
                 "type" : "object",
                 "properties" : {
                   "parameter" : {
-                    "type" : "object",
-                    "properties" : {
-                      "optional-value-property" : {
-                        "type" : "string"
-                      }
-                    }
+                    "type" : "string",
+                    "nullable" : true
                   },
                   "requiredParameter" : {
                     "type" : "string"
@@ -388,12 +384,10 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "optional-value-property" : {
-                      "type" : "number"
-                    }
-                  }
+                  "nullable" : true,
+                  "allOf" : [ {
+                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                  } ]
                 }
               }
             }
@@ -509,14 +503,15 @@
   "components" : {
     "schemas" : {
       "com.vaadin.connect.plugin.generator.services.json.JsonTestService.User" : {
-        "required" : [ "name", "password", "roles" ],
+        "required" : [ "name", "optionalField", "password", "roles" ],
         "type" : "object",
         "properties" : {
           "name" : {
             "type" : "string"
           },
           "optionalField" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "password" : {
             "type" : "string"
