@@ -119,7 +119,7 @@ export function optionalParameter(
   return client.call('JsonTestService', 'optionalParameter', {parameter, requiredParameter});
 }
 
-export function optionalReturn(): Promise<number | null> {
+export function optionalReturn(): Promise<User | null> {
   return client.call('JsonTestService', 'optionalReturn');
 }
 
