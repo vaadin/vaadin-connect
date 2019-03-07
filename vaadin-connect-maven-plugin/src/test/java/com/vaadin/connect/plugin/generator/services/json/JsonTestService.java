@@ -164,7 +164,7 @@ public class JsonTestService {
     // No implementation
   }
 
-  public Optional<Integer> optionalReturn() {
+  public Optional<User> optionalReturn() {
     return Optional.empty();
   }
 

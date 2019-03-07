@@ -117,7 +117,6 @@ public class OpenApiObjectGenerator {
   private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
   private static final String VAADIN_CONNECT_OAUTH2_TOKEN_URL = "/oauth/token";
   private static final String SCHEMA_REF_PREFIX = "#/components/schemas/";
-  private static final String OPTIONAL_VALUE_PROPERTY = "optional-value-property";
 
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
@@ -376,28 +375,11 @@ public class OpenApiObjectGenerator {
     Schema schema = new ObjectSchema();
     schema.setName(fullQualifiedName);
     description.ifPresent(schema::setDescription);
-    getPropertiesFromClassDeclaration(typeDeclaration)
-        .forEach((propertyName, propertySchema) -> {
-          if (isOptionalSchema(propertySchema)) {
-            schema.addProperties(propertyName, (Schema) propertySchema
-                .getProperties().get(OPTIONAL_VALUE_PROPERTY));
-          } else {
-            schema.addProperties(propertyName, propertySchema);
-            schema.addRequiredItem(propertyName);
-          }
-        });
+    Map<String, Schema> properties = getPropertiesFromClassDeclaration(
+        typeDeclaration);
+    schema.properties(properties);
+    schema.setRequired(new ArrayList<>(properties.keySet()));
     return schema;
-  }
-
-  static boolean isOptionalSchema(Schema schema) {
-    return schema instanceof ObjectSchema
-        && Optional.ofNullable(schema.getRequired()).map(List::isEmpty)
-            .orElse(true)
-        && Optional.ofNullable(schema.getProperties())
-            .filter(properties -> properties.size() == 1)
-            .filter(
-                properties -> properties.containsKey(OPTIONAL_VALUE_PROPERTY))
-            .isPresent();
   }
 
   private List<Schema> createSchemasFromQualifiedNameAndType(
@@ -875,8 +857,14 @@ public class OpenApiObjectGenerator {
   private Schema createOptionalSchema(ResolvedReferenceType type) {
     ResolvedType typeInOptional = type.getTypeParametersMap().get(0).b;
     Schema nestedTypeSchema = parseResolvedTypeToSchema(typeInOptional);
-    ObjectSchema optionalSchema = new ObjectSchema();
-    optionalSchema.addProperties(OPTIONAL_VALUE_PROPERTY, nestedTypeSchema);
-    return optionalSchema;
+    if (nestedTypeSchema.get$ref() == null) {
+      nestedTypeSchema.setNullable(true);
+      return nestedTypeSchema;
+    } else {
+      ComposedSchema nullableSchema = new ComposedSchema();
+      nullableSchema.setNullable(true);
+      nullableSchema.setAllOf(Collections.singletonList(nestedTypeSchema));
+      return nullableSchema;
+    }
   }
 }
