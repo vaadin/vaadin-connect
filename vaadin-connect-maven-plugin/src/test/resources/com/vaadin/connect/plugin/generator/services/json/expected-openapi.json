@@ -353,8 +353,11 @@
                 "type" : "object",
                 "properties" : {
                   "parameter" : {
-                    "type" : "string",
-                    "nullable" : true
+                    "type" : "array",
+                    "nullable" : true,
+                    "items" : {
+                      "type" : "string"
+                    }
                   },
                   "requiredParameter" : {
                     "type" : "string"

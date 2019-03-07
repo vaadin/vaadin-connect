@@ -168,7 +168,7 @@ public class JsonTestService {
     return Optional.empty();
   }
 
-  public void optionalParameter(Optional<String> parameter, String requiredParameter) {
+  public void optionalParameter(Optional<List<String>> parameter, String requiredParameter) {
     // No implementation
   }
 
