@@ -113,7 +113,7 @@ export function inputBeanTypeLocal(
 }
 
 export function optionalParameter(
-  parameter: string | null,
+  parameter: Array<string> | null,
   requiredParameter: string
 ): Promise<void> {
   return client.call('JsonTestService', 'optionalParameter', {parameter, requiredParameter});
