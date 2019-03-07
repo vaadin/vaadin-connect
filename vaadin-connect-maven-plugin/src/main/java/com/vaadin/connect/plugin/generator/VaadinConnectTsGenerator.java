@@ -785,7 +785,13 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   @Override
   public String getTypeDeclaration(Schema schema) {
-    if (schema instanceof ArraySchema) {
+    if (Boolean.TRUE.equals(schema.getNullable())) {
+      if (schema instanceof ComposedSchema) {
+        return String.format("%s | null",
+            getTypeDeclaration(((ComposedSchema) schema).getAllOf().get(0)));
+      }
+      return String.format("%s | null", super.getTypeDeclaration(schema));
+    } else if (schema instanceof ArraySchema) {
       ArraySchema arraySchema = (ArraySchema) schema;
       Schema inner = arraySchema.getItems();
       return this.getTypeDeclaration(inner) + "[]";
@@ -794,12 +800,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     } else if (schema.getAdditionalProperties() != null) {
       Schema inner = (Schema) schema.getAdditionalProperties();
       return String.format("{ [key: string]: %s; }", getTypeDeclaration(inner));
-    } else if (Boolean.TRUE.equals(schema.getNullable())) {
-      if (schema instanceof ComposedSchema) {
-        return String.format("%s | null",
-            getTypeDeclaration(((ComposedSchema) schema).getAllOf().get(0)));
-      }
-      return String.format("%s | null", super.getTypeDeclaration(schema));
     } else {
       return super.getTypeDeclaration(schema);
     }
