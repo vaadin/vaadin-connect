@@ -108,32 +108,37 @@ Any `String` values are kept the same when sent from TypeScript to Java backend.
 ==== java.util.Date
 
 * TypeScript compliant values:
-** An integer number or string that represents an epoch timestamp: `1546300800` or `"1546300800"` are converted to a `java.util.Date` instance which contains value of the date `01-01-2019`.
+** A string that represents an epoch timestamp in milliseconds: `'1546300800000'` is converted to a `java.util.Date` instance which contains value of the date `2019-01-01T00:00:00.000+0000`.
 
 * Noncompliant values:
-** A non-number string: `"foo"`
-** Any other types: boolean, object or array
+** A non-number string: `'foo'`
+
+==== java.time.Instant
+
+* TypeScript compliant values:
+** A string that represents an epoch timestamp in seconds: `'1546300800'` is converted to a `java.time.Instant` instance which contains value of the `2019-01-01T00:00:00Z`.
+
+* Noncompliant values:
+** A non-number string: `'foo'`
 
 ==== java.time.LocalDate
 
 * TypeScript compliant values:
-** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE` format `yyyy-MM-dd`: `"2018-12-16"`, `"2019-01-01"`.
+** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE` format `yyyy-MM-dd`: `'2018-12-16'`, `'2019-01-01'`.
 
 * Noncompliant values:
-** An incorrect format string: `"foo"`
-** Any other types: boolean, object or array
+** An incorrect format string: `'foo'`
 
 ==== java.time.LocalDateTime
 
 * TypeScript compliant values:
 ** A string which follows the `java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME` format:
-*** With full time: `"2019-01-01T12:34:56"`
-*** Without seconds: `"2019-01-01T12:34"`
-*** With full time and milliseconds: `"2019-01-01T12:34:56.78"`
+*** With full time: `'2019-01-01T12:34:56'`
+*** Without seconds: `'2019-01-01T12:34'`
+*** With full time and milliseconds: `'2019-01-01T12:34:56.78'`
 
 * Noncompliant values:
-** An incorrect format string: `"foo"`
-** Any other types: boolean, object or array
+** An incorrect format string: `'foo'`
 
 === To receive an `Enum` in Java
 
@@ -268,13 +273,15 @@ All types which inherit from `java.lang.Map` becomes objects in TypeScript with 
 
 === Datetime
 
-By default, the `ObjectMapper` converts Java's date time to a string, then it will be wrapped into a `Date` object in TypeScript:
+By default, the `ObjectMapper` converts Java's date time to a string in TypeScript with the following formats:
 
-* A `java.util.Date` or `java.time.Instant` object of `January 1st, 2019 02:00:00 UTC` => a `Date` object of the corresponding time depending on the browser's locale, e.g.  `January 1st, 2019 04:00:00 GTM+2` or  `December 31st, 2018 18:00:00 GTM-8`
+* `java.util.Date` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00.000+0000'`
 
-* A `java.time.LocalDate` object of `January 1st, 2019` => a `Date` object of `January 1st, 2019` regardless the browser's locale.
+* `java.time.Instant` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00Z'`
 
-* A `java.time.LocalDateTime` object of `January 1st, 2019 02:00:00` => a `Date` object of `January 1st, 2019 02:00:00` regardless the browser's locale.
+* `java.time.LocalDate` of `00:00:00 January 1st, 2019` => `'2019-01-01'`
+
+* `java.time.LocalDateTime` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00'`
 
 
 === `null`

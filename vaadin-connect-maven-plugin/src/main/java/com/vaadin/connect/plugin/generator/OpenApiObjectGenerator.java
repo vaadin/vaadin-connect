@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -663,7 +664,7 @@ public class OpenApiObjectGenerator {
 
   private boolean isDateTimeType(ResolvedType resolvedType) {
     return resolvedType.isReferenceType() && isTypeOf(
-        resolvedType.asReferenceType(), LocalDate.class, Instant.class);
+        resolvedType.asReferenceType(), LocalDateTime.class, Instant.class);
   }
 
   private boolean isDateType(ResolvedType resolvedType) {

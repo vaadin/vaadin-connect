@@ -161,7 +161,48 @@ describe('demo application', () => {
           ).textContent === text;
         }, ['{"foo":"bar"}']).call(page);
       });
+
+      it('should serialize/deserialize Date object', async() => {
+        await page.findById('dateTimeInput').clearValue().type('1546300800000').end().findById('echoDate').click();
+        // tslint:disable-next-line:only-arrow-functions
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('dateTimeOutput') as HTMLOutputElement
+          ).textContent === text;
+        }, ['2019-01-01T00:00:00.000+0000']).call(page);
+      });
+
+      it('should serialize/deserialize Instant object', async() => {
+        await page.findById('dateTimeInput').clearValue().type('1551886875').end().findById('echoInstant').click();;
+        // tslint:disable-next-line:only-arrow-functions
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('dateTimeOutput') as HTMLOutputElement
+          ).textContent === text;
+        }, ['2019-03-06T15:41:15Z']).call(page);
+      });
+
+      it('should serialize/deserialize LocalDate object', async() => {
+        await page.findById('dateTimeInput').clearValue().type('2019-06-03').end().findById('echoLocalDate').click();
+        // tslint:disable-next-line:only-arrow-functions
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('dateTimeOutput') as HTMLOutputElement
+          ).textContent === text;
+        }, ['2019-06-03']).call(page);
+      });
+
+      it('should serialize/deserialize LocalDateTime object', async() => {
+        await page.findById('dateTimeInput').clearValue().type('2019-01-01T12:34:56.78').end().findById('echoLocalDateTime').click();;
+        // tslint:disable-next-line:only-arrow-functions
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('dateTimeOutput') as HTMLOutputElement
+          ).textContent === text;
+        }, ['2019-01-01T12:34:56.78']).call(page);
+      });
     });
+
   });
 
   describe('single page application', () => {

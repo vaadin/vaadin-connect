@@ -108,6 +108,35 @@ const updateExceptionData = (exception: VaadinConnectError) => {
         .textContent = JSON.stringify(mapObject);
   });
 
+const dateTimeInput =
+  document.getElementById('dateTimeInput') as HTMLInputElement;
+const dateTimeOutput =
+  document.getElementById('dateTimeOutput') as HTMLLabelElement;
+
+(document.getElementById('echoInstant') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    dateTimeOutput.textContent =
+      await demoService.echoInstant(dateTimeInput.value);
+  });
+
+(document.getElementById('echoDate') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    dateTimeOutput.textContent =
+      await demoService.echoDate(dateTimeInput.value);
+  });
+
+(document.getElementById('echoLocalDate') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    dateTimeOutput.textContent =
+      await demoService.echoLocalDate(dateTimeInput.value);
+  });
+
+(document.getElementById('echoLocalDateTime') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    dateTimeOutput.textContent =
+      await demoService.echoLocalDateTime(dateTimeInput.value);
+  });
+
 const customClient = new ConnectClient({endpoint: '/connect', credentials});
 
 (document.getElementById('addAnotherOne') as HTMLButtonElement)

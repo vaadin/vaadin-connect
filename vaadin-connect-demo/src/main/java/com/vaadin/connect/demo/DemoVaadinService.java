@@ -4,8 +4,12 @@ import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.auth.AnonymousAllowed;
-import com.vaadin.connect.demo.account.BeanWithTypeFromDependencies;
 import com.vaadin.connect.exception.VaadinConnectException;
 
 @VaadinService
@@ -145,5 +148,26 @@ public class DemoVaadinService {
   @PermitAll
   public Map<String, String> echoMapObject(Map<String, String> param) {
     return param;
+  }
+
+  @PermitAll
+  public Instant echoInstant(Instant instant) {
+    return instant;
+  }
+
+  @PermitAll
+  public Date echoDate(Date date) {
+    return date;
+  }
+
+  @PermitAll
+
+  public LocalDate echoLocalDate(LocalDate localDate) {
+    return localDate;
+  }
+
+  @PermitAll
+  public LocalDateTime echoLocalDateTime(LocalDateTime localDateTime) {
+    return localDateTime;
   }
 }
