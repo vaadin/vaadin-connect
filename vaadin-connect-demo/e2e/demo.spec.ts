@@ -1,7 +1,9 @@
 /// <reference types="intern"/>
 
 declare global {
-  interface Window {Vaadin: any;}
+  interface Window {
+    Vaadin: any;
+  }
 }
 
 const {
@@ -143,10 +145,13 @@ describe('demo application', () => {
 
     describe('statistics', () => {
       it('should be registered in Vaadin namespace', async() => {
-        // tslint:disable-next-line:no-var-keyword only-arrow-functions
-        var registrations = await page.execute(function() {
-          return window.Vaadin.registrations;
-        });
+        // tslint:disable-next-line:no-var-keyword prefer-const
+        var registrations = await page.execute(
+          // tslint:disable-next-line:only-arrow-functions
+          function() {
+            return window.Vaadin.registrations;
+          }
+        );
         expect(registrations[0].is).to.equal('@vaadin/connect');
       });
     });
@@ -216,14 +221,6 @@ describe('demo application', () => {
     });
 
     it('should get index when url has no extension', async(context) => {
-      const page = context.remote.get('app/anyroute');
-      await page
-        .findById('number').getVisibleText().then(text =>
-          expect(text).to.equal('1')
-        );
-    });
-
-    it('should get index when url does not have an extension', async(context) => {
       const page = context.remote.get('app/anyroute');
       await page
         .findById('number').getVisibleText().then(text =>
