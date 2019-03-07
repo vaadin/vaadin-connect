@@ -87,9 +87,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractServiceGenerationTest {
-  private static final org.slf4j.Logger log = LoggerFactory
-      .getLogger(AbstractServiceGenerationTest.class);
-
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
       float.class, double.class);
@@ -320,12 +317,7 @@ public abstract class AbstractServiceGenerationTest {
       index++;
     }
 
-    if (properties.isEmpty()) {
-      assertNull(requestSchema.getRequired());
-    } else {
-      assertEquals(new HashSet<>(requestSchema.getRequired()),
-          properties.keySet());
-    }
+    verifyThatAllPropertiesAreRequired(requestSchema, properties);
   }
 
   private Schema extractSchema(Content content) {
@@ -406,9 +398,10 @@ public abstract class AbstractServiceGenerationTest {
   private boolean assertSpecificJavaClassSchema(Schema actualSchema,
       Class<?> expectedSchemaClass) {
     if (expectedSchemaClass == Optional.class) {
-      assertTrue(actualSchema instanceof ObjectSchema);
-      assertEquals(actualSchema.getProperties().size(), 1);
-      assertNull(actualSchema.getRequired());
+      assertTrue(actualSchema.getNullable());
+      if (actualSchema instanceof ComposedSchema) {
+        assertEquals(1, ((ComposedSchema) actualSchema).getAllOf().size());
+      }
     } else if (expectedSchemaClass == Object.class) {
       assertNull(actualSchema.getProperties());
       assertNull(actualSchema.getAdditionalProperties());
@@ -426,11 +419,6 @@ public abstract class AbstractServiceGenerationTest {
     Map<String, Schema> properties = schema.getProperties();
     assertNotNull(properties);
     assertTrue(properties.size() > 0);
-
-    List<String> requiredProperties = schema.getRequired() == null
-        ? Collections.emptyList()
-        : schema.getRequired();
-
     for (Field expectedSchemaField : expectedSchemaClass.getDeclaredFields()) {
       if (Modifier.isTransient(expectedSchemaField.getModifiers())
           || Modifier.isStatic(expectedSchemaField.getModifiers())
@@ -442,18 +430,19 @@ public abstract class AbstractServiceGenerationTest {
       Schema propertySchema = properties.get(expectedSchemaField.getName());
       assertNotNull(String.format("Property schema is not found %s",
           expectedSchemaField.getName()), propertySchema);
-      assertProperty(propertySchema, expectedSchemaField.getType(),
-          requiredProperties.contains(expectedSchemaField.getName()));
+      assertSchema(propertySchema, expectedSchemaField.getType());
     }
     assertEquals(expectedFieldsCount, properties.size());
+
+    verifyThatAllPropertiesAreRequired(schema, properties);
   }
 
-  private void assertProperty(Schema propertySchema,
-      Class<?> expectedPropertyClass, boolean required) {
-    if (required) {
-      assertSchema(propertySchema, expectedPropertyClass);
+  private void verifyThatAllPropertiesAreRequired(Schema schema,
+      Map<String, Schema> properties) {
+    if (properties.isEmpty()) {
+      assertNull(schema.getRequired());
     } else {
-      assertEquals(expectedPropertyClass, Optional.class);
+      assertEquals(new HashSet<>(schema.getRequired()), properties.keySet());
     }
   }
 
