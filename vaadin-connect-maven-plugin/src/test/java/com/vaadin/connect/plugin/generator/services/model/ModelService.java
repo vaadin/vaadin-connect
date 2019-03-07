@@ -29,6 +29,11 @@ import com.vaadin.connect.plugin.generator.services.model.subpackage.ModelFromDi
 public class ModelService {
 
   /**
+   * This field is irrelevant and the type shouldn't be generated.
+   */
+  private ShouldNotBeGenerated thisFieldShouldNotBeGenerated;
+
+  /**
    * Get account by username.
    * 
    * @param userName
