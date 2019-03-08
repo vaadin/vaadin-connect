@@ -26,8 +26,8 @@ export const command: Command = async() => {
       } else {
         log(
           LogCategory.Error,
-          '\x1b[31;1mUnable to start the backend. Check whether another',
-          'instance is already running \x1b[0m'
+          '\x1b[31;1mUnable to start the backend.',
+          'Check the console output for details. \x1b[0m'
         );
         process.exit(code);
       }
