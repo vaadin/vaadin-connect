@@ -112,6 +112,25 @@ public class VaadinConnectValidationException extends VaadinConnectException {
   }
 
   /**
+   * Creates a validation exception from a error data list.
+   *
+   * @param validationErrorData
+   *          A list of validation error data, must not be {@code null} or
+   *          empty.
+   */
+  public VaadinConnectValidationException(
+      List<ValidationErrorData> validationErrorData) {
+    super("Validation failed");
+    Objects.requireNonNull(validationErrorData);
+    if (validationErrorData.isEmpty()) {
+      throw new IllegalStateException(
+          "At least one validation error is required");
+    }
+    this.validationErrorData = Collections
+        .unmodifiableList(validationErrorData);
+  }
+
+  /**
    * Gets the collection of the data on the validation errors.
    *
    * @return the error data

@@ -19,9 +19,11 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -52,6 +54,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 import com.vaadin.connect.exception.VaadinConnectException;
+import com.vaadin.connect.exception.VaadinConnectValidationException;
 
 /**
  * The controller that is responsible for processing Vaadin Connect requests.
@@ -268,7 +271,7 @@ public class VaadinConnectController {
               serviceName, methodName, checkError)));
     }
 
-    List<JsonNode> requestParameters = getRequestParameters(body);
+    Map<String, JsonNode> requestParameters = getRequestParameters(body);
     Parameter[] javaParameters = methodToInvoke.getParameters();
     if (javaParameters.length != requestParameters.size()) {
       return ResponseEntity.badRequest()
@@ -283,16 +286,15 @@ public class VaadinConnectController {
     try {
       vaadinServiceParameters = getVaadinServiceParameters(requestParameters,
           javaParameters);
-    } catch (IOException e) {
+    } catch (VaadinConnectValidationException e) {
       String errorMessage = String.format(
           "Unable to deserialize parameters for service '%s' method '%s'. "
               + "Expected parameter types (and their order) are: '[%s]'",
           serviceName, methodName, listMethodParameterTypes(javaParameters));
       getLogger().debug(errorMessage, e);
-      return ResponseEntity.badRequest()
-          .body(createResponseErrorObject(errorMessage));
+      return ResponseEntity.badRequest().body(
+          vaadinServiceMapper.writeValueAsString(e.getSerializationData()));
     }
-
     Object returnValue;
     try {
       returnValue = methodToInvoke.invoke(vaadinServiceData.getServiceObject(),
@@ -350,23 +352,42 @@ public class VaadinConnectController {
         .collect(Collectors.joining(", "));
   }
 
-  private Object[] getVaadinServiceParameters(List<JsonNode> requestParameters,
-      Parameter[] javaParameters) throws IOException {
+  private Object[] getVaadinServiceParameters(
+      Map<String, JsonNode> requestParameters, Parameter[] javaParameters) {
     Object[] serviceParameters = new Object[javaParameters.length];
+    String[] parameterNames = new String[requestParameters.size()];
+    requestParameters.keySet().toArray(parameterNames);
+    Map<String, String> errorParams = new HashMap<>();
     for (int i = 0; i < javaParameters.length; i++) {
-      serviceParameters[i] = vaadinServiceMapper
-          .readerFor(vaadinServiceMapper.getTypeFactory()
-              .constructType(javaParameters[i].getParameterizedType()))
-          .readValue(requestParameters.get(i));
+      Type expectedType = javaParameters[i].getParameterizedType();
+      try {
+        serviceParameters[i] = vaadinServiceMapper
+            .readerFor(vaadinServiceMapper.getTypeFactory()
+                .constructType(expectedType))
+            .readValue(requestParameters.get(parameterNames[i]));
+      } catch (IOException e) {
+        errorParams.put(parameterNames[i], expectedType.getTypeName());
+      }
     }
-    return serviceParameters;
+    if (errorParams.isEmpty()) {
+      return serviceParameters;
+    }
+    List<VaadinConnectValidationException.ValidationErrorData> validationErrorData = new ArrayList<>();
+    for (Map.Entry<String, String> errorParam : errorParams.entrySet()) {
+      String message = String.format("Unable to deserialize for type '%s'",
+          errorParam.getValue());
+      validationErrorData
+          .add(new VaadinConnectValidationException.ValidationErrorData(message,
+              errorParam.getKey()));
+    }
+    throw new VaadinConnectValidationException(validationErrorData);
   }
 
-  private List<JsonNode> getRequestParameters(ObjectNode body) {
-    List<JsonNode> parametersData = new ArrayList<>();
+  private Map<String, JsonNode> getRequestParameters(ObjectNode body) {
+    Map<String, JsonNode> parametersData = new LinkedHashMap<>();
     if (body != null) {
-      body.fields()
-          .forEachRemaining(entry -> parametersData.add(entry.getValue()));
+      body.fields().forEachRemaining(
+          entry -> parametersData.put(entry.getKey(), entry.getValue()));
     }
     return parametersData;
   }
