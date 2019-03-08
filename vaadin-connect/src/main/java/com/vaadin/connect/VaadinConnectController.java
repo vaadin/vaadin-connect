@@ -131,9 +131,9 @@ public class VaadinConnectController {
    *          {@link VaadinService} from
    */
   public VaadinConnectController(
-    @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
-    VaadinConnectAccessChecker accessChecker,
-    VaadinServiceNameChecker serviceNameChecker, ApplicationContext context) {
+      @Autowired(required = false) @Qualifier(VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER) ObjectMapper vaadinServiceMapper,
+      VaadinConnectAccessChecker accessChecker,
+      VaadinServiceNameChecker serviceNameChecker, ApplicationContext context) {
     this.vaadinServiceMapper = vaadinServiceMapper != null ? vaadinServiceMapper
         : getDefaultObjectMapper(context);
     this.accessChecker = accessChecker;
@@ -367,7 +367,10 @@ public class VaadinConnectController {
                 .constructType(expectedType))
             .readValue(requestParameters.get(parameterNames[i]));
       } catch (IOException e) {
-        errorParams.put(parameterNames[i], expectedType.getTypeName());
+        String typeName = expectedType.getTypeName();
+        getLogger().debug("Unable to deserialize for parameter {} with type {}",
+            parameterNames[i], typeName, e);
+        errorParams.put(parameterNames[i], typeName);
       }
     }
     if (errorParams.isEmpty()) {
