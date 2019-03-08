@@ -16,8 +16,6 @@
 
 package com.vaadin.connect.exception;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -96,19 +94,10 @@ public class VaadinConnectValidationException extends VaadinConnectException {
    *
    * @param data
    *          validation error data, mandatory (cannot be {@code null})
-   * @param validationErrorData
-   *          the rest of the validation data, optional
    */
-  public VaadinConnectValidationException(ValidationErrorData data,
-      ValidationErrorData... validationErrorData) {
-    super("Validation failed");
-
-    List<ValidationErrorData> allErrors = new ArrayList<>(
-        validationErrorData.length + 1);
-    allErrors.add(Objects.requireNonNull(data,
-        "At least one validation error is required"));
-    allErrors.addAll(Arrays.asList(validationErrorData));
-    this.validationErrorData = Collections.unmodifiableList(allErrors);
+  public VaadinConnectValidationException(ValidationErrorData data) {
+    this(Collections.singletonList(Objects.requireNonNull(data,
+        "At least one 'validation error' is required")));
   }
 
   /**
@@ -120,11 +109,24 @@ public class VaadinConnectValidationException extends VaadinConnectException {
    */
   public VaadinConnectValidationException(
       List<ValidationErrorData> validationErrorData) {
-    super("Validation failed");
-    Objects.requireNonNull(validationErrorData);
-    if (validationErrorData.isEmpty()) {
-      throw new IllegalStateException(
-          "At least one validation error is required");
+    this("Validation failed", validationErrorData);
+  }
+
+  /**
+   * Creates a validation exception from a error data list.
+   * 
+   * @param message
+   *          General error message.
+   * @param validationErrorData
+   *          A list of validation error data, must not be {@code null} or
+   *          empty.
+   */
+  public VaadinConnectValidationException(String message,
+      List<ValidationErrorData> validationErrorData) {
+    super(message);
+    if (validationErrorData == null || validationErrorData.isEmpty()) {
+      throw new IllegalArgumentException(
+          "At least one 'validation error' is required");
     }
     this.validationErrorData = Collections
         .unmodifiableList(validationErrorData);

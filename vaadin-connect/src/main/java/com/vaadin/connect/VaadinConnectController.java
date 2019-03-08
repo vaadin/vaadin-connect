@@ -285,7 +285,7 @@ public class VaadinConnectController {
     Object[] vaadinServiceParameters;
     try {
       vaadinServiceParameters = getVaadinServiceParameters(requestParameters,
-          javaParameters);
+          javaParameters, methodName, serviceName);
     } catch (VaadinConnectValidationException e) {
       String errorMessage = String.format(
           "Unable to deserialize parameters for service '%s' method '%s'. "
@@ -353,7 +353,8 @@ public class VaadinConnectController {
   }
 
   private Object[] getVaadinServiceParameters(
-      Map<String, JsonNode> requestParameters, Parameter[] javaParameters) {
+      Map<String, JsonNode> requestParameters, Parameter[] javaParameters,
+      String methodName, String serviceName) {
     Object[] serviceParameters = new Object[javaParameters.length];
     String[] parameterNames = new String[requestParameters.size()];
     requestParameters.keySet().toArray(parameterNames);
@@ -380,7 +381,10 @@ public class VaadinConnectController {
           .add(new VaadinConnectValidationException.ValidationErrorData(message,
               errorParam.getKey()));
     }
-    throw new VaadinConnectValidationException(validationErrorData);
+    String message = String.format(
+        "Validation error in service '%s' method '%s'", serviceName,
+        methodName);
+    throw new VaadinConnectValidationException(message, validationErrorData);
   }
 
   private Map<String, JsonNode> getRequestParameters(ObjectNode body) {
