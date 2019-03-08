@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.SimpleType;
@@ -26,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 import com.vaadin.connect.exception.VaadinConnectException;
+import com.vaadin.connect.exception.VaadinConnectValidationException;
 import com.vaadin.connect.testservice.BridgeMethodTestService;
 
 import static org.junit.Assert.assertEquals;
@@ -57,6 +60,11 @@ public class VaadinConnectControllerTest {
   public static class TestClass {
     public String testMethod(int parameter) {
       return parameter + "-test";
+    }
+
+    public void testMethodWithMultipleParameter(int number, String text,
+        Date date) {
+      // no op
     }
   }
 
@@ -564,6 +572,63 @@ public class VaadinConnectControllerTest {
 
     new VaadinConnectController(null, mock(VaadinConnectAccessChecker.class),
         mock(VaadinServiceNameChecker.class), contextMock);
+  }
+
+  @Test
+  public void should_ReturnValidationError_When_DeserializationFails()
+      throws IOException {
+    String inputValue = "\"string\"";
+    String expectedErrorMessage = String.format(
+        "Validation error in service '%s' method '%s'", TEST_SERVICE_NAME,
+        TEST_METHOD.getName());
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_METHOD.getName(),
+            createRequestParameters(
+                String.format("{\"value\": %s}", inputValue)));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ObjectNode jsonNodes = new ObjectMapper().readValue(response.getBody(),
+        ObjectNode.class);
+
+    assertEquals(VaadinConnectValidationException.class.getName(),
+        jsonNodes.get("type").asText());
+    assertEquals(expectedErrorMessage, jsonNodes.get("message").asText());
+    assertEquals(1, jsonNodes.get("validationErrorData").size());
+
+    JsonNode validationErrorData = jsonNodes.get("validationErrorData").get(0);
+    assertEquals("value", validationErrorData.get("parameterName").asText());
+    assertTrue(validationErrorData.get("message").asText().contains("'int'"));
+  }
+
+  @Test
+  public void should_ReturnAllValidationErrors_When_DeserializationFailsForMultipleParameters()
+      throws IOException {
+    String inputValue = String.format(
+        "{\"number\": %s, \"text\": %s, \"date\": %s}", "\"NotANumber\"",
+        "\"ValidText\"", "\"NotADate\"");
+    String testMethodName = "testMethodWithMultipleParameter";
+    String expectedErrorMessage = String.format(
+        "Validation error in service '%s' method '%s'", TEST_SERVICE_NAME,
+        testMethodName);
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, testMethodName,
+            createRequestParameters(inputValue));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ObjectNode jsonNodes = new ObjectMapper().readValue(response.getBody(),
+        ObjectNode.class);
+    assertNotNull(jsonNodes);
+
+    assertEquals(VaadinConnectValidationException.class.getName(),
+        jsonNodes.get("type").asText());
+    assertEquals(expectedErrorMessage, jsonNodes.get("message").asText());
+    assertEquals(2, jsonNodes.get("validationErrorData").size());
+
+    List<String> parameterNames = jsonNodes.get("validationErrorData")
+        .findValuesAsText("parameterName");
+    assertEquals(2, parameterNames.size());
+    assertTrue(parameterNames.contains("date"));
+    assertTrue(parameterNames.contains("number"));
   }
 
   private void assertServiceInfoPresent(String responseBody) {

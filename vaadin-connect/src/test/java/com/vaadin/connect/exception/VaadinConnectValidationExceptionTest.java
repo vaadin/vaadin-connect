@@ -102,8 +102,16 @@ public class VaadinConnectValidationExceptionTest {
   @Test
   public void should_ThrowException_WhenNoErrorDataProvided() {
     exception.expect(NullPointerException.class);
-    exception.expectMessage("At least one validation error is required");
-    new VaadinConnectValidationException(null);
+    exception.expectMessage("At least one 'validation error' is required");
+    VaadinConnectValidationException.ValidationErrorData errorData = null;
+    new VaadinConnectValidationException(errorData);
+  }
+
+  @Test
+  public void should_ThrowException_WhenErrorDataProvidedIsEmpty() {
+    exception.expect(IllegalArgumentException.class);
+    exception.expectMessage("At least one 'validation error' is required");
+    new VaadinConnectValidationException(Collections.emptyList());
   }
 
   /**
@@ -140,7 +148,7 @@ public class VaadinConnectValidationExceptionTest {
     ValidationErrorData errorData1 = new ValidationErrorData("test1", "tset1");
     ValidationErrorData errorData2 = new ValidationErrorData("test2", "tset2");
     VaadinConnectValidationException exception = new VaadinConnectValidationException(
-        errorData1, errorData2);
+        Arrays.asList(errorData1, errorData2));
 
     assertNotNull(exception.getMessage());
     assertNull(exception.getDetail());
