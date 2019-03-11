@@ -39,7 +39,6 @@ describe('demo application', () => {
 
     it('should say hello after logging in', async() => {
       await page.findById('login').click();
-      // tslint:disable-next-line:only-arrow-functions
       await pollUntilTruthy(function(text) {
         return (document.getElementById('loginMessage') as HTMLOutputElement)
           .textContent === text;
@@ -48,7 +47,6 @@ describe('demo application', () => {
 
     it('should increment number on button click', async() => {
       await page.findById('addOne').click();
-      // tslint:disable-next-line:only-arrow-functions
       await pollUntilTruthy(function(text) {
         return (document.getElementById('number') as HTMLOutputElement)
           .textContent === text;
@@ -68,7 +66,6 @@ describe('demo application', () => {
         const access = await page.findById('access').getVisibleText();
         expect(access).to.equal('');
         await page.findById('checkAnonymousAccess').click();
-        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           return (document.getElementById('access') as HTMLOutputElement)
             .textContent === text;
@@ -83,7 +80,6 @@ describe('demo application', () => {
         const access = await page.findById('access').getVisibleText();
         await page.findById('checkAnonymousAccess').click();
         expect(access).to.equal('');
-        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           return (document.getElementById('access') as HTMLOutputElement)
             .textContent === text;
@@ -94,7 +90,6 @@ describe('demo application', () => {
         // Get back to working credentials and login
         page = page.get('');
         await page.findById('login').click();
-        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           return (document.getElementById('loginMessage') as HTMLOutputElement)
             .textContent === text;
@@ -105,7 +100,6 @@ describe('demo application', () => {
     describe('exception handling', () => {
       it('should throw generic exception', async() => {
         await page.findById('exceptionButton').click();
-        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           const exceptionMessage = (
             document.getElementById('exceptionMessage') as HTMLOutputElement
@@ -125,7 +119,6 @@ describe('demo application', () => {
 
       it('should throw VaadinConnect exception', async() => {
         await page.findById('submitButton').click();
-        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           const exceptionMessage = (
             document.getElementById('exceptionMessage') as HTMLOutputElement
@@ -147,7 +140,6 @@ describe('demo application', () => {
       it('should be registered in Vaadin namespace', async() => {
         // tslint:disable-next-line:no-var-keyword prefer-const
         var registrations = await page.execute(
-          // tslint:disable-next-line:only-arrow-functions
           function() {
             return window.Vaadin.registrations;
           }
@@ -159,7 +151,6 @@ describe('demo application', () => {
     describe('serialization', () => {
       it('should serialize/deserialize map object', async() => {
         await page.findById('echoMapObject').click();
-        // tslint:disable-next-line:only-arrow-functions
         await pollUntilTruthy(function(text) {
           return (
             document.getElementById('mapObject') as HTMLOutputElement
@@ -168,13 +159,11 @@ describe('demo application', () => {
       });
 
       it('should serialize/deserialize Date object', async() => {
-        await page
-          .findById('dateTimeInput')
-          .clearValue().type('1546300800000')
-          .end()
-          .findById('echoDate')
-          .click();
-        // tslint:disable-next-line:only-arrow-functions
+        await page.execute(function() {
+          (document.getElementById('dateTimeInput') as HTMLInputElement)
+            .value = '1546300800000';
+        });
+        await page.findById('echoDate').click();
         await pollUntilTruthy(function(text) {
           return (
             document.getElementById('dateTimeOutput') as HTMLOutputElement
@@ -183,12 +172,11 @@ describe('demo application', () => {
       });
 
       it('should serialize/deserialize Instant object', async() => {
-        await page
-          .findById('dateTimeInput')
-          .clearValue().type('1551886875')
-          .end()
-          .findById('echoInstant').click();
-        // tslint:disable-next-line:only-arrow-functions
+        await page.execute(function() {
+          (document.getElementById('dateTimeInput') as HTMLInputElement)
+            .value = '1551886875';
+        });
+        await page.findById('echoInstant').click();
         await pollUntilTruthy(function(text) {
           return (
             document.getElementById('dateTimeOutput') as HTMLOutputElement
@@ -197,13 +185,11 @@ describe('demo application', () => {
       });
 
       it('should serialize/deserialize LocalDate object', async() => {
-        await page
-          .findById('dateTimeInput')
-          .clearValue().type('2019-06-03')
-          .end()
-          .findById('echoLocalDate')
-          .click();
-        // tslint:disable-next-line:only-arrow-functions
+        await page.execute(function() {
+          (document.getElementById('dateTimeInput') as HTMLInputElement)
+            .value = '2019-06-03';
+        });
+        await page.findById('echoLocalDate').click();
         await pollUntilTruthy(function(text) {
           return (
             document.getElementById('dateTimeOutput') as HTMLOutputElement
@@ -212,13 +198,11 @@ describe('demo application', () => {
       });
 
       it('should serialize/deserialize LocalDateTime object', async() => {
-        await page
-          .findById('dateTimeInput')
-          .clearValue().type('2019-01-01T12:34:56.78')
-          .end()
-          .findById('echoLocalDateTime')
-          .click();
-        // tslint:disable-next-line:only-arrow-functions
+        await page.execute(function() {
+          (document.getElementById('dateTimeInput') as HTMLInputElement)
+            .value = '2019-01-01T12:34:56.78';
+        });
+        await page.findById('echoLocalDateTime').click();
         await pollUntilTruthy(function(text) {
           return (
             document.getElementById('dateTimeOutput') as HTMLOutputElement
