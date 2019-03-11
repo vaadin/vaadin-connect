@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -34,6 +35,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -309,8 +311,8 @@ public class VaadinConnectController {
       return ResponseEntity.badRequest()
           .body(vaadinServiceMapper.writeValueAsString(
               constructValidationException(methodName, serviceName,
-                  Collections.emptyMap(), methodParameterConstraintViolations)
-                      .getSerializationData()));
+                  Collections.emptyMap(), methodParameterConstraintViolations,
+                  this::createMethodValidationErrors).getSerializationData()));
     }
 
     Object returnValue;
@@ -412,12 +414,13 @@ public class VaadinConnectController {
       return serviceParameters;
     }
     throw constructValidationException(methodName, serviceName, errorParams,
-        constraintViolations);
+        constraintViolations, this::createBeanValidationErrors);
   }
 
   private VaadinConnectValidationException constructValidationException(
       String methodName, String serviceName, Map<String, String> errorParams,
-      Set<ConstraintViolation<Object>> constraintViolations) {
+      Set<ConstraintViolation<Object>> constraintViolations,
+      Function<Set<ConstraintViolation<Object>>, List<ValidationErrorData>> validationErrorsConverter) {
     List<ValidationErrorData> validationErrorData = new ArrayList<>(
         errorParams.size() + constraintViolations.size());
 
@@ -429,20 +432,43 @@ public class VaadinConnectController {
           .add(new ValidationErrorData(message, errorParam.getKey()));
     }
 
-    for (ConstraintViolation<Object> constraintViolation : constraintViolations) {
-      validationErrorData.add(new ValidationErrorData(String.format(
-          "Object of type '%s' has invalid property '%s' with value '%s', validation error: '%s'",
-          constraintViolation.getRootBeanClass(),
-          constraintViolation.getPropertyPath().toString(),
-          constraintViolation.getInvalidValue(),
-          constraintViolation.getMessage()),
-          constraintViolation.getPropertyPath().toString()));
-    }
+    validationErrorData
+        .addAll(validationErrorsConverter.apply(constraintViolations));
 
     String message = String.format(
         "Validation error in service '%s' method '%s'", serviceName,
         methodName);
     return new VaadinConnectValidationException(message, validationErrorData);
+  }
+
+  private List<ValidationErrorData> createBeanValidationErrors(
+      Collection<ConstraintViolation<Object>> beanConstraintViolations) {
+    return beanConstraintViolations.stream()
+        .map(constraintViolation -> new ValidationErrorData(String.format(
+            "Object of type '%s' has invalid property '%s' with value '%s', validation error: '%s'",
+            constraintViolation.getRootBeanClass(),
+            constraintViolation.getPropertyPath().toString(),
+            constraintViolation.getInvalidValue(),
+            constraintViolation.getMessage()),
+            constraintViolation.getPropertyPath().toString()))
+        .collect(Collectors.toList());
+  }
+
+  private List<ValidationErrorData> createMethodValidationErrors(
+      Collection<ConstraintViolation<Object>> methodConstraintViolations) {
+    return methodConstraintViolations.stream()
+        .map(constraintViolation -> {
+          String parameterPath = constraintViolation.getPropertyPath().toString();
+          return new ValidationErrorData(String.format(
+              "Method '%s' of the object '%s' received invalid parameter '%s' with value '%s', validation error: '%s'",
+              parameterPath.split("\\.")[0],
+              constraintViolation.getRootBeanClass(),
+              parameterPath,
+              constraintViolation.getInvalidValue(),
+              constraintViolation.getMessage()),
+              parameterPath);
+        })
+        .collect(Collectors.toList());
   }
 
   private Map<String, JsonNode> getRequestParameters(ObjectNode body) {

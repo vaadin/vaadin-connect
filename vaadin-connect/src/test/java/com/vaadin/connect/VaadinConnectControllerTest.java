@@ -1,5 +1,8 @@
 package com.vaadin.connect;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -9,6 +12,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,18 +54,39 @@ public class VaadinConnectControllerTest {
   private static final String TEST_SERVICE_NAME = TEST_SERVICE.getClass()
       .getSimpleName();
   private static final Method TEST_METHOD;
+  private static final Method TEST_VALIDATION_METHOD;
 
   static {
     TEST_METHOD = Stream.of(TEST_SERVICE.getClass().getDeclaredMethods())
         .filter(method -> "testMethod".equals(method.getName())).findFirst()
         .orElseThrow(
-            () -> new AssertionError("Failed to find a service method"));
+            () -> new AssertionError("Failed to find a test service method"));
+    TEST_VALIDATION_METHOD = Stream
+        .of(TEST_SERVICE.getClass().getDeclaredMethods())
+        .filter(method -> "testValidationMethod".equals(method.getName()))
+        .findFirst().orElseThrow(() -> new AssertionError(
+            "Failed to find a test validation service method"));
+  }
+
+  private static class TestValidationParameter {
+    @Min(10)
+    private final int count;
+
+    @JsonCreator
+    public TestValidationParameter(@JsonProperty("count") int count) {
+      this.count = count;
+    }
   }
 
   @VaadinService
   public static class TestClass {
     public String testMethod(int parameter) {
       return parameter + "-test";
+    }
+
+    public void testValidationMethod(
+        @NotNull TestValidationParameter parameter) {
+      // no op
     }
 
     public void testMethodWithMultipleParameter(int number, String text,
@@ -615,6 +641,71 @@ public class VaadinConnectControllerTest {
     assertEquals(2, parameterNames.size());
     assertTrue(parameterNames.contains("date"));
     assertTrue(parameterNames.contains("number"));
+  }
+
+  @Test
+  public void should_ReturnValidationError_When_ServiceMethodParameterIsInvalid()
+      throws IOException {
+    String expectedErrorMessage = String.format(
+        "Validation error in service '%s' method '%s'", TEST_SERVICE_NAME,
+        TEST_VALIDATION_METHOD.getName());
+
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_VALIDATION_METHOD.getName(),
+            createRequestParameters("{\"parameter\": null}"));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ObjectNode jsonNodes = new ObjectMapper().readValue(response.getBody(),
+        ObjectNode.class);
+
+    assertEquals(VaadinConnectValidationException.class.getName(),
+        jsonNodes.get("type").asText());
+    assertEquals(expectedErrorMessage, jsonNodes.get("message").asText());
+    assertEquals(1, jsonNodes.get("validationErrorData").size());
+
+    JsonNode validationErrorData = jsonNodes.get("validationErrorData").get(0);
+    assertTrue(validationErrorData.get("parameterName").asText()
+        .contains(TEST_VALIDATION_METHOD.getName()));
+    String validationErrorMessage = validationErrorData.get("message").asText();
+    assertTrue(
+        validationErrorMessage.contains(TEST_VALIDATION_METHOD.getName()));
+    assertTrue(
+        validationErrorMessage.contains(TEST_SERVICE.getClass().toString()));
+    assertTrue(validationErrorMessage.contains("null"));
+  }
+
+  @Test
+  public void should_ReturnValidationError_When_ServiceMethodBeanIsInvalid()
+      throws IOException {
+    int invalidPropertyValue = 5;
+    String propertyName = "count";
+    String expectedErrorMessage = String.format(
+        "Validation error in service '%s' method '%s'", TEST_SERVICE_NAME,
+        TEST_VALIDATION_METHOD.getName());
+
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_VALIDATION_METHOD.getName(),
+            createRequestParameters(String.format(
+                "{\"parameter\": {\"count\": %d}}", invalidPropertyValue)));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ObjectNode jsonNodes = new ObjectMapper().readValue(response.getBody(),
+        ObjectNode.class);
+
+    assertEquals(VaadinConnectValidationException.class.getName(),
+        jsonNodes.get("type").asText());
+    assertEquals(expectedErrorMessage, jsonNodes.get("message").asText());
+    assertEquals(1, jsonNodes.get("validationErrorData").size());
+
+    JsonNode validationErrorData = jsonNodes.get("validationErrorData").get(0);
+    assertTrue(validationErrorData.get("parameterName").asText()
+        .contains(propertyName));
+    String validationErrorMessage = validationErrorData.get("message").asText();
+    assertTrue(validationErrorMessage.contains(propertyName));
+    assertTrue(validationErrorMessage
+        .contains(Integer.toString(invalidPropertyValue)));
+    assertTrue(validationErrorMessage
+        .contains(TEST_VALIDATION_METHOD.getParameterTypes()[0].toString()));
   }
 
   private void assertServiceInfoPresent(String responseBody) {
