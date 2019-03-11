@@ -18,8 +18,8 @@ package com.vaadin.connect.plugin.generator;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.validation.constraints.NotNull;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -422,10 +422,14 @@ public class OpenApiObjectGenerator {
       }
       Optional<String> fieldDescription = field.getJavadoc()
           .map(javadoc -> javadoc.getDescription().toText());
-      field.getVariables()
-          .forEach(variableDeclarator -> properties
-              .put(variableDeclarator.getNameAsString(), parseTypeToSchema(
-                  variableDeclarator.getType(), fieldDescription.orElse(""))));
+      field.getVariables().forEach(variableDeclarator -> {
+        Schema propertySchema = parseTypeToSchema(variableDeclarator.getType(),
+            fieldDescription.orElse(""));
+        if (field.isAnnotationPresent(NotNull.class)) {
+          propertySchema.setNullable(false);
+        }
+        properties.put(variableDeclarator.getNameAsString(), propertySchema);
+      });
     }
     return properties;
   }
@@ -577,6 +581,9 @@ public class OpenApiObjectGenerator {
     MediaType mediaItem = new MediaType();
     Type methodReturnType = methodDeclaration.getType();
     Schema schema = parseTypeToSchema(methodReturnType, "");
+    if (methodDeclaration.isAnnotationPresent(NotNull.class)) {
+      schema.setNullable(false);
+    }
     usedTypes.putAll(collectUsedTypesFromSchema(schema));
     mediaItem.schema(schema);
     return mediaItem;
@@ -602,6 +609,9 @@ public class OpenApiObjectGenerator {
     requestBodyObject.schema(requestSchema);
     methodDeclaration.getParameters().forEach(parameter -> {
       Schema paramSchema = parseTypeToSchema(parameter.getType(), "");
+      if (parameter.isAnnotationPresent(NotNull.class)) {
+        paramSchema.setNullable(false);
+      }
       usedTypes.putAll(collectUsedTypesFromSchema(paramSchema));
       String name = (isReservedWord(parameter.getNameAsString()) ? "_" : "")
           .concat(parameter.getNameAsString());
@@ -626,6 +636,9 @@ public class OpenApiObjectGenerator {
       if (StringUtils.isNotBlank(description)) {
         schema.setDescription(description);
       }
+      if (javaType.isPrimitiveType()) {
+        schema.setNullable(false);
+      }
       return schema;
     } catch (Exception e) {
       getLogger().info(String.format(
@@ -644,23 +657,23 @@ public class OpenApiObjectGenerator {
       return createArraySchema(resolvedType);
     }
     if (isNumberType(resolvedType)) {
-      return new NumberSchema();
+      return new NumberSchema().nullable(!resolvedType.isPrimitive());
     } else if (isStringType(resolvedType)) {
-      return new StringSchema();
+      return new StringSchema().nullable(true);
     } else if (isCollectionType(resolvedType)) {
       return createCollectionSchema(resolvedType.asReferenceType());
     } else if (isBooleanType(resolvedType)) {
-      return new BooleanSchema();
+      return new BooleanSchema().nullable(!resolvedType.isPrimitive());
     } else if (isMapType(resolvedType)) {
       return createMapSchema(resolvedType);
     } else if (isDateType(resolvedType)) {
-      return new DateSchema();
+      return new DateSchema().nullable(true);
     } else if (isDateTimeType(resolvedType)) {
-      return new DateTimeSchema();
+      return new DateTimeSchema().nullable(true);
     } else if (isOptionalType(resolvedType)) {
       return createOptionalSchema(resolvedType.asReferenceType());
     } else if (isUnhandledJavaType(resolvedType)) {
-      return new ObjectSchema();
+      return new ObjectSchema().nullable(true);
     }
     return createUserBeanSchema(resolvedType);
   }
@@ -735,10 +748,18 @@ public class OpenApiObjectGenerator {
     if (resolvedType.isReferenceType()) {
       String qualifiedName = resolvedType.asReferenceType().getQualifiedName();
       foundTypes.put(qualifiedName, resolvedType.asReferenceType());
-      return new ObjectSchema().name(qualifiedName)
+      Schema userBean = new ObjectSchema().name(qualifiedName)
           .$ref(getFullQualifiedNameRef(qualifiedName));
+      return createNullableWrapperSchema(userBean);
     }
-    return new ObjectSchema();
+    return new ObjectSchema().nullable(true);
+  }
+
+  private Schema createNullableWrapperSchema(Schema userBean) {
+    ComposedSchema nullableSchema = new ComposedSchema();
+    nullableSchema.setNullable(true);
+    nullableSchema.setAllOf(Collections.singletonList(userBean));
+    return nullableSchema;
   }
 
   @SuppressWarnings("squid:S1872")
@@ -788,19 +809,22 @@ public class OpenApiObjectGenerator {
   private Schema createSingleSchemaFromResolvedType(
       ResolvedReferenceType resolvedType) {
     Schema schema = new ObjectSchema().name(resolvedType.getQualifiedName());
-    Set<String> validFields = getValidFields(resolvedType);
+    Map<String, Boolean> fieldNotNullMap = getFieldWithNotNullMap(
+        resolvedType);
     Set<ResolvedFieldDeclaration> declaredFields = resolvedType
         .getDeclaredFields().stream()
-        .filter(resolvedFieldDeclaration -> validFields
+        .filter(resolvedFieldDeclaration -> fieldNotNullMap.keySet()
             .contains(resolvedFieldDeclaration.getName()))
         .collect(Collectors.toSet());
     // Make sure the order is consistent in properties map
     schema.setProperties(new TreeMap<>());
     for (ResolvedFieldDeclaration resolvedFieldDeclaration : declaredFields) {
-      ResolvedFieldDeclaration fieldDeclaration = resolvedFieldDeclaration
-          .asField();
-      String name = fieldDeclaration.getName();
-      Schema type = parseResolvedTypeToSchema(fieldDeclaration.getType());
+      String name = resolvedFieldDeclaration.getName();
+      Schema type = parseResolvedTypeToSchema(
+          resolvedFieldDeclaration.getType());
+      if (fieldNotNullMap.get(name)) {
+        type.setNullable(false);
+      }
       schema.addProperties(name, type);
       schema.addRequiredItem(name);
     }
@@ -816,29 +840,32 @@ public class OpenApiObjectGenerator {
    *          type of the class to get fields information
    * @return set of fields' name that we should generate.
    */
-  private Set<String> getValidFields(ResolvedReferenceType resolvedType) {
+  private Map<String, Boolean> getFieldWithNotNullMap(
+      ResolvedReferenceType resolvedType) {
     if (!resolvedType.getTypeDeclaration().isClass()
-        || resolvedType.getTypeDeclaration().isAnonymousClass()) {
-      return Collections.emptySet();
+      || resolvedType.getTypeDeclaration().isAnonymousClass()) {
+      return Collections.emptyMap();
     }
-    Set<String> fields;
+    HashMap<String, Boolean> validFields = new HashMap<>();
     try {
       Class<?> aClass = getClassFromReflection(resolvedType);
-      fields = Arrays.stream(aClass.getDeclaredFields()).filter(field -> {
+      Arrays.stream(aClass.getDeclaredFields()).filter(field -> {
+
         int modifiers = field.getModifiers();
         return !Modifier.isStatic(modifiers) && !Modifier.isTransient(modifiers)
             && !field.isAnnotationPresent(JsonIgnore.class);
-      }).map(Field::getName).collect(Collectors.toSet());
+      }).forEach(field -> validFields.put(field.getName(),
+          field.isAnnotationPresent(NotNull.class)));
     } catch (ClassNotFoundException e) {
+
       String message = String.format("Can't get list of fields from class '%s'."
           + "Please make sure that class '%s' is in your project's compile classpath. "
           + "As the result, the generated TypeScript file will be empty.",
           resolvedType.getQualifiedName(), resolvedType.getQualifiedName());
       getLogger().info(message);
       getLogger().debug(message, e);
-      fields = Collections.emptySet();
     }
-    return fields;
+    return validFields;
   }
 
   private Class<?> getClassFromReflection(ResolvedReferenceType resolvedType)
@@ -879,7 +906,7 @@ public class OpenApiObjectGenerator {
   }
 
   private Schema createMapSchema(ResolvedType type) {
-    Schema mapSchema = new MapSchema();
+    Schema mapSchema = new MapSchema().nullable(true);
     List<Pair<ResolvedTypeParameterDeclaration, ResolvedType>> typeParametersMap = type
         .asReferenceType().getTypeParametersMap();
     if (typeParametersMap.size() == 2) {
@@ -893,6 +920,7 @@ public class OpenApiObjectGenerator {
 
   private Schema createArraySchema(ResolvedType type) {
     ArraySchema array = new ArraySchema();
+    array.setNullable(true);
     array.items(
         parseResolvedTypeToSchema(type.asArrayType().getComponentType()));
     return array;
@@ -900,6 +928,7 @@ public class OpenApiObjectGenerator {
 
   private Schema createCollectionSchema(ResolvedReferenceType type) {
     ArraySchema array = new ArraySchema();
+    array.setNullable(true);
     List<Pair<ResolvedTypeParameterDeclaration, ResolvedType>> typeParametersMap = type
         .getTypeParametersMap();
     if (!typeParametersMap.isEmpty()) {
@@ -916,10 +945,7 @@ public class OpenApiObjectGenerator {
       nestedTypeSchema.setNullable(true);
       return nestedTypeSchema;
     } else {
-      ComposedSchema nullableSchema = new ComposedSchema();
-      nullableSchema.setNullable(true);
-      nullableSchema.setAllOf(Collections.singletonList(nestedTypeSchema));
-      return nullableSchema;
+      return createNullableWrapperSchema(nestedTypeSchema);
     }
   }
 }
