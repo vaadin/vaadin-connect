@@ -389,7 +389,9 @@ public abstract class AbstractServiceGenerationTest {
           }
         } else {
           // Nullable schema for referring schema object
-          // FIXME test it properly
+          assertEquals(1, allOf.size());
+          assertEquals(expectedSchemaClass.getCanonicalName(),
+              allOf.get(0).getName());
         }
       } else if (actualSchema instanceof ObjectSchema) {
         assertSchemaProperties(expectedSchemaClass, actualSchema);
@@ -404,10 +406,10 @@ public abstract class AbstractServiceGenerationTest {
   private boolean assertSpecificJavaClassSchema(Schema actualSchema,
       Class<?> expectedSchemaClass) {
     if (expectedSchemaClass == Optional.class) {
-      // assertTrue(actualSchema.getNullable());
-      // if (actualSchema instanceof ComposedSchema) {
-      // assertEquals(1, ((ComposedSchema) actualSchema).getAllOf().size());
-      // }
+      assertTrue(actualSchema.getNullable());
+      if (actualSchema instanceof ComposedSchema) {
+        assertEquals(1, ((ComposedSchema) actualSchema).getAllOf().size());
+      }
     } else if (expectedSchemaClass == Object.class) {
       assertNull(actualSchema.getProperties());
       assertNull(actualSchema.getAdditionalProperties());
