@@ -7,7 +7,7 @@ import Account from './com/vaadin/connect/plugin/generator/services/modelpackage
  *
  * Return list of user name
  */
-export function getListOfUserName(): Promise<string[]> {
+export function getListOfUserName(): Promise<Array<string | null> | null> {
   return client.call('ModelPackageService', 'getListOfUserName');
 }
 
@@ -18,7 +18,7 @@ export function getListOfUserName(): Promise<string[]> {
  * Return a collection
  */
 export function getSameModelPackage(
-  name: string
-): Promise<Account> {
+  name: string | null
+): Promise<Account | null> {
   return client.call('ModelPackageService', 'getSameModelPackage', {name});
 }
