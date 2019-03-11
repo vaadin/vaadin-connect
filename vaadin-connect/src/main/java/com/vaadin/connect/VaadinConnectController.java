@@ -15,6 +15,10 @@
  */
 package com.vaadin.connect;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -24,10 +28,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,6 +61,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.vaadin.connect.auth.VaadinConnectAccessChecker;
 import com.vaadin.connect.exception.VaadinConnectException;
 import com.vaadin.connect.exception.VaadinConnectValidationException;
+import com.vaadin.connect.exception.VaadinConnectValidationException.ValidationErrorData;
 
 /**
  * The controller that is responsible for processing Vaadin Connect requests.
@@ -85,9 +92,12 @@ public class VaadinConnectController {
    */
   public static final String VAADIN_SERVICE_MAPPER_BEAN_QUALIFIER = "vaadinServiceMapper";
 
+  final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
+
   private final ObjectMapper vaadinServiceMapper;
   private final VaadinConnectAccessChecker accessChecker;
-  final Map<String, VaadinServiceData> vaadinServices = new HashMap<>();
+  private final Validator validator = Validation.buildDefaultValidatorFactory()
+      .getValidator();
 
   static class VaadinServiceData {
     private final Object vaadinServiceObject;
@@ -287,14 +297,22 @@ public class VaadinConnectController {
       vaadinServiceParameters = getVaadinServiceParameters(requestParameters,
           javaParameters, methodName, serviceName);
     } catch (VaadinConnectValidationException e) {
-      String errorMessage = String.format(
-          "Unable to deserialize parameters for service '%s' method '%s'. "
-              + "Expected parameter types (and their order) are: '[%s]'",
-          serviceName, methodName, listMethodParameterTypes(javaParameters));
-      getLogger().debug(errorMessage, e);
       return ResponseEntity.badRequest().body(
           vaadinServiceMapper.writeValueAsString(e.getSerializationData()));
     }
+
+    Set<ConstraintViolation<Object>> methodParameterConstraintViolations = validator
+        .forExecutables()
+        .validateParameters(vaadinServiceData.getServiceObject(),
+            methodToInvoke, vaadinServiceParameters);
+    if (!methodParameterConstraintViolations.isEmpty()) {
+      return ResponseEntity.badRequest()
+          .body(vaadinServiceMapper.writeValueAsString(
+              constructValidationException(methodName, serviceName,
+                  Collections.emptyMap(), methodParameterConstraintViolations)
+                      .getSerializationData()));
+    }
+
     Object returnValue;
     try {
       returnValue = methodToInvoke.invoke(vaadinServiceData.getServiceObject(),
@@ -315,6 +333,15 @@ public class VaadinConnectController {
           .body(createResponseErrorObject(errorMessage));
     } catch (InvocationTargetException e) {
       return handleMethodExecutionError(serviceName, methodName, e);
+    }
+
+    Set<ConstraintViolation<Object>> returnValueConstraintViolations = validator
+        .forExecutables().validateReturnValue(
+            vaadinServiceData.getServiceObject(), methodToInvoke, returnValue);
+    if (!returnValueConstraintViolations.isEmpty()) {
+      getLogger().error(
+          "Service '{}' method '{}' had returned a value that has validation errors: '{}', this might cause bugs on the client side. Fix the method implementation.",
+          serviceName, methodName, returnValueConstraintViolations);
     }
     return ResponseEntity
         .ok(vaadinServiceMapper.writeValueAsString(returnValue));
@@ -359,35 +386,63 @@ public class VaadinConnectController {
     String[] parameterNames = new String[requestParameters.size()];
     requestParameters.keySet().toArray(parameterNames);
     Map<String, String> errorParams = new HashMap<>();
+    Set<ConstraintViolation<Object>> constraintViolations = new LinkedHashSet<>();
+
     for (int i = 0; i < javaParameters.length; i++) {
       Type expectedType = javaParameters[i].getParameterizedType();
       try {
-        serviceParameters[i] = vaadinServiceMapper
+        Object parameter = vaadinServiceMapper
             .readerFor(vaadinServiceMapper.getTypeFactory()
                 .constructType(expectedType))
             .readValue(requestParameters.get(parameterNames[i]));
+
+        serviceParameters[i] = parameter;
+        if (parameter != null) {
+          constraintViolations.addAll(validator.validate(parameter));
+        }
       } catch (IOException e) {
         String typeName = expectedType.getTypeName();
-        getLogger().debug("Unable to deserialize for parameter {} with type {}",
+        getLogger().debug("Unable to deserialize parameter {} with type {}",
             parameterNames[i], typeName, e);
         errorParams.put(parameterNames[i], typeName);
       }
     }
-    if (errorParams.isEmpty()) {
+
+    if (errorParams.isEmpty() && constraintViolations.isEmpty()) {
       return serviceParameters;
     }
-    List<VaadinConnectValidationException.ValidationErrorData> validationErrorData = new ArrayList<>();
+    throw constructValidationException(methodName, serviceName, errorParams,
+        constraintViolations);
+  }
+
+  private VaadinConnectValidationException constructValidationException(
+      String methodName, String serviceName, Map<String, String> errorParams,
+      Set<ConstraintViolation<Object>> constraintViolations) {
+    List<ValidationErrorData> validationErrorData = new ArrayList<>(
+        errorParams.size() + constraintViolations.size());
+
     for (Map.Entry<String, String> errorParam : errorParams.entrySet()) {
-      String message = String.format("Unable to deserialize for type '%s'",
+      String message = String.format(
+          "Unable to deserialize a service method parameter into type '%s'",
           errorParam.getValue());
       validationErrorData
-          .add(new VaadinConnectValidationException.ValidationErrorData(message,
-              errorParam.getKey()));
+          .add(new ValidationErrorData(message, errorParam.getKey()));
     }
+
+    for (ConstraintViolation<Object> constraintViolation : constraintViolations) {
+      validationErrorData.add(new ValidationErrorData(String.format(
+          "Object of type '%s' has invalid property '%s' with value '%s', validation error: '%s'",
+          constraintViolation.getRootBeanClass(),
+          constraintViolation.getPropertyPath().toString(),
+          constraintViolation.getInvalidValue(),
+          constraintViolation.getMessage()),
+          constraintViolation.getPropertyPath().toString()));
+    }
+
     String message = String.format(
         "Validation error in service '%s' method '%s'", serviceName,
         methodName);
-    throw new VaadinConnectValidationException(message, validationErrorData);
+    return new VaadinConnectValidationException(message, validationErrorData);
   }
 
   private Map<String, JsonNode> getRequestParameters(ObjectNode body) {
