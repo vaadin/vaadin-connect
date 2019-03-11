@@ -37,6 +37,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.times;
@@ -230,11 +231,8 @@ public class VaadinConnectControllerTest {
       throws Exception {
     int inputValue = 222;
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new IllegalArgumentException("OOPS"));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new IllegalArgumentException("OOPS"));
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -260,11 +258,8 @@ public class VaadinConnectControllerTest {
       throws Exception {
     int inputValue = 222;
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new IllegalAccessException("OOPS"));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new IllegalAccessException("OOPS"));
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -289,11 +284,8 @@ public class VaadinConnectControllerTest {
       throws Exception {
     int inputValue = 222;
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue)).thenThrow(
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
         new InvocationTargetException(new IllegalStateException("OOPS")));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -319,12 +311,9 @@ public class VaadinConnectControllerTest {
     int inputValue = 222;
     String expectedMessage = "OOPS";
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new InvocationTargetException(
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new InvocationTargetException(
             new VaadinConnectException(expectedMessage)));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -357,11 +346,8 @@ public class VaadinConnectControllerTest {
       }
     }
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new InvocationTargetException(new MyCustomException()));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new InvocationTargetException(new MyCustomException()));
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -688,5 +674,20 @@ public class VaadinConnectControllerTest {
         .thenReturn((Class) serviceClass);
     return new VaadinConnectController(vaadinServiceMapper, accessChecker,
         serviceNameChecker, contextMock);
+  }
+
+  private Method createServiceMethodMockThatThrows(Object argument,
+      Exception exceptionToThrow) throws Exception {
+    Method serviceMethodMock = mock(Method.class);
+    when(serviceMethodMock.invoke(TEST_SERVICE, argument))
+        .thenThrow(exceptionToThrow);
+    when(serviceMethodMock.getParameters())
+        .thenReturn(TEST_METHOD.getParameters());
+    doReturn(TEST_METHOD.getDeclaringClass()).when(serviceMethodMock)
+        .getDeclaringClass();
+    when(serviceMethodMock.getParameterTypes())
+        .thenReturn(TEST_METHOD.getParameterTypes());
+    when(serviceMethodMock.getName()).thenReturn(TEST_METHOD.getName());
+    return serviceMethodMock;
   }
 }
