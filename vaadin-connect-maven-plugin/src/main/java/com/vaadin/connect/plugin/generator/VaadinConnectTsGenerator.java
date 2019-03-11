@@ -39,7 +39,6 @@ import io.swagger.codegen.v3.ClientOptInput;
 import io.swagger.codegen.v3.CodegenModel;
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
-import io.swagger.codegen.v3.CodegenProperty;
 import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
@@ -452,6 +451,22 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     return codegenOperation;
   }
 
+  @Override
+  public String getSchemaType(Schema schema) {
+    if (isNullableWrapperSchema(schema)) {
+      Schema wrappedSchema = ((ComposedSchema) schema).getAllOf().get(0);
+      return super.getSchemaType(wrappedSchema);
+    }
+    return super.getSchemaType(schema);
+  }
+
+  private boolean isNullableWrapperSchema(Schema schema) {
+    return schema instanceof ComposedSchema
+        && BooleanUtils.isTrue(schema.getNullable())
+        && ((ComposedSchema) schema).getAllOf() != null
+        && ((ComposedSchema) schema).getAllOf().size() == 1;
+  }
+
   private String getSimpleNameFromImports(String dataType,
       List<Map<String, String>> imports) {
     for (Map<String, String> anImport : imports) {
@@ -461,7 +476,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       }
     }
     if (StringUtils.contains(dataType, "<")
-        || StringUtils.contains(dataType, "[")) {
+        || StringUtils.contains(dataType, "{")
+        || StringUtils.contains(dataType, "|")) {
       return getSimpleNameFromComplexType(dataType, imports);
     }
     return getSimpleNameFromQualifiedName(dataType);
@@ -566,20 +582,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   public CodegenModel fromModel(String name, Schema schema,
       Map<String, Schema> allDefinitions) {
     CodegenModel codegenModel = super.fromModel(name, schema, allDefinitions);
-    if (StringUtils.isBlank(codegenModel.parent)) {
-      return codegenModel;
-    }
-    // The import list contains all the import of the child and parent classes.
-    // We only need import for the parent class and the child field's types.
-    codegenModel.getImports().removeIf(s -> {
-      for (CodegenProperty cp : codegenModel.getVars()) {
-        if (StringUtils.contains(cp.datatype, s)
-            || codegenModel.parent.equals(s)) {
-          return false;
-        }
-      }
-      return true;
-    });
+    Set<String> imports = collectImportsFromSchema(schema);
+    codegenModel.setImports(imports);
     return codegenModel;
   }
 
