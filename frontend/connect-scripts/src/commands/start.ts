@@ -10,9 +10,9 @@ import {command as webpackCommand} from './start/webpack';
 
 export const command: Command = async() => {
   await useCommand(backendCommand);
-  await useCommand(javaWatcherCommand);
   await useCommand(apiBrowserCommand);
   await useCommand(webpackCommand);
+  await useCommand(javaWatcherCommand);
 
   return new Promise<void>(_ => {
     // Never resolves to keep Node.js waiting for an interrupt
