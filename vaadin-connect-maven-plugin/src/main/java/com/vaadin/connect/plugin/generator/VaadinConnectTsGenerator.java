@@ -65,6 +65,7 @@ import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.AbstractFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -785,23 +786,39 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   @Override
   public String getTypeDeclaration(Schema schema) {
-    if (Boolean.TRUE.equals(schema.getNullable())) {
-      if (schema instanceof ComposedSchema) {
-        return String.format("%s | null",
-            getTypeDeclaration(((ComposedSchema) schema).getAllOf().get(0)));
-      }
-      return String.format("%s | null", super.getTypeDeclaration(schema));
-    } else if (schema instanceof ArraySchema) {
+    String nullableSuffix = "";
+    if (BooleanUtils.isTrue(schema.getNullable())) {
+      nullableSuffix = " | null";
+    }
+    if (schema instanceof ArraySchema) {
       ArraySchema arraySchema = (ArraySchema) schema;
       Schema inner = arraySchema.getItems();
-      return this.getTypeDeclaration(inner) + "[]";
+      return String.format("Array<%s>%s", this.getTypeDeclaration(inner),
+          nullableSuffix);
     } else if (StringUtils.isNotBlank(schema.get$ref())) {
-      return getSimpleRef(schema.get$ref());
+      return getSimpleRef(schema.get$ref()) + nullableSuffix;
     } else if (schema.getAdditionalProperties() != null) {
       Schema inner = (Schema) schema.getAdditionalProperties();
-      return String.format("{ [key: string]: %s; }", getTypeDeclaration(inner));
+      return String.format("{ [key: string]: %s; }%s",
+          getTypeDeclaration(inner), nullableSuffix);
+    } else if (schema instanceof ComposedSchema) {
+      return getTypeDeclarationFromComposedSchema((ComposedSchema) schema,
+          nullableSuffix);
     } else {
-      return super.getTypeDeclaration(schema);
+      return super.getTypeDeclaration(schema) + nullableSuffix;
+    }
+  }
+
+  private String getTypeDeclarationFromComposedSchema(
+      ComposedSchema composedSchema, String nullableSuffix) {
+    if (composedSchema.getAllOf() != null
+        && composedSchema.getAllOf().size() == 1) {
+      return getTypeDeclaration(composedSchema.getAllOf().get(0))
+          + nullableSuffix;
+    } else {
+      String unknownComposedSchema = Json.pretty(composedSchema);
+      getLogger().debug("Unknown ComposedSchema: {}", unknownComposedSchema);
+      return "any";
     }
   }
 
