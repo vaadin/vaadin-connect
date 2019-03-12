@@ -298,6 +298,8 @@ public class VaadinConnectController {
       vaadinServiceParameters = getVaadinServiceParameters(requestParameters,
           javaParameters, methodName, serviceName);
     } catch (VaadinConnectValidationException e) {
+      getLogger().debug("Service '{}' method '{}' received invalid response",
+          serviceName, methodName, e);
       return ResponseEntity.badRequest().body(
           vaadinServiceMapper.writeValueAsString(e.getSerializationData()));
     }
