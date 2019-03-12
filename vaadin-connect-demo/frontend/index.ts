@@ -2,12 +2,7 @@ import client from './connect-client';
 
 import * as demoService from './generated/DemoVaadinService';
 
-import {
-  AccessToken,
-  ConnectClient,
-  CredentialsCallback,
-  VaadinConnectError
-} from '@vaadin/connect';
+import {AccessToken, ConnectClient, CredentialsCallback, VaadinConnectError} from '@vaadin/connect';
 
 const credentials: CredentialsCallback = () => {
   return {
@@ -144,4 +139,26 @@ const customClient = new ConnectClient({endpoint: '/connect', credentials});
     customClient.call('DemoVaadinService', 'addOne', {
       number: numberLabel.textContent
     }).then(incrementedValue => numberLabel.textContent = incrementedValue);
+  });
+
+(document.getElementById('validationButton') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    const name = (document.getElementById(
+      'validationNameInput') as HTMLInputElement).value;
+    const count = (document.getElementById(
+      'validationCountInput') as HTMLInputElement).valueAsNumber;
+    const additionalNumber = (document.getElementById(
+      'additionalNumberInput') as HTMLInputElement).valueAsNumber;
+
+    let result = null;
+    try {
+      result = JSON.stringify(await demoService.complexEntitiesTest({
+        count,
+        name,
+        nestedClass: {nestedValue: additionalNumber}
+      }));
+    } catch (e) {
+      result = e;
+    }
+    document.getElementById('validationOutput')!.textContent = result;
   });

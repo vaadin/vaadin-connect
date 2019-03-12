@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -72,7 +71,6 @@ public class VaadinConnectControllerTest {
     @Min(10)
     private final int count;
 
-    @JsonCreator
     public TestValidationParameter(@JsonProperty("count") int count) {
       this.count = count;
     }
