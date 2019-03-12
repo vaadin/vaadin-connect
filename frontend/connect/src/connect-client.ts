@@ -225,6 +225,11 @@ export class VaadinConnectValidationError extends VaadinConnectError {
    */
   validationErrorData: ValidationErrorData[];
 
+  /**
+   * @param message the `message` property value
+   * @param validationErrorData the `validationErrorData` property value
+   * @param type the `type` property value
+   */
   constructor(message: string, validationErrorData: ValidationErrorData[],
               type?: string) {
     super(message, type, validationErrorData);
@@ -234,18 +239,22 @@ export class VaadinConnectValidationError extends VaadinConnectError {
 }
 
 /**
- *
+ * An object, containing all data for the particular validation error.
  */
 export class ValidationErrorData {
   /**
-   *
+   * The validation error message.
    */
   message: string;
   /**
-   *
+   * The parameter name that caused the validation error.
    */
   parameterName?: string;
 
+  /**
+   * @param message the `message` property value
+   * @param parameterName the `parameterName` property value
+   */
   constructor(message: string, parameterName?: string) {
     this.message = message;
     this.parameterName = parameterName;
