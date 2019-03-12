@@ -64,6 +64,7 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -450,7 +451,11 @@ public abstract class AbstractServiceGenerationTest {
     if (properties.isEmpty()) {
       assertNull(schema.getRequired());
     } else {
-      assertEquals(new HashSet<>(schema.getRequired()), properties.keySet());
+      for (Map.Entry<String, Schema> propertySchema : properties.entrySet()) {
+        if (BooleanUtils.isNotTrue(propertySchema.getValue().getNullable())) {
+          assertTrue(schema.getRequired().contains(propertySchema.getKey()));
+        }
+      }
     }
   }
 
