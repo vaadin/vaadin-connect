@@ -92,7 +92,9 @@ module.exports = (env, argv) => {
         // Copy @webcomponents/webcomponentsjs
         {
           from: 'webcomponentsjs/**/*',
-          context: path.resolve('node_modules', '@webcomponents')
+          context: path.resolve(require.resolve(
+            '@webcomponents/webcomponentsjs/package.json'
+          ), '../..')
         }
       ]),
 
