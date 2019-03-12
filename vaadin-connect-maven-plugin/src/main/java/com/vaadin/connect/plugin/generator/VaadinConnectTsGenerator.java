@@ -82,6 +82,7 @@ import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERA
  */
 public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
+  public static final String NULLABLE_SUFFIX = " | null";
   private static final String GENERATOR_NAME = "javascript-vaadin-connect";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
   private static final String EXTENSION_VAADIN_CONNECT_SHOW_TSDOC = "x-vaadin-connect-show-tsdoc";
@@ -792,7 +793,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   public String getTypeDeclaration(Schema schema) {
     String nullableSuffix = "";
     if (BooleanUtils.isTrue(schema.getNullable())) {
-      nullableSuffix = " | null";
+      nullableSuffix = NULLABLE_SUFFIX;
     }
     if (schema instanceof ArraySchema) {
       ArraySchema arraySchema = (ArraySchema) schema;
@@ -866,6 +867,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
     handlebars.registerHelper("getClassNameFromImports",
         getClassNameFromImportsHelper());
+    handlebars.registerHelper("getOptionalFieldSymbol",
+        getOptionalFieldSymbol());
   }
 
   private Helper<String> getMultipleLinesHelper() {
@@ -878,6 +881,16 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
         buffer.append(options.apply(fn, parent.combine("@line", line)));
       }
       return buffer;
+    };
+  }
+
+  private Helper<String> getOptionalFieldSymbol() {
+    return (context, options) -> {
+      if (StringUtils.endsWith(context, NULLABLE_SUFFIX)) {
+        return "?";
+      } else {
+        return "";
+      }
     };
   }
 
