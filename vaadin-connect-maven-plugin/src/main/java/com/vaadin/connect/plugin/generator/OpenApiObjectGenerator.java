@@ -99,6 +99,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -378,7 +379,11 @@ public class OpenApiObjectGenerator {
     Map<String, Schema> properties = getPropertiesFromClassDeclaration(
         typeDeclaration);
     schema.properties(properties);
-    schema.setRequired(new ArrayList<>(properties.keySet()));
+    List<String> requiredList = properties.entrySet().stream()
+        .filter(stringSchemaEntry -> BooleanUtils
+            .isNotTrue(stringSchemaEntry.getValue().getNullable()))
+        .map(Map.Entry::getKey).collect(Collectors.toList());
+    schema.setRequired(requiredList);
     return schema;
   }
 
@@ -824,8 +829,10 @@ public class OpenApiObjectGenerator {
       if (fieldNotNullMap.get(name)) {
         type.setNullable(false);
       }
+      if (BooleanUtils.isNotTrue(type.getNullable())) {
+        schema.addRequiredItem(name);
+      }
       schema.addProperties(name, type);
-      schema.addRequiredItem(name);
     }
     return schema;
   }
