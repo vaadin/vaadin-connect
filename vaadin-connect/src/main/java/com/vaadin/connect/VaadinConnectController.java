@@ -35,7 +35,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -308,11 +307,12 @@ public class VaadinConnectController {
         .validateParameters(vaadinServiceData.getServiceObject(),
             methodToInvoke, vaadinServiceParameters);
     if (!methodParameterConstraintViolations.isEmpty()) {
-      return ResponseEntity.badRequest()
-          .body(vaadinServiceMapper.writeValueAsString(
-              constructValidationException(methodName, serviceName,
-                  Collections.emptyMap(), methodParameterConstraintViolations,
-                  this::createMethodValidationErrors).getSerializationData()));
+      return ResponseEntity.badRequest().body(vaadinServiceMapper
+          .writeValueAsString(new VaadinConnectValidationException(
+              String.format("Validation error in service '%s' method '%s'",
+                  serviceName, methodName),
+              createMethodValidationErrors(methodParameterConstraintViolations))
+                  .getSerializationData()));
     }
 
     Object returnValue;
@@ -413,27 +413,28 @@ public class VaadinConnectController {
     if (errorParams.isEmpty() && constraintViolations.isEmpty()) {
       return serviceParameters;
     }
-    throw constructValidationException(methodName, serviceName, errorParams,
-        constraintViolations, this::createBeanValidationErrors);
+    throw getInvalidServiceParametersException(methodName, serviceName,
+        errorParams, constraintViolations);
   }
 
-  private VaadinConnectValidationException constructValidationException(
-      String methodName, String serviceName, Map<String, String> errorParams,
-      Set<ConstraintViolation<Object>> constraintViolations,
-      Function<Set<ConstraintViolation<Object>>, List<ValidationErrorData>> validationErrorsConverter) {
+  private VaadinConnectValidationException getInvalidServiceParametersException(
+      String methodName, String serviceName,
+      Map<String, String> deserializationErrors,
+      Set<ConstraintViolation<Object>> constraintViolations) {
     List<ValidationErrorData> validationErrorData = new ArrayList<>(
-        errorParams.size() + constraintViolations.size());
+        deserializationErrors.size() + constraintViolations.size());
 
-    for (Map.Entry<String, String> errorParam : errorParams.entrySet()) {
+    for (Map.Entry<String, String> deserializationError : deserializationErrors
+        .entrySet()) {
       String message = String.format(
           "Unable to deserialize a service method parameter into type '%s'",
-          errorParam.getValue());
+          deserializationError.getValue());
       validationErrorData
-          .add(new ValidationErrorData(message, errorParam.getKey()));
+          .add(new ValidationErrorData(message, deserializationError.getKey()));
     }
 
     validationErrorData
-        .addAll(validationErrorsConverter.apply(constraintViolations));
+        .addAll(createBeanValidationErrors(constraintViolations));
 
     String message = String.format(
         "Validation error in service '%s' method '%s'", serviceName,
@@ -456,19 +457,14 @@ public class VaadinConnectController {
 
   private List<ValidationErrorData> createMethodValidationErrors(
       Collection<ConstraintViolation<Object>> methodConstraintViolations) {
-    return methodConstraintViolations.stream()
-        .map(constraintViolation -> {
-          String parameterPath = constraintViolation.getPropertyPath().toString();
-          return new ValidationErrorData(String.format(
-              "Method '%s' of the object '%s' received invalid parameter '%s' with value '%s', validation error: '%s'",
-              parameterPath.split("\\.")[0],
-              constraintViolation.getRootBeanClass(),
-              parameterPath,
-              constraintViolation.getInvalidValue(),
-              constraintViolation.getMessage()),
-              parameterPath);
-        })
-        .collect(Collectors.toList());
+    return methodConstraintViolations.stream().map(constraintViolation -> {
+      String parameterPath = constraintViolation.getPropertyPath().toString();
+      return new ValidationErrorData(String.format(
+          "Method '%s' of the object '%s' received invalid parameter '%s' with value '%s', validation error: '%s'",
+          parameterPath.split("\\.")[0], constraintViolation.getRootBeanClass(),
+          parameterPath, constraintViolation.getInvalidValue(),
+          constraintViolation.getMessage()), parameterPath);
+    }).collect(Collectors.toList());
   }
 
   private Map<String, JsonNode> getRequestParameters(ObjectNode body) {
