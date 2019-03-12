@@ -303,7 +303,7 @@ export interface CredentialsCallbackOptions {
  * @param options
  */
 export type CredentialsCallback = (options?: CredentialsCallbackOptions) =>
-  Promise<Credentials> | Credentials;
+  Promise<Credentials | undefined> | Credentials | undefined;
 
 /**
  * The `ConnectClient` constructor options.
