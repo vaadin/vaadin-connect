@@ -53,7 +53,7 @@
   "bundlesize": [
     {
       "path": "./target/classes/META-INF/resources/index.js",
-      "maxSize": "2.9 kB"
+      "maxSize": "3.5 kB"
     }
   ],
   "babel": {

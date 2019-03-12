@@ -6,7 +6,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.Negative;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Positive;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -31,7 +31,7 @@ public class DemoVaadinService {
   public static class ComplexRequest {
     @NotBlank
     private final String name;
-    @PositiveOrZero
+    @Positive
     private final int count;
     @Valid
     private final NestedClass nestedClass;

@@ -2,7 +2,12 @@ import client from './connect-client';
 
 import * as demoService from './generated/DemoVaadinService';
 
-import {AccessToken, ConnectClient, CredentialsCallback, VaadinConnectError} from '@vaadin/connect';
+import {
+  AccessToken,
+  ConnectClient,
+  CredentialsCallback,
+  VaadinConnectError
+} from '@vaadin/connect';
 
 const credentials: CredentialsCallback = () => {
   return {
@@ -158,7 +163,7 @@ const customClient = new ConnectClient({endpoint: '/connect', credentials});
         nestedClass: {nestedValue: additionalNumber}
       }));
     } catch (e) {
-      result = e;
+      result = e.message;
     }
     document.getElementById('validationOutput')!.textContent = result;
   });
