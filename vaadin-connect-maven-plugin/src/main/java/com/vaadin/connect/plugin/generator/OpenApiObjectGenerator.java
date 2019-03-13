@@ -22,15 +22,11 @@ import javax.validation.constraints.NotNull;
 
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -70,7 +66,6 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-import com.github.javaparser.utils.Pair;
 import com.github.javaparser.utils.SourceRoot;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -79,17 +74,12 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
-import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
-import io.swagger.v3.oas.models.media.DateSchema;
-import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.MapSchema;
 import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
@@ -118,12 +108,10 @@ public class OpenApiObjectGenerator {
 
   private static final String VAADIN_CONNECT_OAUTH2_SECURITY_SCHEME = "vaadin-connect-oauth2";
   private static final String VAADIN_CONNECT_OAUTH2_TOKEN_URL = "/oauth/token";
-  private static final String SCHEMA_REF_PREFIX = "#/components/schemas/";
 
   private List<Path> javaSourcePaths = new ArrayList<>();
   private OpenApiConfiguration configuration;
   private Map<String, ResolvedReferenceType> usedTypes;
-  private Map<String, ResolvedReferenceType> foundTypes;
   private Map<String, String> servicesJavadoc;
   private Map<String, ClassOrInterfaceDeclaration> nonServiceMap;
   private Map<String, PathItem> pathItems;
@@ -131,6 +119,7 @@ public class OpenApiObjectGenerator {
   private OpenAPI openApiModel;
   private final VaadinServiceNameChecker serviceNameChecker = new VaadinServiceNameChecker();
   private ClassLoader typeResolverClassLoader;
+  private SchemaResolver schemaResolver;
 
   /**
    * Adds the source path to the generator to process.
@@ -198,9 +187,8 @@ public class OpenApiObjectGenerator {
     pathItems = new TreeMap<>();
     usedTypes = new HashMap<>();
     generatedSchema = new HashSet<>();
-    foundTypes = new HashMap<>();
     servicesJavadoc = new HashMap<>();
-
+    schemaResolver = new SchemaResolver();
     ParserConfiguration parserConfiguration = createParserConfiguration();
 
     javaSourcePaths.stream()
@@ -359,9 +347,10 @@ public class OpenApiObjectGenerator {
       extendedTypes.forEach(parentType -> {
         ResolvedReferenceType resolvedParentType = parentType.resolve();
         String parentQualifiedName = resolvedParentType.getQualifiedName();
-        String parentRef = getFullQualifiedNameRef(parentQualifiedName);
+        String parentRef = schemaResolver
+            .getFullQualifiedNameRef(parentQualifiedName);
         parentSchema.addAllOfItem(new ObjectSchema().$ref(parentRef));
-        foundTypes.put(parentQualifiedName, resolvedParentType);
+        schemaResolver.addFoundTypes(parentQualifiedName, resolvedParentType);
       });
       // The inserting order matters for `allof` property.
       parentSchema.addAllOfItem(schema);
@@ -398,25 +387,6 @@ public class OpenApiObjectGenerator {
     }
   }
 
-  /**
-   * This method is needed because the {@link Schema#set$ref(String)} method
-   * won't append "#/components/schemas/" if the ref contains `.`.
-   *
-   * @param qualifiedName
-   *          full qualified name of the class
-   * @return the ref in format of "#/components/schemas/com.my.example.Model"
-   */
-  private String getFullQualifiedNameRef(String qualifiedName) {
-    return SCHEMA_REF_PREFIX + qualifiedName;
-  }
-
-  private String getSimpleRef(String ref) {
-    if (StringUtils.contains(ref, SCHEMA_REF_PREFIX)) {
-      return StringUtils.substringAfter(ref, SCHEMA_REF_PREFIX);
-    }
-    return ref;
-  }
-
   private Map<String, Schema> getPropertiesFromClassDeclaration(
       TypeDeclaration<ClassOrInterfaceDeclaration> typeDeclaration) {
     Map<String, Schema> properties = new TreeMap<>();
@@ -445,8 +415,9 @@ public class OpenApiObjectGenerator {
     if (StringUtils.isNotBlank(schema.getName())
         || StringUtils.isNotBlank(schema.get$ref())) {
       String name = StringUtils.firstNonBlank(schema.getName(),
-          getSimpleRef(schema.get$ref()));
-      ResolvedReferenceType resolvedReferenceType = foundTypes.get(name);
+          schemaResolver.getSimpleRef(schema.get$ref()));
+      ResolvedReferenceType resolvedReferenceType = schemaResolver
+          .getFoundTypeByQualifiedName(name);
       if (resolvedReferenceType != null) {
         map.put(name, resolvedReferenceType);
       } else {
@@ -658,113 +629,7 @@ public class OpenApiObjectGenerator {
   }
 
   private Schema parseResolvedTypeToSchema(ResolvedType resolvedType) {
-    if (resolvedType.isArray()) {
-      return createArraySchema(resolvedType);
-    }
-    if (isNumberType(resolvedType)) {
-      return new NumberSchema().nullable(!resolvedType.isPrimitive());
-    } else if (isStringType(resolvedType)) {
-      return new StringSchema().nullable(true);
-    } else if (isCollectionType(resolvedType)) {
-      return createCollectionSchema(resolvedType.asReferenceType());
-    } else if (isBooleanType(resolvedType)) {
-      return new BooleanSchema().nullable(!resolvedType.isPrimitive());
-    } else if (isMapType(resolvedType)) {
-      return createMapSchema(resolvedType);
-    } else if (isDateType(resolvedType)) {
-      return new DateSchema().nullable(true);
-    } else if (isDateTimeType(resolvedType)) {
-      return new DateTimeSchema().nullable(true);
-    } else if (isOptionalType(resolvedType)) {
-      return createOptionalSchema(resolvedType.asReferenceType());
-    } else if (isUnhandledJavaType(resolvedType)) {
-      return new ObjectSchema().nullable(true);
-    }
-    return createUserBeanSchema(resolvedType);
-  }
-
-  private boolean isOptionalType(ResolvedType resolvedType) {
-    return resolvedType.isReferenceType()
-        && isTypeOf(resolvedType.asReferenceType(), Optional.class);
-  }
-
-  private boolean isUnhandledJavaType(ResolvedType resolvedType) {
-    return resolvedType.isReferenceType() && resolvedType.asReferenceType()
-        .getQualifiedName().startsWith("java.");
-  }
-
-  private boolean isDateTimeType(ResolvedType resolvedType) {
-    return resolvedType.isReferenceType() && isTypeOf(
-        resolvedType.asReferenceType(), LocalDateTime.class, Instant.class);
-  }
-
-  private boolean isDateType(ResolvedType resolvedType) {
-    return resolvedType.isReferenceType() && isTypeOf(
-        resolvedType.asReferenceType(), Date.class, LocalDate.class);
-  }
-
-  private boolean isNumberType(ResolvedType type) {
-    if (type.isPrimitive()) {
-      ResolvedPrimitiveType resolvedPrimitiveType = type.asPrimitive();
-      return resolvedPrimitiveType != ResolvedPrimitiveType.BOOLEAN
-          && resolvedPrimitiveType != ResolvedPrimitiveType.CHAR;
-    } else {
-      return isTypeOf(type, Number.class);
-    }
-  }
-
-  private boolean isCollectionType(ResolvedType type) {
-    return !type.isPrimitive() && isTypeOf(type, Collection.class);
-  }
-
-  private boolean isMapType(ResolvedType type) {
-    return !type.isPrimitive() && isTypeOf(type, Map.class);
-  }
-
-  private boolean isBooleanType(ResolvedType type) {
-    if (type.isPrimitive()) {
-      return type == ResolvedPrimitiveType.BOOLEAN;
-    } else {
-      return isTypeOf(type, Boolean.class);
-    }
-  }
-
-  private boolean isStringType(ResolvedType type) {
-    if (type.isPrimitive()) {
-      return type.asPrimitive() == ResolvedPrimitiveType.CHAR;
-    } else {
-      return isTypeOf(type, String.class, Character.class);
-    }
-  }
-
-  private boolean isTypeOf(ResolvedType type, Class... clazz) {
-    if (!type.isReferenceType()) {
-      return false;
-    }
-    List<String> classes = Arrays.stream(clazz).map(Class::getName)
-        .collect(Collectors.toList());
-    return classes.contains(type.asReferenceType().getQualifiedName())
-        || type.asReferenceType().getAllAncestors().stream()
-            .map(ResolvedReferenceType::getQualifiedName)
-            .anyMatch(classes::contains);
-  }
-
-  private Schema createUserBeanSchema(ResolvedType resolvedType) {
-    if (resolvedType.isReferenceType()) {
-      String qualifiedName = resolvedType.asReferenceType().getQualifiedName();
-      foundTypes.put(qualifiedName, resolvedType.asReferenceType());
-      Schema userBean = new ObjectSchema().name(qualifiedName)
-          .$ref(getFullQualifiedNameRef(qualifiedName));
-      return createNullableWrapperSchema(userBean);
-    }
-    return new ObjectSchema().nullable(true);
-  }
-
-  private Schema createNullableWrapperSchema(Schema userBean) {
-    ComposedSchema nullableSchema = new ComposedSchema();
-    nullableSchema.setNullable(true);
-    nullableSchema.setAllOf(Collections.singletonList(userBean));
-    return nullableSchema;
+    return schemaResolver.parseResolvedTypeToSchema(resolvedType);
   }
 
   @SuppressWarnings("squid:S1872")
@@ -792,9 +657,10 @@ public class OpenApiObjectGenerator {
       results.add(parentSchema);
       for (ResolvedReferenceType directAncestor : directAncestors) {
         String ancestorQualifiedName = directAncestor.getQualifiedName();
-        String parentRef = getFullQualifiedNameRef(ancestorQualifiedName);
+        String parentRef = schemaResolver
+            .getFullQualifiedNameRef(ancestorQualifiedName);
         parentSchema.addAllOfItem(new ObjectSchema().$ref(parentRef));
-        foundTypes.put(ancestorQualifiedName, directAncestor);
+        schemaResolver.addFoundTypes(ancestorQualifiedName, directAncestor);
       }
       parentSchema.addAllOfItem(schema);
       results.addAll(generatedRelatedSchemas(parentSchema));
@@ -874,9 +740,8 @@ public class OpenApiObjectGenerator {
     }
     return validFields;
   }
-
   private Class<?> getClassFromReflection(ResolvedReferenceType resolvedType)
-      throws ClassNotFoundException {
+    throws ClassNotFoundException {
     String fullyQualifiedName = getFullyQualifiedName(resolvedType);
     if (typeResolverClassLoader != null) {
       return Class.forName(fullyQualifiedName, true, typeResolverClassLoader);
@@ -897,62 +762,18 @@ public class OpenApiObjectGenerator {
    * @return fully qualified name
    */
   private String getFullyQualifiedName(
-      ResolvedReferenceType resolvedReferenceType) {
+    ResolvedReferenceType resolvedReferenceType) {
     ResolvedReferenceTypeDeclaration typeDeclaration = resolvedReferenceType
-        .getTypeDeclaration();
+      .getTypeDeclaration();
     String packageName = typeDeclaration.getPackageName();
     String canonicalName = typeDeclaration.getQualifiedName();
     if (StringUtils.isBlank(packageName)) {
       return StringUtils.replaceChars(canonicalName, '.', '$');
     } else {
       String name = StringUtils.substringAfterLast(canonicalName,
-          packageName + ".");
+        packageName + ".");
       return String.format("%s.%s", packageName,
-          StringUtils.replaceChars(name, '.', '$'));
-    }
-  }
-
-  private Schema createMapSchema(ResolvedType type) {
-    Schema mapSchema = new MapSchema().nullable(true);
-    List<Pair<ResolvedTypeParameterDeclaration, ResolvedType>> typeParametersMap = type
-        .asReferenceType().getTypeParametersMap();
-    if (typeParametersMap.size() == 2) {
-      // Assumed that Map always has the first type parameter as `String` and
-      // the second is for its value type
-      ResolvedType mapValueType = typeParametersMap.get(1).b;
-      mapSchema.additionalProperties(parseResolvedTypeToSchema(mapValueType));
-    }
-    return mapSchema;
-  }
-
-  private Schema createArraySchema(ResolvedType type) {
-    ArraySchema array = new ArraySchema();
-    array.setNullable(true);
-    array.items(
-        parseResolvedTypeToSchema(type.asArrayType().getComponentType()));
-    return array;
-  }
-
-  private Schema createCollectionSchema(ResolvedReferenceType type) {
-    ArraySchema array = new ArraySchema();
-    array.setNullable(true);
-    List<Pair<ResolvedTypeParameterDeclaration, ResolvedType>> typeParametersMap = type
-        .getTypeParametersMap();
-    if (!typeParametersMap.isEmpty()) {
-      ResolvedType collectionParameterType = typeParametersMap.get(0).b;
-      array.items(parseResolvedTypeToSchema(collectionParameterType));
-    }
-    return array;
-  }
-
-  private Schema createOptionalSchema(ResolvedReferenceType type) {
-    ResolvedType typeInOptional = type.getTypeParametersMap().get(0).b;
-    Schema nestedTypeSchema = parseResolvedTypeToSchema(typeInOptional);
-    if (nestedTypeSchema.get$ref() == null) {
-      nestedTypeSchema.setNullable(true);
-      return nestedTypeSchema;
-    } else {
-      return createNullableWrapperSchema(nestedTypeSchema);
+        StringUtils.replaceChars(name, '.', '$'));
     }
   }
 }
