@@ -867,8 +867,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     handlebars.registerHelper("multiplelines", getMultipleLinesHelper());
     handlebars.registerHelper("getClassNameFromImports",
         getClassNameFromImportsHelper());
-    handlebars.registerHelper("getOptionalFieldSymbol",
-        getOptionalFieldSymbol());
   }
 
   private Helper<String> getMultipleLinesHelper() {
@@ -881,16 +879,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
         buffer.append(options.apply(fn, parent.combine("@line", line)));
       }
       return buffer;
-    };
-  }
-
-  private Helper<String> getOptionalFieldSymbol() {
-    return (context, options) -> {
-      if (StringUtils.endsWith(context, NULLABLE_SUFFIX)) {
-        return "?";
-      } else {
-        return "";
-      }
     };
   }
 
