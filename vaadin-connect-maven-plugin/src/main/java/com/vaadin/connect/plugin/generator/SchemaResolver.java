@@ -45,7 +45,7 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import org.apache.commons.lang3.StringUtils;
 
-public class SchemaResolver {
+class SchemaResolver {
 
   private static final String SCHEMA_REF_PREFIX = "#/components/schemas/";
   private final Map<String, ResolvedReferenceType> foundTypes = new HashMap<>();
@@ -122,7 +122,7 @@ public class SchemaResolver {
 
   private boolean isOptionalType(ResolvedType resolvedType) {
     return resolvedType.isReferenceType()
-        && isTypeOf(resolvedType.asReferenceType(), Optional.class);
+        && isTypeOf(resolvedType, Optional.class);
   }
 
   private boolean isUnhandledJavaType(ResolvedType resolvedType) {
@@ -131,13 +131,13 @@ public class SchemaResolver {
   }
 
   private boolean isDateTimeType(ResolvedType resolvedType) {
-    return resolvedType.isReferenceType() && isTypeOf(
-        resolvedType.asReferenceType(), LocalDateTime.class, Instant.class);
+    return resolvedType.isReferenceType()
+        && isTypeOf(resolvedType, LocalDateTime.class, Instant.class);
   }
 
   private boolean isDateType(ResolvedType resolvedType) {
-    return resolvedType.isReferenceType() && isTypeOf(
-        resolvedType.asReferenceType(), Date.class, LocalDate.class);
+    return resolvedType.isReferenceType()
+        && isTypeOf(resolvedType, Date.class, LocalDate.class);
   }
 
   private boolean isNumberType(ResolvedType type) {
@@ -160,7 +160,7 @@ public class SchemaResolver {
 
   private boolean isBooleanType(ResolvedType type) {
     if (type.isPrimitive()) {
-      return type == ResolvedPrimitiveType.BOOLEAN;
+      return type.asPrimitive() == ResolvedPrimitiveType.BOOLEAN;
     } else {
       return isTypeOf(type, Boolean.class);
     }
@@ -229,5 +229,9 @@ public class SchemaResolver {
 
   ResolvedReferenceType getFoundTypeByQualifiedName(String qualifiedName) {
     return foundTypes.get(qualifiedName);
+  }
+
+  Map<String, ResolvedReferenceType> getFoundTypes() {
+    return foundTypes;
   }
 }
