@@ -495,12 +495,12 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     List<String> operationTags = operation.getTags();
     if (operationTags == null || operationTags.isEmpty()) {
       getLogger().warn(
-          "The {} operation with path \"{}\" does not have any tag. The generated method will be included in Default class.",
+          "The '{}' operation with path '{}' does not have any tag. The generated method will be included in 'Default' Service.",
           httpMethod, path);
     } else if (operationTags.size() > 1) {
       String fileList = String.join(", ", operationTags);
       getLogger().warn(
-          "The {} operation with path \"{}\" contains multiple tags. The generated method will be included in classes: \"{}\".",
+          "The '{}' operation with path '{}' contains multiple tags. The generated method will be included in classes: '{}'.",
           httpMethod, path, fileList);
     }
   }
@@ -708,10 +708,9 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   private void warnNoClassInformation(String classname) {
-    // Link should be replace later
-    getLogger().warn("The operations with tag {} doesn't have description."
-        + "For more information, please visit https://vaadin.com/vaadin-connect#vaadin-services-extension-in-open-api.",
-        classname);
+    getLogger().info(
+        "The class '{}' doesn't have JavaDoc or it is invalid. This results in no TsDoc for the generated module '{}'.",
+        classname, classname);
   }
 
   @Override
@@ -827,10 +826,9 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   }
 
   private RuntimeException getGeneratorException(String message) {
-    // TODO Link should be replaced later
     return new RuntimeException(message
         + " For more information, please checkout the Vaadin Connect Generator "
-        + "documentation page at https://vaadin.com/vaadin-connect.");
+        + "documentation page at https://github.com/vaadin/vaadin-connect/blob/master/doc/typescript-generator.asciidoc.");
   }
 
   @Override
