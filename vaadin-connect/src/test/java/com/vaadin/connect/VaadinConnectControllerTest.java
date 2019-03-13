@@ -1,5 +1,8 @@
 package com.vaadin.connect;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -9,6 +12,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,6 +41,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.times;
@@ -48,18 +53,38 @@ public class VaadinConnectControllerTest {
   private static final String TEST_SERVICE_NAME = TEST_SERVICE.getClass()
       .getSimpleName();
   private static final Method TEST_METHOD;
+  private static final Method TEST_VALIDATION_METHOD;
 
   static {
     TEST_METHOD = Stream.of(TEST_SERVICE.getClass().getDeclaredMethods())
         .filter(method -> "testMethod".equals(method.getName())).findFirst()
         .orElseThrow(
-            () -> new AssertionError("Failed to find a service method"));
+            () -> new AssertionError("Failed to find a test service method"));
+    TEST_VALIDATION_METHOD = Stream
+        .of(TEST_SERVICE.getClass().getDeclaredMethods())
+        .filter(method -> "testValidationMethod".equals(method.getName()))
+        .findFirst().orElseThrow(() -> new AssertionError(
+            "Failed to find a test validation service method"));
+  }
+
+  private static class TestValidationParameter {
+    @Min(10)
+    private final int count;
+
+    public TestValidationParameter(@JsonProperty("count") int count) {
+      this.count = count;
+    }
   }
 
   @VaadinService
   public static class TestClass {
     public String testMethod(int parameter) {
       return parameter + "-test";
+    }
+
+    public void testValidationMethod(
+        @NotNull TestValidationParameter parameter) {
+      // no op
     }
 
     public void testMethodWithMultipleParameter(int number, String text,
@@ -230,11 +255,8 @@ public class VaadinConnectControllerTest {
       throws Exception {
     int inputValue = 222;
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new IllegalArgumentException("OOPS"));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new IllegalArgumentException("OOPS"));
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -260,11 +282,8 @@ public class VaadinConnectControllerTest {
       throws Exception {
     int inputValue = 222;
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new IllegalAccessException("OOPS"));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new IllegalAccessException("OOPS"));
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -289,11 +308,8 @@ public class VaadinConnectControllerTest {
       throws Exception {
     int inputValue = 222;
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue)).thenThrow(
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
         new InvocationTargetException(new IllegalStateException("OOPS")));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -319,12 +335,9 @@ public class VaadinConnectControllerTest {
     int inputValue = 222;
     String expectedMessage = "OOPS";
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new InvocationTargetException(
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new InvocationTargetException(
             new VaadinConnectException(expectedMessage)));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -357,11 +370,8 @@ public class VaadinConnectControllerTest {
       }
     }
 
-    Method serviceMethodMock = mock(Method.class);
-    when(serviceMethodMock.invoke(TEST_SERVICE, inputValue))
-        .thenThrow(new InvocationTargetException(new MyCustomException()));
-    when(serviceMethodMock.getParameters())
-        .thenReturn(TEST_METHOD.getParameters());
+    Method serviceMethodMock = createServiceMethodMockThatThrows(inputValue,
+        new InvocationTargetException(new MyCustomException()));
 
     VaadinConnectController controller = createVaadinController(TEST_SERVICE);
     controller.vaadinServices.get(TEST_SERVICE_NAME.toLowerCase()).methods
@@ -631,6 +641,71 @@ public class VaadinConnectControllerTest {
     assertTrue(parameterNames.contains("number"));
   }
 
+  @Test
+  public void should_ReturnValidationError_When_ServiceMethodParameterIsInvalid()
+      throws IOException {
+    String expectedErrorMessage = String.format(
+        "Validation error in service '%s' method '%s'", TEST_SERVICE_NAME,
+        TEST_VALIDATION_METHOD.getName());
+
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_VALIDATION_METHOD.getName(),
+            createRequestParameters("{\"parameter\": null}"));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ObjectNode jsonNodes = new ObjectMapper().readValue(response.getBody(),
+        ObjectNode.class);
+
+    assertEquals(VaadinConnectValidationException.class.getName(),
+        jsonNodes.get("type").asText());
+    assertEquals(expectedErrorMessage, jsonNodes.get("message").asText());
+    assertEquals(1, jsonNodes.get("validationErrorData").size());
+
+    JsonNode validationErrorData = jsonNodes.get("validationErrorData").get(0);
+    assertTrue(validationErrorData.get("parameterName").asText()
+        .contains(TEST_VALIDATION_METHOD.getName()));
+    String validationErrorMessage = validationErrorData.get("message").asText();
+    assertTrue(
+        validationErrorMessage.contains(TEST_VALIDATION_METHOD.getName()));
+    assertTrue(
+        validationErrorMessage.contains(TEST_SERVICE.getClass().toString()));
+    assertTrue(validationErrorMessage.contains("null"));
+  }
+
+  @Test
+  public void should_ReturnValidationError_When_ServiceMethodBeanIsInvalid()
+      throws IOException {
+    int invalidPropertyValue = 5;
+    String propertyName = "count";
+    String expectedErrorMessage = String.format(
+        "Validation error in service '%s' method '%s'", TEST_SERVICE_NAME,
+        TEST_VALIDATION_METHOD.getName());
+
+    ResponseEntity<String> response = createVaadinController(TEST_SERVICE)
+        .serveVaadinService(TEST_SERVICE_NAME, TEST_VALIDATION_METHOD.getName(),
+            createRequestParameters(String.format(
+                "{\"parameter\": {\"count\": %d}}", invalidPropertyValue)));
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ObjectNode jsonNodes = new ObjectMapper().readValue(response.getBody(),
+        ObjectNode.class);
+
+    assertEquals(VaadinConnectValidationException.class.getName(),
+        jsonNodes.get("type").asText());
+    assertEquals(expectedErrorMessage, jsonNodes.get("message").asText());
+    assertEquals(1, jsonNodes.get("validationErrorData").size());
+
+    JsonNode validationErrorData = jsonNodes.get("validationErrorData").get(0);
+    assertTrue(validationErrorData.get("parameterName").asText()
+        .contains(propertyName));
+    String validationErrorMessage = validationErrorData.get("message").asText();
+    assertTrue(validationErrorMessage.contains(propertyName));
+    assertTrue(validationErrorMessage
+        .contains(Integer.toString(invalidPropertyValue)));
+    assertTrue(validationErrorMessage
+        .contains(TEST_VALIDATION_METHOD.getParameterTypes()[0].toString()));
+  }
+
   private void assertServiceInfoPresent(String responseBody) {
     assertTrue(String.format(
         "Response body '%s' should have service information in it",
@@ -688,5 +763,20 @@ public class VaadinConnectControllerTest {
         .thenReturn((Class) serviceClass);
     return new VaadinConnectController(vaadinServiceMapper, accessChecker,
         serviceNameChecker, contextMock);
+  }
+
+  private Method createServiceMethodMockThatThrows(Object argument,
+      Exception exceptionToThrow) throws Exception {
+    Method serviceMethodMock = mock(Method.class);
+    when(serviceMethodMock.invoke(TEST_SERVICE, argument))
+        .thenThrow(exceptionToThrow);
+    when(serviceMethodMock.getParameters())
+        .thenReturn(TEST_METHOD.getParameters());
+    doReturn(TEST_METHOD.getDeclaringClass()).when(serviceMethodMock)
+        .getDeclaringClass();
+    when(serviceMethodMock.getParameterTypes())
+        .thenReturn(TEST_METHOD.getParameterTypes());
+    when(serviceMethodMock.getName()).thenReturn(TEST_METHOD.getName());
+    return serviceMethodMock;
   }
 }

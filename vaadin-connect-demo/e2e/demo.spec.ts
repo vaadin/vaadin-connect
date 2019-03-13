@@ -211,6 +211,37 @@ describe('demo application', () => {
       });
     });
 
+    describe('validation', () => {
+      it('should show all validation errors for incorrect input', async() => {
+        await page.findById('validationButton').click();
+        await pollUntilTruthy(function() {
+          // tslint:disable-next-line:no-var-keyword prefer-const
+          var validationOutput = (
+            document.getElementById('validationOutput') as HTMLOutputElement
+          ).textContent || '';
+          return validationOutput.indexOf('Validation error') > 0 &&
+            (validationOutput.match(/parameterName/g) || []).length === 3;
+        }, ['']).call(page);
+      });
+
+      it('should show no validation errors for correct input', async() => {
+        await page.execute(function() {
+          (document.getElementById(
+            'validationNameInput') as HTMLInputElement).value = 'test_name';
+          (document.getElementById(
+            'validationCountInput') as HTMLInputElement).value = '1';
+          (document.getElementById(
+            'additionalNumberInput') as HTMLInputElement).value = '-2';
+        });
+        await page.findById('validationButton').click();
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('validationOutput') as HTMLOutputElement
+          ).textContent === text;
+        }, ['{"name":"test_name","generatedResponse":{"0":[]}}']).call(page);
+      });
+    });
+
   });
 
   describe('single page application', () => {

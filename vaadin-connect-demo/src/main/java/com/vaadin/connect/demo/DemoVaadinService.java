@@ -3,6 +3,10 @@ package com.vaadin.connect.demo;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.validation.Valid;
+import javax.validation.constraints.Negative;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Positive;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -25,13 +29,28 @@ import com.vaadin.connect.exception.VaadinConnectException;
 @DenyAll
 public class DemoVaadinService {
   public static class ComplexRequest {
+    @NotBlank
     private final String name;
+    @Positive
     private final int count;
+    @Valid
+    private final NestedClass nestedClass;
 
     public ComplexRequest(@JsonProperty("name") String name,
-        @JsonProperty("count") int count) {
+        @JsonProperty("count") int count,
+        @JsonProperty("nestedClass") NestedClass nestedClass) {
       this.name = name;
       this.count = count;
+      this.nestedClass = nestedClass;
+    }
+  }
+
+  public static class NestedClass {
+    @Negative
+    private final int nestedValue;
+
+    public NestedClass(@JsonProperty("nestedValue") int nestedValue) {
+      this.nestedValue = nestedValue;
     }
   }
 
@@ -110,7 +129,7 @@ public class DemoVaadinService {
     throw new IllegalStateException("Ooops");
   }
 
-  @PermitAll
+  @AnonymousAllowed
   public ComplexResponse complexEntitiesTest(ComplexRequest request) {
     Map<Integer, List<String>> results = new HashMap<>();
     for (int i = 0; i < request.count; i++) {

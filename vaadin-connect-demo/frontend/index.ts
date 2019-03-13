@@ -145,3 +145,25 @@ const customClient = new ConnectClient({endpoint: '/connect', credentials});
       number: numberLabel.textContent
     }).then(incrementedValue => numberLabel.textContent = incrementedValue);
   });
+
+(document.getElementById('validationButton') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    const name = (document.getElementById(
+      'validationNameInput') as HTMLInputElement).value;
+    const count = (document.getElementById(
+      'validationCountInput') as HTMLInputElement).valueAsNumber;
+    const additionalNumber = (document.getElementById(
+      'additionalNumberInput') as HTMLInputElement).valueAsNumber;
+
+    let result = null;
+    try {
+      result = JSON.stringify(await demoService.complexEntitiesTest({
+        count,
+        name,
+        nestedClass: {nestedValue: additionalNumber}
+      }));
+    } catch (e) {
+      result = e.message;
+    }
+    document.getElementById('validationOutput')!.textContent = result;
+  });
