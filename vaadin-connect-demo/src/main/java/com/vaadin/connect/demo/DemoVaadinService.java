@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.security.crypto.codec.Hex;
 
 import com.vaadin.connect.VaadinService;
 import com.vaadin.connect.auth.AnonymousAllowed;
@@ -122,6 +123,15 @@ public class DemoVaadinService {
 
   @PermitAll
   public void noReturnNoArguments() {
+  }
+
+  /**
+   * This method is intended to test if the plugin can load a class from
+   * project's dependency.
+   */
+  @PermitAll
+  public void makeSureTypeReflectionWork(Hex hex) {
+    // no op
   }
 
   @PermitAll
