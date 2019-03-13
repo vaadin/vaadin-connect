@@ -794,6 +794,10 @@ public class OpenApiObjectGenerator {
   }
 
   private Set<String> getValidFields(ResolvedReferenceType resolvedType) {
+    if (!resolvedType.getTypeDeclaration().isClass()
+        || resolvedType.getTypeDeclaration().isAnonymousClass()) {
+      return Collections.emptySet();
+    }
     Set<String> fields;
     try {
       Class<?> aClass = Class.forName(resolvedType.getQualifiedName());
