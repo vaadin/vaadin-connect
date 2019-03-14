@@ -1,6 +1,6 @@
 {
   "name": "@vaadin/connect-scripts",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "description": "Shared scripts for Vaadin Connect projects",
   "main": "connect-scripts.js",
   "directories": {
