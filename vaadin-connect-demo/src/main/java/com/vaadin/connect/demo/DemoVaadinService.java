@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.security.crypto.codec.Hex;
@@ -190,7 +191,6 @@ public class DemoVaadinService {
   }
 
   @PermitAll
-
   public LocalDate echoLocalDate(LocalDate localDate) {
     return localDate;
   }
@@ -198,5 +198,11 @@ public class DemoVaadinService {
   @PermitAll
   public LocalDateTime echoLocalDateTime(LocalDateTime localDateTime) {
     return localDateTime;
+  }
+
+  @PermitAll
+  public Optional<String> echoOptionalString(Optional<String> stringOptional) {
+    return stringOptional.isPresent() ? stringOptional
+        : Optional.of("I am an empty string");
   }
 }

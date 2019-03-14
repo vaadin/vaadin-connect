@@ -1,4 +1,4 @@
 export default interface Account {
-  author: string;
-  type: string;
+  author?: string | null;
+  type?: string | null;
 }

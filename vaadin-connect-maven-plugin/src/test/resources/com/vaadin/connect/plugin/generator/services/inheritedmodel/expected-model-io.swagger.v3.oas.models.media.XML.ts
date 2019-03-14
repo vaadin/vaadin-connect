@@ -1,8 +1,8 @@
 export default interface XML {
-  attribute: boolean;
-  extensions: { [key: string]: any; };
-  name: string;
-  namespace: string;
-  prefix: string;
-  wrapped: boolean;
+  attribute?: boolean | null;
+  extensions?: { [key: string]: any | null; } | null;
+  name?: string | null;
+  namespace?: string | null;
+  prefix?: string | null;
+  wrapped?: boolean | null;
 }

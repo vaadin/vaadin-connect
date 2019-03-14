@@ -1,5 +1,5 @@
 export default interface ExternalDocumentation {
-  description: string;
-  extensions: { [key: string]: any; };
-  url: string;
+  description?: string | null;
+  extensions?: { [key: string]: any | null; } | null;
+  url?: string | null;
 }

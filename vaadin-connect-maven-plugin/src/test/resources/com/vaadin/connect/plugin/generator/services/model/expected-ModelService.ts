@@ -5,8 +5,8 @@ import Group from './com/vaadin/connect/plugin/generator/services/model/ModelSer
 import ModelFromDifferentPackage from './com/vaadin/connect/plugin/generator/services/model/subpackage/ModelFromDifferentPackage';
 
 export function getAccountByGroups(
-  groups: Group[]
-): Promise<Account> {
+  groups: Array<Group | null> | null
+): Promise<Account | null> {
   return client.call('ModelService', 'getAccountByGroups', {groups});
 }
 
@@ -17,16 +17,16 @@ export function getAccountByGroups(
  * Return the account with given userName
  */
 export function getAccountByUserName(
-  userName: string
-): Promise<Account> {
+  userName: string | null
+): Promise<Account | null> {
   return client.call('ModelService', 'getAccountByUserName', {userName});
 }
 
-export function getArrayOfAccount(): Promise<Account[]> {
+export function getArrayOfAccount(): Promise<Array<Account | null> | null> {
   return client.call('ModelService', 'getArrayOfAccount');
 }
 
-export function getMapGroups(): Promise<{ [key: string]: Group; }> {
+export function getMapGroups(): Promise<{ [key: string]: Group | null; } | null> {
   return client.call('ModelService', 'getMapGroups');
 }
 
@@ -35,10 +35,6 @@ export function getMapGroups(): Promise<{ [key: string]: Group; }> {
  *
  *
  */
-export function getModelFromDifferentPackage(): Promise<ModelFromDifferentPackage> {
+export function getModelFromDifferentPackage(): Promise<ModelFromDifferentPackage | null> {
   return client.call('ModelService', 'getModelFromDifferentPackage');
-}
-
-export function makeSureUnhandledJavaTypeWorks(): Promise<any> {
-  return client.call('ModelService', 'makeSureUnhandledJavaTypeWorks');
 }

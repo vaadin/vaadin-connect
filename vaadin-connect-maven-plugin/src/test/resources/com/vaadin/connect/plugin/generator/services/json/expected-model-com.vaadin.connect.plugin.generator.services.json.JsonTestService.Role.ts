@@ -5,5 +5,5 @@ export default interface Role {
   /**
    * Description for roleName.
    */
-  roleName: string;
+  roleName?: string | null;
 }

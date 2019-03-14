@@ -1,4 +1,4 @@
 export default interface ModelFromDifferentPackage {
-  bar: string;
-  foo: string;
+  bar?: string | null;
+  foo?: string | null;
 }

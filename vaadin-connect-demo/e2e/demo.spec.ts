@@ -209,6 +209,32 @@ describe('demo application', () => {
           ).textContent === text;
         }, ['2019-01-01T12:34:56.78']).call(page);
       });
+
+      it('should serialize/deserialize Optional object', async() => {
+        await page.execute(function() {
+          (document.getElementById('optionalInput') as HTMLInputElement)
+            .value = 'Hello, world!';
+        });
+        await page.findById('echoOptional').click();
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('optionalOutput') as HTMLOutputElement
+          ).textContent === text;
+        }, ['Hello, world!']).call(page);
+      });
+
+      it('should recognize a null Optional object', async() => {
+        await page.execute(function() {
+          (document.getElementById('optionalInput') as HTMLInputElement)
+            .value = '';
+        });
+        await page.findById('echoOptional').click();
+        await pollUntilTruthy(function(text) {
+          return (
+            document.getElementById('optionalOutput') as HTMLOutputElement
+          ).textContent === text;
+        }, ['I am an empty string']).call(page);
+      });
     });
 
     describe('validation', () => {

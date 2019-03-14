@@ -1,3 +1,3 @@
 export default interface SubProperty {
-  foobar: string;
+  foobar?: string | null;
 }

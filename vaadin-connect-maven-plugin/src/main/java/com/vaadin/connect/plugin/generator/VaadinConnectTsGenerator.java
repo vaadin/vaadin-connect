@@ -39,7 +39,6 @@ import io.swagger.codegen.v3.ClientOptInput;
 import io.swagger.codegen.v3.CodegenModel;
 import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.CodegenParameter;
-import io.swagger.codegen.v3.CodegenProperty;
 import io.swagger.codegen.v3.CodegenResponse;
 import io.swagger.codegen.v3.CodegenType;
 import io.swagger.codegen.v3.DefaultGenerator;
@@ -65,6 +64,7 @@ import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.AbstractFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -82,6 +82,7 @@ import static com.vaadin.connect.plugin.VaadinClientGeneratorMojo.DEFAULT_GENERA
  */
 public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
+  public static final String NULLABLE_SUFFIX = " | null";
   private static final String GENERATOR_NAME = "javascript-vaadin-connect";
   private static final String EXTENSION_VAADIN_CONNECT_PARAMETERS = "x-vaadin-connect-parameters";
   private static final String EXTENSION_VAADIN_CONNECT_SHOW_TSDOC = "x-vaadin-connect-show-tsdoc";
@@ -451,6 +452,22 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
     return codegenOperation;
   }
 
+  @Override
+  public String getSchemaType(Schema schema) {
+    if (isNullableWrapperSchema(schema)) {
+      Schema wrappedSchema = ((ComposedSchema) schema).getAllOf().get(0);
+      return super.getSchemaType(wrappedSchema);
+    }
+    return super.getSchemaType(schema);
+  }
+
+  private boolean isNullableWrapperSchema(Schema schema) {
+    return schema instanceof ComposedSchema
+        && BooleanUtils.isTrue(schema.getNullable())
+        && ((ComposedSchema) schema).getAllOf() != null
+        && ((ComposedSchema) schema).getAllOf().size() == 1;
+  }
+
   private String getSimpleNameFromImports(String dataType,
       List<Map<String, String>> imports) {
     for (Map<String, String> anImport : imports) {
@@ -460,7 +477,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       }
     }
     if (StringUtils.contains(dataType, "<")
-        || StringUtils.contains(dataType, "[")) {
+        || StringUtils.contains(dataType, "{")
+        || StringUtils.contains(dataType, "|")) {
       return getSimpleNameFromComplexType(dataType, imports);
     }
     return getSimpleNameFromQualifiedName(dataType);
@@ -565,20 +583,8 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   public CodegenModel fromModel(String name, Schema schema,
       Map<String, Schema> allDefinitions) {
     CodegenModel codegenModel = super.fromModel(name, schema, allDefinitions);
-    if (StringUtils.isBlank(codegenModel.parent)) {
-      return codegenModel;
-    }
-    // The import list contains all the import of the child and parent classes.
-    // We only need import for the parent class and the child field's types.
-    codegenModel.getImports().removeIf(s -> {
-      for (CodegenProperty cp : codegenModel.getVars()) {
-        if (StringUtils.contains(cp.datatype, s)
-            || codegenModel.parent.equals(s)) {
-          return false;
-        }
-      }
-      return true;
-    });
+    Set<String> imports = collectImportsFromSchema(schema);
+    codegenModel.setImports(imports);
     return codegenModel;
   }
 
@@ -784,17 +790,39 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   @Override
   public String getTypeDeclaration(Schema schema) {
+    String nullableSuffix = "";
+    if (BooleanUtils.isTrue(schema.getNullable())) {
+      nullableSuffix = NULLABLE_SUFFIX;
+    }
     if (schema instanceof ArraySchema) {
       ArraySchema arraySchema = (ArraySchema) schema;
       Schema inner = arraySchema.getItems();
-      return this.getTypeDeclaration(inner) + "[]";
+      return String.format("Array<%s>%s", this.getTypeDeclaration(inner),
+          nullableSuffix);
     } else if (StringUtils.isNotBlank(schema.get$ref())) {
-      return getSimpleRef(schema.get$ref());
+      return getSimpleRef(schema.get$ref()) + nullableSuffix;
     } else if (schema.getAdditionalProperties() != null) {
       Schema inner = (Schema) schema.getAdditionalProperties();
-      return String.format("{ [key: string]: %s; }", getTypeDeclaration(inner));
+      return String.format("{ [key: string]: %s; }%s",
+          getTypeDeclaration(inner), nullableSuffix);
+    } else if (schema instanceof ComposedSchema) {
+      return getTypeDeclarationFromComposedSchema((ComposedSchema) schema,
+          nullableSuffix);
     } else {
-      return super.getTypeDeclaration(schema);
+      return super.getTypeDeclaration(schema) + nullableSuffix;
+    }
+  }
+
+  private String getTypeDeclarationFromComposedSchema(
+      ComposedSchema composedSchema, String nullableSuffix) {
+    if (composedSchema.getAllOf() != null
+        && composedSchema.getAllOf().size() == 1) {
+      return getTypeDeclaration(composedSchema.getAllOf().get(0))
+          + nullableSuffix;
+    } else {
+      String unknownComposedSchema = Json.pretty(composedSchema);
+      getLogger().debug("Unknown ComposedSchema: {}", unknownComposedSchema);
+      return "any";
     }
   }
 

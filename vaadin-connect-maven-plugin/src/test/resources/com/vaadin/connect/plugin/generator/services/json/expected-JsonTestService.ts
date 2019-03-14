@@ -27,8 +27,8 @@ export function countUser(): Promise<number> {
  * Return current time as an Instant
  */
 export function fullFQNMethod(
-  input: number
-): Promise<string> {
+  input: number | null
+): Promise<string | null> {
   return client.call('JsonTestService', 'fullFQNMethod', {input});
 }
 
@@ -37,7 +37,7 @@ export function fullFQNMethod(
  *
  * Return map of user and roles
  */
-export function getAllUserRolesMap(): Promise<{ [key: string]: User; }> {
+export function getAllUserRolesMap(): Promise<{ [key: string]: User | null; } | null> {
   return client.call('JsonTestService', 'getAllUserRolesMap');
 }
 
@@ -46,7 +46,7 @@ export function getAllUserRolesMap(): Promise<{ [key: string]: User; }> {
  *
  * Return list of users
  */
-export function getAllUsers(): Promise<User[]> {
+export function getAllUsers(): Promise<Array<User | null> | null> {
   return client.call('JsonTestService', 'getAllUsers');
 }
 
@@ -57,8 +57,8 @@ export function getAllUsers(): Promise<User[]> {
  * Return array of int
  */
 export function getArrayInt(
-  input: string[]
-): Promise<number[]> {
+  input: Array<string | null> | null
+): Promise<Array<number> | null> {
   return client.call('JsonTestService', 'getArrayInt', {input}, {requireCredentials: false});
 }
 
@@ -69,7 +69,7 @@ export function getArrayInt(
  * Return boolean value
  */
 export function getBooleanValue(
-  input: { [key: string]: User; }
+  input: { [key: string]: User | null; } | null
 ): Promise<boolean> {
   return client.call('JsonTestService', 'getBooleanValue', {input});
 }
@@ -82,7 +82,7 @@ export function getBooleanValue(
  * Return boolean value
  */
 export function getTwoParameters(
-  input: string,
+  input: string | null,
   secondInput: number
 ): Promise<boolean> {
   return client.call('JsonTestService', 'getTwoParameters', {input, secondInput}, {requireCredentials: false});
@@ -96,20 +96,31 @@ export function getTwoParameters(
  */
 export function getUserById(
   id: number
-): Promise<User> {
+): Promise<User | null> {
   return client.call('JsonTestService', 'getUserById', {id}, {requireCredentials: false});
 }
 
 export function inputBeanTypeDependency(
-  input: Version
+  input: Version | null
 ): Promise<void> {
   return client.call('JsonTestService', 'inputBeanTypeDependency', {input});
 }
 
 export function inputBeanTypeLocal(
-  input: Status
+  input: Status | null
 ): Promise<void> {
   return client.call('JsonTestService', 'inputBeanTypeLocal', {input});
+}
+
+export function optionalParameter(
+  parameter: Array<string | null> | null,
+  requiredParameter: string | null
+): Promise<void> {
+  return client.call('JsonTestService', 'optionalParameter', {parameter, requiredParameter});
+}
+
+export function optionalReturn(): Promise<User | null> {
+  return client.call('JsonTestService', 'optionalReturn');
 }
 
 export function reservedWordInParameter(
@@ -125,7 +136,7 @@ export function reservedWordInParameter(
  *
  */
 export function updateUser(
-  user: User
+  user: User | null
 ): Promise<void> {
   return client.call('JsonTestService', 'updateUser', {user});
 }

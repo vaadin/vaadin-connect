@@ -4,29 +4,29 @@ import SameClassNameModel from './com/vaadin/connect/plugin/generator/services/s
 import SubpackageSameClassNameModel from './com/vaadin/connect/plugin/generator/services/sameclassname/subpackage/SameClassNameModel';
 
 export function getMyClass(
-  sameClassNameModel: SubpackageSameClassNameModel[]
-): Promise<SameClassNameModel> {
+  sameClassNameModel: Array<SubpackageSameClassNameModel | null> | null
+): Promise<SameClassNameModel | null> {
   return client.call('SameClassNameService', 'getMyClass', {sameClassNameModel});
 }
 
 export function getSubpackageModelList(
-  sameClassNameModel: { [key: string]: SubpackageSameClassNameModel; }
-): Promise<SubpackageSameClassNameModel[]> {
+  sameClassNameModel: { [key: string]: SubpackageSameClassNameModel | null; } | null
+): Promise<Array<SubpackageSameClassNameModel | null> | null> {
   return client.call('SameClassNameService', 'getSubpackageModelList', {sameClassNameModel});
 }
 
 export function getSubpackageModelMap(
-  sameClassNameModel: { [key: string]: SameClassNameModel; }
-): Promise<{ [key: string]: SubpackageSameClassNameModel; }> {
+  sameClassNameModel: { [key: string]: SameClassNameModel | null; } | null
+): Promise<{ [key: string]: SubpackageSameClassNameModel | null; } | null> {
   return client.call('SameClassNameService', 'getSubpackageModelMap', {sameClassNameModel});
 }
 
-export function getSubpackageModel(): Promise<SubpackageSameClassNameModel> {
+export function getSubpackageModel(): Promise<SubpackageSameClassNameModel | null> {
   return client.call('SameClassNameService', 'getSubpackageModel');
 }
 
 export function setSubpackageModel(
-  model: SubpackageSameClassNameModel
+  model: SubpackageSameClassNameModel | null
 ): Promise<void> {
   return client.call('SameClassNameService', 'setSubpackageModel', {model});
 }

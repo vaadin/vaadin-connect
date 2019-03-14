@@ -18,7 +18,7 @@ export default interface {{{getClassNameFromImports classname ../../imports}}} {
    * {{{@line}}}{{/multiplelines}}
    */
 {{/unescapedDescription}}
-  {{name}}: {{{getClassNameFromImports datatype ../../../imports}}};
+  {{name}}{{^required}}?{{/required}}: {{{getClassNameFromImports datatype ../../../imports}}};
 {{/vars}}
 }
 {{/model}}

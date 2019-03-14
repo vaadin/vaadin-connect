@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.core.Version;
 
@@ -163,11 +164,20 @@ public class JsonTestService {
     // No implementation
   }
 
+  public Optional<User> optionalReturn() {
+    return Optional.empty();
+  }
+
+  public void optionalParameter(Optional<List<String>> parameter, String requiredParameter) {
+    // No implementation
+  }
+
   public static class User {
     private String name;
     private String password;
     private transient int hiddenField;
     private Map<String, Role> roles;
+    Optional<String> optionalField;
   }
 
   /**

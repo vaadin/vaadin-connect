@@ -167,3 +167,13 @@ const customClient = new ConnectClient({endpoint: '/connect', credentials});
     }
     document.getElementById('validationOutput')!.textContent = result;
   });
+
+(document.getElementById('echoOptional') as HTMLButtonElement)
+  .addEventListener('click', async() => {
+    const optionalString = (document.getElementById(
+      'optionalInput') as HTMLInputElement).value;
+    const optionalOutput =
+      document.getElementById('optionalOutput') as HTMLLabelElement;
+    optionalOutput.textContent =
+      await demoService.echoOptionalString(optionalString || null);
+  });

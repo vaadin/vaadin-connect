@@ -18,7 +18,6 @@ package com.vaadin.connect.plugin.generator.services.model;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -35,7 +34,7 @@ public class ModelService {
 
   /**
    * Get account by username.
-   * 
+   *
    * @param userName
    *          username of the account
    * @return the account with given userName
@@ -54,10 +53,6 @@ public class ModelService {
 
   public Account[] getArrayOfAccount() {
     return null;
-  }
-
-  public Optional<Integer> makeSureUnhandledJavaTypeWorks() {
-    return Optional.empty();
   }
 
   /**

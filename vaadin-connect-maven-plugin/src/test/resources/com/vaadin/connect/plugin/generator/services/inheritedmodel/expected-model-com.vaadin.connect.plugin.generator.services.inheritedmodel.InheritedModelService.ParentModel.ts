@@ -1,3 +1,3 @@
 export default interface ParentModel {
-  id: string;
+  id?: string | null;
 }

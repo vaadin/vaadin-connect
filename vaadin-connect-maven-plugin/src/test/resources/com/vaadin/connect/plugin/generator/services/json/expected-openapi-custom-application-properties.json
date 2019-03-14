@@ -27,7 +27,8 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "number"
+                  "type" : "number",
+                  "nullable" : false
                 }
               }
             }
@@ -47,11 +48,13 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
                     "type" : "number",
-                    "description" : "input parameter"
+                    "description" : "input parameter",
+                    "nullable" : true
                   }
                 }
               }
@@ -65,7 +68,8 @@
               "application/json" : {
                 "schema" : {
                   "type" : "string",
-                  "format" : "date-time"
+                  "format" : "date-time",
+                  "nullable" : true
                 }
               }
             }
@@ -89,8 +93,12 @@
                 "schema" : {
                   "type" : "object",
                   "additionalProperties" : {
-                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
-                  }
+                    "nullable" : true,
+                    "allOf" : [ {
+                      "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                    } ]
+                  },
+                  "nullable" : true
                 }
               }
             }
@@ -113,8 +121,12 @@
               "application/json" : {
                 "schema" : {
                   "type" : "array",
+                  "nullable" : true,
                   "items" : {
-                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                    "nullable" : true,
+                    "allOf" : [ {
+                      "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                    } ]
                   }
                 }
               }
@@ -135,13 +147,16 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
                     "type" : "array",
                     "description" : "input string array",
+                    "nullable" : true,
                     "items" : {
-                      "type" : "string"
+                      "type" : "string",
+                      "nullable" : true
                     }
                   }
                 }
@@ -156,8 +171,10 @@
               "application/json" : {
                 "schema" : {
                   "type" : "array",
+                  "nullable" : true,
                   "items" : {
-                    "type" : "number"
+                    "type" : "number",
+                    "nullable" : false
                   }
                 }
               }
@@ -175,14 +192,19 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
                     "type" : "object",
                     "additionalProperties" : {
-                      "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                      "nullable" : true,
+                      "allOf" : [ {
+                        "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                      } ]
                     },
-                    "description" : "input map"
+                    "description" : "input map",
+                    "nullable" : true
                   }
                 }
               }
@@ -195,7 +217,8 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "boolean"
+                  "type" : "boolean",
+                  "nullable" : false
                 }
               }
             }
@@ -215,15 +238,18 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input", "secondInput" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
                     "type" : "string",
-                    "description" : "first input description"
+                    "description" : "first input description",
+                    "nullable" : true
                   },
                   "secondInput" : {
                     "type" : "number",
-                    "description" : "second input description"
+                    "description" : "second input description",
+                    "nullable" : false
                   }
                 }
               }
@@ -236,7 +262,8 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "boolean"
+                  "type" : "boolean",
+                  "nullable" : false
                 }
               }
             }
@@ -253,11 +280,13 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "id" ],
                 "type" : "object",
                 "properties" : {
                   "id" : {
                     "type" : "number",
-                    "description" : "id of user"
+                    "description" : "id of user",
+                    "nullable" : false
                   }
                 }
               }
@@ -270,7 +299,10 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                  "nullable" : true,
+                  "allOf" : [ {
+                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                  } ]
                 }
               }
             }
@@ -286,10 +318,14 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
-                    "$ref" : "#/components/schemas/com.fasterxml.jackson.core.Version"
+                    "nullable" : true,
+                    "allOf" : [ {
+                      "$ref" : "#/components/schemas/com.fasterxml.jackson.core.Version"
+                    } ]
                   }
                 }
               }
@@ -314,10 +350,14 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "input" ],
                 "type" : "object",
                 "properties" : {
                   "input" : {
-                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.Status"
+                    "nullable" : true,
+                    "allOf" : [ {
+                      "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.Status"
+                    } ]
                   }
                 }
               }
@@ -334,6 +374,68 @@
         } ]
       }
     },
+    "/JsonTestService/optionalParameter" : {
+      "post" : {
+        "tags" : [ "JsonTestService" ],
+        "operationId" : "JsonTestService_optionalParameter_POST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "required" : [ "parameter", "requiredParameter" ],
+                "type" : "object",
+                "properties" : {
+                  "parameter" : {
+                    "type" : "array",
+                    "nullable" : true,
+                    "items" : {
+                      "type" : "string",
+                      "nullable" : true
+                    }
+                  },
+                  "requiredParameter" : {
+                    "type" : "string",
+                    "nullable" : true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : ""
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-oauth2" : [ ]
+        } ]
+      }
+    },
+    "/JsonTestService/optionalReturn" : {
+      "post" : {
+        "tags" : [ "JsonTestService" ],
+        "operationId" : "JsonTestService_optionalReturn_POST",
+        "responses" : {
+          "200" : {
+            "description" : "",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "nullable" : true,
+                  "allOf" : [ {
+                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                  } ]
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "vaadin-connect-oauth2" : [ ]
+        } ]
+      }
+    },
     "/JsonTestService/reservedWordInParameter" : {
       "post" : {
         "tags" : [ "JsonTestService" ],
@@ -342,10 +444,12 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "_delete" ],
                 "type" : "object",
                 "properties" : {
                   "_delete" : {
-                    "type" : "boolean"
+                    "type" : "boolean",
+                    "nullable" : false
                   }
                 }
               }
@@ -371,14 +475,16 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "required" : [ "user" ],
                 "type" : "object",
                 "properties" : {
                   "user" : {
-                    "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                    "description" : "User to be updated",
+                    "nullable" : true,
+                    "allOf" : [ {
+                      "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.User"
+                    } ]
                   }
-                },
-                "x-vaadin-parameters-description" : {
-                  "user" : "User to be updated"
                 }
               }
             }
@@ -440,16 +546,26 @@
         "type" : "object",
         "properties" : {
           "name" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
+          },
+          "optionalField" : {
+            "type" : "string",
+            "nullable" : true
           },
           "password" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "roles" : {
             "type" : "object",
             "additionalProperties" : {
-              "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.Role"
-            }
+              "nullable" : true,
+              "allOf" : [ {
+                "$ref" : "#/components/schemas/com.vaadin.connect.plugin.generator.services.json.JsonTestService.Role"
+              } ]
+            },
+            "nullable" : true
           }
         }
       },
@@ -458,11 +574,13 @@
         "properties" : {
           "createdAt" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "nullable" : true
           },
           "text" : {
             "type" : "string",
-            "description" : "Multiple line description should work.This is very very very very very\nvery very very long."
+            "description" : "Multiple line description should work.This is very very very very very\nvery very very long.",
+            "nullable" : true
           }
         },
         "description" : "Status bean. Used only in request parameters to verify that request\nparameter type descriptions are generated."
@@ -472,31 +590,39 @@
         "properties" : {
           "roleName" : {
             "type" : "string",
-            "description" : "Description for roleName."
+            "description" : "Description for roleName.",
+            "nullable" : true
           }
         },
         "description" : "Role bean"
       },
       "com.fasterxml.jackson.core.Version" : {
+        "required" : [ "_majorVersion", "_minorVersion", "_patchLevel" ],
         "type" : "object",
         "properties" : {
           "_artifactId" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "_groupId" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "_majorVersion" : {
-            "type" : "number"
+            "type" : "number",
+            "nullable" : false
           },
           "_minorVersion" : {
-            "type" : "number"
+            "type" : "number",
+            "nullable" : false
           },
           "_patchLevel" : {
-            "type" : "number"
+            "type" : "number",
+            "nullable" : false
           },
           "_snapshotInfo" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
         }
       }

@@ -1,8 +1,8 @@
 export default interface Version {
-  artifactId: string;
-  groupId: string;
+  artifactId?: string | null;
+  groupId?: string | null;
   majorVersion: number;
   minorVersion: number;
   patchLevel: number;
-  snapshotInfo: string;
+  snapshotInfo?: string | null;
 }

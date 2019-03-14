@@ -64,6 +64,7 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -87,9 +88,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractServiceGenerationTest {
-  private static final org.slf4j.Logger log = LoggerFactory
-      .getLogger(AbstractServiceGenerationTest.class);
-
   private static final List<Class<?>> JSON_NUMBER_CLASSES = Arrays.asList(
       Number.class, byte.class, char.class, short.class, int.class, long.class,
       float.class, double.class);
@@ -319,6 +317,8 @@ public abstract class AbstractServiceGenerationTest {
       assertSchema(propertySchema, parameterTypes[index]);
       index++;
     }
+
+    verifyThatAllPropertiesAreRequired(requestSchema, properties);
   }
 
   private Schema extractSchema(Content content) {
@@ -345,6 +345,10 @@ public abstract class AbstractServiceGenerationTest {
   }
 
   private void assertSchema(Schema actualSchema, Class<?> expectedSchemaClass) {
+    if (assertSpecificJavaClassSchema(actualSchema, expectedSchemaClass)) {
+      return;
+    }
+
     if (actualSchema.get$ref() != null) {
       assertNull(actualSchema.getProperties());
       schemaReferences.add(actualSchema.get$ref());
@@ -375,19 +379,22 @@ public abstract class AbstractServiceGenerationTest {
             || LocalDate.class.isAssignableFrom(expectedSchemaClass));
       } else if (actualSchema instanceof ComposedSchema) {
         List<Schema> allOf = ((ComposedSchema) actualSchema).getAllOf();
-        assertTrue(allOf.size() > 1);
-        for (Schema schema : allOf) {
-          if (expectedSchemaClass.getCanonicalName().equals(schema.getName())) {
-            assertSchemaProperties(expectedSchemaClass, schema);
-            break;
+        if (allOf.size() > 1) {
+          // Inherited schema
+          for (Schema schema : allOf) {
+            if (expectedSchemaClass.getCanonicalName()
+                .equals(schema.getName())) {
+              assertSchemaProperties(expectedSchemaClass, schema);
+              break;
+            }
           }
+        } else {
+          // Nullable schema for referring schema object
+          assertEquals(1, allOf.size());
+          assertEquals(expectedSchemaClass.getCanonicalName(),
+              allOf.get(0).getName());
         }
       } else if (actualSchema instanceof ObjectSchema) {
-        if (StringUtils.startsWith(expectedSchemaClass.getPackage().getName(),
-            "java.")) {
-          // skip the validation for unhandled java types, e.g. Optional
-          return;
-        }
         assertSchemaProperties(expectedSchemaClass, actualSchema);
       } else {
         throw new AssertionError(
@@ -395,6 +402,24 @@ public abstract class AbstractServiceGenerationTest {
                 actualSchema.getClass(), expectedSchemaClass));
       }
     }
+  }
+
+  private boolean assertSpecificJavaClassSchema(Schema actualSchema,
+      Class<?> expectedSchemaClass) {
+    if (expectedSchemaClass == Optional.class) {
+      assertTrue(actualSchema.getNullable());
+      if (actualSchema instanceof ComposedSchema) {
+        assertEquals(1, ((ComposedSchema) actualSchema).getAllOf().size());
+      }
+    } else if (expectedSchemaClass == Object.class) {
+      assertNull(actualSchema.getProperties());
+      assertNull(actualSchema.getAdditionalProperties());
+      assertNull(actualSchema.get$ref());
+      assertNull(actualSchema.getRequired());
+    } else {
+      return false;
+    }
+    return true;
   }
 
   private void assertSchemaProperties(Class<?> expectedSchemaClass,
@@ -417,6 +442,21 @@ public abstract class AbstractServiceGenerationTest {
       assertSchema(propertySchema, expectedSchemaField.getType());
     }
     assertEquals(expectedFieldsCount, properties.size());
+
+    verifyThatAllPropertiesAreRequired(schema, properties);
+  }
+
+  private void verifyThatAllPropertiesAreRequired(Schema schema,
+      Map<String, Schema> properties) {
+    if (properties.isEmpty()) {
+      assertNull(schema.getRequired());
+    } else {
+      for (Map.Entry<String, Schema> propertySchema : properties.entrySet()) {
+        if (BooleanUtils.isNotTrue(propertySchema.getValue().getNullable())) {
+          assertTrue(schema.getRequired().contains(propertySchema.getKey()));
+        }
+      }
+    }
   }
 
   private void verifySchemaReferences() {
