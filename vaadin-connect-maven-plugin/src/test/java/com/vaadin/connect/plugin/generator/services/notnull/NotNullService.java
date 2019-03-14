@@ -39,6 +39,14 @@ public class NotNullService {
     return Collections.emptyMap();
   }
 
+  @NotNull
+  public NotNullService.ReturnType echoAB(){
+    return new ReturnType();
+  }
+
+  public void echoAC(@NotNull NotNullService.ParameterType parameterType){
+
+  }
   public static class NonNullModel {
     String foo;
     @NotNull
@@ -48,5 +56,13 @@ public class NotNullService {
     List<Map<String, String>> listOfMapNullable;
     @NotNull
     List<Map<String, String>> listOfMapNullableNotNull;
+  }
+
+  public static class ReturnType {
+    String foo;
+  }
+
+  public static class ParameterType {
+    String foo;
   }
 }

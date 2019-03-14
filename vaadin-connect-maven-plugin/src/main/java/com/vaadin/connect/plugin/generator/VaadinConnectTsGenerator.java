@@ -463,7 +463,6 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   private boolean isNullableWrapperSchema(Schema schema) {
     return schema instanceof ComposedSchema
-        && BooleanUtils.isTrue(schema.getNullable())
         && ((ComposedSchema) schema).getAllOf() != null
         && ((ComposedSchema) schema).getAllOf().size() == 1;
   }
