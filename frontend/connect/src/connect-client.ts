@@ -53,9 +53,13 @@ const assertResponseIsOk = async(response: Response): Promise<void> => {
 /**
  * Authenticate a Vaadin Connect client
  * @param client the connect client instance
+ * @param askForCredentials if no valid tokens are found, ask for credentials,
+ * `true` by default
  * @ignore
  */
-const authenticateClient = async(client: ConnectClient): Promise<void> => {
+const authenticateClient = async(client: ConnectClient,
+                                 askForCredentials: boolean = true):
+  Promise<AccessToken | null> => {
   let message;
   const _private = privates.get(client);
   let tokens = _private.tokens;
@@ -71,7 +75,7 @@ const authenticateClient = async(client: ConnectClient): Promise<void> => {
     if (tokens.refreshToken && tokens.refreshToken.isValid()) {
       body.append('grant_type', 'refresh_token');
       body.append('refresh_token', tokens.refreshToken.token);
-    } else if (client.credentials) {
+    } else if (askForCredentials && client.credentials) {
       const creds = message !== undefined
         ? await client.credentials({message})
         : await client.credentials();
@@ -118,6 +122,7 @@ const authenticateClient = async(client: ConnectClient): Promise<void> => {
       }
     }
   }
+  return tokens.accessToken;
 };
 
 /** @ignore */
@@ -614,12 +619,27 @@ export class ConnectClient {
    * to login and get the accessToken if the tokens {@link ConnectClient#token}
    * is not available or invalid. The {@link ConnectClient#credentials}
    * will be called if the `refreshToken` is invalid.
+   *
+   * @return a promise the the token that is used to access a service
    */
-  async login() {
+  async login(): Promise<AccessToken> {
     const _private = privates.get(this);
     // memoize to re-use in case of multiple calls
     _private.login = _private.login || authenticateClient(this);
-    await _private.login;
+    const token = await _private.login;
     delete _private.login;
+    return token;
+  }
+
+  /**
+   * Checks if the user is logged in.
+   * If there saved tokens, tries to log in the user,
+   * not asking for the credentials.
+   *
+   * @return {@code true} if the log in successful, {@code false} otherwise
+   */
+  async checkLoggedIn(): Promise<boolean> {
+    return authenticateClient(this, false)
+      .then(token => token !== null);
   }
 }

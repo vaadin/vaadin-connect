@@ -372,9 +372,10 @@ describe('ConnectClient', () => {
 
     it('should request token endpoint with credentials when calling login', async() => {
 
-      await client.login();
+      const token = await client.login();
       const [[url, {method, body}]] = fetchMock.calls();
 
+      expect(token).not.to.be.null;
       expect(method).to.equal('POST');
       expect(url).to.equal('/oauth/token');
       expect(body.toString())
@@ -384,9 +385,10 @@ describe('ConnectClient', () => {
     it('should request token endpoint only once after login', async() => {
       const vaadinEndpoint = '/connect/FooService/fooMethod';
       fetchMock.post(vaadinEndpoint, {fooData: 'foo'});
-      await client.login();
+      const token = await client.login();
       await client.call('FooService', 'fooMethod');
 
+      expect(token).not.to.be.null;
       expect(fetchMock.calls()).to.have.lengthOf(2);
       expect(fetchMock.calls()[0][0]).to.be.equal(client.tokenEndpoint);
       expect(fetchMock.calls()[1][0]).to.be.equal(vaadinEndpoint);
@@ -395,14 +397,33 @@ describe('ConnectClient', () => {
     it('should use refreshToken if available', async() => {
       localStorage.setItem('vaadin.connect.refreshToken', generateOAuthJson().refresh_token);
       const newClient = new ConnectClient({credentials: client.credentials});
-      await newClient.login();
+      const token = await newClient.login();
 
+      expect(token).not.to.be.null;
       expect(fetchMock.calls()).to.have.lengthOf(1);
       expect(newClient.credentials).not.to.be.called;
 
       let [, {body}] = fetchMock.calls()[0];
       body = new URLSearchParams(body);
       expect(body.get('grant_type')).to.be.equal('refresh_token');
+    });
+  });
+
+  describe('checkLoggedIn method', () => {
+    let client;
+    beforeEach(() => {
+      client = new ConnectClient({credentials: sinon.fake
+        .throws('Unexpected method call for credentials')});
+      fetchMock.post(client.tokenEndpoint, generateOAuthJson);
+    });
+
+    afterEach(() => {
+      fetchMock.restore();
+    });
+
+    it('should login successfully without asking for credentials', async() => {
+      const isLoginSuccessful = await client.checkLoggedIn();
+      expect(isLoginSuccessful).to.be.true;
     });
   });
 
