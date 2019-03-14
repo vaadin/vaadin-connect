@@ -632,12 +632,13 @@ export class ConnectClient {
   }
 
   /**
-   * Attempts to log in the user using the saved tokens only,
+   * Checks if the user is logged in.
+   * If there saved tokens, tries to log in the user,
    * not asking for the credentials.
    *
    * @return {@code true} if the log in successful, {@code false} otherwise
    */
-  async tryLoginWithExistingTokens(): Promise<boolean> {
+  async checkLoggedIn(): Promise<boolean> {
     return authenticateClient(this, false)
       .then(token => token !== null);
   }

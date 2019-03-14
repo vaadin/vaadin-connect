@@ -409,7 +409,7 @@ describe('ConnectClient', () => {
     });
   });
 
-  describe('tryLoginWithExistingTokens method', () => {
+  describe('checkLoggedIn method', () => {
     let client;
     beforeEach(() => {
       client = new ConnectClient({credentials: sinon.fake
@@ -422,7 +422,7 @@ describe('ConnectClient', () => {
     });
 
     it('should login successfully without asking for credentials', async() => {
-      const isLoginSuccessful = await client.tryLoginWithExistingTokens();
+      const isLoginSuccessful = await client.checkLoggedIn();
       expect(isLoginSuccessful).to.be.true;
     });
   });
