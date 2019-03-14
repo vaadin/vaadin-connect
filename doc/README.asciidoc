@@ -28,3 +28,4 @@ layout: page
 ** <<type-conversion#,Type conversion between JavaScript and Java>>
 ** <<frontend-server#,Vaadin frontend server>>
 ** <<client-middleware#,Vaadin Connect client middleware>>
+** <<service-methods-validation#,Vaadin Connect validation in the service methods>>
