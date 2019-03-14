@@ -58,8 +58,6 @@ import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
-import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration;
-import com.github.javaparser.resolution.types.ResolvedPrimitiveType;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
@@ -680,8 +678,7 @@ public class OpenApiObjectGenerator {
   private Schema createSingleSchemaFromResolvedType(
       ResolvedReferenceType resolvedType) {
     Schema schema = new ObjectSchema().name(resolvedType.getQualifiedName());
-    Map<String, Boolean> fieldNotNullMap = getFieldWithNotNullMap(
-        resolvedType);
+    Map<String, Boolean> fieldNotNullMap = getFieldWithNotNullMap(resolvedType);
     Set<ResolvedFieldDeclaration> declaredFields = resolvedType
         .getDeclaredFields().stream()
         .filter(resolvedFieldDeclaration -> fieldNotNullMap.keySet()
@@ -716,7 +713,7 @@ public class OpenApiObjectGenerator {
   private Map<String, Boolean> getFieldWithNotNullMap(
       ResolvedReferenceType resolvedType) {
     if (!resolvedType.getTypeDeclaration().isClass()
-      || resolvedType.getTypeDeclaration().isAnonymousClass()) {
+        || resolvedType.getTypeDeclaration().isAnonymousClass()) {
       return Collections.emptyMap();
     }
     HashMap<String, Boolean> validFields = new HashMap<>();
@@ -740,8 +737,9 @@ public class OpenApiObjectGenerator {
     }
     return validFields;
   }
+
   private Class<?> getClassFromReflection(ResolvedReferenceType resolvedType)
-    throws ClassNotFoundException {
+      throws ClassNotFoundException {
     String fullyQualifiedName = getFullyQualifiedName(resolvedType);
     if (typeResolverClassLoader != null) {
       return Class.forName(fullyQualifiedName, true, typeResolverClassLoader);
@@ -756,24 +754,28 @@ public class OpenApiObjectGenerator {
    * {@link ResolvedReferenceType#getQualifiedName()} returns a canonical name
    * instead of a fully qualified name, which is not correct for nested classes
    * to be used in reflection. That's why this method is implemented.
-   *
+   * 
+   * {@see Related discussion about FullyQualifiedName and CanonicalName:
+   * https://github.com/javaparser/javaparser/issues/1480}
+   * 
    * @param resolvedReferenceType
    *          the type to get fully qualified name
    * @return fully qualified name
+   *
    */
   private String getFullyQualifiedName(
-    ResolvedReferenceType resolvedReferenceType) {
+      ResolvedReferenceType resolvedReferenceType) {
     ResolvedReferenceTypeDeclaration typeDeclaration = resolvedReferenceType
-      .getTypeDeclaration();
+        .getTypeDeclaration();
     String packageName = typeDeclaration.getPackageName();
     String canonicalName = typeDeclaration.getQualifiedName();
     if (StringUtils.isBlank(packageName)) {
       return StringUtils.replaceChars(canonicalName, '.', '$');
     } else {
       String name = StringUtils.substringAfterLast(canonicalName,
-        packageName + ".");
+          packageName + ".");
       return String.format("%s.%s", packageName,
-        StringUtils.replaceChars(name, '.', '$'));
+          StringUtils.replaceChars(name, '.', '$'));
     }
   }
 }
