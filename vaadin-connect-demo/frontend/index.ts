@@ -74,9 +74,8 @@ const input = document.getElementById('inputText') as HTMLInputElement;
   .addEventListener('click', async() => {
     updateExceptionData({} as VaadinConnectError);
     try {
-      await demoService.doNotSubmitZeroes(
-        input.valueAsNumber ? input.valueAsNumber : 0
-      );
+      const inputValue = Number(input.value) || 0;
+      await demoService.doNotSubmitZeroes(inputValue);
     } catch (e) {
       updateExceptionData(e);
     }
@@ -150,10 +149,10 @@ const customClient = new ConnectClient({endpoint: '/connect', credentials});
   .addEventListener('click', async() => {
     const name = (document.getElementById(
       'validationNameInput') as HTMLInputElement).value;
-    const count = (document.getElementById(
-      'validationCountInput') as HTMLInputElement).valueAsNumber;
-    const additionalNumber = (document.getElementById(
-      'additionalNumberInput') as HTMLInputElement).valueAsNumber;
+    const count = Number((document.getElementById(
+      'validationCountInput') as HTMLInputElement).value);
+    const additionalNumber = Number((document.getElementById(
+      'additionalNumberInput') as HTMLInputElement).value);
 
     let result = null;
     try {
