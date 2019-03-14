@@ -39,7 +39,7 @@ export function isAdmin(id: number): Promise<boolean> {
 ----
 
 === Modules
-The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding TypeScript file. The tag name is used for TypeScript module name as well as the file name. JsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
+The generator will collect all the `_tags_` field of all operations in the OpenAPI document. Each tag will generate a corresponding TypeScript file. The tag name is used for TypeScript module name as well as the file name. TsDoc of the class will be fetched from `_description_` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] which has the same name as the class.
 
 === Static code
 The `_import_` is a static part of any generated file.
@@ -79,7 +79,7 @@ Parameters of the method are taken from the `_application/json_` content of http
 }
 ----
 
-Type and description of each property are used for JsDoc that describes the parameter in more details.
+Type and description of each property are used for TsDoc that describes the parameter in more details.
 
 [NOTE]
 ====
@@ -113,9 +113,9 @@ Return type and its description are taken from the `_200_` https://github.com/OA
 At this point, the generator only takes the advantage of `_200_` response objects. Other response objects are ignored.
 ====
 
-==== Method's JsDoc
+==== Method's TsDoc
 
-The JsDoc of the generated method is stored as `_description_` value of the `_POST_` operation in path item. A valid `_POST_` operation combined with <<request-body>> and <<response-object>> would look like:
+The TsDoc of the generated method is stored as `_description_` value of the `_POST_` operation in path item. A valid `_POST_` operation combined with <<request-body>> and <<response-object>> would look like:
 
 .Post Operation
 [source, json]

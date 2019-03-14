@@ -61,6 +61,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration;
 import com.github.javaparser.resolution.types.ResolvedPrimitiveType;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
@@ -793,21 +794,75 @@ public class OpenApiObjectGenerator {
     return schema;
   }
 
+  /**
+   * Because it's not possible to check the `transient` modifier and annotation
+   * of a field using JavaParser API. We need this method to reflect the type
+   * and get those information from the reflected object.
+   * 
+   * @param resolvedType
+   *          type of the class to get fields information
+   * @return set of fields' name that we should generate.
+   */
   private Set<String> getValidFields(ResolvedReferenceType resolvedType) {
+    if (!resolvedType.getTypeDeclaration().isClass()
+        || resolvedType.getTypeDeclaration().isAnonymousClass()) {
+      return Collections.emptySet();
+    }
     Set<String> fields;
     try {
-      Class<?> aClass = Class.forName(resolvedType.getQualifiedName());
+      Class<?> aClass = getClassFromReflection(resolvedType);
       fields = Arrays.stream(aClass.getDeclaredFields()).filter(field -> {
         int modifiers = field.getModifiers();
         return !Modifier.isStatic(modifiers) && !Modifier.isTransient(modifiers)
             && !field.isAnnotationPresent(JsonIgnore.class);
       }).map(Field::getName).collect(Collectors.toSet());
     } catch (ClassNotFoundException e) {
-      getLogger().info(String.format("Can't get list of field from class %s",
-          resolvedType.getQualifiedName()), e);
+      String message = String.format("Can't get list of fields from class '%s'."
+          + "Please make sure that class '%s' is in your project's compile classpath. "
+          + "As the result, the generated TypeScript file will be empty.",
+          resolvedType.getQualifiedName(), resolvedType.getQualifiedName());
+      getLogger().info(message);
+      getLogger().debug(message, e);
       fields = Collections.emptySet();
     }
     return fields;
+  }
+
+  private Class<?> getClassFromReflection(ResolvedReferenceType resolvedType)
+      throws ClassNotFoundException {
+    String fullyQualifiedName = getFullyQualifiedName(resolvedType);
+    if (typeResolverClassLoader != null) {
+      return Class.forName(fullyQualifiedName, true, typeResolverClassLoader);
+    } else {
+      return Class.forName(fullyQualifiedName);
+    }
+  }
+
+  /**
+   * This method return a fully qualified name from a resolved reference type
+   * which is correct for nested declaration as well. The
+   * {@link ResolvedReferenceType#getQualifiedName()} returns a canonical name
+   * instead of a fully qualified name, which is not correct for nested classes
+   * to be used in reflection. That's why this method is implemented.
+   *
+   * @param resolvedReferenceType
+   *          the type to get fully qualified name
+   * @return fully qualified name
+   */
+  private String getFullyQualifiedName(
+      ResolvedReferenceType resolvedReferenceType) {
+    ResolvedReferenceTypeDeclaration typeDeclaration = resolvedReferenceType
+        .getTypeDeclaration();
+    String packageName = typeDeclaration.getPackageName();
+    String canonicalName = typeDeclaration.getQualifiedName();
+    if (StringUtils.isBlank(packageName)) {
+      return StringUtils.replaceChars(canonicalName, '.', '$');
+    } else {
+      String name = StringUtils.substringAfterLast(canonicalName,
+          packageName + ".");
+      return String.format("%s.%s", packageName,
+          StringUtils.replaceChars(name, '.', '$'));
+    }
   }
 
   private Schema createMapSchema(ResolvedType type) {
