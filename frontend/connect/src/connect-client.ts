@@ -226,6 +226,10 @@ export class VaadinConnectError extends Error {
  */
 export class VaadinConnectValidationError extends VaadinConnectError {
   /**
+   * An original validation error message.
+   */
+  validationErrorMessage: string;
+  /**
    * An array of the validation errors.
    */
   validationErrorData: ValidationErrorData[];
@@ -238,6 +242,7 @@ export class VaadinConnectValidationError extends VaadinConnectError {
   constructor(message: string, validationErrorData: ValidationErrorData[],
               type?: string) {
     super(message, type, validationErrorData);
+    this.validationErrorMessage = message;
     this.detail = null;
     this.validationErrorData = validationErrorData;
   }
