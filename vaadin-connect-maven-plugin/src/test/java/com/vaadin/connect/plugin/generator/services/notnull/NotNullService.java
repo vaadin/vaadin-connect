@@ -40,13 +40,15 @@ public class NotNullService {
   }
 
   @NotNull
-  public NotNullService.ReturnType echoAB(){
+  public NotNullService.ReturnType getNotNullReturnType() {
     return new ReturnType();
   }
 
-  public void echoAC(@NotNull NotNullService.ParameterType parameterType){
+  public void sendParameterType(
+      @NotNull NotNullService.ParameterType parameterType) {
 
   }
+
   public static class NonNullModel {
     String foo;
     @NotNull
