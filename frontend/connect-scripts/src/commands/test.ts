@@ -11,10 +11,13 @@ import {spawnWebpackSync} from '../lib/spawn/webpack';
  * the frontend and backend.
  */
 export const command: Command = async() => {
+  console.log('use test unit'); // tslint:disable-line
   await useCommand(testUnitCommand);
 
   spawnWebpackSync(['--mode', 'development']);
+  console.log('use backend'); // tslint:disable-line
   await useCommand(backendCommand);
 
+  console.log('use e2e'); // tslint:disable-line
   await useCommand(testE2eCommand);
 };

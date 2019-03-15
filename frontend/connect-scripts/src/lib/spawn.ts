@@ -22,7 +22,8 @@ export function spawnSync(cmd: string, args: string[]) {
   const result = crossSpawn.sync(cmd, args, {stdio: 'inherit'});
   if (result.signal === 'SIGINT') {
     process.exit(130);
+  } else {
+    assertZeroExitCode(result.status, cmd, args);
   }
-  assertZeroExitCode(result.status, cmd, args);
   return result;
 }

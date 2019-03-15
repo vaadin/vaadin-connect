@@ -41,11 +41,15 @@ async function main() {
   }
 }
 
-main().catch(error => {
-  log(
-    LogCategory.Error,
-    '\x1b[31;1mUnable to continue because of the error:\x1b[0m',
-    error.message
-  );
-  throw error;
-});
+export async function run() {
+  try {
+    await main();
+  } catch (error) {
+    log(
+      LogCategory.Error,
+      '\x1b[31;1mUnable to continue because of the error:\x1b[0m',
+      error.message
+    );
+    throw error;
+  }
+}

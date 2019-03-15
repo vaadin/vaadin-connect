@@ -1,0 +1,22 @@
+{
+  "coverage": [
+    "commands/**/*.js",
+    "lib/**/*.js",
+    "cli.js"
+  ],
+  "suites": "test/**/*.spec.*",
+  "environments": ["node"],
+  "node": {
+    "plugins": [
+      "./test/utils.js"
+    ],
+    "reporters+": ["lcov", "htmlcoverage"]
+  },
+  "instrumenterOptions": {
+    "produceSourceMap": true
+  },
+  "configs": {
+    "ci-public": {},
+    "ci": {}
+  }
+}

@@ -15,19 +15,22 @@ export type Command = () =>
 /**
  * The current stack of cleanup callbacks
  */
-let currentCleanupCallbacks: CommandCleanup[] | undefined;
+interface GlobalExtensions {
+  currentCleanupCallbacks?: CommandCleanup[];
+}
+const _global = global as GlobalExtensions;
 
 /**
  * Runs the child command. Store the cleanup callback if returned.
  */
 export async function useCommand(command: Command): Promise<void> {
-  if (currentCleanupCallbacks === undefined) {
+  if (_global.currentCleanupCallbacks === undefined) {
     throw new Error('Invalid useCommand usage, use with runCommand only');
   }
   const cleanupCallback = await command();
   if (cleanupCallback) {
     // Cleanup callback is returned from command, put on the stack
-    currentCleanupCallbacks.unshift(cleanupCallback);
+    _global.currentCleanupCallbacks.unshift(cleanupCallback);
   }
 }
 
@@ -45,7 +48,9 @@ function cleanup(callbacks: CommandCleanup[]) {
 export async function runCommand(command: Command): Promise<void> {
   const cleanupCallbacks: CommandCleanup[] = [];
   process.on('exit', () => cleanup(cleanupCallbacks));
-  currentCleanupCallbacks = cleanupCallbacks;
+  _global.currentCleanupCallbacks = cleanupCallbacks;
+  console.log('run command', command); // tslint:disable-line
   await useCommand(command);
-  currentCleanupCallbacks = undefined;
+  console.log('run command end', command); // tslint:disable-line
+  _global.currentCleanupCallbacks = undefined;
 }
