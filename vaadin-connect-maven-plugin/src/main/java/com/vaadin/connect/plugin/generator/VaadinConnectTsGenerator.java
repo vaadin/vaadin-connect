@@ -464,7 +464,13 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
   private boolean isNullableWrapperSchema(Schema schema) {
     return schema instanceof ComposedSchema
         && ((ComposedSchema) schema).getAllOf() != null
-        && ((ComposedSchema) schema).getAllOf().size() == 1;
+        && ((ComposedSchema) schema).getAllOf().size() == 1
+        && isNullOrEmptyList(((ComposedSchema) schema).getOneOf())
+        && isNullOrEmptyList(((ComposedSchema) schema).getAnyOf());
+  }
+
+  private boolean isNullOrEmptyList(List list) {
+    return list == null || list.isEmpty();
   }
 
   private String getSimpleNameFromImports(String dataType,
