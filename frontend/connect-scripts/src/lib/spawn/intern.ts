@@ -9,7 +9,7 @@ function internify<T extends (...args: any[]) => any>(fn: T) {
         NODE_OPTIONS: [
           process.env.NODE_DEBUG_OPTION,
           process.env.NODE_OPTIONS
-        ].filter(Boolean).join(' ') || null
+        ].filter(Boolean).join(' ') || ''
       })
     }
   ) as ReturnType<T>;
