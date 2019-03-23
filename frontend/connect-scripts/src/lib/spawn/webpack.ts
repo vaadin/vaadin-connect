@@ -1,12 +1,14 @@
 import {spawn, spawnSync} from '../spawn';
 
 function webpackify<T extends (...args: any[]) => any>(fn: T) {
-  return (args: string[]) => fn('node', [
+  return (args: string[]) => fn(
     './node_modules/.bin/webpack',
-    '--progress',
-    '--display', 'minimal',
-    ...args
-  ]) as ReturnType<T>;
+    [
+      '--progress',
+      '--display', 'minimal',
+      ...args
+    ]
+  ) as ReturnType<T>;
 }
 
 export const spawnWebpack = webpackify(spawn);

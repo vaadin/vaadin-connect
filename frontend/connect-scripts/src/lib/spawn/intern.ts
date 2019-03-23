@@ -1,16 +1,18 @@
 import {spawn, spawnSync} from '../spawn';
 
 function internify<T extends (...args: any[]) => any>(fn: T) {
-  const nodeArgs: string[] = [];
-  if (process.env.NODE_DEBUG_OPTION) {
-    nodeArgs.push(process.env.NODE_DEBUG_OPTION);
-  }
-
-  return (args: string[]) => fn('node', [
-    ...nodeArgs,
+  return (args: string[]) => fn(
     './node_modules/.bin/intern',
-    ...args
-  ]) as ReturnType<T>;
+    args,
+    {
+      env: Object.assign({}, process.env, {
+        NODE_OPTIONS: [
+          process.env.NODE_DEBUG_OPTION,
+          process.env.NODE_OPTIONS
+        ].filter(Boolean).join(' ') || ''
+      })
+    }
+  ) as ReturnType<T>;
 }
 
 export const spawnIntern = internify(spawn);
