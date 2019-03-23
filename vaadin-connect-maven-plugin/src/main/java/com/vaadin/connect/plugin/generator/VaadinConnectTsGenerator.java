@@ -651,10 +651,15 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
       String relativizedPath = Paths
           .get(relativePathFromGeneratedFolderToCurrentFile)
           .relativize(Paths.get(importPath)).toString();
-      relativizedPath = StringUtils.prependIfMissing(relativizedPath, "./", ".",
-          "/");
+      relativizedPath = relativePathToNodeImport(relativizedPath);
       anImport.put("importPath", relativizedPath);
     }
+  }
+
+  private String relativePathToNodeImport(String relativePath) {
+    // on Windows Node imports should still use Unix-style path separator
+    relativePath = relativePath.replace("\\", "/");
+    return StringUtils.prependIfMissing(relativePath, "./", ".", "/");
   }
 
   private String getUniqueNameFromQualifiedName(Set<String> usedNames,
