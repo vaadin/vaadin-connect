@@ -606,7 +606,7 @@ public class VaadinConnectTsGenerator extends AbstractTypeScriptClientCodegen {
 
   private void adjustImportInformationForServices(
       List<Map<String, Object>> imports) {
-    adjustImportInformation(imports, "");
+    adjustImportInformation(imports, ".");
   }
 
   private void adjustImportInformationForModel(
