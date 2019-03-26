@@ -136,7 +136,7 @@ Open `frontend/index.html` and add the following lines to the beginning of the
 ----
 <body>
   <vaadin-text-field id="counter" label="Counter" value="1"></vaadin-text-field>
-  <vaadin-button id="addOne">Add one</vaadin-button>
+  <vaadin-button id="addButton">Add one</vaadin-button>
   <br>
 
   <!-- ... -->
@@ -150,8 +150,10 @@ Then, add the following to the beginning of `frontend/index.ts`:
 import * as counterService from './generated/CounterService';
 
 const counter = document.getElementById('counter') as HTMLInputElement;
-document.getElementById('addOne').onclick = async() => {
-  counter.value = await counterService.addOne(counter.value);
+document.getElementById('addButton')!.onclick = async() => {
+  const original = parseInt(counter.value);
+  const incremented = await counterService.addOne(original);
+  counter.value = '' + incremented;
 };
 
 /* ... */
