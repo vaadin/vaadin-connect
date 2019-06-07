@@ -21,8 +21,8 @@
   "tunnelOptions": {
     "version": "3.141.59",
     "drivers": [
-      {"name": "chrome", "version": "2.44"},
-      {"name": "firefox", "version": "0.21.0"}
+      {"name": "chrome", "version": "74.0.3729.6"},
+      {"name": "firefox", "version": "0.24.0"}
     ]
   },
   "configs": {
