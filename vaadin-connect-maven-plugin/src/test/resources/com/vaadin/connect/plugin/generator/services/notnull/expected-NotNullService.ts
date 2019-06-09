@@ -22,8 +22,18 @@ export function getNonNullString(
   return client.call('NotNullService', 'getNonNullString', {input});
 }
 
+export function getNotNullGenericParameterType(): Promise<Array<ReturnType>> {
+  return client.call('NotNullService', 'getNotNullGenericParameterType');
+}
+
 export function getNotNullReturnType(): Promise<ReturnType> {
   return client.call('NotNullService', 'getNotNullReturnType');
+}
+
+export function sendNotNullGenericParameterType(
+  collection: Array<ParameterType>
+): Promise<void> {
+  return client.call('NotNullService', 'sendNotNullGenericParameterType', {collection});
 }
 
 export function sendParameterType(

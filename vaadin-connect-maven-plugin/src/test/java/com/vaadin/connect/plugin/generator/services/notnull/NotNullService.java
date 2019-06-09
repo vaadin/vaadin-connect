@@ -17,6 +17,7 @@ package com.vaadin.connect.plugin.generator.services.notnull;
 
 import javax.validation.constraints.NotNull;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +45,16 @@ public class NotNullService {
     return new ReturnType();
   }
 
+  @NotNull
+  public Collection<@NotNull ReturnType> getNotNullGenericParameterType() {
+    return Collections.singleton(new ReturnType());
+  }
+
   public void sendParameterType(
       @NotNull NotNullService.ParameterType parameterType) {
+  }
+
+  public void sendNotNullGenericParameterType(@NotNull Collection<@NotNull ParameterType> collection) {
 
   }
 

@@ -613,6 +613,7 @@ public class OpenApiObjectGenerator {
       if (javaType.isPrimitiveType()) {
         schema.setNullable(false);
       }
+      setNullableByNotNullAnnotations(javaType, schema);
       return schema;
     } catch (Exception e) {
       getLogger().info(String.format(
@@ -624,6 +625,36 @@ public class OpenApiObjectGenerator {
 
   private static Logger getLogger() {
     return LoggerFactory.getLogger(OpenApiObjectGenerator.class);
+  }
+
+  private static boolean isNotNullAnnotated(Type type) {
+    return type.getAnnotations().stream().anyMatch(a ->
+      a.getName().getIdentifier().equals(NotNull.class.getSimpleName()));
+  }
+
+  private static void setNullableByNotNullAnnotations(Type javaType, Schema schema) {
+    if (isNotNullAnnotated(javaType)) {
+      schema.setNullable(false);
+    }
+
+    if (schema instanceof ArraySchema) {
+      ArraySchema arraySchema = (ArraySchema) schema;
+      if (javaType instanceof ClassOrInterfaceType) {
+        ((ClassOrInterfaceType) javaType).getTypeArguments().ifPresent(args ->
+          setNullableByNotNullAnnotations(args.get(0), arraySchema.getItems()));
+      }
+    } else if (schema instanceof ComposedSchema) {
+      ComposedSchema composedSchema = (ComposedSchema) schema;
+      if (javaType instanceof ClassOrInterfaceType) {
+        ((ClassOrInterfaceType) javaType).getTypeArguments().ifPresent(args -> {
+          if (composedSchema.getAllOf() != null) {
+            for(int i = 0; i < Math.min(args.size(), composedSchema.getAllOf().size()); i++) {
+              setNullableByNotNullAnnotations(args.get(i), composedSchema.getAllOf().get(i));
+            }
+          }
+        });
+      }
+    }
   }
 
   private Schema parseResolvedTypeToSchema(ResolvedType resolvedType) {
@@ -705,7 +736,7 @@ public class OpenApiObjectGenerator {
    * Because it's not possible to check the `transient` modifier and annotation
    * of a field using JavaParser API. We need this method to reflect the type
    * and get those information from the reflected object.
-   * 
+   *
    * @param resolvedType
    *          type of the class to get fields information
    * @return set of fields' name that we should generate.
@@ -754,10 +785,10 @@ public class OpenApiObjectGenerator {
    * {@link ResolvedReferenceType#getQualifiedName()} returns a canonical name
    * instead of a fully qualified name, which is not correct for nested classes
    * to be used in reflection. That's why this method is implemented.
-   * 
+   *
    * {@see Related discussion about FullyQualifiedName and CanonicalName:
    * https://github.com/javaparser/javaparser/issues/1480}
-   * 
+   *
    * @param resolvedReferenceType
    *          the type to get fully qualified name
    * @return fully qualified name
