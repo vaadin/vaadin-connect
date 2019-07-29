@@ -831,7 +831,7 @@ describe('ConnectClient', () => {
               await client.call('FooService', 'fooMethod');
               expect.fail('token request not aborted');
             } catch (error) {
-              expect(error.message).to.equal('URL \'/oauth/token\' aborted.');
+              expect(error.message).to.equal('The operation was aborted.');
             }
           });
 
