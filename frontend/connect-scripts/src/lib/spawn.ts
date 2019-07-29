@@ -2,7 +2,11 @@ import crossSpawn = require('cross-spawn');
 
 import {SpawnOptions, SpawnSyncOptions} from 'child_process';
 
-function assertZeroExitCode(exitCode: number, cmd: string, args: string[]) {
+function assertZeroExitCode(
+  exitCode: number | null,
+  cmd: string,
+  args: string[]
+) {
   if (exitCode !== 0) {
     throw new Error(
       `The command "${[cmd].concat(args).join(' ')}" finished with`
