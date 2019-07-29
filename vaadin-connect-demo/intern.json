@@ -23,7 +23,8 @@
     "drivers": [
       "chrome",
       {"name": "firefox", "version": "0.24.0"}
-    ]
+    ],
+    "verbose": true
   },
   "configs": {
     "sauce": {
