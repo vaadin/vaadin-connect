@@ -3,7 +3,14 @@
   "serverUrl": "http://localhost:8080",
   "serverPort": 9002,
   "socketPort": 9003,
-  "environments": ["chrome"],
+  "environments": [
+    {
+      "browserName": "chrome",
+      "goog:chromeOptions": {
+        "args": ["headless", "disable-gpu", "window-size=1024,768"]
+      }
+    }
+  ],
   "browser": {
     "loader": {
       "script": "esm"
@@ -23,8 +30,7 @@
     "drivers": [
       {"name":  "chrome", "version": "75.0.3770.90"},
       {"name": "firefox", "version": "0.24.0"}
-    ],
-    "verbose": true
+    ]
   },
   "configs": {
     "sauce": {
