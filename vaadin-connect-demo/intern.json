@@ -3,14 +3,7 @@
   "serverUrl": "http://localhost:8080",
   "serverPort": 9002,
   "socketPort": 9003,
-  "environments": [
-    {
-      "browserName": "chrome",
-      "goog:chromeOptions": {
-        "args": ["headless", "disable-gpu", "window-size=1024,768"]
-      }
-    }
-  ],
+  "environments": ["chrome"],
   "browser": {
     "loader": {
       "script": "esm"
@@ -28,7 +21,7 @@
   "tunnelOptions": {
     "version": "3.141.59",
     "drivers": [
-      {"name": "chrome", "version": "75.0.3770.140"},
+      {"name": "chrome", "version": "75.0.3770.8"},
       {"name": "firefox", "version": "0.24.0"}
     ]
   },
