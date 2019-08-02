@@ -23,7 +23,7 @@ Vaadin frontend server is currently published at `vaadin-prereleases` Maven repo
     <!-- Other repositories -->
     <repository>
         <id>vaadin-prerelease</id>
-        <url>http://maven.vaadin.com/vaadin-prereleases</url>
+        <url>https://maven.vaadin.com/vaadin-prereleases</url>
     </repository>
 </repositories>
 
