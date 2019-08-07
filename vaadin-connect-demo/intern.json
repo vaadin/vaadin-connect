@@ -3,7 +3,14 @@
   "serverUrl": "http://localhost:8080",
   "serverPort": 9002,
   "socketPort": 9003,
-  "environments": ["chrome"],
+  "environments": [
+    {
+      "browserName": "chrome",
+      "goog:chromeOptions": {
+        "w3c": false
+      }
+    }
+  ],
   "browser": {
     "loader": {
       "script": "esm"
@@ -21,8 +28,8 @@
   "tunnelOptions": {
     "version": "3.141.59",
     "drivers": [
-      {"name": "chrome", "version": "2.44"},
-      {"name": "firefox", "version": "0.21.0"}
+      {"name": "chrome", "version": "76.0.3809.68"},
+      {"name": "firefox", "version": "0.24.0"}
     ]
   },
   "configs": {
@@ -97,7 +104,8 @@
         "browserName": "chrome",
         "fixSessionCapabilities": false,
         "goog:chromeOptions": {
-          "debuggerAddress": "127.0.0.1:9222"
+          "debuggerAddress": "127.0.0.1:9222",
+          "w3c": false
         }
       }
     }

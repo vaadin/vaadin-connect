@@ -232,8 +232,8 @@ describe('ConnectClient', () => {
       await client.call('FooService', 'fooMethod', {fooParam: 'foo'});
 
       const requestBody = fetchMock.lastCall().request.body;
-      expect(requestBody).to.be.a('string');
-      expect(JSON.parse(requestBody)).to.deep.equal({fooParam: 'foo'});
+      expect(requestBody).to.exist;
+      expect(JSON.parse(requestBody.toString())).to.deep.equal({fooParam: 'foo'});
     });
 
     describe('middleware invocation', () => {
@@ -292,7 +292,8 @@ describe('ConnectClient', () => {
         const request = fetchMock.lastCall().request;
         expect(request.url).to.equal(myUrl);
         expect(request.headers.get('X-Foo')).to.equal('Bar');
-        expect(request.body).to.equal('{"baz": "qux"}');
+        expect(request.body).to.exist;
+        expect(request.body.toString()).to.equal('{"baz": "qux"}');
       });
 
       it('should allow modified response', async() => {
@@ -830,7 +831,7 @@ describe('ConnectClient', () => {
               await client.call('FooService', 'fooMethod');
               expect.fail('token request not aborted');
             } catch (error) {
-              expect(error.message).to.equal('URL \'/oauth/token\' aborted.');
+              expect(error.message).to.equal('The operation was aborted.');
             }
           });
 
