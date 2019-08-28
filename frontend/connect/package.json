@@ -38,7 +38,7 @@
     "btoa": "^1.2.1",
     "chai": "^4.2.0",
     "chokidar-cli": "^1.2.1",
-    "eslint": "^5.8.0",
+    "eslint": "^5.9.0",
     "eslint-config-vaadin": "^0.2.7",
     "eslint-plugin-chai-expect": "^2.0.1",
     "eslint-plugin-chai-friendly": "^0.4.1",
