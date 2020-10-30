@@ -1,3 +1,7 @@
+= This project has been archived
+
+Vaadin Connect is being integrated into link:https://github.com/vaadin/flow[Vaadin Flow]. Please file any issues or improvement suggestions in that repository.
+
 = Vaadin Connect
 
 == What is Vaadin Connect
